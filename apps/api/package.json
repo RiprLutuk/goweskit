@@ -1,0 +1,34 @@
+{
+  "name": "@goweskit/api",
+  "private": true,
+  "type": "module",
+  "scripts": {
+    "build": "tsc -p tsconfig.build.json",
+    "db:generate": "drizzle-kit generate",
+    "db:migrate": "drizzle-kit migrate",
+    "dev": "tsx watch src/server.ts",
+    "lint": "eslint src",
+    "predev": "pnpm --filter @goweskit/bike-domain build && pnpm --filter @goweskit/contracts build",
+    "prestart": "pnpm --filter @goweskit/bike-domain build && pnpm --filter @goweskit/contracts build",
+    "pretest": "pnpm --filter @goweskit/bike-domain build && pnpm --filter @goweskit/contracts build",
+    "start": "node dist/server.js",
+    "test": "vitest run src",
+    "typecheck": "tsc -p tsconfig.json --noEmit"
+  },
+  "dependencies": {
+    "@fastify/cookie": "11.1.2",
+    "@fastify/cors": "11.3.0",
+    "@goweskit/bike-domain": "workspace:*",
+    "@goweskit/contracts": "workspace:*",
+    "dotenv": "17.4.2",
+    "drizzle-orm": "0.45.2",
+    "fastify": "5.12.1",
+    "pg": "8.23.0",
+    "zod": "4.4.3"
+  },
+  "devDependencies": {
+    "@types/pg": "8.23.1",
+    "drizzle-kit": "0.31.10",
+    "tsx": "4.23.12"
+  }
+}

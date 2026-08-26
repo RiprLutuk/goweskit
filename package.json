@@ -1,0 +1,37 @@
+{
+  "name": "goweskit",
+  "private": true,
+  "packageManager": "pnpm@10.34.5",
+  "engines": {
+    "node": ">=22"
+  },
+  "scripts": {
+    "dev": "pnpm packages:build && pnpm -r --parallel dev",
+    "build": "pnpm -r build",
+    "db:generate": "pnpm --filter @goweskit/api db:generate",
+    "db:migrate": "pnpm --filter @goweskit/api db:migrate",
+    "format": "prettier --write .",
+    "format:check": "prettier --check .",
+    "lint": "pnpm -r lint",
+    "packages:build": "pnpm --filter @goweskit/bike-domain build && pnpm --filter @goweskit/contracts build && pnpm --filter @goweskit/ui build",
+    "typecheck": "pnpm -r typecheck",
+    "test": "pnpm packages:build && pnpm -r test"
+  },
+  "devDependencies": {
+    "@eslint/js": "10.0.1",
+    "@types/node": "24.13.3",
+    "eslint": "10.9.1",
+    "globals": "17.11.0",
+    "prettier": "3.9.6",
+    "typescript": "5.9.3",
+    "typescript-eslint": "8.68.0",
+    "vitest": "4.1.11",
+    "vue-tsc": "3.3.11"
+  },
+  "pnpm": {
+    "onlyBuiltDependencies": [
+      "esbuild",
+      "unrs-resolver"
+    ]
+  }
+}
