@@ -18,6 +18,7 @@ describe('mobile navigation', () => {
       { label: 'Home', path: '/', available: true },
       { label: 'Learn', path: '/learn', available: true },
       { label: 'Garage', path: '/garage', available: true },
+      { label: 'Explore', path: '/explore', available: true },
       { label: 'Me', path: '/me', available: true },
     ]);
   });

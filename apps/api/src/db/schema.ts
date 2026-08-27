@@ -1,7 +1,9 @@
 import type { BikeSpecCode } from '@goweskit/bike-domain';
 import { sql } from 'drizzle-orm';
 import {
+  boolean,
   check,
+  customType,
   index,
   integer,
   jsonb,
@@ -12,6 +14,14 @@ import {
   uuid,
   varchar,
 } from 'drizzle-orm/pg-core';
+
+const geographyPoint = customType<{ data: string }>({
+  dataType: () => 'geography(Point,4326)',
+});
+
+const geographyLineString = customType<{ data: string }>({
+  dataType: () => 'geography(LineString,4326)',
+});
 
 export const users = pgTable(
   'users',
@@ -78,6 +88,73 @@ export const standardDefinitions = pgTable('standard_definitions', {
     .default('reviewed'),
   version: varchar('version', { length: 30 }).notNull(),
 });
+
+export const places = pgTable(
+  'places',
+  {
+    id: uuid('id').primaryKey().defaultRandom(),
+    type: varchar('type', { length: 40 }).notNull(),
+    name: varchar('name', { length: 160 }).notNull(),
+    description: text('description').notNull(),
+    location: geographyPoint('location').notNull(),
+    address: text('address').notNull(),
+    bicycleTypes: text('bicycle_types').array().notNull(),
+    beginnerFriendly: boolean('beginner_friendly').notNull().default(false),
+    verificationStatus: varchar('verification_status', { length: 30 })
+      .notNull()
+      .default('unverified'),
+    lastConfirmedAt: timestamp('last_confirmed_at', { withTimezone: true })
+      .notNull()
+      .defaultNow(),
+    createdAt: timestamp('created_at', { withTimezone: true })
+      .notNull()
+      .defaultNow(),
+  },
+  (table) => [
+    index('places_location_gist_idx').using('gist', table.location),
+    index('places_discovery_idx').on(
+      table.type,
+      table.verificationStatus,
+      table.lastConfirmedAt,
+    ),
+  ],
+);
+
+export const routes = pgTable(
+  'routes',
+  {
+    id: uuid('id').primaryKey().defaultRandom(),
+    routeType: varchar('route_type', { length: 40 }).notNull(),
+    name: varchar('name', { length: 160 }).notNull(),
+    description: text('description').notNull(),
+    geometry: geographyLineString('geometry').notNull(),
+    distanceMeters: integer('distance_meters').notNull(),
+    elevationGainMeters: integer('elevation_gain_meters').notNull(),
+    difficulty: varchar('difficulty', { length: 30 }).notNull(),
+    surface: varchar('surface', { length: 30 }).notNull(),
+    bicycleTypes: text('bicycle_types').array().notNull(),
+    beginnerFriendly: boolean('beginner_friendly').notNull().default(false),
+    verificationStatus: varchar('verification_status', { length: 30 })
+      .notNull()
+      .default('unverified'),
+    lastConfirmedAt: timestamp('last_confirmed_at', { withTimezone: true })
+      .notNull()
+      .defaultNow(),
+    createdAt: timestamp('created_at', { withTimezone: true })
+      .notNull()
+      .defaultNow(),
+  },
+  (table) => [
+    index('routes_geometry_gist_idx').using('gist', table.geometry),
+    index('routes_discovery_idx').on(
+      table.routeType,
+      table.difficulty,
+      table.surface,
+      table.verificationStatus,
+      table.lastConfirmedAt,
+    ),
+  ],
+);
 
 export const userBikes = pgTable(
   'user_bikes',

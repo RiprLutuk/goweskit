@@ -1,5 +1,7 @@
 import 'dotenv/config';
 
+import { sql } from 'drizzle-orm';
+
 import { hashPassword } from '../auth/password.js';
 import { readConfig } from '../config.js';
 import { createDatabase, type Database } from './client.js';
@@ -16,6 +18,8 @@ import {
   COMPONENT_CATEGORY_SEEDS,
   DEMO_ACCOUNT,
   DEMO_BIKE_SEEDS,
+  DEMO_PLACE_SEEDS,
+  DEMO_ROUTE_SEEDS,
   STANDARD_DEFINITION_SEEDS,
 } from './seed-data.js';
 
@@ -25,6 +29,15 @@ interface SeedSummary {
   standardDefinitions: number;
   demoBikes: number;
   demoBikeSpecs: number;
+  demoPlaces: number;
+  demoRoutes: number;
+}
+
+function textArraySql(values: readonly string[]) {
+  return sql`ARRAY[${sql.join(
+    values.map((value) => sql`${value}`),
+    sql`, `,
+  )}]::text[]`;
 }
 
 export async function seedDatabase(database: Database): Promise<SeedSummary> {
@@ -80,6 +93,73 @@ export async function seedDatabase(database: Database): Promise<SeedSummary> {
             version: seed.version,
           },
         });
+    }
+
+    for (const seed of DEMO_PLACE_SEEDS) {
+      await transaction.execute(sql`
+        INSERT INTO "places" (
+          "id", "type", "name", "description", "location", "address",
+          "bicycle_types", "beginner_friendly", "verification_status",
+          "last_confirmed_at"
+        ) VALUES (
+          ${seed.id}, ${seed.type}, ${seed.name}, ${seed.description},
+          ST_SetSRID(
+            ST_MakePoint(
+              ${seed.coordinate.longitude},
+              ${seed.coordinate.latitude}
+            ),
+            4326
+          )::geography,
+          ${seed.address}, ${textArraySql(seed.bicycleTypes)},
+          ${seed.beginnerFriendly}, ${seed.verificationStatus},
+          ${new Date(seed.lastConfirmedAt)}
+        )
+        ON CONFLICT ("id") DO UPDATE SET
+          "type" = EXCLUDED."type",
+          "name" = EXCLUDED."name",
+          "description" = EXCLUDED."description",
+          "location" = EXCLUDED."location",
+          "address" = EXCLUDED."address",
+          "bicycle_types" = EXCLUDED."bicycle_types",
+          "beginner_friendly" = EXCLUDED."beginner_friendly",
+          "verification_status" = EXCLUDED."verification_status",
+          "last_confirmed_at" = EXCLUDED."last_confirmed_at"
+      `);
+    }
+
+    for (const seed of DEMO_ROUTE_SEEDS) {
+      const lineString = `LINESTRING(${seed.coordinates
+        .map(
+          ([longitude, latitude]) => `${String(longitude)} ${String(latitude)}`,
+        )
+        .join(', ')})`;
+      await transaction.execute(sql`
+        INSERT INTO "routes" (
+          "id", "route_type", "name", "description", "geometry",
+          "distance_meters", "elevation_gain_meters", "difficulty", "surface",
+          "bicycle_types", "beginner_friendly", "verification_status",
+          "last_confirmed_at"
+        ) VALUES (
+          ${seed.id}, ${seed.routeType}, ${seed.name}, ${seed.description},
+          ST_GeogFromText(${lineString}), ${seed.distanceMeters},
+          ${seed.elevationGainMeters}, ${seed.difficulty}, ${seed.surface},
+          ${textArraySql(seed.bicycleTypes)}, ${seed.beginnerFriendly},
+          ${seed.verificationStatus}, ${new Date(seed.lastConfirmedAt)}
+        )
+        ON CONFLICT ("id") DO UPDATE SET
+          "route_type" = EXCLUDED."route_type",
+          "name" = EXCLUDED."name",
+          "description" = EXCLUDED."description",
+          "geometry" = EXCLUDED."geometry",
+          "distance_meters" = EXCLUDED."distance_meters",
+          "elevation_gain_meters" = EXCLUDED."elevation_gain_meters",
+          "difficulty" = EXCLUDED."difficulty",
+          "surface" = EXCLUDED."surface",
+          "bicycle_types" = EXCLUDED."bicycle_types",
+          "beginner_friendly" = EXCLUDED."beginner_friendly",
+          "verification_status" = EXCLUDED."verification_status",
+          "last_confirmed_at" = EXCLUDED."last_confirmed_at"
+      `);
     }
 
     const [demoUser] = await transaction
@@ -168,6 +248,8 @@ export async function seedDatabase(database: Database): Promise<SeedSummary> {
       standardDefinitions: STANDARD_DEFINITION_SEEDS.length,
       demoBikes: DEMO_BIKE_SEEDS.length,
       demoBikeSpecs: specCount,
+      demoPlaces: DEMO_PLACE_SEEDS.length,
+      demoRoutes: DEMO_ROUTE_SEEDS.length,
     };
   });
 }

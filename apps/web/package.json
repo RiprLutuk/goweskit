@@ -17,6 +17,7 @@
     "@goweskit/bike-domain": "workspace:*",
     "@goweskit/contracts": "workspace:*",
     "@goweskit/ui": "workspace:*",
+    "maplibre-gl": "6.2.0",
     "nuxt": "4.5.2",
     "vue": "3.5.41",
     "vue-router": "5.2.0"

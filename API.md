@@ -100,17 +100,33 @@ if added later, may paraphrase this result but cannot change it.
 ## Explore
 
 ```text
-GET  /places/nearby?lat=&lng=&radius=&type=
-GET  /places/:placeId
-POST /places
-POST /places/:placeId/reviews
-
-GET  /routes/nearby?lat=&lng=&radius=&bikeType=&difficulty=
-GET  /routes/:routeId
-POST /routes
-POST /routes/:routeId/reports
-POST /hazards
+POST /explore/nearby
 ```
+
+The request center is sent in the body so an exact user coordinate is not
+written into request URLs or access logs. It is used for the current search and
+is not persisted. Radius is capped at 50 km and each result kind is capped at
+100 records.
+
+```json
+{
+  "center": { "longitude": 107.6191, "latitude": -6.9175 },
+  "radiusKm": 15,
+  "placeTypes": ["workshop", "water"],
+  "routeTypes": ["mtb", "gravel"],
+  "bikeType": "mtb_hardtail",
+  "difficulty": "easy",
+  "surface": "trail",
+  "beginnerFriendly": true,
+  "verificationStatus": "staff_verified",
+  "freshness": "fresh"
+}
+```
+
+All filters are optional except `center`. Coordinates always use explicit
+longitude/latitude naming. The response contains separately ranked `places`
+and `routes`, their distance from the request center, verification status, and
+freshness. Invalid coordinates, filters, or radius return `INVALID_REQUEST`.
 
 ## Community
 

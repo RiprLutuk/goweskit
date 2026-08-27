@@ -11,11 +11,13 @@ import Fastify, {
 import { AppError } from './errors.js';
 import { registerAuthRoutes } from './routes/auth.js';
 import { registerCompatibilityRoutes } from './routes/compatibility.js';
+import { registerExploreRoutes } from './routes/explore.js';
 import { registerGarageRoutes } from './routes/garage.js';
 import { registerLearnRoutes } from './routes/learn.js';
 import type { AuthService } from './services/auth-service.js';
 import type { CatalogService } from './services/catalog-service.js';
 import type { CompatibilityService } from './services/compatibility-service.js';
+import type { ExploreService } from './services/explore-service.js';
 import type { GarageService } from './services/garage-service.js';
 
 export interface HealthResponse {
@@ -26,6 +28,7 @@ export interface AppServices {
   auth: AuthService;
   catalog: CatalogService;
   compatibility: CompatibilityService;
+  explore: ExploreService;
   garage: GarageService;
 }
 
@@ -60,7 +63,7 @@ export function buildApp(options: BuildAppOptions = {}): FastifyInstance {
         : new AppError('INTERNAL_ERROR', 'Something went wrong.', 500);
 
     if (!(error instanceof AppError)) {
-      request.log.error({ error }, 'Unhandled request error');
+      request.log.error({ err: error }, 'Unhandled request error');
     }
 
     const response: ApiErrorResponse = {
@@ -105,6 +108,7 @@ export function buildApp(options: BuildAppOptions = {}): FastifyInstance {
       options.services.auth,
       options.services.compatibility,
     );
+    registerExploreRoutes(app, options.services.explore);
   }
 
   return app;

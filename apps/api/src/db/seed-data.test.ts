@@ -10,6 +10,8 @@ import {
   BICYCLE_TYPE_SEEDS,
   COMPONENT_CATEGORY_SEEDS,
   DEMO_BIKE_SEEDS,
+  DEMO_PLACE_SEEDS,
+  DEMO_ROUTE_SEEDS,
   STANDARD_DEFINITION_SEEDS,
 } from './seed-data.js';
 
@@ -105,5 +107,52 @@ describe('demo Garage seed', () => {
         { ruleCode: 'front_axle', knowledge: 'known', value: 'qr_100' },
       ]).status,
     ).toBe('unknown');
+  });
+});
+
+describe('demo Explore seed', () => {
+  it('provides diverse places and routes with valid longitude/latitude order', () => {
+    expect(DEMO_PLACE_SEEDS).toHaveLength(8);
+    expect(DEMO_ROUTE_SEEDS).toHaveLength(4);
+
+    for (const place of DEMO_PLACE_SEEDS) {
+      expect(place.coordinate.longitude).toBeGreaterThanOrEqual(-180);
+      expect(place.coordinate.longitude).toBeLessThanOrEqual(180);
+      expect(place.coordinate.latitude).toBeGreaterThanOrEqual(-90);
+      expect(place.coordinate.latitude).toBeLessThanOrEqual(90);
+      expect(place.name).toContain('Demo');
+    }
+
+    for (const route of DEMO_ROUTE_SEEDS) {
+      expect(route.coordinates.length).toBeGreaterThanOrEqual(2);
+      expect(route.name).toContain('Demo');
+      for (const [longitude, latitude] of route.coordinates) {
+        expect(longitude).toBeGreaterThanOrEqual(-180);
+        expect(longitude).toBeLessThanOrEqual(180);
+        expect(latitude).toBeGreaterThanOrEqual(-90);
+        expect(latitude).toBeLessThanOrEqual(90);
+      }
+    }
+  });
+
+  it('contains fresh, aging, stale, verified, and unverified examples', () => {
+    const dates = [...DEMO_PLACE_SEEDS, ...DEMO_ROUTE_SEEDS].map(
+      ({ lastConfirmedAt }) => new Date(lastConfirmedAt),
+    );
+    const verificationStatuses = new Set(
+      [...DEMO_PLACE_SEEDS, ...DEMO_ROUTE_SEEDS].map(
+        ({ verificationStatus }) => verificationStatus,
+      ),
+    );
+
+    expect(Math.max(...dates.map((date) => date.getTime()))).toBeGreaterThan(
+      new Date('2026-08-01T00:00:00.000Z').getTime(),
+    );
+    expect(Math.min(...dates.map((date) => date.getTime()))).toBeLessThan(
+      new Date('2026-01-01T00:00:00.000Z').getTime(),
+    );
+    expect(verificationStatuses).toEqual(
+      new Set(['staff_verified', 'community_verified', 'unverified']),
+    );
   });
 });

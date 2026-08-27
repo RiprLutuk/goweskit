@@ -65,14 +65,14 @@ P3 = later
 
 ## Explore
 
-- [ ] GEO-001 [P1] PostGIS.
-- [ ] GEO-002 [P1] Place model.
-- [ ] GEO-003 [P1] Route model.
-- [ ] GEO-004 [P1] Nearby place query.
-- [ ] GEO-005 [P1] Nearby route query.
-- [ ] GEO-006 [P1] MapLibre.
-- [ ] GEO-007 [P1] Filters.
-- [ ] GEO-008 [P1] Place freshness.
+- [x] GEO-001 [P1] PostGIS.
+- [x] GEO-002 [P1] Place model.
+- [x] GEO-003 [P1] Route model.
+- [x] GEO-004 [P1] Nearby place query.
+- [x] GEO-005 [P1] Nearby route query.
+- [x] GEO-006 [P1] MapLibre.
+- [x] GEO-007 [P1] Filters.
+- [x] GEO-008 [P1] Place freshness.
 - [ ] GEO-009 [P1] Reviews.
 - [ ] GEO-010 [P2] Route/hazard reports.
 - [ ] GEO-011 [P2] GPX import.

@@ -3,6 +3,11 @@ export default defineNuxtConfig({
   css: ['~/assets/css/main.css'],
   devtools: { enabled: false },
   modules: ['@nuxt/eslint'],
+  vite: {
+    optimizeDeps: {
+      exclude: ['maplibre-gl'],
+    },
+  },
   runtimeConfig: {
     public: {
       apiBaseUrl:

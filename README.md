@@ -14,8 +14,9 @@ Learn -> My Garage -> Upgrade Lab
 It includes account sessions, MTB Hardtail, Folding Bike, Road Bike, and Gravel
 Bike learning content, incomplete bike profiles, explicit unknown
 specifications, and deterministic compatibility checks for wheel size,
-front/rear axle, freehub/cassette, drivetrain speeds, and fork steerer. Explore,
-Community, Ride Safety, and Maintenance are not implemented in v0.1.
+front/rear axle, freehub/cassette, drivetrain speeds, and fork steerer. Explore
+adds a privacy-safe nearby map for seeded places and routes. Community, Ride
+Safety, and Maintenance are not implemented in v0.1.
 
 ## Run locally
 
@@ -52,7 +53,8 @@ pnpm dev
 
 `pnpm db:seed` is safe to run repeatedly in local development. It refreshes the
 four P0 bicycle types, 20 component categories, six normalized standards, and a
-demo Garage with four bikes. Sign in with:
+demo Garage with four bikes. It also refreshes eight clearly labelled demo
+places and four demo routes around Bandung. Sign in with:
 
 ```text
 Email: demo@goweskit.local
@@ -62,6 +64,10 @@ Password: GowesKitDemo123!
 The demo bikes cover complete and explicitly unknown specs. Their data can
 produce compatible, incompatible, conditional, and unknown Upgrade Lab results;
 the deterministic evaluator still calculates every result at request time.
+Explore demo coordinates are fictional practice data and must not be used for
+navigation. The map uses MapLibre with the public OpenFreeMap Liberty style;
+results remain available as an accessible list if map tiles or WebGL are
+unavailable.
 
 PostgreSQL with PostGIS listens at `localhost:1921`; the local development
 database uses user `lutuk` with no password. The Nuxt web app defaults to port
@@ -166,4 +172,4 @@ A beginner can:
 - check whether a candidate component fits;
 - understand *why* it fits or not;
 - discover nearby cycling places;
-- start a temporary trusted-contact safety session.
+- compare routes and places without publishing an exact rider location.
