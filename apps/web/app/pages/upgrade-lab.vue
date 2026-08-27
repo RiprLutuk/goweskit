@@ -39,6 +39,9 @@ watch(activeRule, (rule) => {
 watch(candidateKnowledge, () => {
   result.value = null;
 });
+watch([selectedBikeId, candidateValue], () => {
+  result.value = null;
+});
 
 onMounted(async () => {
   try {
@@ -217,6 +220,16 @@ async function evaluate(): Promise<void> {
             <h3>{{ check.label }}</h3>
             <span class="check-status">{{ check.status }}</span>
           </div>
+          <dl class="compatibility-values">
+            <div>
+              <dt>Saved on bike</dt>
+              <dd>{{ check.bikeValue ?? 'Unknown' }}</dd>
+            </div>
+            <div>
+              <dt>Candidate part</dt>
+              <dd>{{ check.candidateValue ?? 'Unknown' }}</dd>
+            </div>
+          </dl>
           <p>{{ check.humanExplanation }}</p>
           <details>
             <summary>Technical explanation</summary>
@@ -236,6 +249,19 @@ async function evaluate(): Promise<void> {
           </ul>
         </div>
 
+        <div class="result-detail-block">
+          <details>
+            <summary>Full technical evaluation</summary>
+            <p>{{ result.technicalExplanation }}</p>
+          </details>
+          <p v-if="result.possibleFix" class="possible-fix">
+            <strong>Next step:</strong> {{ result.possibleFix }}
+          </p>
+          <NuxtLink class="text-link" :to="`/garage/${selectedBikeId}`">
+            Review this bike’s saved specifications
+          </NuxtLink>
+        </div>
+
         <footer class="provenance-block">
           <p class="technical-label">Rule provenance</p>
           <ul>
@@ -251,3 +277,53 @@ async function evaluate(): Promise<void> {
     </template>
   </div>
 </template>
+
+<style scoped>
+.compatibility-values {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 0.65rem;
+  margin: 0.85rem 0 0;
+}
+
+.compatibility-values > div {
+  padding: 0.7rem;
+  border: 1px solid var(--color-sand);
+  border-radius: 0.65rem;
+  background: var(--color-white);
+}
+
+.compatibility-values dt {
+  color: var(--color-asphalt);
+  font-size: 0.72rem;
+  font-weight: 800;
+  text-transform: uppercase;
+}
+
+.compatibility-values dd {
+  margin: 0.2rem 0 0;
+  overflow-wrap: anywhere;
+  font-family: ui-monospace, SFMono-Regular, Menlo, monospace;
+  font-weight: 800;
+}
+
+.result-detail-block {
+  margin: 0 1.25rem;
+  padding: 1.25rem 0;
+  border-top: 1px solid var(--color-sand);
+  color: var(--color-asphalt);
+  line-height: 1.55;
+}
+
+.result-detail-block summary {
+  color: var(--color-ink);
+  font-weight: 800;
+  cursor: pointer;
+}
+
+@media (max-width: 34rem) {
+  .compatibility-values {
+    grid-template-columns: 1fr;
+  }
+}
+</style>

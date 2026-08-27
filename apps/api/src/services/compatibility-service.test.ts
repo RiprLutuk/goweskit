@@ -54,7 +54,7 @@ describe('CompatibilityService', () => {
     const service = new CompatibilityService({
       getBike: () => Promise.resolve(bike),
     });
-    expect(service.listRules()).toHaveLength(6);
+    expect(service.listRules()).toHaveLength(15);
     expect(service.getRule('freehub_cassette')).toMatchObject({
       bikeSpecCode: 'freehub',
       provenance: { ruleVersion: '1.0.0' },

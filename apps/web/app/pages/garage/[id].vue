@@ -196,6 +196,9 @@ async function deleteBike(): Promise<void> {
           </article>
         </div>
       </section>
+
+      <InstalledComponents :bike-id="bike.id" />
+      <MaintenanceLog :bike-id="bike.id" />
     </template>
   </div>
 </template>

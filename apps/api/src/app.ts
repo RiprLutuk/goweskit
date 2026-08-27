@@ -13,12 +13,16 @@ import { registerAuthRoutes } from './routes/auth.js';
 import { registerCompatibilityRoutes } from './routes/compatibility.js';
 import { registerExploreRoutes } from './routes/explore.js';
 import { registerGarageRoutes } from './routes/garage.js';
+import { registerInstalledComponentRoutes } from './routes/installed-components.js';
 import { registerLearnRoutes } from './routes/learn.js';
+import { registerMaintenanceRoutes } from './routes/maintenance.js';
 import type { AuthService } from './services/auth-service.js';
 import type { CatalogService } from './services/catalog-service.js';
 import type { CompatibilityService } from './services/compatibility-service.js';
 import type { ExploreService } from './services/explore-service.js';
 import type { GarageService } from './services/garage-service.js';
+import type { InstalledComponentService } from './services/installed-component-service.js';
+import type { MaintenanceService } from './services/maintenance-service.js';
 
 export interface HealthResponse {
   status: 'ok';
@@ -30,6 +34,8 @@ export interface AppServices {
   compatibility: CompatibilityService;
   explore: ExploreService;
   garage: GarageService;
+  installedComponents: InstalledComponentService;
+  maintenance: MaintenanceService;
 }
 
 export interface BuildAppOptions {
@@ -103,12 +109,22 @@ export function buildApp(options: BuildAppOptions = {}): FastifyInstance {
     });
     registerLearnRoutes(app, options.services.catalog);
     registerGarageRoutes(app, options.services.auth, options.services.garage);
+    registerInstalledComponentRoutes(
+      app,
+      options.services.auth,
+      options.services.installedComponents,
+    );
     registerCompatibilityRoutes(
       app,
       options.services.auth,
       options.services.compatibility,
     );
     registerExploreRoutes(app, options.services.explore);
+    registerMaintenanceRoutes(
+      app,
+      options.services.auth,
+      options.services.maintenance,
+    );
   }
 
   return app;

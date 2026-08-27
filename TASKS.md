@@ -18,7 +18,7 @@ P3 = later
 - [x] FOUNDATION-005 [P0] Nuxt shell + mobile nav + design tokens.
 - [x] FOUNDATION-006 [P0] lint/format/typecheck/test scripts.
 - [x] FOUNDATION-007 [P0] `.env.example` + request IDs.
-- [ ] FOUNDATION-008 [P1] CI.
+- [x] FOUNDATION-008 [P1] CI.
 
 ## Learn
 
@@ -26,9 +26,9 @@ P3 = later
 - [x] LEARN-002 [P0] Seed MTB Hardtail + Folding + Road + Gravel.
 - [x] LEARN-003 [P0] Component categories.
 - [x] LEARN-004 [P0] Bicycle type UI.
-- [ ] LEARN-005 [P0] Anatomy hotspot UI.
-- [ ] LEARN-006 [P0] Component detail.
-- [ ] LEARN-007 [P1] Glossary/search.
+- [x] LEARN-005 [P0] Anatomy hotspot UI.
+- [x] LEARN-006 [P0] Component detail.
+- [x] LEARN-007 [P1] Glossary/search.
 - [ ] LEARN-008 [P1] Admin content workflow.
 
 ## Garage
@@ -37,7 +37,7 @@ P3 = later
 - [x] GARAGE-002 [P0] Incomplete-bike onboarding.
 - [x] GARAGE-003 [P0] Bike detail.
 - [x] GARAGE-004 [P0] Normalized specs.
-- [ ] GARAGE-005 [P0] Installed components.
+- [x] GARAGE-005 [P0] Installed components.
 - [x] GARAGE-006 [P0] Unknown-spec UX.
 - [ ] GARAGE-007 [P1] Bike photo.
 
@@ -52,13 +52,13 @@ P3 = later
 - [x] COMPAT-007 [P0] Front axle.
 - [x] COMPAT-008 [P0] Wheel diameter.
 - [x] COMPAT-009 [P0] Freehub/cassette.
-- [ ] COMPAT-010 [P0] Drivetrain speeds/family.
-- [ ] COMPAT-011 [P1] Crank/BB.
+- [x] COMPAT-010 [P0] Drivetrain speeds/family.
+- [x] COMPAT-011 [P1] Crank/BB.
 - [x] COMPAT-012 [P1] Fork steerer/headset.
-- [ ] COMPAT-013 [P1] Fork travel guidance.
-- [ ] COMPAT-014 [P1] Brake mount/rotor.
-- [ ] COMPAT-015 [P1] Seatpost.
-- [ ] COMPAT-016 [P1] Tire clearance.
+- [x] COMPAT-013 [P1] Fork travel guidance.
+- [x] COMPAT-014 [P1] Brake mount/rotor.
+- [x] COMPAT-015 [P1] Seatpost.
+- [x] COMPAT-016 [P1] Tire clearance.
 - [x] COMPAT-017 [P0] Upgrade Lab UI.
 - [x] COMPAT-018 [P0] Human-readable result.
 - [x] COMPAT-019 [P1] Golden tests.
@@ -103,9 +103,9 @@ P3 = later
 
 ## Maintenance
 
-- [ ] MAINT-001 [P1] Event model.
-- [ ] MAINT-002 [P1] Log service.
-- [ ] MAINT-003 [P1] Date reminder.
+- [x] MAINT-001 [P1] Event model.
+- [x] MAINT-002 [P1] Log service.
+- [x] MAINT-003 [P1] Date reminder.
 - [ ] MAINT-004 [P2] Distance reminder.
 
 ## QA

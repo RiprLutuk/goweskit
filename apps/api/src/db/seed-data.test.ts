@@ -10,6 +10,8 @@ import {
   BICYCLE_TYPE_SEEDS,
   COMPONENT_CATEGORY_SEEDS,
   DEMO_BIKE_SEEDS,
+  DEMO_INSTALLED_COMPONENT_SEEDS,
+  DEMO_MAINTENANCE_EVENT_SEEDS,
   DEMO_PLACE_SEEDS,
   DEMO_ROUTE_SEEDS,
   STANDARD_DEFINITION_SEEDS,
@@ -60,7 +62,7 @@ describe('v0.1 seed catalog', () => {
 });
 
 describe('demo Garage seed', () => {
-  it('provides one bike per seeded bicycle type and all six specs', () => {
+  it('provides one bike per seeded bicycle type and every normalized spec', () => {
     const typeSlugs = DEMO_BIKE_SEEDS.map(
       ({ bicycleTypeSlug }) => bicycleTypeSlug,
     ).sort();
@@ -107,6 +109,42 @@ describe('demo Garage seed', () => {
         { ruleCode: 'front_axle', knowledge: 'known', value: 'qr_100' },
       ]).status,
     ).toBe('unknown');
+  });
+
+  it('provides valid maintenance history without distance reminders', () => {
+    expect(DEMO_MAINTENANCE_EVENT_SEEDS).toHaveLength(4);
+    const bikeIds = new Set(DEMO_BIKE_SEEDS.map(({ id }) => id));
+
+    for (const event of DEMO_MAINTENANCE_EVENT_SEEDS) {
+      expect(bikeIds.has(event.bikeId)).toBe(true);
+      expect(event.performedAt).toMatch(/^\d{4}-\d{2}-\d{2}$/);
+      expect(
+        event.nextDueDate === null || event.nextDueDate >= event.performedAt,
+      ).toBe(true);
+      expect(event).not.toHaveProperty('distance');
+    }
+  });
+
+  it('provides realistic installed components with only normalized standards', () => {
+    expect(DEMO_INSTALLED_COMPONENT_SEEDS).toHaveLength(6);
+    const bikeIds = new Set(DEMO_BIKE_SEEDS.map(({ id }) => id));
+    const categorySlugs = new Set(
+      COMPONENT_CATEGORY_SEEDS.map(({ slug }) => slug),
+    );
+
+    for (const component of DEMO_INSTALLED_COMPONENT_SEEDS) {
+      expect(bikeIds.has(component.bikeId)).toBe(true);
+      expect(categorySlugs.has(component.categorySlug)).toBe(true);
+      for (const standard of component.standards) {
+        if (standard.knowledge === 'known') {
+          expect(
+            isAllowedStandardValue(standard.standardCode, standard.value),
+          ).toBe(true);
+        } else {
+          expect(standard).not.toHaveProperty('value');
+        }
+      }
+    }
   });
 });
 

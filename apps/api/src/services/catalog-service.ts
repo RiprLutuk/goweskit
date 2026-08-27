@@ -1,6 +1,21 @@
-import type { BicycleType, ComponentCategory } from '@goweskit/contracts';
+import type {
+  BicycleAnatomy,
+  BicycleType,
+  ComponentCategory,
+  ComponentDetail,
+  GlossaryTerm,
+  LearnSearchResponse,
+} from '@goweskit/contracts';
 
 import { AppError } from '../errors.js';
+import {
+  getAnatomyContent,
+  getComponentGuide,
+} from '../learn/catalog-content.js';
+import {
+  CURATED_GLOSSARY,
+  searchLearnCatalog,
+} from '../learn/glossary-content.js';
 import type { CatalogRepository } from '../repositories/catalog-repository.js';
 
 export class CatalogService {
@@ -26,7 +41,19 @@ export class CatalogService {
     return this.repository.listComponentCategories();
   }
 
-  public async getComponentCategory(slug: string): Promise<ComponentCategory> {
+  public listGlossary(): GlossaryTerm[] {
+    return [...CURATED_GLOSSARY];
+  }
+
+  public async search(query: string): Promise<LearnSearchResponse> {
+    const [bicycleTypes, componentCategories] = await Promise.all([
+      this.repository.listBicycleTypes(),
+      this.repository.listComponentCategories(),
+    ]);
+    return searchLearnCatalog(query, bicycleTypes, componentCategories);
+  }
+
+  public async getComponentCategory(slug: string): Promise<ComponentDetail> {
     const category = await this.repository.findComponentCategoryBySlug(slug);
     if (category === null) {
       throw new AppError(
@@ -35,6 +62,45 @@ export class CatalogService {
         404,
       );
     }
-    return category;
+    return { ...category, ...getComponentGuide(category) };
+  }
+
+  public async getBicycleTypeAnatomy(
+    slug: string,
+  ): Promise<BicycleAnatomy | null> {
+    const bicycleType = await this.getBicycleType(slug);
+    const content = getAnatomyContent(bicycleType);
+    if (content === null) return null;
+
+    const categories = await this.repository.listComponentCategories();
+    const categoriesBySlug = new Map(
+      categories.map((category) => [category.slug, category]),
+    );
+    const hotspots = content.hotspots.flatMap((hotspot) => {
+      const component = categoriesBySlug.get(hotspot.componentSlug);
+      if (component === undefined) return [];
+      return [
+        {
+          component,
+          xPercent: hotspot.xPercent,
+          yPercent: hotspot.yPercent,
+          beginnerLabel: hotspot.beginnerLabel,
+          beginnerSummary: hotspot.beginnerSummary,
+        },
+      ];
+    });
+    if (hotspots.length !== content.hotspots.length) {
+      throw new AppError(
+        'INTERNAL_ERROR',
+        'Anatomy content is temporarily unavailable.',
+        500,
+      );
+    }
+
+    return {
+      bicycleType,
+      overview: content.overview,
+      hotspots,
+    };
   }
 }

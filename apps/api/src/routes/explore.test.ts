@@ -27,6 +27,8 @@ function buildExploreApp(): ReturnType<typeof buildApp> {
       compatibility: {} as AppServices['compatibility'],
       explore: new ExploreService(new EmptyExploreRepository()),
       garage: {} as AppServices['garage'],
+      installedComponents: {} as AppServices['installedComponents'],
+      maintenance: {} as AppServices['maintenance'],
     },
   });
   openApps.push(app);

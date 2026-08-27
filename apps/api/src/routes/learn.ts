@@ -1,8 +1,12 @@
+import { learnSearchQuerySchema } from '@goweskit/contracts';
 import type {
+  BicycleAnatomyResponse,
   BicycleType,
   BicycleTypeListResponse,
-  ComponentCategory,
   ComponentCategoryListResponse,
+  ComponentDetail,
+  GlossaryListResponse,
+  LearnSearchResponse,
 } from '@goweskit/contracts';
 import type { FastifyInstance } from 'fastify';
 import { z } from 'zod';
@@ -31,6 +35,14 @@ export function registerLearnRoutes(
     },
   );
 
+  app.get<{ Reply: BicycleAnatomyResponse }>(
+    '/api/v1/learn/bicycle-types/:slug/anatomy',
+    async (request) => {
+      const { slug } = parseInput(slugParamsSchema, request.params);
+      return { anatomy: await catalogService.getBicycleTypeAnatomy(slug) };
+    },
+  );
+
   app.get<{ Reply: ComponentCategoryListResponse }>(
     '/api/v1/learn/components',
     async () => ({
@@ -38,11 +50,23 @@ export function registerLearnRoutes(
     }),
   );
 
-  app.get<{ Reply: ComponentCategory }>(
+  app.get<{ Reply: ComponentDetail }>(
     '/api/v1/learn/components/:slug',
     async (request) => {
       const { slug } = parseInput(slugParamsSchema, request.params);
       return catalogService.getComponentCategory(slug);
+    },
+  );
+
+  app.get<{ Reply: GlossaryListResponse }>('/api/v1/learn/glossary', () => ({
+    terms: catalogService.listGlossary(),
+  }));
+
+  app.get<{ Reply: LearnSearchResponse }>(
+    '/api/v1/learn/search',
+    async (request) => {
+      const { q } = parseInput(learnSearchQuerySchema, request.query);
+      return catalogService.search(q);
     },
   );
 }

@@ -1,9 +1,14 @@
 import type { BikeSpecCode } from '@goweskit/bike-domain';
+import type {
+  InstalledComponentStandardInput,
+  MaintenanceEventType,
+} from '@goweskit/contracts';
 import { sql } from 'drizzle-orm';
 import {
   boolean,
   check,
   customType,
+  date,
   index,
   integer,
   jsonb,
@@ -214,6 +219,75 @@ export const bikeSpecs = pgTable(
     check(
       'bike_specs_unknown_value_check',
       sql`(${table.confidence} = 'unknown' AND ${table.valueJson} IS NULL) OR (${table.confidence} <> 'unknown' AND ${table.valueJson} IS NOT NULL)`,
+    ),
+  ],
+);
+
+export const bikeComponentInstalls = pgTable(
+  'bike_component_installs',
+  {
+    id: uuid('id').primaryKey().defaultRandom(),
+    userBikeId: uuid('user_bike_id')
+      .notNull()
+      .references(() => userBikes.id, { onDelete: 'cascade' }),
+    componentCategoryId: uuid('component_category_id')
+      .notNull()
+      .references(() => componentCategories.id),
+    customName: varchar('custom_name', { length: 120 }).notNull(),
+    brand: varchar('brand', { length: 100 }),
+    model: varchar('model', { length: 120 }),
+    serialNumber: varchar('serial_number', { length: 160 }),
+    notes: text('notes'),
+    installedAt: date('installed_at', { mode: 'string' }),
+    standards: jsonb('standards')
+      .$type<InstalledComponentStandardInput[]>()
+      .notNull()
+      .default([]),
+    createdAt: timestamp('created_at', { withTimezone: true })
+      .notNull()
+      .defaultNow(),
+    updatedAt: timestamp('updated_at', { withTimezone: true })
+      .notNull()
+      .defaultNow(),
+  },
+  (table) => [
+    index('bike_component_installs_bike_idx').on(table.userBikeId),
+    index('bike_component_installs_category_idx').on(table.componentCategoryId),
+  ],
+);
+
+export const maintenanceEvents = pgTable(
+  'maintenance_events',
+  {
+    id: uuid('id').primaryKey().defaultRandom(),
+    userId: uuid('user_id')
+      .notNull()
+      .references(() => users.id, { onDelete: 'cascade' }),
+    userBikeId: uuid('user_bike_id')
+      .notNull()
+      .references(() => userBikes.id, { onDelete: 'cascade' }),
+    type: varchar('type', { length: 40 })
+      .notNull()
+      .$type<MaintenanceEventType>(),
+    performedAt: date('performed_at', { mode: 'string' }).notNull(),
+    notes: text('notes'),
+    nextDueDate: date('next_due_date', { mode: 'string' }),
+    createdAt: timestamp('created_at', { withTimezone: true })
+      .notNull()
+      .defaultNow(),
+  },
+  (table) => [
+    index('maintenance_events_bike_performed_idx').on(
+      table.userBikeId,
+      table.performedAt,
+    ),
+    index('maintenance_events_user_due_idx').on(
+      table.userId,
+      table.nextDueDate,
+    ),
+    check(
+      'maintenance_events_due_after_performed_check',
+      sql`${table.nextDueDate} IS NULL OR ${table.nextDueDate} >= ${table.performedAt}`,
     ),
   ],
 );

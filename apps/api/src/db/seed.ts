@@ -7,8 +7,10 @@ import { readConfig } from '../config.js';
 import { createDatabase, type Database } from './client.js';
 import {
   bicycleTypes,
+  bikeComponentInstalls,
   bikeSpecs,
   componentCategories,
+  maintenanceEvents,
   standardDefinitions,
   userBikes,
   users,
@@ -18,6 +20,8 @@ import {
   COMPONENT_CATEGORY_SEEDS,
   DEMO_ACCOUNT,
   DEMO_BIKE_SEEDS,
+  DEMO_INSTALLED_COMPONENT_SEEDS,
+  DEMO_MAINTENANCE_EVENT_SEEDS,
   DEMO_PLACE_SEEDS,
   DEMO_ROUTE_SEEDS,
   STANDARD_DEFINITION_SEEDS,
@@ -29,6 +33,8 @@ interface SeedSummary {
   standardDefinitions: number;
   demoBikes: number;
   demoBikeSpecs: number;
+  demoInstalledComponents: number;
+  demoMaintenanceEvents: number;
   demoPlaces: number;
   demoRoutes: number;
 }
@@ -45,6 +51,7 @@ export async function seedDatabase(database: Database): Promise<SeedSummary> {
 
   return database.transaction(async (transaction) => {
     const bicycleTypeIds = new Map<string, string>();
+    const componentCategoryIds = new Map<string, string>();
 
     for (const seed of BICYCLE_TYPE_SEEDS) {
       const [row] = await transaction
@@ -68,13 +75,21 @@ export async function seedDatabase(database: Database): Promise<SeedSummary> {
     }
 
     for (const seed of COMPONENT_CATEGORY_SEEDS) {
-      await transaction
+      const [row] = await transaction
         .insert(componentCategories)
         .values(seed)
         .onConflictDoUpdate({
           target: componentCategories.slug,
           set: { name: seed.name, description: seed.description },
+        })
+        .returning({
+          id: componentCategories.id,
+          slug: componentCategories.slug,
         });
+      if (row === undefined) {
+        throw new Error(`Component category seed failed for ${seed.slug}.`);
+      }
+      componentCategoryIds.set(row.slug, row.id);
     }
 
     for (const seed of STANDARD_DEFINITION_SEEDS) {
@@ -242,12 +257,79 @@ export async function seedDatabase(database: Database): Promise<SeedSummary> {
       }
     }
 
+    for (const eventSeed of DEMO_MAINTENANCE_EVENT_SEEDS) {
+      await transaction
+        .insert(maintenanceEvents)
+        .values({
+          id: eventSeed.id,
+          userId: demoUser.id,
+          userBikeId: eventSeed.bikeId,
+          type: eventSeed.type,
+          performedAt: eventSeed.performedAt,
+          notes: eventSeed.notes,
+          nextDueDate: eventSeed.nextDueDate,
+        })
+        .onConflictDoUpdate({
+          target: maintenanceEvents.id,
+          set: {
+            userId: demoUser.id,
+            userBikeId: eventSeed.bikeId,
+            type: eventSeed.type,
+            performedAt: eventSeed.performedAt,
+            notes: eventSeed.notes,
+            nextDueDate: eventSeed.nextDueDate,
+          },
+        });
+    }
+
+    for (const componentSeed of DEMO_INSTALLED_COMPONENT_SEEDS) {
+      const componentCategoryId = componentCategoryIds.get(
+        componentSeed.categorySlug,
+      );
+      if (componentCategoryId === undefined) {
+        throw new Error(
+          `Missing component category ${componentSeed.categorySlug} for demo install.`,
+        );
+      }
+      await transaction
+        .insert(bikeComponentInstalls)
+        .values({
+          id: componentSeed.id,
+          userBikeId: componentSeed.bikeId,
+          componentCategoryId,
+          customName: componentSeed.customName,
+          brand: componentSeed.brand,
+          model: componentSeed.model,
+          serialNumber: componentSeed.serialNumber,
+          notes: componentSeed.notes,
+          installedAt: componentSeed.installedAt,
+          standards: [...componentSeed.standards],
+        })
+        .onConflictDoUpdate({
+          target: bikeComponentInstalls.id,
+          set: {
+            userBikeId: componentSeed.bikeId,
+            componentCategoryId,
+            customName: componentSeed.customName,
+            brand: componentSeed.brand,
+            model: componentSeed.model,
+            serialNumber: componentSeed.serialNumber,
+            notes: componentSeed.notes,
+            installedAt: componentSeed.installedAt,
+            standards: [...componentSeed.standards],
+            updatedAt: new Date(),
+          },
+        });
+    }
+
     return {
       bicycleTypes: BICYCLE_TYPE_SEEDS.length,
       componentCategories: COMPONENT_CATEGORY_SEEDS.length,
       standardDefinitions: STANDARD_DEFINITION_SEEDS.length,
       demoBikes: DEMO_BIKE_SEEDS.length,
       demoBikeSpecs: specCount,
+      demoInstalledComponents: DEMO_INSTALLED_COMPONENT_SEEDS.length,
+      demoMaintenanceEvents: DEMO_MAINTENANCE_EVENT_SEEDS.length,
       demoPlaces: DEMO_PLACE_SEEDS.length,
       demoRoutes: DEMO_ROUTE_SEEDS.length,
     };

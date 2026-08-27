@@ -1,4 +1,7 @@
-import { COMPATIBILITY_RULE_CODES } from '@goweskit/bike-domain';
+import {
+  COMPATIBILITY_RULE_CODES,
+  getCompatibilityCandidateValues,
+} from '@goweskit/bike-domain';
 import { z } from 'zod';
 
 export const compatibilityRuleCodeSchema = z.enum(COMPATIBILITY_RULE_CODES);
@@ -18,29 +21,39 @@ export const compatibilityCheckStatusSchema = z.enum([
 export type CompatibilityStatus = z.infer<typeof compatibilityStatusSchema>;
 
 const unknownCandidateSchema = z.object({ knowledge: z.literal('unknown') });
-const candidateFor = <T extends readonly [string, ...string[]]>(
-  ruleCode: (typeof COMPATIBILITY_RULE_CODES)[number],
-  values: T,
+const candidateFor = <T extends (typeof COMPATIBILITY_RULE_CODES)[number]>(
+  ruleCode: T,
 ) =>
   z.object({
     ruleCode: z.literal(ruleCode),
     knowledge: z.literal('known'),
-    value: z.enum(values),
+    value: z
+      .string()
+      .refine(
+        (value) =>
+          getCompatibilityCandidateValues(ruleCode).some(
+            (option) => option.code === value,
+          ),
+        `Value is not part of the normalized ${ruleCode} vocabulary.`,
+      ),
   });
 
 export const compatibilityCandidateSchema = z.union([
-  candidateFor('wheel_size', [
-    'iso_406',
-    'iso_451',
-    'iso_559',
-    'iso_584',
-    'iso_622',
-  ]),
-  candidateFor('front_axle', ['qr_100', '12x100', '15x100', '15x110']),
-  candidateFor('rear_axle', ['qr_135', '12x142', '12x148']),
-  candidateFor('freehub_cassette', ['hg', 'micro_spline', 'xd', 'xdr']),
-  candidateFor('drivetrain_speeds', ['7', '8', '9', '10', '11', '12', '13']),
-  candidateFor('fork_steerer', ['straight_1_1_8', 'tapered_1_1_8_to_1_1_2']),
+  candidateFor('wheel_size'),
+  candidateFor('front_axle'),
+  candidateFor('rear_axle'),
+  candidateFor('freehub_cassette'),
+  candidateFor('drivetrain_speeds'),
+  candidateFor('drivetrain_family'),
+  candidateFor('fork_steerer'),
+  candidateFor('headset_interface'),
+  candidateFor('bottom_bracket_shell'),
+  candidateFor('crank_spindle'),
+  candidateFor('fork_travel'),
+  candidateFor('brake_mount'),
+  candidateFor('rotor_diameter'),
+  candidateFor('seatpost_diameter'),
+  candidateFor('tire_clearance'),
   z.object({
     ruleCode: compatibilityRuleCodeSchema,
     ...unknownCandidateSchema.shape,

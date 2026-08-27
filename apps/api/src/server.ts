@@ -7,11 +7,15 @@ import { DrizzleAuthRepository } from './repositories/auth-repository.js';
 import { DrizzleCatalogRepository } from './repositories/catalog-repository.js';
 import { DrizzleExploreRepository } from './repositories/explore-repository.js';
 import { DrizzleGarageRepository } from './repositories/garage-repository.js';
+import { DrizzleInstalledComponentRepository } from './repositories/installed-component-repository.js';
+import { DrizzleMaintenanceRepository } from './repositories/maintenance-repository.js';
 import { AuthService } from './services/auth-service.js';
 import { CatalogService } from './services/catalog-service.js';
 import { CompatibilityService } from './services/compatibility-service.js';
 import { ExploreService } from './services/explore-service.js';
 import { GarageService } from './services/garage-service.js';
+import { InstalledComponentService } from './services/installed-component-service.js';
+import { MaintenanceService } from './services/maintenance-service.js';
 
 const config = readConfig();
 const databaseClient = createDatabase(config.databaseUrl);
@@ -31,6 +35,14 @@ const app = buildApp({
       new DrizzleExploreRepository(databaseClient.database),
     ),
     garage: garageService,
+    installedComponents: new InstalledComponentService(
+      new DrizzleInstalledComponentRepository(databaseClient.database),
+      garageService,
+    ),
+    maintenance: new MaintenanceService(
+      new DrizzleMaintenanceRepository(databaseClient.database),
+      garageService,
+    ),
   },
 });
 

@@ -10,6 +10,8 @@ import {
   ROUTE_TYPES,
   VERIFICATION_STATUSES,
   type Coordinate,
+  type InstalledComponentStandardInput,
+  type MaintenanceEventType,
 } from '@goweskit/contracts';
 
 export const BICYCLE_TYPE_SEEDS = [
@@ -177,8 +179,8 @@ export const COMPONENT_CATEGORY_SEEDS = [
 
 export const STANDARD_DEFINITION_SEEDS = BIKE_SPEC_DEFINITIONS.map(
   (definition) => {
-    const rule = COMPATIBILITY_RULES.find(
-      ({ bikeSpecCode }) => bikeSpecCode === definition.code,
+    const rule = COMPATIBILITY_RULES.find(({ requiredBikeSpecCodes }) =>
+      requiredBikeSpecCodes.some((code) => code === definition.code),
     );
     if (rule === undefined) {
       throw new Error(
@@ -245,9 +247,56 @@ export const DEMO_BIKE_SEEDS = [
       },
       { standardCode: 'drivetrain_speeds', knowledge: 'known', value: '12' },
       {
+        standardCode: 'drivetrain_family',
+        knowledge: 'known',
+        value: 'shimano_mtb_hg',
+      },
+      {
         standardCode: 'fork_steerer',
         knowledge: 'known',
         value: 'tapered_1_1_8_to_1_1_2',
+      },
+      {
+        standardCode: 'headset_interface',
+        knowledge: 'known',
+        value: 'zs44_zs56',
+      },
+      {
+        standardCode: 'bottom_bracket_shell',
+        knowledge: 'known',
+        value: 'bsa_68_73',
+      },
+      {
+        standardCode: 'bottom_bracket_spindle',
+        knowledge: 'known',
+        value: '24mm',
+      },
+      {
+        standardCode: 'fork_travel_min_mm',
+        knowledge: 'known',
+        value: '100',
+      },
+      {
+        standardCode: 'fork_travel_max_mm',
+        knowledge: 'known',
+        value: '140',
+      },
+      {
+        standardCode: 'brake_mount',
+        knowledge: 'known',
+        value: 'post_mount',
+      },
+      { standardCode: 'rotor_min_mm', knowledge: 'known', value: '160' },
+      { standardCode: 'rotor_max_mm', knowledge: 'known', value: '203' },
+      {
+        standardCode: 'seatpost_diameter_mm',
+        knowledge: 'known',
+        value: '30.9',
+      },
+      {
+        standardCode: 'tire_clearance_max_mm',
+        knowledge: 'known',
+        value: '65',
       },
     ],
   },
@@ -266,7 +315,34 @@ export const DEMO_BIKE_SEEDS = [
       { standardCode: 'rear_axle', knowledge: 'known', value: 'qr_135' },
       { standardCode: 'freehub', knowledge: 'known', value: 'hg' },
       { standardCode: 'drivetrain_speeds', knowledge: 'known', value: '8' },
+      {
+        standardCode: 'drivetrain_family',
+        knowledge: 'known',
+        value: 'shimano_mtb_hg',
+      },
       { standardCode: 'fork_steerer', knowledge: 'unknown' },
+      { standardCode: 'headset_interface', knowledge: 'unknown' },
+      {
+        standardCode: 'bottom_bracket_shell',
+        knowledge: 'known',
+        value: 'bsa_68_73',
+      },
+      {
+        standardCode: 'bottom_bracket_spindle',
+        knowledge: 'known',
+        value: 'square_taper',
+      },
+      { standardCode: 'fork_travel_min_mm', knowledge: 'unknown' },
+      { standardCode: 'fork_travel_max_mm', knowledge: 'unknown' },
+      { standardCode: 'brake_mount', knowledge: 'unknown' },
+      { standardCode: 'rotor_min_mm', knowledge: 'unknown' },
+      { standardCode: 'rotor_max_mm', knowledge: 'unknown' },
+      { standardCode: 'seatpost_diameter_mm', knowledge: 'unknown' },
+      {
+        standardCode: 'tire_clearance_max_mm',
+        knowledge: 'known',
+        value: '50',
+      },
     ],
   },
   {
@@ -285,9 +361,48 @@ export const DEMO_BIKE_SEEDS = [
       { standardCode: 'freehub', knowledge: 'known', value: 'xdr' },
       { standardCode: 'drivetrain_speeds', knowledge: 'known', value: '12' },
       {
+        standardCode: 'drivetrain_family',
+        knowledge: 'known',
+        value: 'sram_road_axs',
+      },
+      {
         standardCode: 'fork_steerer',
         knowledge: 'known',
         value: 'tapered_1_1_8_to_1_1_2',
+      },
+      {
+        standardCode: 'headset_interface',
+        knowledge: 'known',
+        value: 'is42_is52',
+      },
+      {
+        standardCode: 'bottom_bracket_shell',
+        knowledge: 'known',
+        value: 't47_68_73',
+      },
+      {
+        standardCode: 'bottom_bracket_spindle',
+        knowledge: 'known',
+        value: 'dub_28_99',
+      },
+      { standardCode: 'fork_travel_min_mm', knowledge: 'unknown' },
+      { standardCode: 'fork_travel_max_mm', knowledge: 'unknown' },
+      {
+        standardCode: 'brake_mount',
+        knowledge: 'known',
+        value: 'flat_mount',
+      },
+      { standardCode: 'rotor_min_mm', knowledge: 'known', value: '140' },
+      { standardCode: 'rotor_max_mm', knowledge: 'known', value: '160' },
+      {
+        standardCode: 'seatpost_diameter_mm',
+        knowledge: 'known',
+        value: '27.2',
+      },
+      {
+        standardCode: 'tire_clearance_max_mm',
+        knowledge: 'known',
+        value: '35',
       },
     ],
   },
@@ -306,13 +421,213 @@ export const DEMO_BIKE_SEEDS = [
       { standardCode: 'freehub', knowledge: 'known', value: 'hg' },
       { standardCode: 'drivetrain_speeds', knowledge: 'known', value: '11' },
       {
+        standardCode: 'drivetrain_family',
+        knowledge: 'known',
+        value: 'shimano_road_hg',
+      },
+      {
         standardCode: 'fork_steerer',
         knowledge: 'known',
         value: 'tapered_1_1_8_to_1_1_2',
       },
+      {
+        standardCode: 'headset_interface',
+        knowledge: 'known',
+        value: 'is42_is52',
+      },
+      {
+        standardCode: 'bottom_bracket_shell',
+        knowledge: 'known',
+        value: 'bb86_92',
+      },
+      {
+        standardCode: 'bottom_bracket_spindle',
+        knowledge: 'known',
+        value: '24mm',
+      },
+      { standardCode: 'fork_travel_min_mm', knowledge: 'unknown' },
+      { standardCode: 'fork_travel_max_mm', knowledge: 'unknown' },
+      {
+        standardCode: 'brake_mount',
+        knowledge: 'known',
+        value: 'flat_mount',
+      },
+      { standardCode: 'rotor_min_mm', knowledge: 'known', value: '140' },
+      { standardCode: 'rotor_max_mm', knowledge: 'known', value: '180' },
+      {
+        standardCode: 'seatpost_diameter_mm',
+        knowledge: 'known',
+        value: '27.2',
+      },
+      {
+        standardCode: 'tire_clearance_max_mm',
+        knowledge: 'known',
+        value: '50',
+      },
     ],
   },
 ] as const satisfies readonly DemoBikeSeed[];
+
+interface DemoInstalledComponentSeed {
+  id: string;
+  bikeId: (typeof DEMO_BIKE_SEEDS)[number]['id'];
+  categorySlug: (typeof COMPONENT_CATEGORY_SEEDS)[number]['slug'];
+  customName: string;
+  brand: string | null;
+  model: string | null;
+  serialNumber: string | null;
+  notes: string;
+  installedAt: string | null;
+  standards: readonly InstalledComponentStandardInput[];
+}
+
+export const DEMO_INSTALLED_COMPONENT_SEEDS = [
+  {
+    id: '40000000-0000-4000-8000-000000000001',
+    bikeId: '10000000-0000-4000-8000-000000000001',
+    categorySlug: 'fork',
+    customName: 'Trail suspension fork',
+    brand: 'RockShox',
+    model: 'Recon Silver RL',
+    serialNumber: null,
+    notes: 'Demo component with confirmed axle and steerer interfaces.',
+    installedAt: '2025-11-15',
+    standards: [
+      { standardCode: 'front_axle', knowledge: 'known', value: '15x110' },
+      {
+        standardCode: 'fork_steerer',
+        knowledge: 'known',
+        value: 'tapered_1_1_8_to_1_1_2',
+      },
+      { standardCode: 'fork_travel_max_mm', knowledge: 'known', value: '120' },
+    ],
+  },
+  {
+    id: '40000000-0000-4000-8000-000000000002',
+    bikeId: '10000000-0000-4000-8000-000000000001',
+    categorySlug: 'wheel',
+    customName: 'Current rear trail wheel',
+    brand: 'Shimano',
+    model: 'MTB Boost wheel',
+    serialNumber: null,
+    notes:
+      'Demo wheel: compatibility comes from the recorded standards, not the brand.',
+    installedAt: '2026-02-10',
+    standards: [
+      { standardCode: 'wheel_size', knowledge: 'known', value: 'iso_622' },
+      { standardCode: 'rear_axle', knowledge: 'known', value: '12x148' },
+      { standardCode: 'freehub', knowledge: 'known', value: 'micro_spline' },
+    ],
+  },
+  {
+    id: '40000000-0000-4000-8000-000000000003',
+    bikeId: '10000000-0000-4000-8000-000000000002',
+    categorySlug: 'folding_hinge',
+    customName: 'Main frame hinge',
+    brand: null,
+    model: null,
+    serialNumber: null,
+    notes:
+      'Demo folding-specific part; no normalized interface has been confirmed.',
+    installedAt: null,
+    standards: [],
+  },
+  {
+    id: '40000000-0000-4000-8000-000000000004',
+    bikeId: '10000000-0000-4000-8000-000000000002',
+    categorySlug: 'cassette',
+    customName: '8-speed cassette',
+    brand: 'Shimano',
+    model: 'HG-range cassette',
+    serialNumber: null,
+    notes: 'Demo cassette with explicit freehub and speed standards.',
+    installedAt: '2025-08-05',
+    standards: [
+      { standardCode: 'freehub', knowledge: 'known', value: 'hg' },
+      { standardCode: 'drivetrain_speeds', knowledge: 'known', value: '8' },
+      { standardCode: 'drivetrain_family', knowledge: 'unknown' },
+    ],
+  },
+  {
+    id: '40000000-0000-4000-8000-000000000005',
+    bikeId: '10000000-0000-4000-8000-000000000003',
+    categorySlug: 'cassette',
+    customName: 'Road 12-speed cassette',
+    brand: 'SRAM',
+    model: 'XDR road cassette',
+    serialNumber: null,
+    notes: 'Demo road cassette with independently recorded standards.',
+    installedAt: '2026-01-20',
+    standards: [
+      { standardCode: 'freehub', knowledge: 'known', value: 'xdr' },
+      { standardCode: 'drivetrain_speeds', knowledge: 'known', value: '12' },
+      {
+        standardCode: 'drivetrain_family',
+        knowledge: 'known',
+        value: 'sram_road_axs',
+      },
+    ],
+  },
+  {
+    id: '40000000-0000-4000-8000-000000000006',
+    bikeId: '10000000-0000-4000-8000-000000000004',
+    categorySlug: 'brake',
+    customName: 'Front flat-mount brake',
+    brand: 'Shimano',
+    model: 'Hydraulic road caliper',
+    serialNumber: null,
+    notes:
+      'Demo brake with mount recorded; rotor limits remain a bike-level check.',
+    installedAt: '2025-10-12',
+    standards: [
+      { standardCode: 'brake_mount', knowledge: 'known', value: 'flat_mount' },
+    ],
+  },
+] as const satisfies readonly DemoInstalledComponentSeed[];
+
+interface DemoMaintenanceEventSeed {
+  id: string;
+  bikeId: (typeof DEMO_BIKE_SEEDS)[number]['id'];
+  type: MaintenanceEventType;
+  performedAt: string;
+  notes: string;
+  nextDueDate: string | null;
+}
+
+export const DEMO_MAINTENANCE_EVENT_SEEDS = [
+  {
+    id: '30000000-0000-4000-8000-000000000001',
+    bikeId: '10000000-0000-4000-8000-000000000001',
+    type: 'chain_lube',
+    performedAt: '2026-08-18',
+    notes: 'Demo log: cleaned and lubricated after a wet trail ride.',
+    nextDueDate: '2026-09-18',
+  },
+  {
+    id: '30000000-0000-4000-8000-000000000002',
+    bikeId: '10000000-0000-4000-8000-000000000001',
+    type: 'brake_pads',
+    performedAt: '2026-05-10',
+    notes: 'Demo log: inspected pad thickness and rotor condition.',
+    nextDueDate: '2026-08-10',
+  },
+  {
+    id: '30000000-0000-4000-8000-000000000003',
+    bikeId: '10000000-0000-4000-8000-000000000002',
+    type: 'folding_hinge',
+    performedAt: '2026-08-12',
+    notes: 'Demo log: checked hinge play and safety latch engagement.',
+    nextDueDate: '2026-11-12',
+  },
+  {
+    id: '30000000-0000-4000-8000-000000000004',
+    bikeId: '10000000-0000-4000-8000-000000000004',
+    type: 'sealant',
+    performedAt: '2026-08-01',
+    notes: 'Demo log: refreshed tubeless sealant.',
+    nextDueDate: null,
+  },
+] as const satisfies readonly DemoMaintenanceEventSeed[];
 
 interface DemoPlaceSeed {
   id: string;

@@ -5,12 +5,14 @@ import {
   type CompatibilityBike,
   type CompatibilityRuleCode,
 } from '@goweskit/bike-domain';
-import type {
-  Bike,
-  CompatibilityCandidateInput,
-  CompatibilityEvaluationResponse,
-  CompatibilityRule,
-  User,
+import {
+  compatibilityEvaluationSchema,
+  compatibilityRuleSchema,
+  type Bike,
+  type CompatibilityCandidateInput,
+  type CompatibilityEvaluationResponse,
+  type CompatibilityRule,
+  type User,
 } from '@goweskit/contracts';
 
 import { AppError } from '../errors.js';
@@ -23,14 +25,14 @@ function toRuleResponse(
   rule: (typeof COMPATIBILITY_RULES)[number],
 ): CompatibilityRule {
   const standard = getBikeSpecDefinition(rule.bikeSpecCode);
-  return {
+  return compatibilityRuleSchema.parse({
     code: rule.code,
     label: rule.label,
     bikeSpecCode: rule.bikeSpecCode,
     candidateLabel: rule.candidateLabel,
     values: standard?.values.map((value) => ({ ...value })) ?? [],
     provenance: { ...rule.provenance },
-  };
+  });
 }
 
 function toDomainBike(bike: Bike): CompatibilityBike {
@@ -73,6 +75,8 @@ export class CompatibilityService {
     candidates: CompatibilityCandidateInput[],
   ): Promise<CompatibilityEvaluationResponse> {
     const bike = await this.bikeSource.getBike(user, bikeId);
-    return evaluateCompatibility(toDomainBike(bike), candidates);
+    return compatibilityEvaluationSchema.parse(
+      evaluateCompatibility(toDomainBike(bike), candidates),
+    );
   }
 }
