@@ -19,12 +19,32 @@ Maintenance are not implemented in v0.1.
 
 ## Run locally
 
-Requirements: Node.js 22+, pnpm 10.34.5, and Docker Compose.
+Requirements: Node.js 22+, pnpm 10.34.5, PostgreSQL 18, and PostGIS.
+
+### Native PostgreSQL (macOS with Homebrew)
+
+Install and start PostgreSQL/PostGIS. On Apple Silicon, explicitly use the ARM
+Homebrew process so the extensions are installed into the same prefix:
+
+```bash
+arch -arm64 brew install postgresql@18 postgis
+brew services start postgresql@18
+```
+
+Set `port = 1921` in
+`/opt/homebrew/var/postgresql@18/postgresql.conf`, then restart PostgreSQL:
+
+```bash
+brew services restart postgresql@18
+createdb -h localhost -p 1921 -U lutuk goweskit
+```
+
+Skip `createdb` when the `goweskit` database already exists. Then install the
+application dependencies and apply the additive migrations:
 
 ```bash
 cp .env.example .env
 pnpm install
-docker compose -f infra/docker-compose.yml up -d
 pnpm db:migrate
 pnpm dev
 ```
@@ -32,6 +52,20 @@ pnpm dev
 PostgreSQL with PostGIS listens at `localhost:1921`; the local development
 database uses user `lutuk` with no password. The Nuxt web app defaults to port
 3000 and the Fastify API to port 4000.
+
+If those application ports are occupied, run the processes separately, for
+example on 3001 and 4001:
+
+```bash
+API_PORT=4001 WEB_ORIGIN=http://localhost:3001 pnpm --filter @goweskit/api dev
+PUBLIC_API_BASE_URL=http://localhost:4001/api/v1 pnpm --filter @goweskit/web dev --port 3001
+```
+
+Docker Compose remains an optional database alternative:
+
+```bash
+docker compose -f infra/docker-compose.yml up -d
+```
 
 Quality gates:
 
