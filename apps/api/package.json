@@ -6,6 +6,7 @@
     "build": "tsc -p tsconfig.build.json",
     "db:generate": "drizzle-kit generate",
     "db:migrate": "drizzle-kit migrate",
+    "db:seed": "pnpm --filter @goweskit/bike-domain build && tsx src/db/seed.ts",
     "dev": "tsx watch src/server.ts",
     "lint": "eslint src",
     "predev": "pnpm --filter @goweskit/bike-domain build && pnpm --filter @goweskit/contracts build",

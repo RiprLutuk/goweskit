@@ -10,6 +10,7 @@
     "build": "pnpm -r build",
     "db:generate": "pnpm --filter @goweskit/api db:generate",
     "db:migrate": "pnpm --filter @goweskit/api db:migrate",
+    "db:seed": "pnpm --filter @goweskit/api db:seed",
     "format": "prettier --write .",
     "format:check": "prettier --check .",
     "lint": "pnpm -r lint",

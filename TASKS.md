@@ -23,7 +23,7 @@ P3 = later
 ## Learn
 
 - [x] LEARN-001 [P0] Bicycle type model.
-- [ ] LEARN-002 [P0] Seed MTB Hardtail + Folding + Road + Gravel.
+- [x] LEARN-002 [P0] Seed MTB Hardtail + Folding + Road + Gravel.
 - [x] LEARN-003 [P0] Component categories.
 - [x] LEARN-004 [P0] Bicycle type UI.
 - [ ] LEARN-005 [P0] Anatomy hotspot UI.

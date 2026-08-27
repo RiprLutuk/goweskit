@@ -11,11 +11,11 @@ The current vertical slice is deliberately narrow:
 Learn -> My Garage -> Upgrade Lab
 ```
 
-It includes account sessions, MTB Hardtail and Folding Bike learning content,
-incomplete bike profiles, explicit unknown specifications, and deterministic
-compatibility checks for wheel size, front/rear axle, freehub/cassette,
-drivetrain speeds, and fork steerer. Explore, Community, Ride Safety, and
-Maintenance are not implemented in v0.1.
+It includes account sessions, MTB Hardtail, Folding Bike, Road Bike, and Gravel
+Bike learning content, incomplete bike profiles, explicit unknown
+specifications, and deterministic compatibility checks for wheel size,
+front/rear axle, freehub/cassette, drivetrain speeds, and fork steerer. Explore,
+Community, Ride Safety, and Maintenance are not implemented in v0.1.
 
 ## Run locally
 
@@ -46,8 +46,22 @@ application dependencies and apply the additive migrations:
 cp .env.example .env
 pnpm install
 pnpm db:migrate
+pnpm db:seed
 pnpm dev
 ```
+
+`pnpm db:seed` is safe to run repeatedly in local development. It refreshes the
+four P0 bicycle types, 20 component categories, six normalized standards, and a
+demo Garage with four bikes. Sign in with:
+
+```text
+Email: demo@goweskit.local
+Password: GowesKitDemo123!
+```
+
+The demo bikes cover complete and explicitly unknown specs. Their data can
+produce compatible, incompatible, conditional, and unknown Upgrade Lab results;
+the deterministic evaluator still calculates every result at request time.
 
 PostgreSQL with PostGIS listens at `localhost:1921`; the local development
 database uses user `lutuk` with no password. The Nuxt web app defaults to port
