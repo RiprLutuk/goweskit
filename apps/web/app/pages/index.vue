@@ -17,6 +17,12 @@
       <NuxtLink class="button button--secondary" to="/upgrade-lab"
         >Check an upgrade</NuxtLink
       >
+      <NuxtLink class="button button--secondary" to="/safety"
+        >Start Ride Safety</NuxtLink
+      >
+      <NuxtLink class="button button--secondary" to="/community"
+        >Find a cycling community</NuxtLink
+      >
     </div>
     <div class="workbench-line" aria-hidden="true">
       <span />

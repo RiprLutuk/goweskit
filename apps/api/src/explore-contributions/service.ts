@@ -305,6 +305,7 @@ export class ExploreContributionService {
       targetStatus: input.targetStatus,
       moderatorUserId: input.moderatorUserId,
       moderatedAt: input.occurredAt,
+      reason,
     });
     if (transition.outcome === 'not_found') {
       throw new ExploreContributionError(

@@ -9,6 +9,12 @@ import Fastify, {
 } from 'fastify';
 
 import { AppError } from './errors.js';
+import type { ExploreContributionService } from './explore-contributions/service.js';
+import {
+  registerExploreContributionRoutes,
+  type ExploreContributionAuthPolicy,
+  type ExploreContributionRateLimitPolicy,
+} from './explore-contributions/routes.js';
 import { registerAuthRoutes } from './routes/auth.js';
 import { registerCompatibilityRoutes } from './routes/compatibility.js';
 import { registerCommunityRoutes } from './routes/community.js';
@@ -17,6 +23,8 @@ import { registerGarageRoutes } from './routes/garage.js';
 import { registerInstalledComponentRoutes } from './routes/installed-components.js';
 import { registerLearnRoutes } from './routes/learn.js';
 import { registerMaintenanceRoutes } from './routes/maintenance.js';
+import { registerSafetyRoutes } from './routes/safety.js';
+import type { SafetyService } from './safety/service.js';
 import type { AuthService } from './services/auth-service.js';
 import type { CatalogService } from './services/catalog-service.js';
 import type { CompatibilityService } from './services/compatibility-service.js';
@@ -39,6 +47,12 @@ export interface AppServices {
   garage: GarageService;
   installedComponents: InstalledComponentService;
   maintenance: MaintenanceService;
+  safety?: SafetyService;
+  exploreContributions?: {
+    service: ExploreContributionService;
+    authPolicy: ExploreContributionAuthPolicy;
+    rateLimitPolicy: ExploreContributionRateLimitPolicy;
+  };
 }
 
 export interface BuildAppOptions {
@@ -128,11 +142,25 @@ export function buildApp(options: BuildAppOptions = {}): FastifyInstance {
       options.services.community,
     );
     registerExploreRoutes(app, options.services.explore);
+    if (options.services.exploreContributions !== undefined) {
+      registerExploreContributionRoutes(
+        app,
+        options.services.exploreContributions.service,
+        {
+          authPolicy: options.services.exploreContributions.authPolicy,
+          rateLimitPolicy:
+            options.services.exploreContributions.rateLimitPolicy,
+        },
+      );
+    }
     registerMaintenanceRoutes(
       app,
       options.services.auth,
       options.services.maintenance,
     );
+    if (options.services.safety !== undefined) {
+      registerSafetyRoutes(app, options.services.auth, options.services.safety);
+    }
   }
 
   return app;

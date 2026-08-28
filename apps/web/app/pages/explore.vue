@@ -457,5 +457,7 @@ onMounted(loadNearby);
         </div>
       </section>
     </div>
+
+    <ExploreContributions :selected-item="selectedItem" />
   </div>
 </template>

@@ -1,40 +1,25 @@
-export const CONTRIBUTION_MODERATION_STATUSES = [
-  'pending',
-  'approved',
-  'rejected',
-] as const;
-export type ContributionModerationStatus =
-  (typeof CONTRIBUTION_MODERATION_STATUSES)[number];
+import type {
+  ContributionKind,
+  ContributionModerationStatus,
+  HazardSeverity,
+  HazardType,
+  RouteReportType,
+} from '@goweskit/contracts';
 
-export const ROUTE_REPORT_TYPES = [
-  'condition',
-  'closure',
-  'incorrect_route',
-  'difficulty',
-  'other',
-] as const;
-export type RouteReportType = (typeof ROUTE_REPORT_TYPES)[number];
-
-export const HAZARD_TYPES = [
-  'road_damage',
-  'trail_obstruction',
-  'traffic',
-  'construction',
-  'flooding',
-  'animal',
-  'other',
-] as const;
-export type HazardType = (typeof HAZARD_TYPES)[number];
-
-export const HAZARD_SEVERITIES = ['info', 'caution', 'danger'] as const;
-export type HazardSeverity = (typeof HAZARD_SEVERITIES)[number];
-
-export const CONTRIBUTION_KINDS = [
-  'place_review',
-  'route_report',
-  'hazard_report',
-] as const;
-export type ContributionKind = (typeof CONTRIBUTION_KINDS)[number];
+export {
+  CONTRIBUTION_KINDS,
+  CONTRIBUTION_MODERATION_STATUSES,
+  HAZARD_SEVERITIES,
+  HAZARD_TYPES,
+  ROUTE_REPORT_TYPES,
+} from '@goweskit/contracts';
+export type {
+  ContributionKind,
+  ContributionModerationStatus,
+  HazardSeverity,
+  HazardType,
+  RouteReportType,
+} from '@goweskit/contracts';
 
 export interface ContributionCoordinate {
   longitude: number;
@@ -152,6 +137,7 @@ export interface ModerationTransitionInput {
   targetStatus: 'approved' | 'rejected';
   moderatorUserId: string;
   moderatedAt: Date;
+  reason: string | null;
 }
 
 export type ModerationTransitionResult =

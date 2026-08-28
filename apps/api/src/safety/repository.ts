@@ -19,7 +19,7 @@ export interface StoredSafetySession {
   id: string;
   userId: string;
   riderDisplayName: string;
-  trustedContactId: string;
+  trustedContactId: string | null;
   status: SafetySessionStatus;
   startedAt: Date;
   expectedEndAt: Date | null;

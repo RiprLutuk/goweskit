@@ -1,4 +1,12 @@
-import 'dotenv/config';
+import { existsSync } from 'node:fs';
+import { fileURLToPath } from 'node:url';
+import { resolve } from 'node:path';
+
+const rootEnvPath = resolve(
+  fileURLToPath(new URL('.', import.meta.url)),
+  '../../.env',
+);
+if (existsSync(rootEnvPath)) process.loadEnvFile(rootEnvPath);
 
 import { defineConfig } from 'drizzle-kit';
 

@@ -44,6 +44,9 @@ async function signOut(): Promise<void> {
       >
         {{ signingOut ? 'Signing out…' : 'Sign out' }}
       </button>
+      <NuxtLink class="button button--secondary" to="/safety">
+        Manage Ride Safety
+      </NuxtLink>
     </div>
     <div v-else class="signed-out-state">
       <p>Sign in to create bikes, save unknown specs, and use Upgrade Lab.</p>

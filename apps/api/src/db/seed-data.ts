@@ -14,12 +14,19 @@ import {
   type CommunityMembershipStatus,
   type CommunityRole,
   type CommunityVisibility,
+  type ContributionKind,
+  type ContributionModerationStatus,
   type EventParticipationStatus,
   type EventStatus,
   type EventVisibility,
+  type HazardSeverity,
+  type HazardType,
   type InstalledComponentStandardInput,
   type MaintenanceEventType,
+  type RouteReportType,
 } from '@goweskit/contracts';
+import type { SafetySessionStatus } from '@goweskit/contracts/safety';
+import type { SafetyAuditAction } from '../safety/repository.js';
 
 export const BICYCLE_TYPE_SEEDS = [
   {
@@ -1185,3 +1192,483 @@ export const DEMO_COMMUNITY_MODERATION_AUDIT_SEEDS = [
     note: 'Demo audit: approved after reviewing the request.',
   },
 ] as const;
+
+export const DEMO_TRUSTED_CONTACT_SEEDS = [
+  {
+    id: '61000000-0000-4000-8000-000000000001',
+    name: 'Ayu — keluarga',
+    phone: '+6281211112222',
+    email: 'ayu.contact@example.test',
+    note: 'Demo contact: call when the private share shows SOS.',
+  },
+  {
+    id: '61000000-0000-4000-8000-000000000002',
+    name: 'Bima — teman gowes',
+    phone: '+6281233334444',
+    email: null,
+    note: 'Demo contact for the morning loop.',
+  },
+  {
+    id: '61000000-0000-4000-8000-000000000003',
+    name: 'Rumah',
+    phone: null,
+    email: 'home.contact@example.test',
+    note: 'Demo email-only trusted contact.',
+  },
+] as const;
+
+interface DemoSafetySessionSeed {
+  id: string;
+  trustedContactId: (typeof DEMO_TRUSTED_CONTACT_SEEDS)[number]['id'];
+  status: SafetySessionStatus;
+  startedOffsetMinutes: number;
+  expectedEndOffsetMinutes: number | null;
+  endedOffsetMinutes: number | null;
+  shareExpiresOffsetMinutes: number;
+  sosOffsetMinutes: number | null;
+  shareTokenHash: string;
+  note: string;
+}
+
+export const DEMO_SAFETY_SESSION_SEEDS = [
+  {
+    id: '62000000-0000-4000-8000-000000000001',
+    trustedContactId: '61000000-0000-4000-8000-000000000001',
+    status: 'active',
+    startedOffsetMinutes: -30,
+    expectedEndOffsetMinutes: 120,
+    endedOffsetMinutes: null,
+    shareExpiresOffsetMinutes: 360,
+    sosOffsetMinutes: null,
+    shareTokenHash: 'a'.repeat(64),
+    note: 'Demo active session. The location shown is last-known, not live.',
+  },
+  {
+    id: '62000000-0000-4000-8000-000000000002',
+    trustedContactId: '61000000-0000-4000-8000-000000000002',
+    status: 'sos',
+    startedOffsetMinutes: -90,
+    expectedEndOffsetMinutes: 60,
+    endedOffsetMinutes: null,
+    shareExpiresOffsetMinutes: 240,
+    sosOffsetMinutes: -10,
+    shareTokenHash: 'b'.repeat(64),
+    note: 'Demo SOS state. GowesKit does not dispatch emergency services.',
+  },
+  {
+    id: '62000000-0000-4000-8000-000000000003',
+    trustedContactId: '61000000-0000-4000-8000-000000000003',
+    status: 'ended',
+    startedOffsetMinutes: -2_880,
+    expectedEndOffsetMinutes: -2_700,
+    endedOffsetMinutes: -2_760,
+    shareExpiresOffsetMinutes: -2_400,
+    sosOffsetMinutes: null,
+    shareTokenHash: 'c'.repeat(64),
+    note: 'Demo ride ended normally.',
+  },
+  {
+    id: '62000000-0000-4000-8000-000000000004',
+    trustedContactId: '61000000-0000-4000-8000-000000000001',
+    status: 'revoked',
+    startedOffsetMinutes: -4_320,
+    expectedEndOffsetMinutes: -4_200,
+    endedOffsetMinutes: -4_260,
+    shareExpiresOffsetMinutes: -3_600,
+    sosOffsetMinutes: null,
+    shareTokenHash: 'd'.repeat(64),
+    note: 'Demo revoked private share.',
+  },
+  {
+    id: '62000000-0000-4000-8000-000000000005',
+    trustedContactId: '61000000-0000-4000-8000-000000000002',
+    status: 'expired',
+    startedOffsetMinutes: -3_000,
+    expectedEndOffsetMinutes: null,
+    endedOffsetMinutes: null,
+    shareExpiresOffsetMinutes: -1_560,
+    sosOffsetMinutes: null,
+    shareTokenHash: 'e'.repeat(64),
+    note: 'Demo share expired automatically.',
+  },
+] as const satisfies readonly DemoSafetySessionSeed[];
+
+export const DEMO_SAFETY_LOCATION_SEEDS = [
+  {
+    id: '63000000-0000-4000-8000-000000000001',
+    sessionId: '62000000-0000-4000-8000-000000000001',
+    coordinate: { longitude: 107.6191, latitude: -6.9175 },
+    accuracyMeters: 14,
+    batteryPercent: 82,
+    recordedOffsetMinutes: -5,
+  },
+  {
+    id: '63000000-0000-4000-8000-000000000002',
+    sessionId: '62000000-0000-4000-8000-000000000002',
+    coordinate: { longitude: 107.6134, latitude: -6.8863 },
+    accuracyMeters: 21,
+    batteryPercent: 54,
+    recordedOffsetMinutes: -3,
+  },
+  {
+    id: '63000000-0000-4000-8000-000000000003',
+    sessionId: '62000000-0000-4000-8000-000000000003',
+    coordinate: { longitude: 107.6087, latitude: -6.9218 },
+    accuracyMeters: 10,
+    batteryPercent: null,
+    recordedOffsetMinutes: -2_765,
+  },
+] as const;
+
+interface DemoSafetyAuditSeed {
+  id: string;
+  action: SafetyAuditAction;
+  sessionId: string | null;
+  occurredOffsetMinutes: number;
+  metadata: Record<string, string | number | boolean | null>;
+}
+
+export const DEMO_SAFETY_AUDIT_SEEDS = [
+  {
+    id: '64000000-0000-4000-8000-000000000001',
+    action: 'session_started',
+    sessionId: '62000000-0000-4000-8000-000000000001',
+    occurredOffsetMinutes: -30,
+    metadata: { demo: true, expectedReturnProvided: true },
+  },
+  {
+    id: '64000000-0000-4000-8000-000000000002',
+    action: 'location_updated',
+    sessionId: '62000000-0000-4000-8000-000000000001',
+    occurredOffsetMinutes: -5,
+    metadata: { demo: true, accuracyMeters: 14, batteryProvided: true },
+  },
+  {
+    id: '64000000-0000-4000-8000-000000000003',
+    action: 'session_started',
+    sessionId: '62000000-0000-4000-8000-000000000002',
+    occurredOffsetMinutes: -90,
+    metadata: { demo: true, expectedReturnProvided: true },
+  },
+  {
+    id: '64000000-0000-4000-8000-000000000004',
+    action: 'sos_triggered',
+    sessionId: '62000000-0000-4000-8000-000000000002',
+    occurredOffsetMinutes: -10,
+    metadata: { demo: true },
+  },
+  {
+    id: '64000000-0000-4000-8000-000000000005',
+    action: 'session_ended',
+    sessionId: '62000000-0000-4000-8000-000000000003',
+    occurredOffsetMinutes: -2_760,
+    metadata: { demo: true },
+  },
+  {
+    id: '64000000-0000-4000-8000-000000000006',
+    action: 'session_revoked',
+    sessionId: '62000000-0000-4000-8000-000000000004',
+    occurredOffsetMinutes: -4_260,
+    metadata: { demo: true },
+  },
+  {
+    id: '64000000-0000-4000-8000-000000000007',
+    action: 'session_expired',
+    sessionId: '62000000-0000-4000-8000-000000000005',
+    occurredOffsetMinutes: -1_560,
+    metadata: { demo: true },
+  },
+] as const satisfies readonly DemoSafetyAuditSeed[];
+
+type DemoContributionUserKey =
+  'demo' | (typeof DEMO_COMMUNITY_USERS)[number]['key'];
+
+interface DemoPlaceReviewSeed {
+  id: string;
+  reporterKey: DemoContributionUserKey;
+  placeId: (typeof DEMO_PLACE_SEEDS)[number]['id'];
+  rating: number;
+  notes: string;
+  moderationStatus: ContributionModerationStatus;
+  createdAt: string;
+}
+
+export const DEMO_PLACE_REVIEW_SEEDS = [
+  {
+    id: '71000000-0000-4000-8000-000000000001',
+    reporterKey: 'ayu',
+    placeId: '20000000-0000-4000-8000-000000000001',
+    rating: 5,
+    notes:
+      'Staff explained the brake check clearly and welcomed a beginner question.',
+    moderationStatus: 'approved',
+    createdAt: '2026-08-23T03:00:00.000Z',
+  },
+  {
+    id: '71000000-0000-4000-8000-000000000002',
+    reporterKey: 'bima',
+    placeId: '20000000-0000-4000-8000-000000000001',
+    rating: 4,
+    notes: 'Useful inspection stop; confirm opening hours before a long ride.',
+    moderationStatus: 'approved',
+    createdAt: '2026-08-21T04:30:00.000Z',
+  },
+  {
+    id: '71000000-0000-4000-8000-000000000003',
+    reporterKey: 'demo',
+    placeId: '20000000-0000-4000-8000-000000000002',
+    rating: 5,
+    notes: 'Pending demo review for moderation testing.',
+    moderationStatus: 'pending',
+    createdAt: '2026-08-27T06:00:00.000Z',
+  },
+  {
+    id: '71000000-0000-4000-8000-000000000004',
+    reporterKey: 'bima',
+    placeId: '20000000-0000-4000-8000-000000000003',
+    rating: 2,
+    notes: 'Rejected demo content retained for audit coverage.',
+    moderationStatus: 'rejected',
+    createdAt: '2026-08-18T01:00:00.000Z',
+  },
+  {
+    id: '71000000-0000-4000-8000-000000000005',
+    reporterKey: 'demo',
+    placeId: '20000000-0000-4000-8000-000000000005',
+    rating: 4,
+    notes:
+      'Clear trail entry marker, but riders should verify access and weather themselves.',
+    moderationStatus: 'approved',
+    createdAt: '2026-08-24T02:15:00.000Z',
+  },
+] as const satisfies readonly DemoPlaceReviewSeed[];
+
+interface DemoRouteReportSeed {
+  id: string;
+  reporterKey: DemoContributionUserKey;
+  routeId: (typeof DEMO_ROUTE_SEEDS)[number]['id'];
+  reportType: RouteReportType;
+  notes: string;
+  observedAt: string | null;
+  moderationStatus: ContributionModerationStatus;
+  createdAt: string;
+}
+
+export const DEMO_ROUTE_REPORT_SEEDS = [
+  {
+    id: '72000000-0000-4000-8000-000000000001',
+    reporterKey: 'ayu',
+    routeId: '30000000-0000-4000-8000-000000000001',
+    reportType: 'condition',
+    notes: 'Paved climb was dry in the morning; traffic increased after 08:00.',
+    observedAt: '2026-08-25T00:30:00.000Z',
+    moderationStatus: 'approved',
+    createdAt: '2026-08-25T01:15:00.000Z',
+  },
+  {
+    id: '72000000-0000-4000-8000-000000000002',
+    reporterKey: 'demo',
+    routeId: '30000000-0000-4000-8000-000000000002',
+    reportType: 'condition',
+    notes: 'Several loose gravel patches; reduce speed before shaded bends.',
+    observedAt: '2026-08-26T02:00:00.000Z',
+    moderationStatus: 'approved',
+    createdAt: '2026-08-26T03:00:00.000Z',
+  },
+  {
+    id: '72000000-0000-4000-8000-000000000003',
+    reporterKey: 'bima',
+    routeId: '30000000-0000-4000-8000-000000000002',
+    reportType: 'difficulty',
+    notes: 'The middle climb may feel hard for first-time gravel riders.',
+    observedAt: '2026-08-24T01:00:00.000Z',
+    moderationStatus: 'approved',
+    createdAt: '2026-08-24T02:00:00.000Z',
+  },
+  {
+    id: '72000000-0000-4000-8000-000000000004',
+    reporterKey: 'demo',
+    routeId: '30000000-0000-4000-8000-000000000003',
+    reportType: 'incorrect_route',
+    notes: 'Pending demo report: one practice line may need a geometry review.',
+    observedAt: null,
+    moderationStatus: 'pending',
+    createdAt: '2026-08-27T05:00:00.000Z',
+  },
+  {
+    id: '72000000-0000-4000-8000-000000000005',
+    reporterKey: 'ayu',
+    routeId: '30000000-0000-4000-8000-000000000004',
+    reportType: 'closure',
+    notes:
+      'Rejected demo closure because the observation could not be verified.',
+    observedAt: '2026-08-10T03:00:00.000Z',
+    moderationStatus: 'rejected',
+    createdAt: '2026-08-10T04:00:00.000Z',
+  },
+  {
+    id: '72000000-0000-4000-8000-000000000006',
+    reporterKey: 'bima',
+    routeId: '30000000-0000-4000-8000-000000000003',
+    reportType: 'condition',
+    notes: 'City loop surface was mostly smooth with busy crossings.',
+    observedAt: '2026-08-22T00:30:00.000Z',
+    moderationStatus: 'approved',
+    createdAt: '2026-08-22T01:10:00.000Z',
+  },
+] as const satisfies readonly DemoRouteReportSeed[];
+
+interface DemoHazardReportSeed {
+  id: string;
+  reporterKey: DemoContributionUserKey;
+  routeId: (typeof DEMO_ROUTE_SEEDS)[number]['id'] | null;
+  hazardType: HazardType;
+  severity: HazardSeverity;
+  coordinate: Coordinate;
+  notes: string;
+  observedAt: string | null;
+  moderationStatus: ContributionModerationStatus;
+  createdAt: string;
+}
+
+export const DEMO_HAZARD_REPORT_SEEDS = [
+  {
+    id: '73000000-0000-4000-8000-000000000001',
+    reporterKey: 'ayu',
+    routeId: '30000000-0000-4000-8000-000000000001',
+    hazardType: 'traffic',
+    severity: 'caution',
+    coordinate: { longitude: 107.6161, latitude: -6.888 },
+    notes: 'Busy merge point during the morning commute; approach visibly.',
+    observedAt: '2026-08-25T00:35:00.000Z',
+    moderationStatus: 'approved',
+    createdAt: '2026-08-25T01:20:00.000Z',
+  },
+  {
+    id: '73000000-0000-4000-8000-000000000002',
+    reporterKey: 'demo',
+    routeId: '30000000-0000-4000-8000-000000000002',
+    hazardType: 'trail_obstruction',
+    severity: 'caution',
+    coordinate: { longitude: 107.6322, latitude: -6.8566 },
+    notes: 'Small fallen branch near the edge of the practice line.',
+    observedAt: '2026-08-26T02:05:00.000Z',
+    moderationStatus: 'approved',
+    createdAt: '2026-08-26T03:10:00.000Z',
+  },
+  {
+    id: '73000000-0000-4000-8000-000000000003',
+    reporterKey: 'bima',
+    routeId: '30000000-0000-4000-8000-000000000003',
+    hazardType: 'road_damage',
+    severity: 'danger',
+    coordinate: { longitude: 107.6145, latitude: -6.907 },
+    notes: 'Deep pothole on the left side of the demo route line.',
+    observedAt: '2026-08-22T00:40:00.000Z',
+    moderationStatus: 'approved',
+    createdAt: '2026-08-22T01:15:00.000Z',
+  },
+  {
+    id: '73000000-0000-4000-8000-000000000004',
+    reporterKey: 'demo',
+    routeId: null,
+    hazardType: 'construction',
+    severity: 'info',
+    coordinate: { longitude: 107.6098, latitude: -6.9178 },
+    notes: 'Pending standalone construction marker for moderation testing.',
+    observedAt: null,
+    moderationStatus: 'pending',
+    createdAt: '2026-08-27T07:00:00.000Z',
+  },
+  {
+    id: '73000000-0000-4000-8000-000000000005',
+    reporterKey: 'ayu',
+    routeId: '30000000-0000-4000-8000-000000000004',
+    hazardType: 'animal',
+    severity: 'caution',
+    coordinate: { longitude: 107.683, latitude: -6.9155 },
+    notes: 'Rejected demo marker after the observation became outdated.',
+    observedAt: '2026-07-01T02:00:00.000Z',
+    moderationStatus: 'rejected',
+    createdAt: '2026-07-01T03:00:00.000Z',
+  },
+  {
+    id: '73000000-0000-4000-8000-000000000006',
+    reporterKey: 'bima',
+    routeId: '30000000-0000-4000-8000-000000000002',
+    hazardType: 'flooding',
+    severity: 'info',
+    coordinate: { longitude: 107.6205, latitude: -6.875 },
+    notes: 'Shallow water after rain; conditions can change quickly.',
+    observedAt: '2026-08-24T01:10:00.000Z',
+    moderationStatus: 'approved',
+    createdAt: '2026-08-24T02:10:00.000Z',
+  },
+  {
+    id: '73000000-0000-4000-8000-000000000007',
+    reporterKey: 'demo',
+    routeId: null,
+    hazardType: 'other',
+    severity: 'info',
+    coordinate: { longitude: 107.6186, latitude: -6.9002 },
+    notes: 'Temporary event activity near the demo meeting area.',
+    observedAt: '2026-08-23T00:00:00.000Z',
+    moderationStatus: 'approved',
+    createdAt: '2026-08-23T01:00:00.000Z',
+  },
+] as const satisfies readonly DemoHazardReportSeed[];
+
+interface DemoExploreModerationAuditSeed {
+  id: string;
+  contributionKind: ContributionKind;
+  contributionId: string;
+  moderatorKey: DemoContributionUserKey;
+  targetStatus: 'approved' | 'rejected';
+  reason: string;
+  occurredAt: string;
+}
+
+function decidedModerationStatus(
+  status: ContributionModerationStatus,
+): 'approved' | 'rejected' {
+  if (status === 'pending') {
+    throw new Error('Pending contribution cannot have a moderation audit.');
+  }
+  return status;
+}
+
+export const DEMO_EXPLORE_MODERATION_AUDIT_SEEDS = [
+  ...DEMO_PLACE_REVIEW_SEEDS.filter(
+    (seed) => seed.moderationStatus !== 'pending',
+  ).map((seed, index) => ({
+    id: `74000000-0000-4000-8000-${String(index + 1).padStart(12, '0')}`,
+    contributionKind: 'place_review' as const,
+    contributionId: seed.id,
+    moderatorKey: 'demo' as const,
+    targetStatus: decidedModerationStatus(seed.moderationStatus),
+    reason: 'Demo moderation decision for a seeded place review.',
+    occurredAt: seed.createdAt,
+  })),
+  ...DEMO_ROUTE_REPORT_SEEDS.filter(
+    (seed) => seed.moderationStatus !== 'pending',
+  ).map((seed, index) => ({
+    id: `74100000-0000-4000-8000-${String(index + 1).padStart(12, '0')}`,
+    contributionKind: 'route_report' as const,
+    contributionId: seed.id,
+    moderatorKey: 'demo' as const,
+    targetStatus: decidedModerationStatus(seed.moderationStatus),
+    reason: 'Demo moderation decision for a seeded route report.',
+    occurredAt: seed.createdAt,
+  })),
+  ...DEMO_HAZARD_REPORT_SEEDS.filter(
+    (seed) => seed.moderationStatus !== 'pending',
+  ).map((seed, index) => ({
+    id: `74200000-0000-4000-8000-${String(index + 1).padStart(12, '0')}`,
+    contributionKind: 'hazard_report' as const,
+    contributionId: seed.id,
+    moderatorKey: 'demo' as const,
+    targetStatus: decidedModerationStatus(seed.moderationStatus),
+    reason: 'Demo moderation decision for a seeded hazard report.',
+    occurredAt: seed.createdAt,
+  })),
+] as const satisfies readonly DemoExploreModerationAuditSeed[];

@@ -15,11 +15,19 @@ import {
   DEMO_COMMUNITY_SEEDS,
   DEMO_COMMUNITY_USERS,
   DEMO_EVENT_PARTICIPATION_SEEDS,
+  DEMO_EXPLORE_MODERATION_AUDIT_SEEDS,
+  DEMO_HAZARD_REPORT_SEEDS,
   DEMO_INSTALLED_COMPONENT_SEEDS,
   DEMO_MAINTENANCE_EVENT_SEEDS,
   DEMO_PLACE_SEEDS,
+  DEMO_PLACE_REVIEW_SEEDS,
   DEMO_ROUTE_SEEDS,
+  DEMO_ROUTE_REPORT_SEEDS,
   DEMO_RIDE_EVENT_SEEDS,
+  DEMO_SAFETY_AUDIT_SEEDS,
+  DEMO_SAFETY_LOCATION_SEEDS,
+  DEMO_SAFETY_SESSION_SEEDS,
+  DEMO_TRUSTED_CONTACT_SEEDS,
   STANDARD_DEFINITION_SEEDS,
 } from './seed-data.js';
 
@@ -125,6 +133,43 @@ describe('demo Community seed', () => {
         ({ status }) => status === 'requested',
       ),
     ).toBe(true);
+  });
+});
+
+describe('demo Ride Safety seed', () => {
+  it('covers the session lifecycle with hash-only private shares', () => {
+    expect(DEMO_TRUSTED_CONTACT_SEEDS).toHaveLength(3);
+    expect(DEMO_SAFETY_SESSION_SEEDS).toHaveLength(5);
+    expect(
+      new Set(DEMO_SAFETY_SESSION_SEEDS.map(({ status }) => status)),
+    ).toEqual(new Set(['active', 'sos', 'ended', 'revoked', 'expired']));
+
+    for (const session of DEMO_SAFETY_SESSION_SEEDS) {
+      expect(session.shareTokenHash).toMatch(/^[a-f0-9]{64}$/u);
+      expect(session).not.toHaveProperty('shareToken');
+      expect(session.shareExpiresOffsetMinutes).toBeGreaterThan(
+        session.startedOffsetMinutes,
+      );
+      if (session.expectedEndOffsetMinutes !== null) {
+        expect(session.expectedEndOffsetMinutes).toBeGreaterThan(
+          session.startedOffsetMinutes,
+        );
+        expect(session.expectedEndOffsetMinutes).toBeLessThanOrEqual(
+          session.shareExpiresOffsetMinutes,
+        );
+      }
+    }
+  });
+
+  it('keeps exact coordinates out of audit metadata', () => {
+    expect(DEMO_SAFETY_LOCATION_SEEDS).toHaveLength(3);
+    expect(DEMO_SAFETY_AUDIT_SEEDS.length).toBeGreaterThanOrEqual(7);
+    const auditJson = JSON.stringify(DEMO_SAFETY_AUDIT_SEEDS);
+
+    for (const location of DEMO_SAFETY_LOCATION_SEEDS) {
+      expect(auditJson).not.toContain(String(location.coordinate.longitude));
+      expect(auditJson).not.toContain(String(location.coordinate.latitude));
+    }
   });
 });
 
@@ -259,5 +304,35 @@ describe('demo Explore seed', () => {
     expect(verificationStatuses).toEqual(
       new Set(['staff_verified', 'community_verified', 'unverified']),
     );
+  });
+
+  it('seeds moderated reviews, route reports, hazards, and matching audits', () => {
+    expect(DEMO_PLACE_REVIEW_SEEDS).toHaveLength(5);
+    expect(DEMO_ROUTE_REPORT_SEEDS).toHaveLength(6);
+    expect(DEMO_HAZARD_REPORT_SEEDS).toHaveLength(7);
+    const allContributions = [
+      ...DEMO_PLACE_REVIEW_SEEDS,
+      ...DEMO_ROUTE_REPORT_SEEDS,
+      ...DEMO_HAZARD_REPORT_SEEDS,
+    ];
+    expect(
+      new Set(allContributions.map(({ moderationStatus }) => moderationStatus)),
+    ).toEqual(new Set(['pending', 'approved', 'rejected']));
+
+    const moderatedIds = new Set(
+      allContributions
+        .filter(({ moderationStatus }) => moderationStatus !== 'pending')
+        .map(({ id }) => id),
+    );
+    expect(DEMO_EXPLORE_MODERATION_AUDIT_SEEDS).toHaveLength(moderatedIds.size);
+    for (const audit of DEMO_EXPLORE_MODERATION_AUDIT_SEEDS) {
+      expect(moderatedIds.has(audit.contributionId)).toBe(true);
+    }
+    for (const hazard of DEMO_HAZARD_REPORT_SEEDS) {
+      expect(hazard.coordinate.longitude).toBeGreaterThanOrEqual(-180);
+      expect(hazard.coordinate.longitude).toBeLessThanOrEqual(180);
+      expect(hazard.coordinate.latitude).toBeGreaterThanOrEqual(-90);
+      expect(hazard.coordinate.latitude).toBeLessThanOrEqual(90);
+    }
   });
 });

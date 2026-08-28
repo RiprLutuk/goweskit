@@ -1,4 +1,8 @@
-import 'dotenv/config';
+import { existsSync } from 'node:fs';
+import { resolve } from 'node:path';
+
+const rootEnvPath = resolve(import.meta.dirname, '../../../../.env');
+if (existsSync(rootEnvPath)) process.loadEnvFile(rootEnvPath);
 
 import { sql } from 'drizzle-orm';
 
@@ -12,9 +16,15 @@ import {
   communityMemberships,
   communityModerationAudits,
   componentCategories,
+  exploreModerationAudits,
   maintenanceEvents,
+  placeReviews,
   rideEventParticipations,
+  routeReports,
+  safetyAudits,
+  safetySessions,
   standardDefinitions,
+  trustedContacts,
   userBikes,
   users,
 } from './schema.js';
@@ -28,11 +38,19 @@ import {
   DEMO_COMMUNITY_SEEDS,
   DEMO_COMMUNITY_USERS,
   DEMO_EVENT_PARTICIPATION_SEEDS,
+  DEMO_EXPLORE_MODERATION_AUDIT_SEEDS,
+  DEMO_HAZARD_REPORT_SEEDS,
   DEMO_INSTALLED_COMPONENT_SEEDS,
   DEMO_MAINTENANCE_EVENT_SEEDS,
+  DEMO_PLACE_REVIEW_SEEDS,
   DEMO_PLACE_SEEDS,
   DEMO_ROUTE_SEEDS,
   DEMO_RIDE_EVENT_SEEDS,
+  DEMO_ROUTE_REPORT_SEEDS,
+  DEMO_SAFETY_AUDIT_SEEDS,
+  DEMO_SAFETY_LOCATION_SEEDS,
+  DEMO_SAFETY_SESSION_SEEDS,
+  DEMO_TRUSTED_CONTACT_SEEDS,
   STANDARD_DEFINITION_SEEDS,
 } from './seed-data.js';
 
@@ -51,6 +69,14 @@ interface SeedSummary {
   demoRideEvents: number;
   demoEventParticipations: number;
   demoModerationAudits: number;
+  demoTrustedContacts: number;
+  demoSafetySessions: number;
+  demoSafetyLocations: number;
+  demoSafetyAudits: number;
+  demoPlaceReviews: number;
+  demoRouteReports: number;
+  demoHazardReports: number;
+  demoExploreModerationAudits: number;
 }
 
 function textArraySql(values: readonly string[]) {
@@ -58,6 +84,10 @@ function textArraySql(values: readonly string[]) {
     values.map((value) => sql`${value}`),
     sql`, `,
   )}]::text[]`;
+}
+
+function minutesFrom(now: Date, offsetMinutes: number): Date {
+  return new Date(now.getTime() + offsetMinutes * 60_000);
 }
 
 export async function seedDatabase(database: Database): Promise<SeedSummary> {
@@ -212,6 +242,26 @@ export async function seedDatabase(database: Database): Promise<SeedSummary> {
       throw new Error('Demo user seed failed.');
     }
 
+    for (const contactSeed of DEMO_TRUSTED_CONTACT_SEEDS) {
+      await transaction
+        .insert(trustedContacts)
+        .values({
+          ...contactSeed,
+          userId: demoUser.id,
+        })
+        .onConflictDoUpdate({
+          target: trustedContacts.id,
+          set: {
+            userId: demoUser.id,
+            name: contactSeed.name,
+            phone: contactSeed.phone,
+            email: contactSeed.email,
+            note: contactSeed.note,
+            updatedAt: new Date(),
+          },
+        });
+    }
+
     const communityUserIds = new Map<string, string>([['demo', demoUser.id]]);
     for (const communityUser of DEMO_COMMUNITY_USERS) {
       const [storedUser] = await transaction
@@ -235,6 +285,154 @@ export async function seedDatabase(database: Database): Promise<SeedSummary> {
         throw new Error(`Community demo user failed for ${communityUser.key}.`);
       }
       communityUserIds.set(communityUser.key, storedUser.id);
+    }
+
+    const demoModeratorId = communityUserIds.get('demo');
+    if (demoModeratorId === undefined) {
+      throw new Error('Missing demo Explore moderator.');
+    }
+
+    for (const reviewSeed of DEMO_PLACE_REVIEW_SEEDS) {
+      const reporterUserId = communityUserIds.get(reviewSeed.reporterKey);
+      if (reporterUserId === undefined)
+        throw new Error('Missing place review reporter.');
+      const moderated = reviewSeed.moderationStatus !== 'pending';
+      await transaction
+        .insert(placeReviews)
+        .values({
+          id: reviewSeed.id,
+          reporterUserId,
+          placeId: reviewSeed.placeId,
+          rating: reviewSeed.rating,
+          notes: reviewSeed.notes,
+          moderationStatus: reviewSeed.moderationStatus,
+          moderatedBy: moderated ? demoModeratorId : null,
+          moderatedAt: moderated ? new Date(reviewSeed.createdAt) : null,
+          createdAt: new Date(reviewSeed.createdAt),
+        })
+        .onConflictDoUpdate({
+          target: placeReviews.id,
+          set: {
+            reporterUserId,
+            placeId: reviewSeed.placeId,
+            rating: reviewSeed.rating,
+            notes: reviewSeed.notes,
+            moderationStatus: reviewSeed.moderationStatus,
+            moderatedBy: moderated ? demoModeratorId : null,
+            moderatedAt: moderated ? new Date(reviewSeed.createdAt) : null,
+            createdAt: new Date(reviewSeed.createdAt),
+          },
+        });
+    }
+
+    for (const reportSeed of DEMO_ROUTE_REPORT_SEEDS) {
+      const reporterUserId = communityUserIds.get(reportSeed.reporterKey);
+      if (reporterUserId === undefined)
+        throw new Error('Missing route report reporter.');
+      const moderated = reportSeed.moderationStatus !== 'pending';
+      await transaction
+        .insert(routeReports)
+        .values({
+          id: reportSeed.id,
+          reporterUserId,
+          routeId: reportSeed.routeId,
+          reportType: reportSeed.reportType,
+          notes: reportSeed.notes,
+          observedAt:
+            reportSeed.observedAt === null
+              ? null
+              : new Date(reportSeed.observedAt),
+          moderationStatus: reportSeed.moderationStatus,
+          moderatedBy: moderated ? demoModeratorId : null,
+          moderatedAt: moderated ? new Date(reportSeed.createdAt) : null,
+          createdAt: new Date(reportSeed.createdAt),
+        })
+        .onConflictDoUpdate({
+          target: routeReports.id,
+          set: {
+            reporterUserId,
+            routeId: reportSeed.routeId,
+            reportType: reportSeed.reportType,
+            notes: reportSeed.notes,
+            observedAt:
+              reportSeed.observedAt === null
+                ? null
+                : new Date(reportSeed.observedAt),
+            moderationStatus: reportSeed.moderationStatus,
+            moderatedBy: moderated ? demoModeratorId : null,
+            moderatedAt: moderated ? new Date(reportSeed.createdAt) : null,
+            createdAt: new Date(reportSeed.createdAt),
+          },
+        });
+    }
+
+    for (const hazardSeed of DEMO_HAZARD_REPORT_SEEDS) {
+      const reporterUserId = communityUserIds.get(hazardSeed.reporterKey);
+      if (reporterUserId === undefined)
+        throw new Error('Missing hazard report reporter.');
+      const moderated = hazardSeed.moderationStatus !== 'pending';
+      await transaction.execute(sql`
+        INSERT INTO hazard_reports (
+          id, reporter_user_id, route_id, hazard_type, severity, location,
+          notes, observed_at, moderation_status, moderated_by, moderated_at,
+          created_at
+        ) VALUES (
+          ${hazardSeed.id}, ${reporterUserId}, ${hazardSeed.routeId},
+          ${hazardSeed.hazardType}, ${hazardSeed.severity},
+          ST_SetSRID(ST_MakePoint(
+            ${hazardSeed.coordinate.longitude},
+            ${hazardSeed.coordinate.latitude}
+          ), 4326)::geography,
+          ${hazardSeed.notes},
+          ${hazardSeed.observedAt === null ? null : new Date(hazardSeed.observedAt)},
+          ${hazardSeed.moderationStatus},
+          ${moderated ? demoModeratorId : null},
+          ${moderated ? new Date(hazardSeed.createdAt) : null},
+          ${new Date(hazardSeed.createdAt)}
+        )
+        ON CONFLICT (id) DO UPDATE SET
+          reporter_user_id = EXCLUDED.reporter_user_id,
+          route_id = EXCLUDED.route_id,
+          hazard_type = EXCLUDED.hazard_type,
+          severity = EXCLUDED.severity,
+          location = EXCLUDED.location,
+          notes = EXCLUDED.notes,
+          observed_at = EXCLUDED.observed_at,
+          moderation_status = EXCLUDED.moderation_status,
+          moderated_by = EXCLUDED.moderated_by,
+          moderated_at = EXCLUDED.moderated_at,
+          created_at = EXCLUDED.created_at
+      `);
+    }
+
+    for (const auditSeed of DEMO_EXPLORE_MODERATION_AUDIT_SEEDS) {
+      const moderatorUserId = communityUserIds.get(auditSeed.moderatorKey);
+      if (moderatorUserId === undefined)
+        throw new Error('Missing Explore audit moderator.');
+      await transaction
+        .insert(exploreModerationAudits)
+        .values({
+          id: auditSeed.id,
+          contributionKind: auditSeed.contributionKind,
+          contributionId: auditSeed.contributionId,
+          moderatorUserId,
+          previousStatus: 'pending',
+          targetStatus: auditSeed.targetStatus,
+          reason: auditSeed.reason,
+          occurredAt: new Date(auditSeed.occurredAt),
+        })
+        .onConflictDoUpdate({
+          target: exploreModerationAudits.id,
+          set: {
+            contributionKind: auditSeed.contributionKind,
+            contributionId: auditSeed.contributionId,
+            moderatorUserId,
+            previousStatus: 'pending',
+            targetStatus: auditSeed.targetStatus,
+            reason: auditSeed.reason,
+            occurredAt: new Date(auditSeed.occurredAt),
+          },
+        });
     }
 
     let specCount = 0;
@@ -496,6 +694,117 @@ export async function seedDatabase(database: Database): Promise<SeedSummary> {
         });
     }
 
+    const safetySeedNow = new Date();
+    for (const sessionSeed of DEMO_SAFETY_SESSION_SEEDS) {
+      const startedAt = minutesFrom(
+        safetySeedNow,
+        sessionSeed.startedOffsetMinutes,
+      );
+      const expectedEndAt =
+        sessionSeed.expectedEndOffsetMinutes === null
+          ? null
+          : minutesFrom(safetySeedNow, sessionSeed.expectedEndOffsetMinutes);
+      const endedAt =
+        sessionSeed.endedOffsetMinutes === null
+          ? null
+          : minutesFrom(safetySeedNow, sessionSeed.endedOffsetMinutes);
+      const shareExpiresAt = minutesFrom(
+        safetySeedNow,
+        sessionSeed.shareExpiresOffsetMinutes,
+      );
+      const sosTriggeredAt =
+        sessionSeed.sosOffsetMinutes === null
+          ? null
+          : minutesFrom(safetySeedNow, sessionSeed.sosOffsetMinutes);
+      await transaction
+        .insert(safetySessions)
+        .values({
+          id: sessionSeed.id,
+          userId: demoUser.id,
+          riderDisplayName: DEMO_ACCOUNT.displayName,
+          trustedContactId: sessionSeed.trustedContactId,
+          status: sessionSeed.status,
+          startedAt,
+          expectedEndAt,
+          endedAt,
+          shareTokenHash: sessionSeed.shareTokenHash,
+          shareExpiresAt,
+          sosTriggeredAt,
+          note: sessionSeed.note,
+        })
+        .onConflictDoUpdate({
+          target: safetySessions.id,
+          set: {
+            userId: demoUser.id,
+            riderDisplayName: DEMO_ACCOUNT.displayName,
+            trustedContactId: sessionSeed.trustedContactId,
+            status: sessionSeed.status,
+            startedAt,
+            expectedEndAt,
+            endedAt,
+            shareTokenHash: sessionSeed.shareTokenHash,
+            shareExpiresAt,
+            sosTriggeredAt,
+            note: sessionSeed.note,
+          },
+        });
+    }
+
+    for (const locationSeed of DEMO_SAFETY_LOCATION_SEEDS) {
+      const recordedAt = minutesFrom(
+        safetySeedNow,
+        locationSeed.recordedOffsetMinutes,
+      );
+      await transaction.execute(sql`
+        INSERT INTO safety_locations (
+          id, session_id, location, accuracy_meters, battery_percent, recorded_at
+        ) VALUES (
+          ${locationSeed.id}, ${locationSeed.sessionId},
+          ST_SetSRID(ST_MakePoint(
+            ${locationSeed.coordinate.longitude},
+            ${locationSeed.coordinate.latitude}
+          ), 4326)::geography,
+          ${locationSeed.accuracyMeters}, ${locationSeed.batteryPercent},
+          ${recordedAt}
+        )
+        ON CONFLICT (id) DO UPDATE SET
+          session_id = EXCLUDED.session_id,
+          location = EXCLUDED.location,
+          accuracy_meters = EXCLUDED.accuracy_meters,
+          battery_percent = EXCLUDED.battery_percent,
+          recorded_at = EXCLUDED.recorded_at
+      `);
+    }
+
+    for (const auditSeed of DEMO_SAFETY_AUDIT_SEEDS) {
+      await transaction
+        .insert(safetyAudits)
+        .values({
+          id: auditSeed.id,
+          action: auditSeed.action,
+          sessionId: auditSeed.sessionId,
+          actorUserId: demoUser.id,
+          occurredAt: minutesFrom(
+            safetySeedNow,
+            auditSeed.occurredOffsetMinutes,
+          ),
+          metadata: auditSeed.metadata,
+        })
+        .onConflictDoUpdate({
+          target: safetyAudits.id,
+          set: {
+            action: auditSeed.action,
+            sessionId: auditSeed.sessionId,
+            actorUserId: demoUser.id,
+            occurredAt: minutesFrom(
+              safetySeedNow,
+              auditSeed.occurredOffsetMinutes,
+            ),
+            metadata: auditSeed.metadata,
+          },
+        });
+    }
+
     return {
       bicycleTypes: BICYCLE_TYPE_SEEDS.length,
       componentCategories: COMPONENT_CATEGORY_SEEDS.length,
@@ -511,6 +820,14 @@ export async function seedDatabase(database: Database): Promise<SeedSummary> {
       demoRideEvents: DEMO_RIDE_EVENT_SEEDS.length,
       demoEventParticipations: DEMO_EVENT_PARTICIPATION_SEEDS.length,
       demoModerationAudits: DEMO_COMMUNITY_MODERATION_AUDIT_SEEDS.length,
+      demoTrustedContacts: DEMO_TRUSTED_CONTACT_SEEDS.length,
+      demoSafetySessions: DEMO_SAFETY_SESSION_SEEDS.length,
+      demoSafetyLocations: DEMO_SAFETY_LOCATION_SEEDS.length,
+      demoSafetyAudits: DEMO_SAFETY_AUDIT_SEEDS.length,
+      demoPlaceReviews: DEMO_PLACE_REVIEW_SEEDS.length,
+      demoRouteReports: DEMO_ROUTE_REPORT_SEEDS.length,
+      demoHazardReports: DEMO_HAZARD_REPORT_SEEDS.length,
+      demoExploreModerationAudits: DEMO_EXPLORE_MODERATION_AUDIT_SEEDS.length,
     };
   });
 }

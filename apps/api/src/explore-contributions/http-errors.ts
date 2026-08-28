@@ -1,3 +1,4 @@
+import { AppError } from '../errors.js';
 import { ExploreContributionError } from './domain.js';
 import { GpxImportError } from './gpx.js';
 
@@ -13,14 +14,14 @@ export type ExploreContributionHttpErrorCode =
   | 'RATE_LIMITED'
   | 'ROUTE_NOT_FOUND';
 
-export class ExploreContributionHttpError extends Error {
+export class ExploreContributionHttpError extends AppError {
   public constructor(
-    public readonly code: ExploreContributionHttpErrorCode,
+    code: ExploreContributionHttpErrorCode,
     message: string,
-    public readonly statusCode: number,
-    public readonly details: Record<string, unknown> = {},
+    statusCode: number,
+    details: Record<string, unknown> = {},
   ) {
-    super(message);
+    super(code, message, statusCode, details);
     this.name = 'ExploreContributionHttpError';
   }
 }

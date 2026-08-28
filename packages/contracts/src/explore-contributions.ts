@@ -22,6 +22,11 @@ export const HAZARD_TYPES = [
   'other',
 ] as const;
 export const HAZARD_SEVERITIES = ['info', 'caution', 'danger'] as const;
+export const CONTRIBUTION_KINDS = [
+  'place_review',
+  'route_report',
+  'hazard_report',
+] as const;
 
 export const GPX_MAX_FILE_BYTES = 2_000_000;
 export const GPX_MIN_POINTS = 2;
@@ -33,6 +38,14 @@ export const contributionModerationStatusSchema = z.enum(
 export const routeReportTypeSchema = z.enum(ROUTE_REPORT_TYPES);
 export const hazardTypeSchema = z.enum(HAZARD_TYPES);
 export const hazardSeveritySchema = z.enum(HAZARD_SEVERITIES);
+export const contributionKindSchema = z.enum(CONTRIBUTION_KINDS);
+export type ContributionModerationStatus = z.infer<
+  typeof contributionModerationStatusSchema
+>;
+export type RouteReportType = z.infer<typeof routeReportTypeSchema>;
+export type HazardType = z.infer<typeof hazardTypeSchema>;
+export type HazardSeverity = z.infer<typeof hazardSeveritySchema>;
+export type ContributionKind = z.infer<typeof contributionKindSchema>;
 
 const contributionNotesSchema = z.string().trim().min(1).max(1_000);
 const contributionSubmissionFields = {
@@ -162,6 +175,25 @@ export const publicHazardReportSchema = z
   .strict();
 export type PublicHazardReport = z.infer<typeof publicHazardReportSchema>;
 
+export const publicPlaceReviewsResponseSchema = z
+  .object({ reviews: z.array(publicPlaceReviewSchema).max(100) })
+  .strict();
+export type PublicPlaceReviewsResponse = z.infer<
+  typeof publicPlaceReviewsResponseSchema
+>;
+
+export const publicRouteReportsResponseSchema = z
+  .object({ reports: z.array(publicRouteReportSchema).max(100) })
+  .strict();
+export type PublicRouteReportsResponse = z.infer<
+  typeof publicRouteReportsResponseSchema
+>;
+
+export const publicHazardsResponseSchema = z
+  .object({ hazards: z.array(publicHazardReportSchema).max(100) })
+  .strict();
+export type PublicHazardsResponse = z.infer<typeof publicHazardsResponseSchema>;
+
 export const contributionSubmissionResponseSchema = z
   .object({
     contribution: z.discriminatedUnion('kind', [
@@ -171,6 +203,9 @@ export const contributionSubmissionResponseSchema = z
     ]),
   })
   .strict();
+export type ContributionSubmissionResponse = z.infer<
+  typeof contributionSubmissionResponseSchema
+>;
 
 const gpxPositionSchema = z.tuple([
   z.number().min(-180).max(180),

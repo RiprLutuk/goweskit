@@ -79,27 +79,27 @@ P3 = later
 
 ## Community
 
-- [ ] COMM-001 [P1] Directory.
-- [ ] COMM-002 [P1] Detail.
-- [ ] COMM-003 [P1] Join/request.
-- [ ] COMM-004 [P1] Ride events.
-- [ ] COMM-005 [P1] Nearby events.
-- [ ] COMM-006 [P2] Contributor reputation.
-- [ ] COMM-007 [P2] Moderation queue.
+- [x] COMM-001 [P1] Directory.
+- [x] COMM-002 [P1] Detail.
+- [x] COMM-003 [P1] Join/request.
+- [x] COMM-004 [P1] Ride events.
+- [x] COMM-005 [P1] Nearby events.
+- [x] COMM-006 [P2] Contributor reputation.
+- [x] COMM-007 [P2] Moderation queue.
 
 ## Ride Safety
 
-- [ ] SAFE-001 [P1] Trusted contacts.
-- [ ] SAFE-002 [P1] Session state machine.
-- [ ] SAFE-003 [P1] Expiring share token.
-- [ ] SAFE-004 [P1] Start session UI.
-- [ ] SAFE-005 [P1] Location update endpoint.
-- [ ] SAFE-006 [P1] Share page.
-- [ ] SAFE-007 [P1] Press-and-hold SOS.
-- [ ] SAFE-008 [P1] End/revoke.
-- [ ] SAFE-009 [P1] Rate limit/audit.
-- [ ] SAFE-010 [P1] Retention cleanup.
-- [ ] SAFE-011 [P1] Emergency-service disclaimer.
+- [x] SAFE-001 [P1] Trusted contacts.
+- [x] SAFE-002 [P1] Session state machine.
+- [x] SAFE-003 [P1] Expiring share token.
+- [x] SAFE-004 [P1] Start session UI.
+- [x] SAFE-005 [P1] Location update endpoint.
+- [x] SAFE-006 [P1] Share page.
+- [x] SAFE-007 [P1] Press-and-hold SOS.
+- [x] SAFE-008 [P1] End/revoke.
+- [x] SAFE-009 [P1] Rate limit/audit.
+- [x] SAFE-010 [P1] Retention cleanup.
+- [x] SAFE-011 [P1] Emergency-service disclaimer.
 
 ## Maintenance
 
