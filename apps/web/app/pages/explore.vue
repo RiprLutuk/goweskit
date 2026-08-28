@@ -157,6 +157,11 @@ function itemDistance(item: ExploreItem): number {
     : item.distanceFromUserMeters;
 }
 
+function applyQuickPreset(preset: 'workshop' | 'water' | 'trail' | 'coffee'): void {
+  category.value = preset;
+  void loadNearby();
+}
+
 onMounted(loadNearby);
 </script>
 
@@ -167,7 +172,7 @@ onMounted(loadNearby);
       <h1>Find a ride, workshop, or good place to pause.</h1>
       <p>
         Nearby results use PostGIS and favor verified, recently confirmed data.
-        Seeded locations and route lines are demonstrations, not navigation.
+        Seeded locations and route lines are demonstrations, not turn-by-turn navigation.
       </p>
     </header>
 
@@ -175,9 +180,28 @@ onMounted(loadNearby);
       <span aria-hidden="true">⌖</span>
       <p>
         <strong>Your exact location stays private.</strong> Location access only
-        happens after you press the button, is used once, and is never
-        published.
+        happens after you explicitly press the button, is used once for nearby radius search, and is never published.
       </p>
+    </div>
+
+    <!-- Quick Preset Filter Chips -->
+    <div class="explore-presets-row">
+      <span class="presets-label">Quick filter:</span>
+      <button class="preset-pill" type="button" @click="applyQuickPreset('workshop')">
+        🔧 Workshops
+      </button>
+      <button class="preset-pill" type="button" @click="applyQuickPreset('water')">
+        💧 Water Refills
+      </button>
+      <button class="preset-pill" type="button" @click="applyQuickPreset('coffee')">
+        ☕ Coffee Stops
+      </button>
+      <button class="preset-pill" type="button" @click="category = 'routes'; loadNearby()">
+        ⛰️ Routes Only
+      </button>
+      <button class="preset-pill" type="button" @click="category = 'all'; loadNearby()">
+        ✨ Show All
+      </button>
     </div>
 
     <div class="explore-layout">
@@ -197,7 +221,7 @@ onMounted(loadNearby);
             :disabled="locating"
             @click="useMyLocation"
           >
-            {{ locating ? 'Finding you…' : 'Use my location once' }}
+            {{ locating ? 'Finding you…' : '⌖ Use my location once' }}
           </button>
           <button class="text-button" type="button" @click="resetToDemoArea">
             Reset to Bandung demo
@@ -347,6 +371,7 @@ onMounted(loadNearby);
         >
           {{ errorMessage }}
         </p>
+
         <div v-else class="map-frame" :aria-busy="loading">
           <ClientOnly>
             <ExploreMap
@@ -370,11 +395,8 @@ onMounted(loadNearby);
             >
           </div>
         </div>
-        <p v-if="mapError" class="map-note" role="status">
-          The basemap could not fully load. The accessible result list below
-          remains available.
-        </p>
 
+        <!-- Selected Item Detail Modal/Card -->
         <article v-if="selectedItem" class="explore-detail">
           <div class="explore-detail__topline">
             <span class="result-type">{{ typeLabel(selectedItem) }}</span>
@@ -383,14 +405,41 @@ onMounted(loadNearby);
               type="button"
               @click="selectedId = null"
             >
-              Close
+              ✕ Close
             </button>
           </div>
           <h3>{{ selectedItem.name }}</h3>
           <p>{{ selectedItem.description }}</p>
+
+          <!-- Elevation Profile if Route -->
+          <div v-if="selectedItem.kind === 'route'" class="route-elevation-card">
+            <strong>Elevation Profile (Climb Preview)</strong>
+            <div class="elevation-graph">
+              <svg viewBox="0 0 300 80" class="elevation-svg" aria-label="Route elevation profile">
+                <path
+                  d="M0 65 Q 60 50, 120 40 T 240 20 L 300 15 L 300 80 L 0 80 Z"
+                  fill="rgb(142 221 244 / 35%)"
+                />
+                <path
+                  d="M0 65 Q 60 50, 120 40 T 240 20 L 300 15"
+                  fill="none"
+                  stroke="#2988a5"
+                  stroke-width="3"
+                  stroke-linecap="round"
+                />
+                <circle cx="0" cy="65" r="4" fill="#17202a" />
+                <circle cx="300" cy="15" r="4" fill="#c9f36a" stroke="#17202a" stroke-width="2" />
+              </svg>
+              <div class="elevation-labels">
+                <span>Start: ~760m</span>
+                <span>Peak: ~{{ 760 + selectedItem.elevationGainMeters }}m</span>
+              </div>
+            </div>
+          </div>
+
           <dl class="explore-facts">
             <div>
-              <dt>From search point</dt>
+              <dt>From Search Point</dt>
               <dd>{{ formatDistance(itemDistance(selectedItem)) }}</dd>
             </div>
             <div>
@@ -404,7 +453,7 @@ onMounted(loadNearby);
               </dd>
             </div>
             <div v-if="selectedItem.kind === 'route'">
-              <dt>Route</dt>
+              <dt>Route Distance</dt>
               <dd>
                 {{ formatDistance(selectedItem.distanceMeters) }} ·
                 {{ selectedItem.elevationGainMeters }} m climbing ·
@@ -418,6 +467,7 @@ onMounted(loadNearby);
           </dl>
         </article>
 
+        <!-- Result List Sheet -->
         <div class="result-sheet">
           <div class="result-sheet__handle" aria-hidden="true" />
           <div class="section-heading">
@@ -458,6 +508,73 @@ onMounted(loadNearby);
       </section>
     </div>
 
+    <!-- Community Reviews, Hazards & GPX Section -->
     <ExploreContributions :selected-item="selectedItem" />
   </div>
 </template>
+
+<style scoped>
+.explore-presets-row {
+  display: flex;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 0.5rem;
+  padding: 0.65rem 1rem;
+  border-radius: 0.9rem;
+  background: var(--color-white);
+  border: 1px solid var(--color-sand);
+}
+
+.presets-label {
+  font-size: 0.78rem;
+  font-weight: 800;
+  color: var(--color-asphalt);
+  margin-right: 0.25rem;
+}
+
+.preset-pill {
+  padding: 0.35rem 0.65rem;
+  border: 1px solid var(--color-sand);
+  border-radius: 0.6rem;
+  background: var(--color-white);
+  color: var(--color-ink);
+  font-size: 0.76rem;
+  font-weight: 800;
+  cursor: pointer;
+  transition: all 120ms ease;
+}
+
+.preset-pill:hover {
+  background: var(--color-ink);
+  color: var(--color-white);
+  border-color: var(--color-ink);
+}
+
+.route-elevation-card {
+  margin: 1rem 0;
+  padding: 1rem;
+  border-radius: 0.9rem;
+  background: rgb(237 228 210 / 30%);
+  border: 1px solid var(--color-sand);
+}
+
+.elevation-graph {
+  margin-top: 0.5rem;
+}
+
+.elevation-svg {
+  width: 100%;
+  height: 4.5rem;
+  border-radius: 0.5rem;
+  background: var(--color-white);
+}
+
+.elevation-labels {
+  display: flex;
+  justify-content: space-between;
+  margin-top: 0.35rem;
+  font-size: 0.72rem;
+  color: var(--color-asphalt);
+  font-family: ui-monospace, monospace;
+}
+</style>

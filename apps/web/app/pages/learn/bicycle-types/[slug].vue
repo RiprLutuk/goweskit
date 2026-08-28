@@ -9,6 +9,9 @@ const api = useApi();
 const anatomy = ref<BicycleAnatomy | null>(null);
 const loading = ref(true);
 const errorMessage = ref('');
+const activeHotspotIndex = ref<number | null>(null);
+const categoryFilter = ref('all');
+
 const slug = computed(() => String(route.params.slug));
 
 onMounted(loadAnatomy);
@@ -27,11 +30,31 @@ async function loadAnatomy(): Promise<void> {
     loading.value = false;
   }
 }
+
+const activeHotspot = computed(() => {
+  if (
+    anatomy.value === null ||
+    activeHotspotIndex.value === null ||
+    activeHotspotIndex.value < 0 ||
+    activeHotspotIndex.value >= anatomy.value.hotspots.length
+  ) {
+    return null;
+  }
+  return anatomy.value.hotspots[activeHotspotIndex.value];
+});
+
+function selectHotspot(index: number | null): void {
+  if (index === null || activeHotspotIndex.value === index) {
+    activeHotspotIndex.value = null;
+  } else {
+    activeHotspotIndex.value = index;
+  }
+}
 </script>
 
 <template>
-  <div class="page-stack">
-    <NuxtLink class="anatomy-back" to="/learn">← Back to Learn</NuxtLink>
+  <div class="page-stack anatomy-page">
+    <NuxtLink class="anatomy-back" to="/learn">← Back to Learn Library</NuxtLink>
 
     <p v-if="loading" class="state-card" role="status">
       Preparing the workshop diagram…
@@ -66,68 +89,41 @@ async function loadAnatomy(): Promise<void> {
 
     <template v-else>
       <header class="page-heading anatomy-heading">
-        <span class="status-chip">{{ anatomy.bicycleType.name }}</span>
+        <span class="status-chip status-chip--sky">{{ anatomy.bicycleType.name }}</span>
         <h1>Meet the parts of your bike.</h1>
         <p>{{ anatomy.overview }}</p>
       </header>
 
+      <!-- Interactive Hotspot Workbench -->
       <section class="anatomy-workbench" aria-labelledby="diagram-title">
         <div class="anatomy-workbench__heading">
           <div>
-            <p class="technical-label">Touch, click, or tab</p>
-            <h2 id="diagram-title">Interactive anatomy</h2>
+            <p class="technical-label">Direct Interactive Blueprint</p>
+            <h2 id="diagram-title">Interactive Anatomy Diagram</h2>
           </div>
           <span class="count-chip">{{ anatomy.hotspots.length }} parts</span>
         </div>
 
-        <div class="bike-diagram">
-          <svg
-            class="bike-diagram__drawing"
-            viewBox="0 0 100 78"
-            aria-hidden="true"
-            focusable="false"
-          >
-            <circle cx="18" cy="59" r="15" />
-            <circle cx="82" cy="59" r="15" />
-            <path d="M18 59 39 30 52 59 28 59 45 43 68 43 82 59" />
-            <path d="M52 59 68 43 62 26 M56 26h13" />
-            <path d="M39 30 33 20 25 19 M31 19h-8" />
-            <circle cx="52" cy="59" r="4" />
-            <path d="M52 59 61 65 M52 59 44 53" />
-          </svg>
-
-          <ol class="bike-diagram__hotspots" aria-label="Bike anatomy hotspots">
-            <li
-              v-for="(hotspot, index) in anatomy.hotspots"
-              :key="hotspot.component.id"
-              :style="{
-                left: `${hotspot.xPercent}%`,
-                top: `${hotspot.yPercent}%`,
-              }"
-            >
-              <NuxtLink
-                class="hotspot-pin"
-                :to="`/learn/components/${hotspot.component.slug}`"
-                :aria-label="`${index + 1}. ${hotspot.component.name}: ${hotspot.beginnerLabel}`"
-              >
-                {{ index + 1 }}
-              </NuxtLink>
-            </li>
-          </ol>
+        <div class="bike-diagram-container">
+          <RealisticBikeDiagram
+            :type-slug="slug"
+            :anatomy="anatomy"
+            :active-index="activeHotspotIndex"
+            @select="selectHotspot"
+          />
         </div>
 
         <p class="diagram-note">
-          The diagram is a learning aid, not a measurement reference. The full
-          component list below provides the same links without relying on the
-          picture.
+          💡 <strong>Tip:</strong> Click or hover directly on any part of the bicycle illustration above to inspect its specs, or browse the list below.
         </p>
       </section>
 
+      <!-- Parts Guide List -->
       <section aria-labelledby="parts-title">
         <div class="section-heading">
           <div>
             <p class="section-heading__eyebrow">The same parts, in words</p>
-            <h2 id="parts-title">Component guide</h2>
+            <h2 id="parts-title">Component Guide</h2>
           </div>
         </div>
 
@@ -136,21 +132,25 @@ async function loadAnatomy(): Promise<void> {
             v-for="(hotspot, index) in anatomy.hotspots"
             :key="hotspot.component.id"
             class="anatomy-list__item"
+            :class="{ 'anatomy-list__item--highlighted': activeHotspotIndex === index }"
+            @click="selectHotspot(index)"
           >
             <span class="anatomy-list__number" aria-hidden="true">
               {{ index + 1 }}
             </span>
-            <div>
+            <div class="anatomy-list__content">
               <p class="technical-label">{{ hotspot.beginnerLabel }}</p>
               <h3>{{ hotspot.component.name }}</h3>
               <p>{{ hotspot.beginnerSummary }}</p>
-              <NuxtLink
-                class="anatomy-list__link"
-                :to="`/learn/components/${hotspot.component.slug}`"
-              >
-                Learn about {{ hotspot.component.name }}
-                <span aria-hidden="true">→</span>
-              </NuxtLink>
+              <div class="anatomy-list__actions">
+                <NuxtLink
+                  class="anatomy-list__link"
+                  :to="`/learn/components/${hotspot.component.slug}`"
+                  @click.stop
+                >
+                  Learn about {{ hotspot.component.name }} →
+                </NuxtLink>
+              </div>
             </div>
           </li>
         </ol>
@@ -160,6 +160,10 @@ async function loadAnatomy(): Promise<void> {
 </template>
 
 <style scoped>
+.anatomy-page {
+  gap: 2rem;
+}
+
 .anatomy-back {
   justify-self: start;
   color: var(--color-asphalt);
@@ -184,12 +188,12 @@ async function loadAnatomy(): Promise<void> {
 
 .anatomy-workbench {
   display: grid;
-  gap: 1rem;
+  gap: 1.25rem;
   padding: clamp(1rem, 4vw, 2rem);
   border: 1px solid rgb(64 80 95 / 14%);
   border-radius: var(--radius-card);
   background:
-    linear-gradient(rgb(255 255 255 / 88%), rgb(255 255 255 / 88%)),
+    linear-gradient(rgb(255 255 255 / 92%), rgb(255 255 255 / 92%)),
     repeating-linear-gradient(
       90deg,
       transparent 0 31px,
@@ -210,6 +214,11 @@ async function loadAnatomy(): Promise<void> {
   margin: 0;
 }
 
+.bike-diagram-container {
+  display: grid;
+  gap: 1rem;
+}
+
 .bike-diagram {
   position: relative;
   width: 100%;
@@ -218,7 +227,7 @@ async function loadAnatomy(): Promise<void> {
   border: 1px solid rgb(64 80 95 / 15%);
   border-radius: 1rem;
   background:
-    radial-gradient(circle at 50% 70%, rgb(201 243 106 / 30%), transparent 40%),
+    radial-gradient(circle at 50% 70%, rgb(201 243 106 / 35%), transparent 50%),
     var(--color-canvas);
 }
 
@@ -255,10 +264,8 @@ async function loadAnatomy(): Promise<void> {
   color: var(--color-ink);
   font-size: 0.85rem;
   font-weight: 900;
-  text-decoration: none;
-  transition:
-    transform 150ms ease,
-    box-shadow 150ms ease;
+  cursor: pointer;
+  transition: transform 150ms ease, box-shadow 150ms ease, background-color 150ms ease;
 }
 
 .hotspot-pin:hover,
@@ -269,10 +276,75 @@ async function loadAnatomy(): Promise<void> {
   transform: translateY(3px);
 }
 
+.hotspot-pin--active {
+  background: var(--color-sky);
+  box-shadow: 0 0 0 4px var(--color-ink), 0 5px 0 var(--color-ink);
+  transform: scale(1.15) translateY(-2px);
+}
+
+/* Active Hotspot Preview Card */
+.active-hotspot-card {
+  padding: 1.15rem;
+  border: 2px solid var(--color-ink);
+  border-radius: 1rem;
+  background: var(--color-white);
+  box-shadow: 0 8px 25px rgb(23 32 42 / 12%);
+  display: grid;
+  gap: 0.65rem;
+  animation: fadeIn 150ms ease-out;
+}
+
+@keyframes fadeIn {
+  from { opacity: 0; transform: translateY(-4px); }
+  to { opacity: 1; transform: translateY(0); }
+}
+
+.active-hotspot-card__header {
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+}
+
+.active-hotspot-card__header h3 {
+  margin: 0;
+  font-size: 1.25rem;
+}
+
+.active-hotspot-pin-badge {
+  display: grid;
+  width: 2.2rem;
+  height: 2.2rem;
+  place-items: center;
+  border-radius: 0.65rem;
+  background: var(--color-chain-lime);
+  font-weight: 900;
+  font-size: 0.85rem;
+}
+
+.active-hotspot-card__header .text-button {
+  margin-left: auto;
+  font-size: 1.1rem;
+  padding: 0.2rem 0.5rem;
+}
+
+.active-hotspot-card__summary {
+  margin: 0;
+  color: var(--color-asphalt);
+  font-size: 0.9rem;
+  line-height: 1.55;
+}
+
+.active-hotspot-card__actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.5rem;
+  margin-top: 0.35rem;
+}
+
 .diagram-note {
   margin: 0;
   color: var(--color-asphalt);
-  font-size: 0.82rem;
+  font-size: 0.84rem;
   line-height: 1.6;
 }
 
@@ -288,10 +360,22 @@ async function loadAnatomy(): Promise<void> {
   display: grid;
   grid-template-columns: 2.5rem 1fr;
   gap: 0.85rem;
-  padding: 1rem;
+  padding: 1.15rem;
   border: 1px solid rgb(64 80 95 / 13%);
   border-radius: 1rem;
   background: var(--color-white);
+  cursor: pointer;
+  transition: border-color 120ms ease, background-color 120ms ease;
+}
+
+.anatomy-list__item:hover {
+  border-color: var(--color-ink);
+}
+
+.anatomy-list__item--highlighted {
+  border-color: var(--color-ink);
+  background: rgb(201 243 106 / 15%);
+  box-shadow: 0 4px 15px rgb(23 32 42 / 8%);
 }
 
 .anatomy-list__number {
@@ -313,19 +397,28 @@ async function loadAnatomy(): Promise<void> {
   margin-top: 0.2rem;
 }
 
-.anatomy-list__item > div > p:not(.technical-label) {
+.anatomy-list__content > p:not(.technical-label) {
   margin-top: 0.45rem;
   color: var(--color-asphalt);
   line-height: 1.6;
 }
 
+.anatomy-list__actions {
+  margin-top: 0.75rem;
+}
+
 .anatomy-list__link {
-  display: inline-block;
-  min-height: 2.75rem;
-  margin-top: 0.65rem;
-  padding-top: 0.65rem;
   font-weight: 800;
+  font-size: 0.85rem;
+  color: var(--color-ink);
+  text-decoration: underline;
   text-underline-offset: 0.2rem;
+}
+
+.button--sm {
+  min-height: 2.25rem;
+  padding: 0.35rem 0.75rem;
+  font-size: 0.78rem;
 }
 
 @media (min-width: 48rem) {
@@ -336,12 +429,6 @@ async function loadAnatomy(): Promise<void> {
 
   .anatomy-list {
     grid-template-columns: repeat(2, minmax(0, 1fr));
-  }
-}
-
-@media (prefers-reduced-motion: reduce) {
-  .hotspot-pin {
-    transition: none;
   }
 }
 </style>

@@ -12,7 +12,8 @@ import type {
 import { buildSafetyShareUrl, SOS_HOLD_DURATION_MS } from '../../safety';
 
 const api = useApi();
-const { user, initialized, refresh } = useAuth();
+const { user, initialized, refresh, login } = useAuth();
+const { triggerHaptic } = usePwa();
 
 const contacts = ref<TrustedContact[]>([]);
 const sessions = ref<SafetySession[]>([]);
@@ -238,6 +239,47 @@ async function updateLocation(): Promise<void> {
   }
 }
 
+async function quickDemoLogin(): Promise<void> {
+  try {
+    await login({
+      email: 'demo@goweskit.local',
+      password: 'GowesKitDemo123!',
+    });
+    await loadSafety();
+  } catch (error: unknown) {
+    pageError.value = getApiErrorMessage(error);
+  }
+}
+
+async function simulateLocationUpdate(): Promise<void> {
+  const session = activeSession.value;
+  if (session === null) return;
+  locationSaving.value = true;
+  sessionError.value = '';
+  try {
+    const delta = (Math.random() - 0.5) * 0.005;
+    const response = await api<SafetySessionResponse>(
+      `/safety/sessions/${session.id}/location`,
+      {
+        method: 'PUT',
+        body: {
+          coordinate: {
+            longitude: 107.6191 + delta,
+            latitude: -6.9175 + delta,
+          },
+          accuracyMeters: 8,
+          batteryPercent: 88,
+        },
+      },
+    );
+    replaceSession(response.session);
+  } catch (error: unknown) {
+    sessionError.value = getApiErrorMessage(error);
+  } finally {
+    locationSaving.value = false;
+  }
+}
+
 function beginSosHold(): void {
   if (
     activeSession.value?.status !== 'active' ||
@@ -247,9 +289,11 @@ function beginSosHold(): void {
     return;
   }
   holdingSos.value = true;
+  triggerHaptic(20);
   sosTimer = setTimeout(() => {
     holdingSos.value = false;
     sosTimer = undefined;
+    triggerHaptic([100, 50, 100, 50, 200]);
     void mutateSession('sos');
   }, SOS_HOLD_DURATION_MS);
 }
@@ -340,10 +384,16 @@ function statusLabel(status: SafetySession['status']): string {
       Loading your Ride Safety setup…
     </p>
     <section v-else-if="!user" class="state-card signed-out-state">
+      <strong>Private Ride Safety Setup</strong>
       <p>
-        Sign in to add a trusted contact and start a private safety session.
+        Sign in to add trusted contacts and start a private safety session.
       </p>
-      <NuxtLink class="button button--primary" to="/login">Sign in</NuxtLink>
+      <div class="action-row">
+        <button class="button button--primary" type="button" @click="quickDemoLogin">
+          ⚡ 1-Click Demo Login
+        </button>
+        <NuxtLink class="button button--secondary" to="/login">Sign in</NuxtLink>
+      </div>
     </section>
     <p v-else-if="pageError" class="state-card state-card--error" role="alert">
       {{ pageError }}
@@ -426,14 +476,24 @@ function statusLabel(status: SafetySession['status']): string {
                 background tracking runs after this update.
               </p>
             </div>
-            <button
-              class="button button--secondary"
-              type="button"
-              :disabled="locationSaving || actionPending !== null"
-              @click="updateLocation"
-            >
-              {{ locationSaving ? 'Updating…' : 'Update my location now' }}
-            </button>
+            <div class="action-row">
+              <button
+                class="button button--secondary"
+                type="button"
+                :disabled="locationSaving || actionPending !== null"
+                @click="updateLocation"
+              >
+                {{ locationSaving ? 'Updating…' : '📍 Update my location now' }}
+              </button>
+              <button
+                class="button button--secondary"
+                type="button"
+                :disabled="locationSaving || actionPending !== null"
+                @click="simulateLocationUpdate"
+              >
+                {{ locationSaving ? 'Simulating…' : '🧪 Simulate movement' }}
+              </button>
+            </div>
           </div>
 
           <div class="safety-actions">

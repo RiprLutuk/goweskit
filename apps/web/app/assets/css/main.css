@@ -7,27 +7,46 @@
   --color-coral: #ff8c75;
   --color-sand: #ede4d2;
   --color-white: #ffffff;
-  --font-ui: 'Plus Jakarta Sans', 'Manrope', system-ui, sans-serif;
+  --font-ui: -apple-system, BlinkMacSystemFont, 'Plus Jakarta Sans', 'Manrope', system-ui, sans-serif;
+  --font-mono: 'Geist Mono', ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace;
   --radius-card: 20px;
-  --shadow-card: 0 18px 50px rgb(23 32 42 / 8%);
+  --shadow-card: 0 8px 28px rgb(23 32 42 / 7%);
+  --safe-top: env(safe-area-inset-top, 0px);
+  --safe-bottom: env(safe-area-inset-bottom, 0px);
+  --safe-left: env(safe-area-inset-left, 0px);
+  --safe-right: env(safe-area-inset-right, 0px);
 }
 
 *,
 *::before,
 *::after {
   box-sizing: border-box;
+  -webkit-tap-highlight-color: transparent;
+  min-width: 0;
 }
 
 html {
+  overflow-x: hidden;
+  overflow-y: scroll;
+  max-width: 100%;
+  width: 100%;
   background: var(--color-canvas);
   color: var(--color-ink);
   font-family: var(--font-ui);
+  -webkit-text-size-adjust: 100%;
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
 }
 
 body {
+  overflow-x: hidden;
+  max-width: 100%;
+  width: 100%;
   min-width: 320px;
-  min-height: 100vh;
+  min-height: 100%;
   margin: 0;
+  padding: 0;
+  -webkit-touch-callout: none;
   background:
     radial-gradient(
       circle at 12% 5%,
@@ -41,11 +60,41 @@ a {
   color: inherit;
 }
 
-.app-shell {
-  width: min(100%, 82rem);
+button, a, input, select, textarea, [role="button"] {
+  touch-action: manipulation;
+}
+
+.button:active:not(:disabled),
+.action-badge:active,
+.tactile-card:active,
+.bike-card-rich:active,
+.filter-pill:active,
+.preset-chip:active,
+.knowledge-chip-card:active {
+  transform: scale(0.96) !important;
+  opacity: 0.92;
+  transition: transform 70ms cubic-bezier(0.2, 0.8, 0.4, 1);
+}
+
+.app-root {
+  width: 100%;
   min-height: 100vh;
+  min-height: 100dvh;
+  display: flex;
+  flex-direction: column;
+}
+
+.app-shell {
+  width: min(100%, 60rem);
   margin: 0 auto;
-  padding: 0 1rem 7rem;
+  padding: 0 0.85rem max(6.5rem, calc(5.5rem + var(--safe-bottom)));
+  flex: 1 0 auto;
+}
+
+@media (min-width: 48rem) {
+  .app-shell {
+    padding: 0 1.5rem 4.5rem;
+  }
 }
 
 .skip-link {
@@ -65,11 +114,12 @@ a {
 }
 
 .site-header {
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  min-height: 5.25rem;
-  gap: 1rem;
+  position: sticky;
+  top: 0;
+  left: 0;
+  right: 0;
+  width: 100%;
+  z-index: 40;
 }
 
 .brand {
@@ -108,7 +158,7 @@ a {
 }
 
 .main-content {
-  padding-top: clamp(2.25rem, 10vh, 6rem);
+  padding-top: 1.25rem;
 }
 
 .welcome-card {
@@ -214,32 +264,42 @@ a {
 
 .button {
   display: inline-flex;
-  min-height: 2.9rem;
+  min-height: 2.85rem;
   align-items: center;
   justify-content: center;
-  padding: 0.7rem 1rem;
-  border: 2px solid transparent;
-  border-radius: 0.85rem;
+  padding: 0.65rem 1.15rem;
+  border: 1.5px solid transparent;
+  border-radius: 0.95rem;
   font: inherit;
+  font-size: 0.88rem;
   font-weight: 800;
   text-decoration: none;
   cursor: pointer;
+  user-select: none;
+  transition: transform 90ms cubic-bezier(0.2, 0.8, 0.4, 1), background-color 120ms ease, border-color 120ms ease, opacity 120ms ease;
+}
+
+.button:active:not(:disabled) {
+  transform: scale(0.96);
+  opacity: 0.92;
 }
 
 .button:disabled {
   cursor: wait;
-  opacity: 0.65;
+  opacity: 0.6;
 }
 
 .button--primary {
   background: var(--color-ink);
   color: var(--color-white);
+  box-shadow: 0 2px 8px rgb(23 32 42 / 12%);
 }
 
 .button--secondary {
   border-color: var(--color-sand);
   background: var(--color-white);
   color: var(--color-ink);
+  box-shadow: 0 1px 4px rgb(23 32 42 / 5%);
 }
 
 .state-card {

@@ -17,7 +17,7 @@ export default defineNuxtConfig({
   compatibilityDate: '2026-08-26',
   css: ['~/assets/css/main.css'],
   devtools: { enabled: false },
-  modules: ['@nuxt/eslint'],
+  modules: ['@nuxt/eslint', '@vite-pwa/nuxt'],
   devServer: {
     port: devServerPort,
   },
@@ -32,16 +32,93 @@ export default defineNuxtConfig({
         process.env.PUBLIC_API_BASE_URL ?? 'http://localhost:4000/api/v1',
     },
   },
+  pwa: {
+    registerType: 'autoUpdate',
+    manifest: {
+      name: 'GowesKit — Cycling Knowledge & Workshop',
+      short_name: 'GowesKit',
+      description:
+        'Learn bicycle anatomy, verify upgrade compatibility with deterministic rules, and share safe rides.',
+      theme_color: '#17202A',
+      background_color: '#FFFDF7',
+      display: 'standalone',
+      orientation: 'portrait-primary',
+      icons: [
+        {
+          src: '/icons/icon-192.png',
+          sizes: '192x192',
+          type: 'image/png',
+          purpose: 'any',
+        },
+        {
+          src: '/icons/icon-512.png',
+          sizes: '512x512',
+          type: 'image/png',
+          purpose: 'any',
+        },
+        {
+          src: '/icons/icon-maskable-512.png',
+          sizes: '512x512',
+          type: 'image/png',
+          purpose: 'maskable',
+        },
+        {
+          src: '/icons/icon-192.svg',
+          sizes: '192x192',
+          type: 'image/svg+xml',
+          purpose: 'any',
+        },
+        {
+          src: '/icons/icon.svg',
+          sizes: '512x512',
+          type: 'image/svg+xml',
+          purpose: 'any',
+        },
+      ],
+    },
+    workbox: {
+      navigateFallback: '/',
+      globPatterns: ['**/*.{js,css,html,png,svg,ico,webmanifest,json}'],
+    },
+    client: {
+      installPrompt: true,
+    },
+    devOptions: {
+      enabled: true,
+      type: 'module',
+    },
+  },
   app: {
     head: {
       htmlAttrs: { lang: 'en' },
-      title: 'GowesKit',
+      title: 'GowesKit — Cycling Knowledge & Workshop',
       meta: [
         {
-          name: 'description',
-          content: 'A learning-first cycling platform.',
+          name: 'viewport',
+          content:
+            'width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no, viewport-fit=cover',
         },
-        { name: 'theme-color', content: '#fffdf7' },
+        {
+          name: 'description',
+          content:
+            'Learn bicycle anatomy, verify upgrade compatibility with deterministic rules, and share safe rides.',
+        },
+        { name: 'theme-color', content: '#17202A' },
+        { name: 'mobile-web-app-capable', content: 'yes' },
+        { name: 'apple-mobile-web-app-capable', content: 'yes' },
+        {
+          name: 'apple-mobile-web-app-status-bar-style',
+          content: 'black-translucent',
+        },
+        { name: 'apple-mobile-web-app-title', content: 'GowesKit' },
+        { name: 'application-name', content: 'GowesKit' },
+        { name: 'format-detection', content: 'telephone=no' },
+      ],
+      link: [
+        { rel: 'manifest', href: '/manifest.webmanifest' },
+        { rel: 'icon', type: 'image/png', href: '/favicon.png' },
+        { rel: 'icon', type: 'image/svg+xml', href: '/favicon.svg' },
+        { rel: 'apple-touch-icon', href: '/apple-touch-icon.png' },
       ],
     },
   },
