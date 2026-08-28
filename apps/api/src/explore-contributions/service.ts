@@ -6,6 +6,10 @@ import {
   type CreateHazardReportInput,
   type CreatePlaceReviewInput,
   type CreateRouteReportInput,
+  type ContributionKind,
+  type ContributionModerationAuditEvent,
+  type ModerationTransitionInput,
+  type ModerationTransitionResult,
   type PublicHazardReport,
   type PublicPlaceReview,
   type PublicRouteReport,
@@ -27,6 +31,13 @@ export interface ExploreContributionRepository {
   listPlaceReviews(placeId: string): Promise<StoredPlaceReview[]>;
   listRouteReports(routeId: string): Promise<StoredRouteReport[]>;
   listHazardReports(routeId?: string): Promise<StoredHazardReport[]>;
+  transitionModeration(
+    input: ModerationTransitionInput,
+  ): Promise<ModerationTransitionResult>;
+}
+
+export interface ExploreContributionAuditHook {
+  record(event: ContributionModerationAuditEvent): Promise<void>;
 }
 
 function normalizedNotes(notes: string): string {
@@ -121,6 +132,7 @@ function publicHazardReport(
 export class ExploreContributionService {
   public constructor(
     private readonly repository: ExploreContributionRepository,
+    private readonly auditHook?: ExploreContributionAuditHook,
   ) {}
 
   public async submitPlaceReview(
@@ -255,5 +267,70 @@ export class ExploreContributionService {
         return mapped === null ? [] : [mapped];
       },
     );
+  }
+
+  public async moderateContribution(input: {
+    moderatorUserId: string;
+    kind: ContributionKind;
+    contributionId: string;
+    targetStatus: 'approved' | 'rejected';
+    reason?: string | null;
+    occurredAt: Date;
+  }): Promise<{
+    id: string;
+    kind: ContributionKind;
+    moderationStatus: 'approved' | 'rejected';
+  }> {
+    if (Number.isNaN(input.occurredAt.getTime())) {
+      throw new ExploreContributionError(
+        'INVALID_EXPLORE_CONTRIBUTION',
+        'Moderation time must be a valid date.',
+        400,
+      );
+    }
+    const trimmedReason = input.reason?.trim();
+    const reason = trimmedReason === '' ? null : (trimmedReason ?? null);
+    if (reason !== null && reason.length > 500) {
+      throw new ExploreContributionError(
+        'INVALID_EXPLORE_CONTRIBUTION',
+        'Moderation reason must not exceed 500 characters.',
+        400,
+      );
+    }
+
+    const transition = await this.repository.transitionModeration({
+      kind: input.kind,
+      contributionId: input.contributionId,
+      expectedStatus: 'pending',
+      targetStatus: input.targetStatus,
+      moderatorUserId: input.moderatorUserId,
+      moderatedAt: input.occurredAt,
+    });
+    if (transition.outcome === 'not_found') {
+      throw new ExploreContributionError(
+        'CONTRIBUTION_NOT_FOUND',
+        'Explore contribution not found.',
+        404,
+      );
+    }
+    if (transition.outcome === 'conflict') {
+      throw new ExploreContributionError(
+        'INVALID_MODERATION_TRANSITION',
+        `Explore contribution is already ${transition.currentStatus}.`,
+        409,
+      );
+    }
+
+    await this.auditHook?.record({
+      action: 'explore_contribution_moderated',
+      contributionId: transition.contribution.id,
+      contributionKind: transition.contribution.kind,
+      moderatorUserId: input.moderatorUserId,
+      previousStatus: 'pending',
+      targetStatus: transition.contribution.moderationStatus,
+      reason,
+      occurredAt: input.occurredAt,
+    });
+    return transition.contribution;
   }
 }

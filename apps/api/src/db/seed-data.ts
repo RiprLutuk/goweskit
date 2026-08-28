@@ -10,6 +10,13 @@ import {
   ROUTE_TYPES,
   VERIFICATION_STATUSES,
   type Coordinate,
+  type CommunityJoinMode,
+  type CommunityMembershipStatus,
+  type CommunityRole,
+  type CommunityVisibility,
+  type EventParticipationStatus,
+  type EventStatus,
+  type EventVisibility,
   type InstalledComponentStandardInput,
   type MaintenanceEventType,
 } from '@goweskit/contracts';
@@ -856,3 +863,325 @@ export const DEMO_ROUTE_SEEDS = [
     lastConfirmedAt: '2025-11-15T00:00:00.000Z',
   },
 ] as const satisfies readonly DemoRouteSeed[];
+
+export const DEMO_COMMUNITY_USERS = [
+  {
+    key: 'ayu',
+    id: '50000000-0000-4000-8000-000000000001',
+    displayName: 'Ayu Demo',
+    email: 'ayu.community@goweskit.local',
+  },
+  {
+    key: 'bima',
+    id: '50000000-0000-4000-8000-000000000002',
+    displayName: 'Bima Demo',
+    email: 'bima.community@goweskit.local',
+  },
+] as const;
+
+interface DemoCommunitySeed {
+  id: string;
+  slug: string;
+  name: string;
+  description: string;
+  locality: string;
+  coordinate: Coordinate;
+  bicycleTypes: readonly string[];
+  visibility: CommunityVisibility;
+  joinMode: CommunityJoinMode;
+  verificationStatus: (typeof VERIFICATION_STATUSES)[number];
+  createdByKey: 'demo' | (typeof DEMO_COMMUNITY_USERS)[number]['key'];
+}
+
+export const DEMO_COMMUNITY_SEEDS = [
+  {
+    id: '51000000-0000-4000-8000-000000000001',
+    slug: 'bandung-morning-roll-demo',
+    name: 'Bandung Morning Roll · Demo',
+    description:
+      'Beginner-friendly morning rides with regroup points and a no-drop pace.',
+    locality: 'Bandung Tengah',
+    coordinate: { longitude: 107.6191, latitude: -6.9175 },
+    bicycleTypes: ['road', 'folding', 'city'],
+    visibility: 'public',
+    joinMode: 'open',
+    verificationStatus: 'staff_verified',
+    createdByKey: 'demo',
+  },
+  {
+    id: '51000000-0000-4000-8000-000000000002',
+    slug: 'lipat-kota-bandung-demo',
+    name: 'Lipat Kota Bandung · Demo',
+    description:
+      'A compact-bike community practicing calm urban routes and folding-bike basics.',
+    locality: 'Bandung Kota',
+    coordinate: { longitude: 107.6098, latitude: -6.9178 },
+    bicycleTypes: ['folding', 'city'],
+    visibility: 'public',
+    joinMode: 'request',
+    verificationStatus: 'community_verified',
+    createdByKey: 'demo',
+  },
+  {
+    id: '51000000-0000-4000-8000-000000000003',
+    slug: 'north-bandung-trail-circle-demo',
+    name: 'North Bandung Trail Circle · Demo',
+    description:
+      'A private practice group for intermediate trail skills. The directory only shows a broad locality.',
+    locality: 'Bandung Utara',
+    coordinate: { longitude: 107.6322, latitude: -6.8566 },
+    bicycleTypes: ['mtb_hardtail'],
+    visibility: 'private',
+    joinMode: 'request',
+    verificationStatus: 'community_verified',
+    createdByKey: 'ayu',
+  },
+  {
+    id: '51000000-0000-4000-8000-000000000004',
+    slug: 'bandung-gravel-collective-demo',
+    name: 'Bandung Gravel Collective · Demo',
+    description:
+      'Mixed-surface rides focused on route awareness, self-sufficiency, and inclusive pacing.',
+    locality: 'Bandung Raya',
+    coordinate: { longitude: 107.6035, latitude: -6.889 },
+    bicycleTypes: ['gravel', 'road'],
+    visibility: 'public',
+    joinMode: 'open',
+    verificationStatus: 'unverified',
+    createdByKey: 'bima',
+  },
+] as const satisfies readonly DemoCommunitySeed[];
+
+interface DemoCommunityMembershipSeed {
+  id: string;
+  communityId: string;
+  userKey: 'demo' | (typeof DEMO_COMMUNITY_USERS)[number]['key'];
+  role: CommunityRole;
+  status: CommunityMembershipStatus;
+}
+
+export const DEMO_COMMUNITY_MEMBERSHIP_SEEDS = [
+  {
+    id: '52000000-0000-4000-8000-000000000001',
+    communityId: '51000000-0000-4000-8000-000000000001',
+    userKey: 'demo',
+    role: 'owner',
+    status: 'active',
+  },
+  {
+    id: '52000000-0000-4000-8000-000000000002',
+    communityId: '51000000-0000-4000-8000-000000000001',
+    userKey: 'ayu',
+    role: 'member',
+    status: 'active',
+  },
+  {
+    id: '52000000-0000-4000-8000-000000000003',
+    communityId: '51000000-0000-4000-8000-000000000002',
+    userKey: 'demo',
+    role: 'owner',
+    status: 'active',
+  },
+  {
+    id: '52000000-0000-4000-8000-000000000004',
+    communityId: '51000000-0000-4000-8000-000000000002',
+    userKey: 'bima',
+    role: 'member',
+    status: 'requested',
+  },
+  {
+    id: '52000000-0000-4000-8000-000000000005',
+    communityId: '51000000-0000-4000-8000-000000000003',
+    userKey: 'ayu',
+    role: 'owner',
+    status: 'active',
+  },
+  {
+    id: '52000000-0000-4000-8000-000000000006',
+    communityId: '51000000-0000-4000-8000-000000000003',
+    userKey: 'demo',
+    role: 'member',
+    status: 'requested',
+  },
+  {
+    id: '52000000-0000-4000-8000-000000000007',
+    communityId: '51000000-0000-4000-8000-000000000004',
+    userKey: 'bima',
+    role: 'owner',
+    status: 'active',
+  },
+  {
+    id: '52000000-0000-4000-8000-000000000008',
+    communityId: '51000000-0000-4000-8000-000000000004',
+    userKey: 'demo',
+    role: 'member',
+    status: 'active',
+  },
+] as const satisfies readonly DemoCommunityMembershipSeed[];
+
+interface DemoRideEventSeed {
+  id: string;
+  communityId: string;
+  title: string;
+  startsAt: string;
+  coordinate: Coordinate;
+  meetingArea: string;
+  routeId: string | null;
+  difficulty: (typeof ROUTE_DIFFICULTIES)[number];
+  bicycleTypes: readonly string[];
+  capacity: number | null;
+  requirements: string;
+  visibility: EventVisibility;
+  status: EventStatus;
+  createdByKey: 'demo' | (typeof DEMO_COMMUNITY_USERS)[number]['key'];
+}
+
+export const DEMO_RIDE_EVENT_SEEDS = [
+  {
+    id: '53000000-0000-4000-8000-000000000001',
+    communityId: '51000000-0000-4000-8000-000000000001',
+    title: 'Demo Sunday Beginner Loop',
+    startsAt: '2026-09-06T00:00:00.000Z',
+    coordinate: { longitude: 107.6186, latitude: -6.9002 },
+    meetingArea: 'Gasibu area, Bandung',
+    routeId: '30000000-0000-4000-8000-000000000003',
+    difficulty: 'easy',
+    bicycleTypes: ['road', 'folding'],
+    capacity: 24,
+    requirements: 'Helmet, water, working brakes, and a roadworthy bicycle.',
+    visibility: 'public',
+    status: 'scheduled',
+    createdByKey: 'demo',
+  },
+  {
+    id: '53000000-0000-4000-8000-000000000002',
+    communityId: '51000000-0000-4000-8000-000000000001',
+    title: 'Demo Member Bike Check',
+    startsAt: '2026-09-12T01:00:00.000Z',
+    coordinate: { longitude: 107.6191, latitude: -6.9175 },
+    meetingArea: 'Bandung city center',
+    routeId: null,
+    difficulty: 'easy',
+    bicycleTypes: ['road', 'folding', 'city'],
+    capacity: 16,
+    requirements: 'Bring the bicycle and any specification notes you have.',
+    visibility: 'members_only',
+    status: 'scheduled',
+    createdByKey: 'demo',
+  },
+  {
+    id: '53000000-0000-4000-8000-000000000003',
+    communityId: '51000000-0000-4000-8000-000000000002',
+    title: 'Demo Folding Bike Social Ride',
+    startsAt: '2026-09-20T00:30:00.000Z',
+    coordinate: { longitude: 107.6087, latitude: -6.9218 },
+    meetingArea: 'Asia Afrika area, Bandung',
+    routeId: '30000000-0000-4000-8000-000000000003',
+    difficulty: 'easy',
+    bicycleTypes: ['folding'],
+    capacity: 20,
+    requirements: 'Helmet and a secure folding hinge latch.',
+    visibility: 'public',
+    status: 'scheduled',
+    createdByKey: 'demo',
+  },
+  {
+    id: '53000000-0000-4000-8000-000000000004',
+    communityId: '51000000-0000-4000-8000-000000000003',
+    title: 'Demo Trail Skills Session',
+    startsAt: '2026-09-13T00:00:00.000Z',
+    coordinate: { longitude: 107.6322, latitude: -6.8566 },
+    meetingArea: 'North Bandung trail area',
+    routeId: null,
+    difficulty: 'moderate',
+    bicycleTypes: ['mtb_hardtail'],
+    capacity: 12,
+    requirements: 'Active membership, helmet, gloves, and trail-ready brakes.',
+    visibility: 'members_only',
+    status: 'scheduled',
+    createdByKey: 'ayu',
+  },
+  {
+    id: '53000000-0000-4000-8000-000000000005',
+    communityId: '51000000-0000-4000-8000-000000000004',
+    title: 'Demo Mixed Surface Intro',
+    startsAt: '2026-09-27T00:00:00.000Z',
+    coordinate: { longitude: 107.604, latitude: -6.8745 },
+    meetingArea: 'Ciumbuleuit area, Bandung',
+    routeId: '30000000-0000-4000-8000-000000000002',
+    difficulty: 'moderate',
+    bicycleTypes: ['gravel'],
+    capacity: null,
+    requirements: 'Helmet, two spare tubes or repair plugs, water, and snacks.',
+    visibility: 'public',
+    status: 'scheduled',
+    createdByKey: 'bima',
+  },
+  {
+    id: '53000000-0000-4000-8000-000000000006',
+    communityId: '51000000-0000-4000-8000-000000000001',
+    title: 'Demo August Morning Roll',
+    startsAt: '2026-08-16T00:00:00.000Z',
+    coordinate: { longitude: 107.6186, latitude: -6.9002 },
+    meetingArea: 'Gasibu area, Bandung',
+    routeId: null,
+    difficulty: 'easy',
+    bicycleTypes: ['road', 'folding'],
+    capacity: 20,
+    requirements: 'Helmet and water.',
+    visibility: 'public',
+    status: 'completed',
+    createdByKey: 'demo',
+  },
+] as const satisfies readonly DemoRideEventSeed[];
+
+interface DemoEventParticipationSeed {
+  id: string;
+  eventId: string;
+  userKey: 'demo' | (typeof DEMO_COMMUNITY_USERS)[number]['key'];
+  status: EventParticipationStatus;
+}
+
+export const DEMO_EVENT_PARTICIPATION_SEEDS = [
+  {
+    id: '54000000-0000-4000-8000-000000000001',
+    eventId: '53000000-0000-4000-8000-000000000001',
+    userKey: 'demo',
+    status: 'joined',
+  },
+  {
+    id: '54000000-0000-4000-8000-000000000002',
+    eventId: '53000000-0000-4000-8000-000000000001',
+    userKey: 'ayu',
+    status: 'joined',
+  },
+  {
+    id: '54000000-0000-4000-8000-000000000003',
+    eventId: '53000000-0000-4000-8000-000000000003',
+    userKey: 'demo',
+    status: 'joined',
+  },
+  {
+    id: '54000000-0000-4000-8000-000000000004',
+    eventId: '53000000-0000-4000-8000-000000000005',
+    userKey: 'demo',
+    status: 'joined',
+  },
+  {
+    id: '54000000-0000-4000-8000-000000000005',
+    eventId: '53000000-0000-4000-8000-000000000006',
+    userKey: 'demo',
+    status: 'joined',
+  },
+] as const satisfies readonly DemoEventParticipationSeed[];
+
+export const DEMO_COMMUNITY_MODERATION_AUDIT_SEEDS = [
+  {
+    id: '55000000-0000-4000-8000-000000000001',
+    communityId: '51000000-0000-4000-8000-000000000001',
+    membershipId: '52000000-0000-4000-8000-000000000002',
+    reviewerKey: 'demo' as const,
+    decision: 'approve' as const,
+    note: 'Demo audit: approved after reviewing the request.',
+  },
+] as const;

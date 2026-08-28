@@ -63,6 +63,7 @@ function makeApp(options: { authenticated?: boolean } = {}) {
       } as unknown as AppServices['auth'],
       catalog: {} as AppServices['catalog'],
       compatibility: new CompatibilityService({ getBike }),
+      community: {} as AppServices['community'],
       explore: {} as AppServices['explore'],
       garage: {} as AppServices['garage'],
       installedComponents: {} as AppServices['installedComponents'],

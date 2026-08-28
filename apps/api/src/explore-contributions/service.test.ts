@@ -3,6 +3,8 @@ import { describe, expect, it } from 'vitest';
 import {
   ExploreContributionError,
   isLegalModerationTransition,
+  type ModerationTransitionInput,
+  type ModerationTransitionResult,
   type StoredHazardReport,
   type StoredPlaceReview,
   type StoredRouteReport,
@@ -23,6 +25,7 @@ class MemoryContributionRepository implements ExploreContributionRepository {
   public placeReviews: StoredPlaceReview[] = [];
   public routeReports: StoredRouteReport[] = [];
   public hazardReports: StoredHazardReport[] = [];
+  public moderationTransitions: ModerationTransitionInput[] = [];
 
   public placeExists(placeId: string): Promise<boolean> {
     return Promise.resolve(this.places.has(placeId));
@@ -86,6 +89,37 @@ class MemoryContributionRepository implements ExploreContributionRepository {
         ? this.hazardReports
         : this.hazardReports.filter((report) => report.routeId === routeId),
     );
+  }
+
+  public transitionModeration(
+    input: ModerationTransitionInput,
+  ): Promise<ModerationTransitionResult> {
+    this.moderationTransitions.push(input);
+    const collection =
+      input.kind === 'place_review'
+        ? this.placeReviews
+        : input.kind === 'route_report'
+          ? this.routeReports
+          : this.hazardReports;
+    const stored = collection.find(
+      (contribution) => contribution.id === input.contributionId,
+    );
+    if (stored === undefined) return Promise.resolve({ outcome: 'not_found' });
+    if (stored.moderationStatus !== input.expectedStatus) {
+      return Promise.resolve({
+        outcome: 'conflict',
+        currentStatus: stored.moderationStatus,
+      });
+    }
+    stored.moderationStatus = input.targetStatus;
+    return Promise.resolve({
+      outcome: 'updated',
+      contribution: {
+        id: stored.id,
+        kind: input.kind,
+        moderationStatus: input.targetStatus,
+      },
+    });
   }
 }
 
@@ -252,5 +286,84 @@ describe('ExploreContributionService', () => {
     expect(isLegalModerationTransition('approved', 'rejected')).toBe(false);
     expect(isLegalModerationTransition('rejected', 'approved')).toBe(false);
     expect(isLegalModerationTransition('pending', 'pending')).toBe(false);
+  });
+
+  it('moderates pending contributions and emits a privacy-safe audit hook', async () => {
+    const repository = new MemoryContributionRepository();
+    const auditEvents: unknown[] = [];
+    const service = new ExploreContributionService(repository, {
+      record: (event) => {
+        auditEvents.push(event);
+        return Promise.resolve();
+      },
+    });
+    const review = await service.submitPlaceReview(USER_ID, {
+      placeId: PLACE_ID,
+      rating: 5,
+      notes: 'Ready for moderation.',
+    });
+    const occurredAt = new Date('2026-08-28T03:00:00.000Z');
+    await expect(
+      service.moderateContribution({
+        moderatorUserId: '019c9c80-2896-7593-bd02-509894b90009',
+        kind: 'place_review',
+        contributionId: review.id,
+        targetStatus: 'approved',
+        reason: '  Verified against contribution policy.  ',
+        occurredAt,
+      }),
+    ).resolves.toEqual({
+      id: review.id,
+      kind: 'place_review',
+      moderationStatus: 'approved',
+    });
+    expect(auditEvents).toEqual([
+      {
+        action: 'explore_contribution_moderated',
+        contributionId: review.id,
+        contributionKind: 'place_review',
+        moderatorUserId: '019c9c80-2896-7593-bd02-509894b90009',
+        previousStatus: 'pending',
+        targetStatus: 'approved',
+        reason: 'Verified against contribution policy.',
+        occurredAt,
+      },
+    ]);
+  });
+
+  it('rejects missing and already-moderated transitions', async () => {
+    const repository = new MemoryContributionRepository();
+    const service = new ExploreContributionService(repository);
+    const common = {
+      moderatorUserId: '019c9c80-2896-7593-bd02-509894b90009',
+      kind: 'place_review' as const,
+      targetStatus: 'rejected' as const,
+      occurredAt: new Date('2026-08-28T03:00:00.000Z'),
+    };
+    await expect(
+      service.moderateContribution({
+        ...common,
+        contributionId: '019c9c80-2896-7593-bd02-509894b90999',
+      }),
+    ).rejects.toMatchObject({ code: 'CONTRIBUTION_NOT_FOUND' });
+
+    const review = await service.submitPlaceReview(USER_ID, {
+      placeId: PLACE_ID,
+      rating: 4,
+      notes: 'Moderate once.',
+    });
+    await service.moderateContribution({
+      ...common,
+      contributionId: review.id,
+    });
+    await expect(
+      service.moderateContribution({
+        ...common,
+        contributionId: review.id,
+      }),
+    ).rejects.toMatchObject({
+      code: 'INVALID_MODERATION_TRANSITION',
+      statusCode: 409,
+    });
   });
 });

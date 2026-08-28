@@ -25,6 +25,7 @@ function buildExploreApp(): ReturnType<typeof buildApp> {
       auth: {} as AppServices['auth'],
       catalog: {} as AppServices['catalog'],
       compatibility: {} as AppServices['compatibility'],
+      community: {} as AppServices['community'],
       explore: new ExploreService(new EmptyExploreRepository()),
       garage: {} as AppServices['garage'],
       installedComponents: {} as AppServices['installedComponents'],

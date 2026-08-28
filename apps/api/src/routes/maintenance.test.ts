@@ -50,6 +50,7 @@ function buildMaintenanceApp() {
       } as unknown as AppServices['auth'],
       catalog: {} as AppServices['catalog'],
       compatibility: {} as AppServices['compatibility'],
+      community: {} as AppServices['community'],
       explore: {} as AppServices['explore'],
       garage: {} as AppServices['garage'],
       installedComponents: {} as AppServices['installedComponents'],

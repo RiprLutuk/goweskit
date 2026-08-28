@@ -6,6 +6,10 @@
     ".": {
       "types": "./src/index.ts",
       "import": "./dist/index.js"
+    },
+    "./safety": {
+      "types": "./src/safety.ts",
+      "import": "./dist/safety.js"
     }
   },
   "scripts": {

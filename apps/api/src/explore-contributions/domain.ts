@@ -29,6 +29,13 @@ export type HazardType = (typeof HAZARD_TYPES)[number];
 export const HAZARD_SEVERITIES = ['info', 'caution', 'danger'] as const;
 export type HazardSeverity = (typeof HAZARD_SEVERITIES)[number];
 
+export const CONTRIBUTION_KINDS = [
+  'place_review',
+  'route_report',
+  'hazard_report',
+] as const;
+export type ContributionKind = (typeof CONTRIBUTION_KINDS)[number];
+
 export interface ContributionCoordinate {
   longitude: number;
   latitude: number;
@@ -125,13 +132,52 @@ export interface PublicHazardReport {
 export class ExploreContributionError extends Error {
   public constructor(
     public readonly code:
-      'INVALID_EXPLORE_CONTRIBUTION' | 'PLACE_NOT_FOUND' | 'ROUTE_NOT_FOUND',
+      | 'CONTRIBUTION_NOT_FOUND'
+      | 'INVALID_EXPLORE_CONTRIBUTION'
+      | 'INVALID_MODERATION_TRANSITION'
+      | 'PLACE_NOT_FOUND'
+      | 'ROUTE_NOT_FOUND',
     message: string,
-    public readonly statusCode: 400 | 404,
+    public readonly statusCode: 400 | 404 | 409,
   ) {
     super(message);
     this.name = 'ExploreContributionError';
   }
+}
+
+export interface ModerationTransitionInput {
+  kind: ContributionKind;
+  contributionId: string;
+  expectedStatus: 'pending';
+  targetStatus: 'approved' | 'rejected';
+  moderatorUserId: string;
+  moderatedAt: Date;
+}
+
+export type ModerationTransitionResult =
+  | {
+      outcome: 'updated';
+      contribution: {
+        id: string;
+        kind: ContributionKind;
+        moderationStatus: 'approved' | 'rejected';
+      };
+    }
+  | { outcome: 'not_found' }
+  | {
+      outcome: 'conflict';
+      currentStatus: ContributionModerationStatus;
+    };
+
+export interface ContributionModerationAuditEvent {
+  action: 'explore_contribution_moderated';
+  contributionId: string;
+  contributionKind: ContributionKind;
+  moderatorUserId: string;
+  previousStatus: 'pending';
+  targetStatus: 'approved' | 'rejected';
+  reason: string | null;
+  occurredAt: Date;
 }
 
 export function isLegalModerationTransition(

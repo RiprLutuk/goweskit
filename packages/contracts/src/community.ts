@@ -275,3 +275,98 @@ export const joinEventResponseSchema = z
   .strict();
 
 export type JoinEventResponse = z.infer<typeof joinEventResponseSchema>;
+
+export const communityEventsResponseSchema = z
+  .object({
+    events: z.array(publicEventSchema).max(COMMUNITY_NEARBY_MAX_RESULTS),
+  })
+  .strict();
+export type CommunityEventsResponse = z.infer<
+  typeof communityEventsResponseSchema
+>;
+
+export const COMMUNITY_MODERATION_DECISIONS = ['approve', 'reject'] as const;
+export const communityModerationDecisionSchema = z.enum(
+  COMMUNITY_MODERATION_DECISIONS,
+);
+export type CommunityModerationDecision = z.infer<
+  typeof communityModerationDecisionSchema
+>;
+
+export const communityMembershipModerationItemSchema = z
+  .object({
+    membershipId: z.uuid(),
+    communityId: z.uuid(),
+    requester: z.object({
+      id: z.uuid(),
+      displayName: z.string().trim().min(1).max(80),
+    }),
+    requestedAt: z.iso.datetime(),
+  })
+  .strict();
+export type CommunityMembershipModerationItem = z.infer<
+  typeof communityMembershipModerationItemSchema
+>;
+
+export const communityModerationQueueResponseSchema = z
+  .object({
+    requests: z
+      .array(communityMembershipModerationItemSchema)
+      .max(COMMUNITY_NEARBY_MAX_RESULTS),
+  })
+  .strict();
+export type CommunityModerationQueueResponse = z.infer<
+  typeof communityModerationQueueResponseSchema
+>;
+
+export const moderateCommunityMembershipRequestSchema = z
+  .object({
+    decision: communityModerationDecisionSchema,
+    note: z.string().trim().min(1).max(1000).nullable().optional(),
+  })
+  .strict();
+export type ModerateCommunityMembershipRequest = z.infer<
+  typeof moderateCommunityMembershipRequestSchema
+>;
+
+export const moderateCommunityMembershipResponseSchema = z
+  .object({
+    membershipId: z.uuid(),
+    status: z.enum(['active', 'rejected']),
+    auditId: z.uuid(),
+  })
+  .strict();
+export type ModerateCommunityMembershipResponse = z.infer<
+  typeof moderateCommunityMembershipResponseSchema
+>;
+
+export const CONTRIBUTOR_REPUTATION_LEVELS = [
+  'new_contributor',
+  'contributor',
+  'trusted_contributor',
+] as const;
+export const contributorReputationLevelSchema = z.enum(
+  CONTRIBUTOR_REPUTATION_LEVELS,
+);
+export type ContributorReputationLevel = z.infer<
+  typeof contributorReputationLevelSchema
+>;
+
+export const contributorReputationSchema = z
+  .object({
+    userId: z.uuid(),
+    score: z.number().int().nonnegative(),
+    level: contributorReputationLevelSchema,
+    hostedEvents: z.number().int().nonnegative(),
+    completedEvents: z.number().int().nonnegative(),
+    moderationDecisions: z.number().int().nonnegative(),
+  })
+  .strict();
+export type ContributorReputation = z.infer<typeof contributorReputationSchema>;
+
+export const contributorReputationResponseSchema = z
+  .object({ reputation: contributorReputationSchema })
+  .strict();
+export type ContributorReputationResponse = z.infer<
+  typeof contributorReputationResponseSchema
+>;

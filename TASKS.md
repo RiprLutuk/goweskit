@@ -110,7 +110,7 @@ P3 = later
 
 ## QA
 
-- [ ] QA-001 [P0] API contract tests.
+- [x] QA-001 [P0] API contract tests.
 - [x] QA-002 [P0] Compatibility golden tests.
 - [ ] QA-003 [P1] Mobile viewport tests.
 - [ ] QA-004 [P1] Accessibility pass.

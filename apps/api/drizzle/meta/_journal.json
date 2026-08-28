@@ -29,6 +29,13 @@
       "when": 1787849948201,
       "tag": "0003_hard_diamondback",
       "breakpoints": true
+    },
+    {
+      "idx": 4,
+      "version": "7",
+      "when": 1787851442262,
+      "tag": "0004_tearful_shriek",
+      "breakpoints": true
     }
   ]
 }

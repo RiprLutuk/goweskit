@@ -10,10 +10,16 @@ import {
   BICYCLE_TYPE_SEEDS,
   COMPONENT_CATEGORY_SEEDS,
   DEMO_BIKE_SEEDS,
+  DEMO_COMMUNITY_MEMBERSHIP_SEEDS,
+  DEMO_COMMUNITY_MODERATION_AUDIT_SEEDS,
+  DEMO_COMMUNITY_SEEDS,
+  DEMO_COMMUNITY_USERS,
+  DEMO_EVENT_PARTICIPATION_SEEDS,
   DEMO_INSTALLED_COMPONENT_SEEDS,
   DEMO_MAINTENANCE_EVENT_SEEDS,
   DEMO_PLACE_SEEDS,
   DEMO_ROUTE_SEEDS,
+  DEMO_RIDE_EVENT_SEEDS,
   STANDARD_DEFINITION_SEEDS,
 } from './seed-data.js';
 
@@ -56,6 +62,67 @@ describe('v0.1 seed catalog', () => {
       STANDARD_DEFINITION_SEEDS.every(
         ({ sourceUrl, version }) =>
           sourceUrl.startsWith('https://') && version.length > 0,
+      ),
+    ).toBe(true);
+  });
+});
+
+describe('demo Community seed', () => {
+  it('provides diverse communities and events without invalid coordinates', () => {
+    expect(DEMO_COMMUNITY_SEEDS).toHaveLength(4);
+    expect(DEMO_RIDE_EVENT_SEEDS).toHaveLength(6);
+    expect(new Set(DEMO_COMMUNITY_SEEDS.map(({ id }) => id)).size).toBe(4);
+    expect(new Set(DEMO_RIDE_EVENT_SEEDS.map(({ id }) => id)).size).toBe(6);
+
+    for (const item of [...DEMO_COMMUNITY_SEEDS, ...DEMO_RIDE_EVENT_SEEDS]) {
+      expect(item.coordinate.longitude).toBeGreaterThanOrEqual(-180);
+      expect(item.coordinate.longitude).toBeLessThanOrEqual(180);
+      expect(item.coordinate.latitude).toBeGreaterThanOrEqual(-90);
+      expect(item.coordinate.latitude).toBeLessThanOrEqual(90);
+      expect('name' in item ? item.name : item.title).toContain('Demo');
+    }
+
+    expect(
+      DEMO_COMMUNITY_SEEDS.some(({ visibility }) => visibility === 'private'),
+    ).toBe(true);
+    expect(
+      DEMO_COMMUNITY_SEEDS.some(({ joinMode }) => joinMode === 'request'),
+    ).toBe(true);
+    expect(
+      DEMO_RIDE_EVENT_SEEDS.some(
+        ({ visibility }) => visibility === 'members_only',
+      ),
+    ).toBe(true);
+  });
+
+  it('keeps memberships, participation, and moderation references coherent', () => {
+    const communityIds = new Set(DEMO_COMMUNITY_SEEDS.map(({ id }) => id));
+    const eventIds = new Set(DEMO_RIDE_EVENT_SEEDS.map(({ id }) => id));
+    const membershipIds = new Set(
+      DEMO_COMMUNITY_MEMBERSHIP_SEEDS.map(({ id }) => id),
+    );
+    const userKeys = new Set([
+      'demo',
+      ...DEMO_COMMUNITY_USERS.map(({ key }) => key),
+    ]);
+
+    for (const membership of DEMO_COMMUNITY_MEMBERSHIP_SEEDS) {
+      expect(communityIds.has(membership.communityId)).toBe(true);
+      expect(userKeys.has(membership.userKey)).toBe(true);
+    }
+    for (const participation of DEMO_EVENT_PARTICIPATION_SEEDS) {
+      expect(eventIds.has(participation.eventId)).toBe(true);
+      expect(userKeys.has(participation.userKey)).toBe(true);
+    }
+    for (const audit of DEMO_COMMUNITY_MODERATION_AUDIT_SEEDS) {
+      expect(communityIds.has(audit.communityId)).toBe(true);
+      expect(membershipIds.has(audit.membershipId)).toBe(true);
+      expect(userKeys.has(audit.reviewerKey)).toBe(true);
+    }
+
+    expect(
+      DEMO_COMMUNITY_MEMBERSHIP_SEEDS.some(
+        ({ status }) => status === 'requested',
       ),
     ).toBe(true);
   });

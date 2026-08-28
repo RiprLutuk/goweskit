@@ -9,8 +9,11 @@ import {
   bicycleTypes,
   bikeComponentInstalls,
   bikeSpecs,
+  communityMemberships,
+  communityModerationAudits,
   componentCategories,
   maintenanceEvents,
+  rideEventParticipations,
   standardDefinitions,
   userBikes,
   users,
@@ -20,10 +23,16 @@ import {
   COMPONENT_CATEGORY_SEEDS,
   DEMO_ACCOUNT,
   DEMO_BIKE_SEEDS,
+  DEMO_COMMUNITY_MEMBERSHIP_SEEDS,
+  DEMO_COMMUNITY_MODERATION_AUDIT_SEEDS,
+  DEMO_COMMUNITY_SEEDS,
+  DEMO_COMMUNITY_USERS,
+  DEMO_EVENT_PARTICIPATION_SEEDS,
   DEMO_INSTALLED_COMPONENT_SEEDS,
   DEMO_MAINTENANCE_EVENT_SEEDS,
   DEMO_PLACE_SEEDS,
   DEMO_ROUTE_SEEDS,
+  DEMO_RIDE_EVENT_SEEDS,
   STANDARD_DEFINITION_SEEDS,
 } from './seed-data.js';
 
@@ -37,6 +46,11 @@ interface SeedSummary {
   demoMaintenanceEvents: number;
   demoPlaces: number;
   demoRoutes: number;
+  demoCommunities: number;
+  demoCommunityMemberships: number;
+  demoRideEvents: number;
+  demoEventParticipations: number;
+  demoModerationAudits: number;
 }
 
 function textArraySql(values: readonly string[]) {
@@ -198,6 +212,31 @@ export async function seedDatabase(database: Database): Promise<SeedSummary> {
       throw new Error('Demo user seed failed.');
     }
 
+    const communityUserIds = new Map<string, string>([['demo', demoUser.id]]);
+    for (const communityUser of DEMO_COMMUNITY_USERS) {
+      const [storedUser] = await transaction
+        .insert(users)
+        .values({
+          id: communityUser.id,
+          displayName: communityUser.displayName,
+          email: communityUser.email,
+          passwordHash: demoPasswordHash,
+        })
+        .onConflictDoUpdate({
+          target: users.email,
+          set: {
+            displayName: communityUser.displayName,
+            passwordHash: demoPasswordHash,
+            updatedAt: new Date(),
+          },
+        })
+        .returning({ id: users.id });
+      if (storedUser === undefined) {
+        throw new Error(`Community demo user failed for ${communityUser.key}.`);
+      }
+      communityUserIds.set(communityUser.key, storedUser.id);
+    }
+
     let specCount = 0;
     for (const bikeSeed of DEMO_BIKE_SEEDS) {
       const bicycleTypeId = bicycleTypeIds.get(bikeSeed.bicycleTypeSlug);
@@ -322,6 +361,141 @@ export async function seedDatabase(database: Database): Promise<SeedSummary> {
         });
     }
 
+    for (const communitySeed of DEMO_COMMUNITY_SEEDS) {
+      const createdBy = communityUserIds.get(communitySeed.createdByKey);
+      if (createdBy === undefined)
+        throw new Error('Missing community creator.');
+      await transaction.execute(sql`
+        INSERT INTO communities (
+          id, slug, name, description, locality, home_location,
+          bicycle_types, visibility, join_mode, verification_status, created_by
+        ) VALUES (
+          ${communitySeed.id}, ${communitySeed.slug}, ${communitySeed.name},
+          ${communitySeed.description}, ${communitySeed.locality},
+          ST_SetSRID(ST_MakePoint(
+            ${communitySeed.coordinate.longitude},
+            ${communitySeed.coordinate.latitude}
+          ), 4326)::geography,
+          ${textArraySql(communitySeed.bicycleTypes)},
+          ${communitySeed.visibility}, ${communitySeed.joinMode},
+          ${communitySeed.verificationStatus}, ${createdBy}
+        )
+        ON CONFLICT (id) DO UPDATE SET
+          slug = EXCLUDED.slug, name = EXCLUDED.name,
+          description = EXCLUDED.description, locality = EXCLUDED.locality,
+          home_location = EXCLUDED.home_location,
+          bicycle_types = EXCLUDED.bicycle_types,
+          visibility = EXCLUDED.visibility, join_mode = EXCLUDED.join_mode,
+          verification_status = EXCLUDED.verification_status,
+          created_by = EXCLUDED.created_by, updated_at = NOW()
+      `);
+    }
+
+    for (const membershipSeed of DEMO_COMMUNITY_MEMBERSHIP_SEEDS) {
+      const userId = communityUserIds.get(membershipSeed.userKey);
+      if (userId === undefined)
+        throw new Error('Missing membership demo user.');
+      await transaction
+        .insert(communityMemberships)
+        .values({
+          id: membershipSeed.id,
+          communityId: membershipSeed.communityId,
+          userId,
+          role: membershipSeed.role,
+          status: membershipSeed.status,
+        })
+        .onConflictDoUpdate({
+          target: communityMemberships.id,
+          set: {
+            communityId: membershipSeed.communityId,
+            userId,
+            role: membershipSeed.role,
+            status: membershipSeed.status,
+            updatedAt: new Date(),
+          },
+        });
+    }
+
+    for (const eventSeed of DEMO_RIDE_EVENT_SEEDS) {
+      const createdBy = communityUserIds.get(eventSeed.createdByKey);
+      if (createdBy === undefined) throw new Error('Missing event creator.');
+      await transaction.execute(sql`
+        INSERT INTO ride_events (
+          id, community_id, title, starts_at, meeting_location, meeting_area,
+          route_id, difficulty, bicycle_types, capacity, requirements,
+          visibility, status, created_by
+        ) VALUES (
+          ${eventSeed.id}, ${eventSeed.communityId}, ${eventSeed.title},
+          ${new Date(eventSeed.startsAt)},
+          ST_SetSRID(ST_MakePoint(
+            ${eventSeed.coordinate.longitude},
+            ${eventSeed.coordinate.latitude}
+          ), 4326)::geography,
+          ${eventSeed.meetingArea}, ${eventSeed.routeId},
+          ${eventSeed.difficulty}, ${textArraySql(eventSeed.bicycleTypes)},
+          ${eventSeed.capacity}, ${eventSeed.requirements},
+          ${eventSeed.visibility}, ${eventSeed.status}, ${createdBy}
+        )
+        ON CONFLICT (id) DO UPDATE SET
+          community_id = EXCLUDED.community_id, title = EXCLUDED.title,
+          starts_at = EXCLUDED.starts_at,
+          meeting_location = EXCLUDED.meeting_location,
+          meeting_area = EXCLUDED.meeting_area, route_id = EXCLUDED.route_id,
+          difficulty = EXCLUDED.difficulty,
+          bicycle_types = EXCLUDED.bicycle_types, capacity = EXCLUDED.capacity,
+          requirements = EXCLUDED.requirements, visibility = EXCLUDED.visibility,
+          status = EXCLUDED.status, created_by = EXCLUDED.created_by,
+          updated_at = NOW()
+      `);
+    }
+
+    for (const participationSeed of DEMO_EVENT_PARTICIPATION_SEEDS) {
+      const userId = communityUserIds.get(participationSeed.userKey);
+      if (userId === undefined) throw new Error('Missing participation user.');
+      await transaction
+        .insert(rideEventParticipations)
+        .values({
+          id: participationSeed.id,
+          eventId: participationSeed.eventId,
+          userId,
+          status: participationSeed.status,
+        })
+        .onConflictDoUpdate({
+          target: rideEventParticipations.id,
+          set: {
+            eventId: participationSeed.eventId,
+            userId,
+            status: participationSeed.status,
+            updatedAt: new Date(),
+          },
+        });
+    }
+
+    for (const auditSeed of DEMO_COMMUNITY_MODERATION_AUDIT_SEEDS) {
+      const reviewerId = communityUserIds.get(auditSeed.reviewerKey);
+      if (reviewerId === undefined) throw new Error('Missing audit reviewer.');
+      await transaction
+        .insert(communityModerationAudits)
+        .values({
+          id: auditSeed.id,
+          communityId: auditSeed.communityId,
+          membershipId: auditSeed.membershipId,
+          reviewerId,
+          decision: auditSeed.decision,
+          note: auditSeed.note,
+        })
+        .onConflictDoUpdate({
+          target: communityModerationAudits.id,
+          set: {
+            communityId: auditSeed.communityId,
+            membershipId: auditSeed.membershipId,
+            reviewerId,
+            decision: auditSeed.decision,
+            note: auditSeed.note,
+          },
+        });
+    }
+
     return {
       bicycleTypes: BICYCLE_TYPE_SEEDS.length,
       componentCategories: COMPONENT_CATEGORY_SEEDS.length,
@@ -332,6 +506,11 @@ export async function seedDatabase(database: Database): Promise<SeedSummary> {
       demoMaintenanceEvents: DEMO_MAINTENANCE_EVENT_SEEDS.length,
       demoPlaces: DEMO_PLACE_SEEDS.length,
       demoRoutes: DEMO_ROUTE_SEEDS.length,
+      demoCommunities: DEMO_COMMUNITY_SEEDS.length,
+      demoCommunityMemberships: DEMO_COMMUNITY_MEMBERSHIP_SEEDS.length,
+      demoRideEvents: DEMO_RIDE_EVENT_SEEDS.length,
+      demoEventParticipations: DEMO_EVENT_PARTICIPATION_SEEDS.length,
+      demoModerationAudits: DEMO_COMMUNITY_MODERATION_AUDIT_SEEDS.length,
     };
   });
 }

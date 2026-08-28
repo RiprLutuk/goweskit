@@ -1,5 +1,13 @@
 import type { BikeSpecCode } from '@goweskit/bike-domain';
 import type {
+  CommunityJoinMode,
+  CommunityMembershipStatus,
+  CommunityModerationDecision,
+  CommunityRole,
+  CommunityVisibility,
+  EventParticipationStatus,
+  EventStatus,
+  EventVisibility,
   InstalledComponentStandardInput,
   MaintenanceEventType,
 } from '@goweskit/contracts';
@@ -288,6 +296,199 @@ export const maintenanceEvents = pgTable(
     check(
       'maintenance_events_due_after_performed_check',
       sql`${table.nextDueDate} IS NULL OR ${table.nextDueDate} >= ${table.performedAt}`,
+    ),
+  ],
+);
+
+export const communities = pgTable(
+  'communities',
+  {
+    id: uuid('id').primaryKey().defaultRandom(),
+    slug: varchar('slug', { length: 80 }).notNull(),
+    name: varchar('name', { length: 160 }).notNull(),
+    description: text('description').notNull(),
+    locality: varchar('locality', { length: 160 }).notNull(),
+    homeLocation: geographyPoint('home_location').notNull(),
+    bicycleTypes: text('bicycle_types').array().notNull(),
+    visibility: varchar('visibility', { length: 20 })
+      .notNull()
+      .$type<CommunityVisibility>(),
+    joinMode: varchar('join_mode', { length: 20 })
+      .notNull()
+      .$type<CommunityJoinMode>(),
+    verificationStatus: varchar('verification_status', { length: 30 })
+      .notNull()
+      .default('unverified'),
+    createdBy: uuid('created_by')
+      .notNull()
+      .references(() => users.id),
+    createdAt: timestamp('created_at', { withTimezone: true })
+      .notNull()
+      .defaultNow(),
+    updatedAt: timestamp('updated_at', { withTimezone: true })
+      .notNull()
+      .defaultNow(),
+  },
+  (table) => [
+    uniqueIndex('communities_slug_unique').on(table.slug),
+    index('communities_home_location_gist_idx').using(
+      'gist',
+      table.homeLocation,
+    ),
+    index('communities_discovery_idx').on(
+      table.visibility,
+      table.verificationStatus,
+    ),
+  ],
+);
+
+export const communityMemberships = pgTable(
+  'community_memberships',
+  {
+    id: uuid('id').primaryKey().defaultRandom(),
+    communityId: uuid('community_id')
+      .notNull()
+      .references(() => communities.id, { onDelete: 'cascade' }),
+    userId: uuid('user_id')
+      .notNull()
+      .references(() => users.id, { onDelete: 'cascade' }),
+    role: varchar('role', { length: 20 }).notNull().$type<CommunityRole>(),
+    status: varchar('status', { length: 20 })
+      .notNull()
+      .$type<CommunityMembershipStatus>(),
+    createdAt: timestamp('created_at', { withTimezone: true })
+      .notNull()
+      .defaultNow(),
+    updatedAt: timestamp('updated_at', { withTimezone: true })
+      .notNull()
+      .defaultNow(),
+  },
+  (table) => [
+    uniqueIndex('community_memberships_community_user_unique').on(
+      table.communityId,
+      table.userId,
+    ),
+    index('community_memberships_queue_idx').on(
+      table.communityId,
+      table.status,
+      table.createdAt,
+    ),
+    index('community_memberships_user_idx').on(table.userId, table.status),
+  ],
+);
+
+export const rideEvents = pgTable(
+  'ride_events',
+  {
+    id: uuid('id').primaryKey().defaultRandom(),
+    communityId: uuid('community_id')
+      .notNull()
+      .references(() => communities.id, { onDelete: 'cascade' }),
+    title: varchar('title', { length: 180 }).notNull(),
+    startsAt: timestamp('starts_at', { withTimezone: true }).notNull(),
+    meetingLocation: geographyPoint('meeting_location').notNull(),
+    meetingArea: varchar('meeting_area', { length: 200 }).notNull(),
+    routeId: uuid('route_id').references(() => routes.id, {
+      onDelete: 'set null',
+    }),
+    difficulty: varchar('difficulty', { length: 30 }).notNull(),
+    bicycleTypes: text('bicycle_types').array().notNull(),
+    capacity: integer('capacity'),
+    requirements: text('requirements').notNull(),
+    visibility: varchar('visibility', { length: 20 })
+      .notNull()
+      .$type<EventVisibility>(),
+    status: varchar('status', { length: 20 }).notNull().$type<EventStatus>(),
+    createdBy: uuid('created_by')
+      .notNull()
+      .references(() => users.id),
+    createdAt: timestamp('created_at', { withTimezone: true })
+      .notNull()
+      .defaultNow(),
+    updatedAt: timestamp('updated_at', { withTimezone: true })
+      .notNull()
+      .defaultNow(),
+  },
+  (table) => [
+    index('ride_events_meeting_location_gist_idx').using(
+      'gist',
+      table.meetingLocation,
+    ),
+    index('ride_events_discovery_idx').on(
+      table.status,
+      table.visibility,
+      table.startsAt,
+    ),
+    index('ride_events_community_idx').on(table.communityId, table.startsAt),
+    check(
+      'ride_events_capacity_positive_check',
+      sql`${table.capacity} IS NULL OR ${table.capacity} > 0`,
+    ),
+  ],
+);
+
+export const rideEventParticipations = pgTable(
+  'ride_event_participations',
+  {
+    id: uuid('id').primaryKey().defaultRandom(),
+    eventId: uuid('event_id')
+      .notNull()
+      .references(() => rideEvents.id, { onDelete: 'cascade' }),
+    userId: uuid('user_id')
+      .notNull()
+      .references(() => users.id, { onDelete: 'cascade' }),
+    status: varchar('status', { length: 20 })
+      .notNull()
+      .$type<EventParticipationStatus>(),
+    joinedAt: timestamp('joined_at', { withTimezone: true })
+      .notNull()
+      .defaultNow(),
+    updatedAt: timestamp('updated_at', { withTimezone: true })
+      .notNull()
+      .defaultNow(),
+  },
+  (table) => [
+    uniqueIndex('ride_event_participations_event_user_unique').on(
+      table.eventId,
+      table.userId,
+    ),
+    index('ride_event_participations_event_status_idx').on(
+      table.eventId,
+      table.status,
+    ),
+    index('ride_event_participations_user_idx').on(table.userId, table.status),
+  ],
+);
+
+export const communityModerationAudits = pgTable(
+  'community_moderation_audits',
+  {
+    id: uuid('id').primaryKey().defaultRandom(),
+    communityId: uuid('community_id')
+      .notNull()
+      .references(() => communities.id, { onDelete: 'cascade' }),
+    membershipId: uuid('membership_id')
+      .notNull()
+      .references(() => communityMemberships.id, { onDelete: 'cascade' }),
+    reviewerId: uuid('reviewer_id')
+      .notNull()
+      .references(() => users.id),
+    decision: varchar('decision', { length: 20 })
+      .notNull()
+      .$type<CommunityModerationDecision>(),
+    note: text('note'),
+    createdAt: timestamp('created_at', { withTimezone: true })
+      .notNull()
+      .defaultNow(),
+  },
+  (table) => [
+    index('community_moderation_audits_community_idx').on(
+      table.communityId,
+      table.createdAt,
+    ),
+    index('community_moderation_audits_reviewer_idx').on(
+      table.reviewerId,
+      table.createdAt,
     ),
   ],
 );

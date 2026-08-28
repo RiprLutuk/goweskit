@@ -3,6 +3,8 @@ import { describe, expect, it } from 'vitest';
 import {
   COMMUNITY_NEARBY_MAX_RADIUS_KM,
   communityDetailResponseSchema,
+  communityModerationQueueResponseSchema,
+  contributorReputationResponseSchema,
   joinCommunityResponseSchema,
   nearbyCommunitiesRequestSchema,
   nearbyCommunitiesResponseSchema,
@@ -166,5 +168,40 @@ describe('Community ride event contracts', () => {
     expect(publicEventSchema.safeParse({ ...event, chat: [] }).success).toBe(
       false,
     );
+  });
+});
+
+describe('Community moderation and reputation contracts', () => {
+  it('keeps the moderation queue bounded and limited to requester identity', () => {
+    expect(
+      communityModerationQueueResponseSchema.parse({
+        requests: [
+          {
+            membershipId: '30000000-0000-4000-8000-000000000001',
+            communityId: community.id,
+            requester: {
+              id: '40000000-0000-4000-8000-000000000001',
+              displayName: 'Ayu',
+            },
+            requestedAt: '2026-08-27T00:00:00.000Z',
+          },
+        ],
+      }).requests,
+    ).toHaveLength(1);
+  });
+
+  it('returns deterministic reputation inputs without social-feed metrics', () => {
+    expect(
+      contributorReputationResponseSchema.parse({
+        reputation: {
+          userId: '40000000-0000-4000-8000-000000000001',
+          score: 19,
+          level: 'contributor',
+          hostedEvents: 4,
+          completedEvents: 2,
+          moderationDecisions: 1,
+        },
+      }).reputation,
+    ).not.toHaveProperty('followers');
   });
 });

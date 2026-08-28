@@ -11,6 +11,7 @@ import Fastify, {
 import { AppError } from './errors.js';
 import { registerAuthRoutes } from './routes/auth.js';
 import { registerCompatibilityRoutes } from './routes/compatibility.js';
+import { registerCommunityRoutes } from './routes/community.js';
 import { registerExploreRoutes } from './routes/explore.js';
 import { registerGarageRoutes } from './routes/garage.js';
 import { registerInstalledComponentRoutes } from './routes/installed-components.js';
@@ -19,6 +20,7 @@ import { registerMaintenanceRoutes } from './routes/maintenance.js';
 import type { AuthService } from './services/auth-service.js';
 import type { CatalogService } from './services/catalog-service.js';
 import type { CompatibilityService } from './services/compatibility-service.js';
+import type { CommunityService } from './services/community-service.js';
 import type { ExploreService } from './services/explore-service.js';
 import type { GarageService } from './services/garage-service.js';
 import type { InstalledComponentService } from './services/installed-component-service.js';
@@ -32,6 +34,7 @@ export interface AppServices {
   auth: AuthService;
   catalog: CatalogService;
   compatibility: CompatibilityService;
+  community: CommunityService;
   explore: ExploreService;
   garage: GarageService;
   installedComponents: InstalledComponentService;
@@ -118,6 +121,11 @@ export function buildApp(options: BuildAppOptions = {}): FastifyInstance {
       app,
       options.services.auth,
       options.services.compatibility,
+    );
+    registerCommunityRoutes(
+      app,
+      options.services.auth,
+      options.services.community,
     );
     registerExploreRoutes(app, options.services.explore);
     registerMaintenanceRoutes(

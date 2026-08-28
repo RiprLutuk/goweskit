@@ -13,6 +13,11 @@ export const SAFETY_SHARE_TOKEN_LENGTH = 43;
 export const SAFETY_SHARE_MIN_DURATION_MINUTES = 15;
 export const SAFETY_SHARE_MAX_DURATION_MINUTES = 24 * 60;
 export const SAFETY_LOCATION_MAX_ACCURACY_METERS = 10_000;
+export const SAFETY_LOCATION_RETENTION_HOURS = 24;
+export const SAFETY_TERMINAL_SESSION_RETENTION_DAYS = 30;
+export const SAFETY_AUDIT_RETENTION_DAYS = 90;
+export const SAFETY_PUBLIC_RATE_LIMIT_REQUESTS = 30;
+export const SAFETY_PUBLIC_RATE_LIMIT_WINDOW_SECONDS = 60;
 
 export const SAFETY_DISCLAIMER = {
   code: 'NOT_AN_EMERGENCY_SERVICE',
@@ -24,10 +29,67 @@ export const SAFETY_DISCLAIMER = {
 export const safetySessionStatusSchema = z.enum(SAFETY_SESSION_STATUSES);
 export type SafetySessionStatus = z.infer<typeof safetySessionStatusSchema>;
 
+const nullableContactValueSchema = z
+  .string()
+  .trim()
+  .min(1)
+  .max(160)
+  .nullable()
+  .optional();
+
+export const createTrustedContactRequestSchema = z
+  .object({
+    name: z.string().trim().min(1).max(80),
+    phone: nullableContactValueSchema,
+    email: z.email().max(320).nullable().optional(),
+    note: z.string().trim().max(500).nullable().optional(),
+  })
+  .strict()
+  .refine(({ phone, email }) => phone != null || email != null, {
+    message: 'A phone number or email address is required.',
+  });
+export type CreateTrustedContactRequest = z.infer<
+  typeof createTrustedContactRequestSchema
+>;
+
+export const trustedContactSchema = z
+  .object({
+    id: z.uuid(),
+    name: z.string().trim().min(1).max(80),
+    phone: z.string().nullable(),
+    email: z.string().nullable(),
+    note: z.string().nullable(),
+    createdAt: z.iso.datetime(),
+    updatedAt: z.iso.datetime(),
+  })
+  .strict();
+export type TrustedContact = z.infer<typeof trustedContactSchema>;
+
+export const trustedContactResponseSchema = z
+  .object({ contact: trustedContactSchema })
+  .strict();
+export type TrustedContactResponse = z.infer<
+  typeof trustedContactResponseSchema
+>;
+
+export const trustedContactListResponseSchema = z
+  .object({ contacts: z.array(trustedContactSchema).max(100) })
+  .strict();
+export type TrustedContactListResponse = z.infer<
+  typeof trustedContactListResponseSchema
+>;
+
 export const safetyShareTokenSchema = z
   .string()
   .length(SAFETY_SHARE_TOKEN_LENGTH)
   .regex(/^[A-Za-z0-9_-]+$/u);
+
+export const resolveSafetyShareRequestSchema = z
+  .object({ token: safetyShareTokenSchema })
+  .strict();
+export type ResolveSafetyShareRequest = z.infer<
+  typeof resolveSafetyShareRequestSchema
+>;
 
 export const safetyDisclaimerSchema = z
   .object({
@@ -97,6 +159,26 @@ export const safetySessionSchema = z
   })
   .strict();
 export type SafetySession = z.infer<typeof safetySessionSchema>;
+
+export const safetySessionResponseSchema = z
+  .object({
+    session: safetySessionSchema,
+    disclaimer: safetyDisclaimerSchema,
+  })
+  .strict();
+export type SafetySessionResponse = z.infer<typeof safetySessionResponseSchema>;
+
+export const safetySessionListResponseSchema = z
+  .object({ sessions: z.array(safetySessionSchema).max(100) })
+  .strict();
+export type SafetySessionListResponse = z.infer<
+  typeof safetySessionListResponseSchema
+>;
+
+export const safetyMutationSuccessSchema = z
+  .object({ success: z.literal(true) })
+  .strict();
+export type SafetyMutationSuccess = z.infer<typeof safetyMutationSuccessSchema>;
 
 export const createSafetySessionResponseSchema = z
   .object({
