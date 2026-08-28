@@ -73,47 +73,45 @@ function specsBreakdown(bike: Bike): { known: number; unknown: number } {
 </script>
 
 <template>
-  <div class="page-stack garage-page">
-    <header class="page-heading page-heading--action">
-      <div>
-        <span class="status-chip status-chip--lime">My Garage</span>
-        <h1>Your bikes, including what you don’t know yet.</h1>
-        <p>
-          Incomplete details are welcome. GowesKit tracks verified standards,
-          keeps unknowns actionable, and never guesses from brand names alone.
-        </p>
+  <div class="native-container garage-container">
+    <!-- Header with Action Button -->
+    <header class="native-page-header">
+      <div class="header-topline">
+        <span class="native-eyebrow">Workshop Pribadi</span>
+        <span v-if="user && bikes.length" class="counter-chip">{{ bikes.length }} Sepeda Aktif</span>
       </div>
-      <NuxtLink v-if="user" class="button button--primary" to="/garage/new">
-        ＋ Add a Bike
-      </NuxtLink>
+      <div class="header-main-row">
+        <h1 class="native-title">My Garage</h1>
+        <NuxtLink v-if="user" class="add-bike-fab" to="/garage/new" title="Tambah Sepeda">
+          ＋ Tambah Sepeda
+        </NuxtLink>
+      </div>
+      <p class="native-sub">
+        Simpan anatomi sepeda, pantau standar teknis terverifikasi, dan catat servis secara digital tanpa tebak-tebakan merek.
+      </p>
     </header>
 
-    <p v-if="loading" class="state-card" role="status">Opening your Garage…</p>
+    <p v-if="loading" class="state-card" role="status">Membuka Garasi Anda…</p>
 
     <!-- Signed-out state with 1-click Demo helper -->
-    <div v-else-if="!user" class="garage-guest-box">
-      <div class="garage-guest-box__content">
-        <span class="garage-guest-icon" aria-hidden="true">🚲</span>
-        <div>
-          <h2>Sign in to open your personal Garage</h2>
-          <p>
-            Save your bicycle specifications, installed components, and service
-            notebook privately.
-          </p>
-        </div>
-      </div>
+    <div v-else-if="!user" class="native-guest-box">
+      <div class="guest-icon">🚲</div>
+      <h2>Buka Garasi Sepeda Anda</h2>
+      <p>
+        Simpan spesifikasi komponen as roda, headset, BB, rantai, dan catatan servis rutin sepeda Anda di GowesKit.
+      </p>
 
-      <div class="garage-guest-actions">
+      <div class="guest-btn-group">
+        <NuxtLink class="button button--primary button--full" to="/login">Masuk ke Akun</NuxtLink>
+        <NuxtLink class="button button--secondary button--full" to="/register">Daftar Akun Baru</NuxtLink>
         <button
-          class="button button--primary"
+          class="button button--sand button--full"
           type="button"
           :disabled="demoLoggingIn"
           @click="quickDemoLogin"
         >
-          {{ demoLoggingIn ? 'Opening Demo Garage…' : '⚡ 1-Click Demo Garage' }}
+          {{ demoLoggingIn ? 'Memuat Demo…' : '⚡ Buka Contoh Garasi Demo (1-Klik)' }}
         </button>
-        <NuxtLink class="button button--secondary" to="/login">Sign In</NuxtLink>
-        <NuxtLink class="button button--secondary" to="/register">Create Account</NuxtLink>
       </div>
     </div>
 
@@ -125,246 +123,441 @@ function specsBreakdown(bike: Bike): { known: number; unknown: number } {
       {{ errorMessage }}
     </p>
 
+    <!-- Bike List / Empty State -->
     <template v-else-if="bikes.length">
-      <!-- Search/Filter if multiple bikes -->
-      <div v-if="bikes.length > 2" class="garage-filter-bar">
-        <label for="garage-search" class="visually-hidden">Search bikes</label>
+      <!-- Search Input if multiple bikes -->
+      <div class="search-bar-wrap">
+        <span class="search-icon" aria-hidden="true">🔍</span>
         <input
-          id="garage-search"
           v-model="filterQuery"
           type="search"
-          placeholder="Filter your bikes by nickname, brand, model, or type…"
+          placeholder="Cari sepeda berdasarkan nama, merek, atau tipe…"
+          class="search-field"
         />
+        <button
+          v-if="filterQuery"
+          class="clear-search-btn"
+          type="button"
+          @click="filterQuery = ''"
+        >
+          ✕
+        </button>
       </div>
 
-      <div class="card-grid garage-grid">
+      <!-- Native Cards Grid -->
+      <div class="bike-cards-feed">
         <article
           v-for="bike in filteredBikes"
           :key="bike.id"
-          class="bike-card-rich"
+          class="native-bike-card"
         >
-          <div class="bike-card-rich__top">
-            <span class="bike-type-badge">
-              <span aria-hidden="true">{{ bikeTypeIcon(bike.bicycleType.slug) }}</span>
-              {{ bike.bicycleType.name }}
-            </span>
-            <span class="bike-year-tag" v-if="bike.modelYear">{{ bike.modelYear }}</span>
-          </div>
+          <!-- Visual Photo / Illustration -->
+          <div class="card-cover">
+            <img
+              v-if="bike.photoUrl"
+              :src="bike.photoUrl"
+              :alt="bike.nickname"
+              class="cover-image"
+            />
+            <div v-else class="cover-placeholder">
+              <span class="cover-placeholder-icon">{{ bikeTypeIcon(bike.bicycleType.slug) }}</span>
+            </div>
 
-          <h2 class="bike-card-rich__title">
-            <NuxtLink :to="`/garage/${bike.id}`">{{ bike.nickname }}</NuxtLink>
-          </h2>
-
-          <p class="bike-card-rich__model">
-            {{
-              [bike.brand, bike.model].filter(Boolean).join(' ') ||
-              'Brand and model not recorded'
-            }}
-          </p>
-
-          <div class="bike-specs-meter">
-            <div class="bike-specs-meter__stats">
-              <span><strong>{{ specsBreakdown(bike).known }}</strong> confirmed</span>
-              <span v-if="specsBreakdown(bike).unknown" class="unknown-pill">
-                {{ specsBreakdown(bike).unknown }} unknown
+            <div class="cover-pills">
+              <span class="type-pill">
+                {{ bikeTypeIcon(bike.bicycleType.slug) }} {{ bike.bicycleType.name }}
               </span>
-            </div>
-            <div class="meter-bar">
-              <div
-                class="meter-bar__fill"
-                :style="{ width: `${Math.min(100, Math.round((bike.specs.length / 17) * 100))}%` }"
-              />
+              <span v-if="bike.modelYear" class="year-pill">{{ bike.modelYear }}</span>
             </div>
           </div>
 
-          <div class="bike-card-rich__actions">
-            <NuxtLink class="button button--secondary button--sm" :to="`/garage/${bike.id}`">
-              Specs &amp; Service →
-            </NuxtLink>
-            <NuxtLink class="button button--primary button--sm" :to="`/upgrade-lab?bike=${bike.id}`">
-              Check Upgrade
-            </NuxtLink>
+          <!-- Content Body -->
+          <div class="card-body">
+            <h2 class="bike-name">
+              <NuxtLink :to="`/garage/${bike.id}`">{{ bike.nickname }}</NuxtLink>
+            </h2>
+
+            <p class="bike-spec-sub">
+              {{ [bike.brand, bike.model].filter(Boolean).join(' · ') || 'Custom Build / Rakitan' }}
+            </p>
+
+            <!-- Verified Standards Progress Gauge -->
+            <div class="standards-gauge">
+              <div class="gauge-labels">
+                <span class="gauge-known">
+                  <strong>{{ specsBreakdown(bike).known }}</strong> Standar Terverifikasi
+                </span>
+                <span v-if="specsBreakdown(bike).unknown" class="gauge-unknown">
+                  {{ specsBreakdown(bike).unknown }} belum tahu
+                </span>
+              </div>
+              <div class="gauge-track">
+                <div
+                  class="gauge-fill"
+                  :style="{ width: `${Math.min(100, Math.round((specsBreakdown(bike).known / 17) * 100))}%` }"
+                />
+              </div>
+            </div>
+
+            <!-- Native 1-Tap Action Buttons -->
+            <div class="card-actions-row">
+              <NuxtLink class="native-btn native-btn--secondary" :to="`/garage/${bike.id}`">
+                🔧 Spesifikasi &amp; Servis
+              </NuxtLink>
+              <NuxtLink class="native-btn native-btn--primary" :to="`/upgrade-lab?bike=${bike.id}`">
+                ⚡ Cek Upgrade Lab
+              </NuxtLink>
+            </div>
           </div>
         </article>
       </div>
     </template>
 
-    <div v-else class="state-card empty-garage">
-      <span class="empty-garage__wheel" aria-hidden="true">○</span>
-      <div>
-        <strong>Your Garage is ready for its first bike.</strong>
-        <p>Start with a nickname and bike type. Every other standard can wait.</p>
-      </div>
-      <NuxtLink class="button button--primary" to="/garage/new">Add first bike</NuxtLink>
+    <!-- Empty Garage State -->
+    <div v-else class="empty-garage-box">
+      <div class="empty-icon">🚲</div>
+      <h2>Garasi Anda Masih Kosong</h2>
+      <p>Tambahkan sepeda pertama Anda untuk mulai memetakan standar teknis dan riwayat servis.</p>
+      <NuxtLink class="button button--primary" to="/garage/new">
+        ＋ Daftarkan Sepeda Pertama
+      </NuxtLink>
     </div>
   </div>
 </template>
 
 <style scoped>
-.garage-page {
-  gap: 2rem;
-}
-
-.status-chip--lime {
-  background: var(--color-chain-lime);
-}
-
-.garage-guest-box {
+.garage-container {
   display: grid;
-  gap: 1.5rem;
-  padding: clamp(1.25rem, 5vw, 2.5rem);
-  border: 2px dashed var(--color-ink);
-  border-radius: var(--radius-card);
-  background: rgb(201 243 106 / 18%);
+  gap: 1.25rem;
+  padding-bottom: 2rem;
 }
 
-.garage-guest-box__content {
-  display: flex;
-  align-items: center;
-  gap: 1rem;
-}
-
-.garage-guest-icon {
-  font-size: 2.8rem;
-}
-
-.garage-guest-box h2 {
-  margin: 0;
-  font-size: clamp(1.4rem, 5vw, 2rem);
-  letter-spacing: -0.035em;
-}
-
-.garage-guest-box p {
-  margin: 0.35rem 0 0;
-  color: var(--color-asphalt);
-  line-height: 1.55;
-}
-
-.garage-guest-actions {
-  display: flex;
-  flex-wrap: wrap;
-  gap: 0.75rem;
-}
-
-.garage-filter-bar input {
-  width: 100%;
-  min-height: 3rem;
-  padding: 0.75rem 1rem;
-  border: 1px solid var(--color-sand);
-  border-radius: 0.85rem;
-  background: var(--color-white);
-  font: inherit;
-}
-
-.bike-card-rich {
+.native-page-header {
   display: grid;
-  gap: 0.85rem;
-  padding: 1.35rem;
-  border: 1px solid rgb(64 80 95 / 14%);
-  border-radius: var(--radius-card);
-  background: var(--color-white);
-  box-shadow: var(--shadow-card);
-  transition: transform 120ms ease, border-color 120ms ease;
+  gap: 0.35rem;
 }
 
-.bike-card-rich:hover {
-  border-color: var(--color-ink);
-}
-
-.bike-card-rich__top {
+.header-topline {
   display: flex;
   align-items: center;
   justify-content: space-between;
 }
 
-.bike-type-badge {
+.native-eyebrow {
+  font-family: var(--font-mono);
+  font-size: 0.72rem;
+  font-weight: 850;
+  text-transform: uppercase;
+  color: var(--color-asphalt);
+  letter-spacing: 0.05em;
+}
+
+.counter-chip {
+  font-family: var(--font-mono);
+  font-size: 0.68rem;
+  font-weight: 850;
+  padding: 0.15rem 0.55rem;
+  border-radius: 9999px;
+  background: var(--color-sand);
+  color: var(--color-ink);
+}
+
+.header-main-row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 0.85rem;
+}
+
+.native-title {
+  margin: 0;
+  font-size: 1.65rem;
+  font-weight: 850;
+  letter-spacing: -0.03em;
+  color: var(--color-ink);
+}
+
+.add-bike-fab {
   display: inline-flex;
   align-items: center;
   gap: 0.35rem;
-  padding: 0.3rem 0.65rem;
-  border-radius: 0.55rem;
-  background: var(--color-sky);
-  font-size: 0.75rem;
-  font-weight: 800;
-}
-
-.bike-year-tag {
-  font-family: ui-monospace, monospace;
-  font-size: 0.75rem;
-  font-weight: 800;
-  color: var(--color-asphalt);
-}
-
-.bike-card-rich__title {
-  margin: 0.2rem 0 0;
-  font-size: 1.5rem;
-  letter-spacing: -0.03em;
-}
-
-.bike-card-rich__title a {
+  padding: 0.45rem 0.85rem;
+  border-radius: 0.75rem;
+  background: var(--color-chain-lime);
+  color: var(--color-ink);
+  font-size: 0.78rem;
+  font-weight: 850;
   text-decoration: none;
-  color: inherit;
+  border: 1.5px solid var(--color-ink);
+  box-shadow: 0 2px 0 var(--color-ink);
+  transition: transform 90ms ease;
+  white-space: nowrap;
 }
 
-.bike-card-rich__title a:hover {
-  text-decoration: underline;
+.add-bike-fab:active {
+  transform: scale(0.96);
 }
 
-.bike-card-rich__model {
+.native-sub {
   margin: 0;
+  font-size: 0.84rem;
   color: var(--color-asphalt);
-  font-size: 0.9rem;
+  line-height: 1.4;
 }
 
-.bike-specs-meter {
-  display: grid;
-  gap: 0.4rem;
-  padding: 0.85rem;
-  border-radius: 0.85rem;
-  background: rgb(237 228 210 / 35%);
-}
-
-.bike-specs-meter__stats {
+/* Search Bar */
+.search-bar-wrap {
   display: flex;
   align-items: center;
-  justify-content: space-between;
-  font-size: 0.78rem;
-  color: var(--color-asphalt);
+  gap: 0.45rem;
+  padding: 0.5rem 0.85rem;
+  border-radius: 0.95rem;
+  background: var(--color-white);
+  border: 1px solid var(--color-sand);
+  box-shadow: 0 2px 8px rgb(23 32 42 / 3%);
 }
 
-.unknown-pill {
-  padding: 0.15rem 0.45rem;
-  border-radius: 0.4rem;
-  background: rgb(142 221 244 / 45%);
+.search-icon {
+  font-size: 0.85rem;
+  opacity: 0.5;
+}
+
+.search-field {
+  flex: 1;
+  border: none;
+  background: transparent;
+  outline: none;
+  font-size: 0.82rem;
+  font-weight: 750;
   color: var(--color-ink);
-  font-weight: 800;
-  font-size: 0.7rem;
 }
 
-.meter-bar {
+.clear-search-btn {
+  border: none;
+  background: none;
+  font-size: 0.75rem;
+  color: var(--color-asphalt);
+  cursor: pointer;
+}
+
+/* Bike Cards Feed */
+.bike-cards-feed {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(18rem, 1fr));
+  gap: 1rem;
+}
+
+.native-bike-card {
+  display: flex;
+  flex-direction: column;
+  border-radius: 1.25rem;
+  background: var(--color-white);
+  border: 1px solid var(--color-sand);
+  overflow: hidden;
+  box-shadow: 0 4px 18px rgb(23 32 42 / 6%);
+  transition: transform 120ms ease, border-color 120ms ease;
+}
+
+.native-bike-card:hover {
+  border-color: var(--color-ink);
+}
+
+.card-cover {
+  position: relative;
   width: 100%;
-  height: 0.45rem;
-  border-radius: 1rem;
+  height: 9.5rem;
   background: var(--color-sand);
   overflow: hidden;
 }
 
-.meter-bar__fill {
+.cover-image {
+  width: 100%;
   height: 100%;
-  background: var(--color-chain-lime);
-  border-radius: 1rem;
+  object-fit: cover;
 }
 
-.bike-card-rich__actions {
+.cover-placeholder {
+  width: 100%;
+  height: 100%;
+  display: grid;
+  place-items: center;
+  background: radial-gradient(circle at center, #ffffff 0%, #ede4d2 100%);
+}
+
+.cover-placeholder-icon {
+  font-size: 3.5rem;
+}
+
+.cover-pills {
+  position: absolute;
+  top: 0.65rem;
+  left: 0.65rem;
+  right: 0.65rem;
   display: flex;
-  flex-wrap: wrap;
-  gap: 0.5rem;
+  align-items: center;
+  justify-content: space-between;
+}
+
+.type-pill {
+  font-size: 0.72rem;
+  font-weight: 850;
+  padding: 0.2rem 0.55rem;
+  border-radius: 9999px;
+  background: rgb(255 255 255 / 92%);
+  backdrop-filter: blur(8px);
+  -webkit-backdrop-filter: blur(8px);
+  color: var(--color-ink);
+  border: 1px solid rgb(23 32 42 / 10%);
+}
+
+.year-pill {
+  font-family: var(--font-mono);
+  font-size: 0.68rem;
+  font-weight: 850;
+  padding: 0.15rem 0.45rem;
+  border-radius: 0.45rem;
+  background: rgb(23 32 42 / 75%);
+  color: var(--color-white);
+}
+
+.card-body {
+  padding: 1rem;
+  display: grid;
+  gap: 0.65rem;
+  flex: 1;
+}
+
+.bike-name {
+  margin: 0;
+  font-size: 1.15rem;
+  font-weight: 850;
+  letter-spacing: -0.02em;
+}
+
+.bike-name a {
+  text-decoration: none;
+  color: var(--color-ink);
+}
+
+.bike-spec-sub {
+  margin: 0;
+  font-size: 0.78rem;
+  color: var(--color-asphalt);
+  font-weight: 700;
+}
+
+/* Standards Progress */
+.standards-gauge {
+  display: grid;
+  gap: 0.25rem;
+  padding: 0.55rem 0.75rem;
+  border-radius: 0.75rem;
+  background: var(--color-canvas);
+  border: 1px solid var(--color-sand);
+}
+
+.gauge-labels {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  font-size: 0.68rem;
+  font-weight: 750;
+}
+
+.gauge-known strong {
+  color: #166534;
+}
+
+.gauge-unknown {
+  color: #0369a1;
+  background: #e0f2fe;
+  padding: 0.05rem 0.35rem;
+  border-radius: 0.35rem;
+}
+
+.gauge-track {
+  width: 100%;
+  height: 0.35rem;
+  border-radius: 9999px;
+  background: var(--color-sand);
+  overflow: hidden;
+}
+
+.gauge-fill {
+  height: 100%;
+  background: var(--color-chain-lime);
+  border-radius: 9999px;
+  transition: width 300ms ease;
+}
+
+/* 1-Tap Action Buttons */
+.card-actions-row {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 0.45rem;
   margin-top: 0.35rem;
 }
 
-.button--sm {
-  min-height: 2.4rem;
-  padding: 0.4rem 0.85rem;
-  font-size: 0.82rem;
+.native-btn {
+  display: grid;
+  place-items: center;
+  text-align: center;
+  padding: 0.5rem 0.65rem;
+  border-radius: 0.75rem;
+  font-size: 0.76rem;
+  font-weight: 850;
+  text-decoration: none;
+  transition: transform 90ms ease;
+}
+
+.native-btn:active {
+  transform: scale(0.96);
+}
+
+.native-btn--primary {
+  background: var(--color-ink);
+  color: var(--color-white);
+}
+
+.native-btn--secondary {
+  background: var(--color-sand);
+  color: var(--color-ink);
+}
+
+/* Guest & Empty */
+.native-guest-box,
+.empty-garage-box {
+  display: grid;
+  gap: 1rem;
+  text-align: center;
+  padding: 2.25rem 1.5rem;
+  border-radius: 1.35rem;
+  background: var(--color-white);
+  border: 1px solid var(--color-sand);
+}
+
+.guest-icon,
+.empty-icon {
+  font-size: 3.2rem;
+}
+
+.native-guest-box h2,
+.empty-garage-box h2 {
+  margin: 0;
+  font-size: 1.3rem;
+  font-weight: 850;
+}
+
+.native-guest-box p,
+.empty-garage-box p {
+  margin: 0;
+  font-size: 0.84rem;
+  color: var(--color-asphalt);
+  line-height: 1.4;
+}
+
+.guest-btn-group {
+  display: grid;
+  gap: 0.65rem;
 }
 </style>

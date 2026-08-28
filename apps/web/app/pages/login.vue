@@ -17,12 +17,6 @@ async function submit(): Promise<void> {
     submitting.value = false;
   }
 }
-
-async function fillDemoAndLogin(): Promise<void> {
-  email.value = 'demo@goweskit.local';
-  password.value = 'GowesKitDemo123!';
-  await submit();
-}
 </script>
 
 <template>
@@ -64,52 +58,9 @@ async function fillDemoAndLogin(): Promise<void> {
       >
         {{ submitting ? 'Signing in…' : 'Sign in' }}
       </button>
-
-      <div class="demo-login-box">
-        <p class="demo-login-box__title">🧪 Quick Testing Mode</p>
-        <p class="demo-login-box__desc">
-          Sign in instantly using the pre-seeded GowesKit demo account (with 4
-          bikes, maintenance logs, and trusted contacts).
-        </p>
-        <button
-          class="button button--secondary button--demo"
-          type="button"
-          :disabled="submitting"
-          @click="fillDemoAndLogin"
-        >
-          Sign in with Demo Account
-        </button>
-      </div>
     </form>
     <p class="form-footer">
       New here? <NuxtLink to="/register">Create an account</NuxtLink>.
     </p>
   </section>
 </template>
-
-<style scoped>
-.demo-login-box {
-  margin-top: 1.25rem;
-  padding: 1rem;
-  border: 1px dashed rgb(64 80 95 / 24%);
-  border-radius: 0.9rem;
-  background: rgb(201 243 106 / 20%);
-}
-.demo-login-box__title {
-  margin: 0;
-  font-size: 0.85rem;
-  font-weight: 800;
-}
-.demo-login-box__desc {
-  margin: 0.35rem 0 0.75rem;
-  color: var(--color-asphalt);
-  font-size: 0.78rem;
-  line-height: 1.45;
-}
-.button--demo {
-  width: 100%;
-  border-color: var(--color-ink);
-  background: var(--color-white);
-  font-weight: 800;
-}
-</style>

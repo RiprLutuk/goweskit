@@ -21,6 +21,7 @@ const bike: Bike = {
   brand: null,
   model: null,
   modelYear: null,
+  photoUrl: null,
   notes: null,
   specs: [
     {

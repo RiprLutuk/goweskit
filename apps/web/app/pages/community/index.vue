@@ -15,7 +15,7 @@ const BANDUNG_CENTER: Coordinate = {
 
 const api = useApi();
 const center = ref<Coordinate>(BANDUNG_CENTER);
-const centerLabel = ref('Bandung demo area');
+const centerLabel = ref('Bandung Area');
 const radiusKm = ref(15);
 const bicycleType = ref('all');
 const verificationStatus = ref('all');
@@ -82,7 +82,7 @@ function useMyLocation(): void {
     () => {
       locating.value = false;
       locationMessage.value =
-        'Location was not available. The Bandung demo area is still usable.';
+        'Lokasi tidak dapat diakses. Menampilkan komunitas area Bandung.';
     },
     { enableHighAccuracy: false, timeout: 10_000, maximumAge: 60_000 },
   );
@@ -90,8 +90,8 @@ function useMyLocation(): void {
 
 function resetLocation(): void {
   center.value = BANDUNG_CENTER;
-  centerLabel.value = 'Bandung demo area';
-  locationMessage.value = 'Showing seeded communities around Bandung.';
+  centerLabel.value = 'Bandung Area';
+  locationMessage.value = 'Menampilkan komunitas dan event di Bandung.';
   void loadDirectory();
 }
 
@@ -138,7 +138,7 @@ onMounted(loadDirectory);
             {{ locating ? 'Finding you…' : 'Use my location once' }}
           </button>
           <button class="text-button" type="button" @click="resetLocation">
-            Reset to Bandung demo
+            Reset ke Area Bandung
           </button>
         </div>
         <p v-if="locationMessage" class="location-message" role="status">
@@ -259,7 +259,7 @@ onMounted(loadDirectory);
   background: var(--color-coral);
 }
 .community-heading h1 {
-  max-width: 14ch;
+  max-width: 100%;
 }
 .community-search {
   padding: 1.2rem;

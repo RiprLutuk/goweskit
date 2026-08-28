@@ -39,7 +39,7 @@ P3 = later
 - [x] GARAGE-004 [P0] Normalized specs.
 - [x] GARAGE-005 [P0] Installed components.
 - [x] GARAGE-006 [P0] Unknown-spec UX.
-- [ ] GARAGE-007 [P1] Bike photo.
+- [x] GARAGE-007 [P1] Bike photo.
 
 ## Compatibility
 
@@ -73,9 +73,9 @@ P3 = later
 - [x] GEO-006 [P1] MapLibre.
 - [x] GEO-007 [P1] Filters.
 - [x] GEO-008 [P1] Place freshness.
-- [ ] GEO-009 [P1] Reviews.
-- [ ] GEO-010 [P2] Route/hazard reports.
-- [ ] GEO-011 [P2] GPX import.
+- [x] GEO-009 [P1] Reviews.
+- [x] GEO-010 [P2] Route/hazard reports.
+- [x] GEO-011 [P2] GPX import.
 
 ## Community
 
@@ -106,7 +106,7 @@ P3 = later
 - [x] MAINT-001 [P1] Event model.
 - [x] MAINT-002 [P1] Log service.
 - [x] MAINT-003 [P1] Date reminder.
-- [ ] MAINT-004 [P2] Distance reminder.
+- [x] MAINT-004 [P2] Distance reminder.
 
 ## QA
 

@@ -41,6 +41,7 @@ const bikeDetailsInputSchema = z.object({
   brand: z.string().trim().max(100).nullable().optional(),
   model: z.string().trim().max(100).nullable().optional(),
   modelYear: z.number().int().min(1900).max(2100).nullable().optional(),
+  photoUrl: z.string().trim().max(2000).nullable().optional(),
   notes: z.string().trim().max(2000).nullable().optional(),
 });
 
@@ -70,6 +71,7 @@ export const bikeSchema = z.object({
   brand: z.string().nullable(),
   model: z.string().nullable(),
   modelYear: z.number().int().nullable(),
+  photoUrl: z.string().nullable().default(null),
   notes: z.string().nullable(),
   specs: z.array(bikeSpecSchema),
   createdAt: z.iso.datetime(),

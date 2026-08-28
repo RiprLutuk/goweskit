@@ -28,12 +28,17 @@ const props = defineProps<{
 
 const api = useApi();
 const { user, initialized, refresh } = useAuth();
+
+type ActiveTab = 'reviews' | 'hazard' | 'gpx';
+const activeTab = ref<ActiveTab>(props.selectedItem ? 'reviews' : 'hazard');
+
 const reviews = ref<PublicPlaceReview[]>([]);
 const routeReports = ref<PublicRouteReport[]>([]);
 const hazards = ref<PublicHazardReport[]>([]);
 const publicLoading = ref(true);
 const publicError = ref('');
 const submitting = ref(false);
+const locatingHazard = ref(false);
 const submissionError = ref('');
 const submissionMessage = ref('');
 const rating = ref(5);
@@ -68,6 +73,22 @@ function updateHazardCoordinate(): void {
   const coordinate = contributionCoordinateForItem(props.selectedItem);
   hazardLongitude.value = coordinate.longitude;
   hazardLatitude.value = coordinate.latitude;
+}
+
+function useCurrentGpsForHazard(): void {
+  if (!('geolocation' in navigator)) return;
+  locatingHazard.value = true;
+  navigator.geolocation.getCurrentPosition(
+    (pos) => {
+      hazardLongitude.value = pos.coords.longitude;
+      hazardLatitude.value = pos.coords.latitude;
+      locatingHazard.value = false;
+    },
+    () => {
+      locatingHazard.value = false;
+    },
+    { enableHighAccuracy: true, timeout: 10_000, maximumAge: 0 },
+  );
 }
 
 async function loadApprovedContributions(): Promise<void> {
@@ -109,7 +130,7 @@ async function submitReview(): Promise<void> {
       },
     );
     reviewNotes.value = '';
-    submissionMessage.value = `Review ${response.contribution.moderationStatus}. It becomes public only after approval.`;
+    submissionMessage.value = `Ulasan berhasil dikirim (${response.contribution.moderationStatus}).`;
   } catch (error: unknown) {
     submissionError.value = getApiErrorMessage(error);
   } finally {
@@ -134,7 +155,7 @@ async function submitRouteReport(): Promise<void> {
       },
     );
     reportNotes.value = '';
-    submissionMessage.value = `Route report ${response.contribution.moderationStatus}. It becomes public only after approval.`;
+    submissionMessage.value = `Laporan kondisi jalur terkirim (${response.contribution.moderationStatus}).`;
   } catch (error: unknown) {
     submissionError.value = getApiErrorMessage(error);
   } finally {
@@ -143,7 +164,6 @@ async function submitRouteReport(): Promise<void> {
 }
 
 async function submitHazard(): Promise<void> {
-  if (props.selectedItem === null) return;
   resetMessages();
   submitting.value = true;
   try {
@@ -151,7 +171,7 @@ async function submitHazard(): Promise<void> {
       method: 'POST',
       body: {
         routeId:
-          props.selectedItem.kind === 'route' ? props.selectedItem.id : null,
+          props.selectedItem?.kind === 'route' ? props.selectedItem.id : null,
         hazardType: hazardType.value,
         severity: hazardSeverity.value,
         coordinate: {
@@ -163,7 +183,7 @@ async function submitHazard(): Promise<void> {
       },
     });
     hazardNotes.value = '';
-    submissionMessage.value = `Hazard report ${response.contribution.moderationStatus}. It becomes public only after approval.`;
+    submissionMessage.value = `Laporan bahaya jalan terkirim (${response.contribution.moderationStatus}).`;
   } catch (error: unknown) {
     submissionError.value = getApiErrorMessage(error);
   } finally {
@@ -178,7 +198,7 @@ async function chooseGpx(event: Event): Promise<void> {
   const file = input.files?.[0];
   if (file === undefined) return;
   if (file.size > GPX_MAX_FILE_BYTES) {
-    gpxError.value = 'GPX file is larger than the 2 MB limit.';
+    gpxError.value = 'Ukuran file GPX maksimal 2 MB.';
     input.value = '';
     return;
   }
@@ -203,12 +223,21 @@ async function importGpx(): Promise<void> {
   }
 }
 
+function cleanText(text: string): string {
+  return text
+    .replace(/^Practice\s+/i, '')
+    .replace(/\s*·\s*demo\s+data/gi, '')
+    .replace(/\bdemo\b/gi, '')
+    .trim();
+}
+
 watch(
   () => props.selectedItem?.id,
   () => {
     resetMessages();
     updateHazardCoordinate();
     void loadApprovedContributions();
+    if (props.selectedItem) activeTab.value = 'reviews';
   },
 );
 
@@ -220,470 +249,679 @@ onMounted(async () => {
 </script>
 
 <template>
-  <section class="contribution-shell" aria-labelledby="contribution-title">
-    <header class="contribution-heading">
-      <div>
-        <p class="section-heading__eyebrow">Community knowledge</p>
-        <h2 id="contribution-title">Reviews, conditions, and hazards</h2>
-      </div>
-      <span class="status-chip status-chip--sky">Moderated</span>
-    </header>
-    <p class="contribution-intro">
-      Public lists contain approved reports only. Reporter identity is private,
-      and every hazard point means “reported hazard”—never a live rider.
-    </p>
-
-    <p v-if="publicLoading" class="state-card" role="status">
-      Loading approved local reports…
-    </p>
-    <p
-      v-else-if="publicError"
-      class="state-card state-card--error"
-      role="alert"
-    >
-      {{ publicError }}
-    </p>
-
-    <div v-else class="contribution-grid">
-      <article class="contribution-panel">
-        <h3>
-          {{
-            selectedItem === null
-              ? 'Select a map result'
-              : `Approved notes for ${selectedItem.name}`
-          }}
-        </h3>
-        <p v-if="selectedItem === null" class="muted-copy">
-          Select a place or route above to read and submit focused information.
-        </p>
-        <template v-else-if="selectedItem.kind === 'place'">
-          <p v-if="reviews.length === 0" class="muted-copy">
-            No approved reviews yet.
-          </p>
-          <ul v-else class="contribution-list">
-            <li v-for="review in reviews" :key="review.id">
-              <strong>{{ review.rating }} / 5</strong>
-              <span>{{ review.notes }}</span>
-              <small>{{ contributionDate(review.createdAt) }}</small>
-            </li>
-          </ul>
-        </template>
-        <template v-else>
-          <p v-if="routeReports.length === 0" class="muted-copy">
-            No approved route reports yet.
-          </p>
-          <ul v-else class="contribution-list">
-            <li v-for="report in routeReports" :key="report.id">
-              <strong>{{ contributionLabel(report.reportType) }}</strong>
-              <span>{{ report.notes }}</span>
-              <small>{{ contributionDate(report.observedAt) }}</small>
-            </li>
-          </ul>
-          <p v-if="selectedRouteHazards.length === 0" class="muted-copy">
-            No approved hazards are linked to this route.
-          </p>
-          <ul v-else class="contribution-list contribution-list--hazard">
-            <li v-for="hazard in selectedRouteHazards" :key="hazard.id">
-              <strong>
-                {{ contributionLabel(hazard.severity) }} ·
-                {{ contributionLabel(hazard.hazardType) }}
-              </strong>
-              <span>{{ hazard.notes }}</span>
-              <small
-                >Reported hazard marker ·
-                {{ contributionDate(hazard.observedAt) }}</small
-              >
-            </li>
-          </ul>
-        </template>
-      </article>
-
-      <article class="contribution-panel contribution-panel--forms">
-        <h3>Contribute what you observed</h3>
-        <p v-if="selectedItem === null" class="muted-copy">
-          Select a public map item first. Your search center is never copied
-          into a report.
-        </p>
-        <div v-else-if="!initialized" class="state-card" role="status">
-          Checking contribution permission…
-        </div>
-        <div v-else-if="!user" class="permission-card">
-          <p>
-            Sign in to submit. Approved information stays anonymous publicly.
-          </p>
-          <NuxtLink class="button button--secondary" to="/login"
-            >Sign in</NuxtLink
-          >
-        </div>
-        <div v-else class="contribution-forms">
-          <form
-            v-if="selectedItem.kind === 'place'"
-            class="compact-form"
-            @submit.prevent="submitReview"
-          >
-            <h4>Review this place</h4>
-            <label>
-              Rating
-              <select v-model="rating">
-                <option
-                  v-for="value in [5, 4, 3, 2, 1]"
-                  :key="value"
-                  :value="value"
-                >
-                  {{ value }} / 5
-                </option>
-              </select>
-            </label>
-            <label>
-              Helpful notes
-              <textarea v-model="reviewNotes" required maxlength="1000" />
-            </label>
-            <button
-              class="button button--primary"
-              :disabled="submitting"
-              type="submit"
-            >
-              Submit review
-            </button>
-          </form>
-
-          <form v-else class="compact-form" @submit.prevent="submitRouteReport">
-            <h4>Report route condition</h4>
-            <label>
-              Report type
-              <select v-model="reportType">
-                <option
-                  v-for="value in ROUTE_REPORT_TYPES"
-                  :key="value"
-                  :value="value"
-                >
-                  {{ contributionLabel(value) }}
-                </option>
-              </select>
-            </label>
-            <label>
-              What did you observe?
-              <textarea v-model="reportNotes" required maxlength="1000" />
-            </label>
-            <button
-              class="button button--primary"
-              :disabled="submitting"
-              type="submit"
-            >
-              Submit route report
-            </button>
-          </form>
-
-          <form class="compact-form" @submit.prevent="submitHazard">
-            <h4>Mark a hazard</h4>
-            <p class="privacy-note">
-              These coordinates describe the hazard. They start from the
-              selected public map item, not your location.
-            </p>
-            <div class="compact-pair">
-              <label>
-                Type
-                <select v-model="hazardType">
-                  <option
-                    v-for="value in HAZARD_TYPES"
-                    :key="value"
-                    :value="value"
-                  >
-                    {{ contributionLabel(value) }}
-                  </option>
-                </select>
-              </label>
-              <label>
-                Severity
-                <select v-model="hazardSeverity">
-                  <option
-                    v-for="value in HAZARD_SEVERITIES"
-                    :key="value"
-                    :value="value"
-                  >
-                    {{ value }}
-                  </option>
-                </select>
-              </label>
-            </div>
-            <div class="compact-pair">
-              <label>
-                Longitude
-                <input
-                  v-model.number="hazardLongitude"
-                  type="number"
-                  min="-180"
-                  max="180"
-                  step="0.000001"
-                  required
-                />
-              </label>
-              <label>
-                Latitude
-                <input
-                  v-model.number="hazardLatitude"
-                  type="number"
-                  min="-90"
-                  max="90"
-                  step="0.000001"
-                  required
-                />
-              </label>
-            </div>
-            <label>
-              What should riders know?
-              <textarea v-model="hazardNotes" required maxlength="1000" />
-            </label>
-            <button
-              class="button button--secondary"
-              :disabled="submitting"
-              type="submit"
-            >
-              Submit hazard
-            </button>
-          </form>
-          <p v-if="submissionMessage" class="form-message" role="status">
-            {{ submissionMessage }}
-          </p>
-          <p
-            v-if="submissionError"
-            class="form-message form-message--error"
-            role="alert"
-          >
-            {{ submissionError }}
-          </p>
-        </div>
-      </article>
+  <div class="contribution-modal-wrap">
+    <!-- Clean Segmented Navigation Tabs -->
+    <div class="modal-segmented-control" role="tablist">
+      <button
+        class="seg-btn"
+        :class="{ 'seg-btn--active': activeTab === 'reviews' }"
+        type="button"
+        role="tab"
+        :aria-selected="activeTab === 'reviews'"
+        @click="activeTab = 'reviews'"
+      >
+        💬 {{ selectedItem ? 'Ulasan Tempat' : 'Info Komunitas' }}
+      </button>
+      <button
+        class="seg-btn"
+        :class="{ 'seg-btn--active': activeTab === 'hazard' }"
+        type="button"
+        role="tab"
+        :aria-selected="activeTab === 'hazard'"
+        @click="activeTab = 'hazard'"
+      >
+        ⚠️ Lapor Bahaya
+      </button>
+      <button
+        class="seg-btn"
+        :class="{ 'seg-btn--active': activeTab === 'gpx' }"
+        type="button"
+        role="tab"
+        :aria-selected="activeTab === 'gpx'"
+        @click="activeTab = 'gpx'"
+      >
+        📁 File GPX
+      </button>
     </div>
 
-    <div class="contribution-grid contribution-grid--lower">
-      <article class="contribution-panel">
-        <h3>Approved hazard board</h3>
-        <p v-if="hazards.length === 0" class="muted-copy">
-          No approved hazard markers are available.
-        </p>
-        <ul v-else class="contribution-list contribution-list--hazard">
-          <li v-for="hazard in hazards.slice(0, 6)" :key="hazard.id">
-            <strong>
-              {{ contributionLabel(hazard.severity) }} ·
-              {{ contributionLabel(hazard.hazardType) }}
-            </strong>
-            <span>{{ hazard.notes }}</span>
-            <small>
-              Reported hazard marker
-              {{ hazard.coordinate.longitude.toFixed(4) }},
-              {{ hazard.coordinate.latitude.toFixed(4) }}
-            </small>
-          </li>
-        </ul>
-      </article>
+    <!-- TAB 1: REVIEWS & COMMUNITY REPORTS -->
+    <section v-if="activeTab === 'reviews'" class="tab-pane">
+      <!-- A. If a place / route is selected -->
+      <div v-if="selectedItem" class="selected-item-box">
+        <div class="selected-item-tag">
+          {{ selectedItem.kind === 'place' ? 'Spot Terpilih' : 'Rute Terpilih' }}
+        </div>
+        <strong class="selected-item-name">{{ selectedItem.name.replace(/^Demo\s+/i, '') }}</strong>
+      </div>
 
-      <article class="contribution-panel">
-        <h3>Check a GPX file</h3>
-        <p class="muted-copy">
-          Parses up to 2 MB and 10,000 points for a route preview. Import does
-          not publish a route or reveal your location.
+      <!-- Approved Reviews List -->
+      <div v-if="publicLoading" class="mini-status-card">Memuat laporan komunitas…</div>
+      <div v-else-if="publicError" class="mini-status-card mini-status-card--error">{{ publicError }}</div>
+      <div v-else class="reviews-stack">
+        <!-- Place Reviews -->
+        <template v-if="selectedItem?.kind === 'place'">
+          <div v-if="reviews.length === 0" class="empty-bulletin">
+            Belum ada ulasan komunitas untuk tempat ini.
+          </div>
+          <div v-for="review in reviews" :key="review.id" class="review-card">
+            <div class="review-header">
+              <span class="rating-badge">★ {{ review.rating }}.0</span>
+              <small class="review-date">{{ contributionDate(review.createdAt) }}</small>
+            </div>
+            <p class="review-text">{{ cleanText(review.notes) }}</p>
+          </div>
+
+          <!-- Add Review Form -->
+          <div v-if="user" class="add-review-box">
+            <h4>Tulis Ulasan</h4>
+            <form class="clean-form" @submit.prevent="submitReview">
+              <div class="form-row-compact">
+                <label>
+                  Rating:
+                  <select v-model="rating">
+                    <option v-for="val in [5, 4, 3, 2, 1]" :key="val" :value="val">★ {{ val }} Bintang</option>
+                  </select>
+                </label>
+              </div>
+              <textarea
+                v-model="reviewNotes"
+                placeholder="Tulis ulasan fasilitas parkir, ketersediaan pompa, atau keramahan bengkel..."
+                required
+                maxlength="500"
+              />
+              <button class="button button--primary button--full" :disabled="submitting" type="submit">
+                {{ submitting ? 'Mengirim…' : 'Kirim Ulasan' }}
+              </button>
+            </form>
+          </div>
+          <div v-else class="login-prompt-banner">
+            <span>Masuk untuk menulis ulasan tempat ini.</span>
+            <NuxtLink class="button button--secondary button--sm" to="/login">Sign In</NuxtLink>
+          </div>
+        </template>
+
+        <!-- Route Reports & Route Hazards -->
+        <template v-else-if="selectedItem?.kind === 'route'">
+          <div v-if="routeReports.length === 0 && selectedRouteHazards.length === 0" class="empty-bulletin">
+            Belum ada laporan kendala pada rute ini.
+          </div>
+          <div v-for="report in routeReports" :key="report.id" class="review-card">
+            <div class="review-header">
+              <span class="pill-tag">{{ contributionLabel(report.reportType) }}</span>
+              <small class="review-date">{{ contributionDate(report.observedAt) }}</small>
+            </div>
+            <p class="review-text">{{ cleanText(report.notes) }}</p>
+          </div>
+
+          <div v-for="hz in selectedRouteHazards" :key="hz.id" class="review-card review-card--hazard">
+            <div class="review-header">
+              <span class="hazard-tag">⚠️ {{ contributionLabel(hz.severity) }} · {{ contributionLabel(hz.hazardType) }}</span>
+              <small class="review-date">{{ contributionDate(hz.observedAt) }}</small>
+            </div>
+            <p class="review-text">{{ cleanText(hz.notes) }}</p>
+          </div>
+
+          <!-- Add Route Report Form -->
+          <div v-if="user" class="add-review-box">
+            <h4>Lapor Kondisi Jalur Ini</h4>
+            <form class="clean-form" @submit.prevent="submitRouteReport">
+              <select v-model="reportType">
+                <option v-for="val in ROUTE_REPORT_TYPES" :key="val" :value="val">
+                  {{ contributionLabel(val) }}
+                </option>
+              </select>
+              <textarea
+                v-model="reportNotes"
+                placeholder="Ceritakan kondisi jalan, permukaan aspal/tanah, atau perbaikan jalan..."
+                required
+                maxlength="500"
+              />
+              <button class="button button--primary button--full" :disabled="submitting" type="submit">
+                {{ submitting ? 'Mengirim…' : 'Kirim Laporan Rute' }}
+              </button>
+            </form>
+          </div>
+          <div v-else class="login-prompt-banner">
+            <span>Masuk untuk melaporkan kondisi rute.</span>
+            <NuxtLink class="button button--secondary button--sm" to="/login">Sign In</NuxtLink>
+          </div>
+        </template>
+
+        <!-- No Item Selected: Show General Community Hazards Board -->
+        <template v-else>
+          <div class="bulletin-header">
+            <strong>Pantauan Bahaya Jalan Terkini</strong>
+            <span class="count-pill">{{ hazards.length }}</span>
+          </div>
+          <div v-if="hazards.length === 0" class="empty-bulletin">Tidak ada laporan bahaya aktif saat ini.</div>
+          <div v-for="hz in hazards.slice(0, 6)" :key="hz.id" class="review-card review-card--hazard">
+            <div class="review-header">
+              <span class="hazard-tag">⚠️ {{ contributionLabel(hz.severity) }} · {{ contributionLabel(hz.hazardType) }}</span>
+              <small class="review-date">{{ contributionDate(hz.observedAt) }}</small>
+            </div>
+            <p class="review-text">{{ cleanText(hz.notes) }}</p>
+          </div>
+        </template>
+      </div>
+    </section>
+
+    <!-- TAB 2: REPORT HAZARD FORM -->
+    <section v-else-if="activeTab === 'hazard'" class="tab-pane">
+      <div class="form-card-box">
+        <p class="tab-intro-copy">
+          Laporkan jalan berlubang, tumpahan oli, atau pohon tumbang demi keselamatan sesama pesepeda.
         </p>
-        <div v-if="!initialized" class="state-card" role="status">
-          Checking permission…
+
+        <div v-if="!user" class="login-prompt-banner">
+          <span>Masuk untuk mengirimkan laporan bahaya jalan.</span>
+          <NuxtLink class="button button--secondary button--sm" to="/login">Sign In</NuxtLink>
         </div>
-        <div v-else-if="!user" class="permission-card">
-          <p>Sign in before importing a GPX preview.</p>
-          <NuxtLink class="button button--secondary" to="/login"
-            >Sign in</NuxtLink
-          >
-        </div>
-        <form v-else class="compact-form" @submit.prevent="importGpx">
+
+        <form v-else class="clean-form" @submit.prevent="submitHazard">
+          <!-- Location Source & GPS Auto-Detect Header -->
+          <div class="hazard-location-picker">
+            <div class="location-picker-header">
+              <span class="picker-label">Titik Koordinat Bahaya:</span>
+              <span class="picker-coords font-mono">{{ hazardLatitude.toFixed(4) }}, {{ hazardLongitude.toFixed(4) }}</span>
+            </div>
+            <div class="location-picker-actions">
+              <button
+                class="location-gps-btn"
+                type="button"
+                :disabled="locatingHazard"
+                @click="useCurrentGpsForHazard"
+              >
+                {{ locatingHazard ? 'Mengambil GPS…' : '📍 Gunakan Lokasi GPS Saya Saat Ini' }}
+              </button>
+              <span v-if="props.selectedItem" class="selected-target-hint">
+                🔗 Terkait Rute: {{ props.selectedItem.name.replace(/^Demo\s+/i, '') }}
+              </span>
+            </div>
+          </div>
+
+          <div class="form-grid-2">
+            <label>
+              Jenis Bahaya
+              <select v-model="hazardType">
+                <option v-for="val in HAZARD_TYPES" :key="val" :value="val">
+                  {{ contributionLabel(val) }}
+                </option>
+              </select>
+            </label>
+            <label>
+              Tingkat Urgensi
+              <select v-model="hazardSeverity">
+                <option v-for="val in HAZARD_SEVERITIES" :key="val" :value="val">
+                  {{ val }}
+                </option>
+              </select>
+            </label>
+          </div>
+
           <label>
-            GPX file
+            Detail Catatan
+            <textarea
+              v-model="hazardNotes"
+              placeholder="Jelaskan bahaya secara spesifik, misal: 'Lubang dalam di sebelah kiri turunan setelah tikungan'..."
+              required
+              maxlength="500"
+            />
+          </label>
+
+          <button class="button button--primary button--full" :disabled="submitting" type="submit">
+            {{ submitting ? 'Mengirimkan…' : 'Kirim Laporan Bahaya' }}
+          </button>
+        </form>
+      </div>
+    </section>
+
+    <!-- TAB 3: UPLOAD GPX FILE -->
+    <section v-else-if="activeTab === 'gpx'" class="tab-pane">
+      <div class="form-card-box">
+        <p class="tab-intro-copy">
+          Upload file rute GPX (maks. 2 MB) untuk mengecek jarak, elevasi, dan koordinat jalur.
+        </p>
+
+        <div v-if="!user" class="login-prompt-banner">
+          <span>Masuk akun terlebih dahulu untuk preview file GPX.</span>
+          <NuxtLink class="button button--secondary button--sm" to="/login">Sign In</NuxtLink>
+        </div>
+
+        <form v-else class="clean-form" @submit.prevent="importGpx">
+          <div class="gpx-dropzone">
             <input
               type="file"
               accept=".gpx,application/gpx+xml,application/xml,text/xml"
+              class="gpx-file-input"
               @change="chooseGpx"
             />
-          </label>
+            <div class="gpx-drop-content">
+              <span class="gpx-icon">🗺️</span>
+              <span class="gpx-name">{{ gpxFileName || 'Pilih atau sentuh file GPX' }}</span>
+              <span class="gpx-hint">Format .gpx hingga 10.000 titik koordinat</span>
+            </div>
+          </div>
+
           <button
-            class="button button--secondary"
+            class="button button--primary button--full"
             type="submit"
             :disabled="gpxLoading || gpxContent === ''"
           >
-            {{ gpxLoading ? 'Checking GPX…' : 'Import preview' }}
+            {{ gpxLoading ? 'Memproses GPX…' : 'Periksa & Preview GPX' }}
           </button>
-          <p
-            v-if="gpxError"
-            class="form-message form-message--error"
-            role="alert"
-          >
+
+          <p v-if="gpxError" class="form-message form-message--error" role="alert">
             {{ gpxError }}
           </p>
-          <dl v-if="gpxResult" class="gpx-result" role="status">
-            <div>
-              <dt>File</dt>
-              <dd>{{ gpxResult.fileName }}</dd>
+
+          <!-- Result Card -->
+          <div v-if="gpxResult" class="gpx-summary-card">
+            <div class="summary-metric">
+              <span class="metric-label">Nama File</span>
+              <strong>{{ gpxResult.fileName }}</strong>
             </div>
-            <div>
-              <dt>Points</dt>
-              <dd>{{ gpxResult.pointCount }}</dd>
+            <div class="summary-metric">
+              <span class="metric-label">Jumlah Titik</span>
+              <strong>{{ gpxResult.pointCount.toLocaleString() }} waypoints</strong>
             </div>
-            <div>
-              <dt>Distance</dt>
-              <dd>{{ (gpxResult.distanceMeters / 1000).toFixed(1) }} km</dd>
+            <div class="summary-metric">
+              <span class="metric-label">Total Jarak</span>
+              <strong class="highlight-metric">{{ (gpxResult.distanceMeters / 1000).toFixed(1) }} km</strong>
             </div>
-          </dl>
+          </div>
         </form>
-      </article>
-    </div>
-  </section>
+      </div>
+    </section>
+
+    <!-- Global Feedback Notification -->
+    <p v-if="submissionMessage" class="form-message form-message--success" role="status">
+      ✓ {{ submissionMessage }}
+    </p>
+    <p v-if="submissionError" class="form-message form-message--error" role="alert">
+      {{ submissionError }}
+    </p>
+  </div>
 </template>
 
 <style scoped>
-.contribution-shell {
+.contribution-modal-wrap {
   display: grid;
-  gap: 1.25rem;
-  padding: clamp(1rem, 3vw, 1.75rem);
-  border: 1px solid var(--color-border);
-  border-radius: 1.5rem;
-  background: var(--color-surface);
+  gap: 0.85rem;
 }
 
-.contribution-heading,
-.contribution-grid,
-.compact-pair,
-.gpx-result {
+/* Clean Segmented Control */
+.modal-segmented-control {
   display: grid;
-  gap: 1rem;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 0.35rem;
+  padding: 0.25rem;
+  border-radius: 0.85rem;
+  background: var(--color-sand);
 }
 
-.contribution-heading {
-  grid-template-columns: 1fr auto;
-  align-items: start;
+.seg-btn {
+  border: none;
+  background: transparent;
+  padding: 0.45rem 0.3rem;
+  border-radius: 0.65rem;
+  font-size: 0.76rem;
+  font-weight: 800;
+  color: var(--color-asphalt);
+  cursor: pointer;
+  transition: all 120ms ease;
+  white-space: nowrap;
+  text-align: center;
 }
 
-.contribution-heading h2,
-.contribution-panel h3,
-.compact-form h4,
-.contribution-intro,
-.muted-copy,
-.privacy-note,
-.permission-card p {
-  margin: 0;
+.seg-btn--active {
+  background: var(--color-white);
+  color: var(--color-ink);
+  box-shadow: 0 2px 8px rgb(23 32 42 / 10%);
 }
 
-.contribution-intro,
-.muted-copy,
-.privacy-note,
-.contribution-list small {
-  color: var(--color-text-muted);
-}
-
-.contribution-grid {
-  grid-template-columns: repeat(2, minmax(0, 1fr));
-}
-
-.contribution-grid--lower {
-  align-items: start;
-}
-
-.contribution-panel {
-  display: grid;
-  align-content: start;
-  gap: 1rem;
-  padding: 1rem;
-  border: 1px solid var(--color-border);
-  border-radius: 1rem;
-  background: var(--color-surface-raised, #fff);
-}
-
-.contribution-list {
+.tab-pane {
   display: grid;
   gap: 0.75rem;
-  padding: 0;
-  margin: 0;
-  list-style: none;
 }
 
-.contribution-list li {
+.tab-intro-copy {
+  margin: 0;
+  font-size: 0.78rem;
+  color: var(--color-asphalt);
+  line-height: 1.4;
+}
+
+.selected-item-box {
+  padding: 0.6rem 0.85rem;
+  border-radius: 0.75rem;
+  background: rgb(201 243 106 / 25%);
+  border: 1px solid rgb(201 243 106 / 60%);
+  display: flex;
+  flex-direction: column;
+  gap: 0.15rem;
+}
+
+.selected-item-tag {
+  font-family: var(--font-mono);
+  font-size: 0.62rem;
+  font-weight: 850;
+  text-transform: uppercase;
+  color: var(--color-ink);
+}
+
+.selected-item-name {
+  font-size: 0.95rem;
+  color: var(--color-ink);
+}
+
+.reviews-stack {
+  display: grid;
+  gap: 0.55rem;
+}
+
+.review-card {
+  padding: 0.65rem 0.85rem;
+  border-radius: 0.75rem;
+  background: var(--color-white);
+  border: 1px solid var(--color-sand);
   display: grid;
   gap: 0.3rem;
-  padding: 0.8rem;
+}
+
+.review-card--hazard {
+  border-left: 3px solid #ef4444;
+}
+
+.review-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+}
+
+.rating-badge {
+  font-family: var(--font-mono);
+  font-size: 0.7rem;
+  font-weight: 900;
+  color: #d97706;
+}
+
+.pill-tag {
+  padding: 0.1rem 0.4rem;
+  border-radius: 0.35rem;
+  background: var(--color-sand);
+  font-size: 0.65rem;
+  font-weight: 800;
+  text-transform: capitalize;
+}
+
+.hazard-tag {
+  font-size: 0.72rem;
+  font-weight: 850;
+  color: #dc2626;
+  text-transform: capitalize;
+}
+
+.review-date {
+  font-size: 0.65rem;
+  color: var(--color-asphalt);
+}
+
+.review-text {
+  margin: 0;
+  font-size: 0.76rem;
+  color: var(--color-ink);
+  line-height: 1.35;
+}
+
+.bulletin-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  font-size: 0.82rem;
+  color: var(--color-ink);
+}
+
+.count-pill {
+  font-family: var(--font-mono);
+  font-size: 0.65rem;
+  font-weight: 850;
+  padding: 0.1rem 0.4rem;
+  border-radius: 9999px;
+  background: var(--color-sand);
+}
+
+.empty-bulletin {
+  padding: 0.85rem;
+  text-align: center;
+  font-size: 0.76rem;
+  color: var(--color-asphalt);
   border-radius: 0.75rem;
-  background: var(--color-background);
+  background: var(--color-sand);
 }
 
-.contribution-list--hazard li {
-  border-left: 4px solid var(--color-warning, #d7922f);
-}
-
-.contribution-forms,
-.compact-form,
-.permission-card {
+.add-review-box,
+.form-card-box {
   display: grid;
-  gap: 0.9rem;
+  gap: 0.6rem;
+  padding: 0.85rem;
+  border-radius: 0.85rem;
+  background: var(--color-white);
+  border: 1px solid var(--color-sand);
 }
 
-.compact-form + .compact-form {
-  padding-top: 1rem;
-  border-top: 1px solid var(--color-border);
+.add-review-box h4 {
+  margin: 0;
+  font-size: 0.85rem;
+  font-weight: 850;
 }
 
-.compact-form label {
+.clean-form {
   display: grid;
-  gap: 0.4rem;
-  font-weight: 700;
+  gap: 0.55rem;
 }
 
-.compact-form input,
-.compact-form select,
-.compact-form textarea {
+.clean-form label {
+  display: grid;
+  gap: 0.25rem;
+  font-size: 0.72rem;
+  font-weight: 800;
+  color: var(--color-asphalt);
+}
+
+.clean-form select,
+.clean-form input,
+.clean-form textarea {
   width: 100%;
-  min-width: 0;
-  padding: 0.7rem;
-  border: 1px solid var(--color-border-strong, var(--color-border));
+  padding: 0.5rem 0.65rem;
   border-radius: 0.65rem;
-  background: #fff;
-  color: inherit;
-  font: inherit;
+  border: 1px solid var(--color-sand);
+  background: var(--color-white);
+  font-size: 0.78rem;
+  outline: none;
+  box-sizing: border-box;
 }
 
-.compact-form textarea {
-  min-height: 6rem;
+.clean-form textarea {
+  min-height: 4.5rem;
   resize: vertical;
 }
 
-.compact-pair,
-.gpx-result {
-  grid-template-columns: repeat(2, minmax(0, 1fr));
+.clean-form select:focus,
+.clean-form input:focus,
+.clean-form textarea:focus {
+  border-color: var(--color-ink);
 }
 
-.privacy-note {
+.hazard-location-picker {
+  display: grid;
+  gap: 0.35rem;
+  padding: 0.55rem 0.75rem;
+  border-radius: 0.65rem;
+  background: var(--color-sand);
+}
+
+.location-picker-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  font-size: 0.72rem;
+}
+
+.picker-label {
+  font-weight: 800;
+  color: var(--color-asphalt);
+}
+
+.picker-coords {
+  font-size: 0.7rem;
+  font-weight: 850;
+  color: var(--color-ink);
+}
+
+.location-picker-actions {
+  display: flex;
+  align-items: center;
+  gap: 0.45rem;
+  flex-wrap: wrap;
+}
+
+.location-gps-btn {
+  padding: 0.3rem 0.6rem;
+  border-radius: 0.5rem;
+  border: 1px solid var(--color-asphalt);
+  background: var(--color-white);
+  font-size: 0.7rem;
+  font-weight: 850;
+  color: var(--color-ink);
+  cursor: pointer;
+}
+
+.location-gps-btn:active {
+  transform: scale(0.96);
+}
+
+.selected-target-hint {
+  font-size: 0.68rem;
+  color: var(--color-asphalt);
+  font-weight: 750;
+}
+
+.form-grid-2 {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 0.45rem;
+}
+
+.login-prompt-banner {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 0.65rem 0.85rem;
+  border-radius: 0.75rem;
+  background: var(--color-sand);
+  font-size: 0.74rem;
+  color: var(--color-ink);
+}
+
+/* GPX Dropzone */
+.gpx-dropzone {
+  position: relative;
+  border: 2px dashed var(--color-sand);
+  border-radius: 0.85rem;
+  padding: 1.25rem 0.85rem;
+  text-align: center;
+  cursor: pointer;
+  transition: border-color 120ms ease;
+  background: rgb(255 255 255 / 60%);
+}
+
+.gpx-dropzone:hover {
+  border-color: var(--color-ink);
+}
+
+.gpx-file-input {
+  position: absolute;
+  inset: 0;
+  opacity: 0;
+  width: 100%;
+  height: 100%;
+  cursor: pointer;
+}
+
+.gpx-drop-content {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 0.25rem;
+}
+
+.gpx-icon {
+  font-size: 1.5rem;
+}
+
+.gpx-name {
+  font-size: 0.82rem;
+  font-weight: 850;
+  color: var(--color-ink);
+}
+
+.gpx-hint {
+  font-size: 0.68rem;
+  color: var(--color-asphalt);
+}
+
+.gpx-summary-card {
+  display: grid;
+  gap: 0.4rem;
   padding: 0.75rem;
   border-radius: 0.75rem;
-  background: var(--color-sky-soft, #eef8ff);
-  font-size: 0.9rem;
+  background: rgb(201 243 106 / 20%);
+  border: 1px solid var(--color-chain-lime);
 }
 
-.gpx-result div {
+.summary-metric {
+  display: flex;
+  justify-content: space-between;
+  font-size: 0.74rem;
+}
+
+.metric-label {
+  color: var(--color-asphalt);
+}
+
+.highlight-metric {
+  color: #0284c7;
+  font-family: var(--font-mono);
+}
+
+.mini-status-card {
   padding: 0.75rem;
-  border-radius: 0.75rem;
-  background: var(--color-background);
+  text-align: center;
+  font-size: 0.76rem;
+  border-radius: 0.65rem;
+  background: var(--color-sand);
 }
 
-.gpx-result dt {
-  color: var(--color-text-muted);
-  font-size: 0.8rem;
-  font-weight: 700;
-  text-transform: uppercase;
+.mini-status-card--error {
+  background: #fef2f2;
+  color: #b91c1c;
 }
 
-.gpx-result dd {
-  margin: 0.2rem 0 0;
+.form-message {
+  margin: 0;
+  padding: 0.5rem 0.75rem;
+  border-radius: 0.65rem;
+  font-size: 0.74rem;
   font-weight: 800;
 }
 
-@media (max-width: 760px) {
-  .contribution-grid,
-  .compact-pair {
-    grid-template-columns: 1fr;
-  }
+.form-message--success {
+  background: rgb(201 243 106 / 35%);
+  color: #166534;
+}
+
+.form-message--error {
+  background: #fef2f2;
+  color: #b91c1c;
 }
 </style>

@@ -18,6 +18,7 @@ const bicycleTypeId = ref('');
 const brand = ref('');
 const model = ref('');
 const modelYear = ref<number | null>(null);
+const photoUrl = ref('');
 const notes = ref('');
 const specSelections = reactive<Record<string, string>>(
   Object.fromEntries(
@@ -149,6 +150,7 @@ async function submit(): Promise<void> {
         brand: brand.value || null,
         model: model.value || null,
         modelYear: modelYear.value,
+        photoUrl: photoUrl.value.trim() || null,
         notes: notes.value || null,
         specs: selectedSpecs(),
       },
@@ -241,6 +243,10 @@ async function submit(): Promise<void> {
         <label>
           <span>Model year <small>optional</small></span>
           <input v-model="modelYear" type="number" min="1900" max="2100" placeholder="e.g. 2024" />
+        </label>
+        <label>
+          <span>Bike photo URL <small>optional</small></span>
+          <input v-model="photoUrl" type="url" placeholder="https://... image link" />
         </label>
       </div>
 

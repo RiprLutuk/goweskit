@@ -22,15 +22,19 @@ const form = reactive<{
   performedAt: string;
   notes: string;
   nextDueDate: string;
+  performedAtDistanceKm: number | null;
+  nextDueDistanceKm: number | null;
 }>({
   type: 'chain_lube',
   performedAt: today,
   notes: '',
   nextDueDate: '',
+  performedAtDistanceKm: null,
+  nextDueDistanceKm: null,
 });
 
 function formatDate(value: string): string {
-  return new Intl.DateTimeFormat('en', {
+  return new Intl.DateTimeFormat('id-ID', {
     day: 'numeric',
     month: 'short',
     year: 'numeric',
@@ -39,11 +43,17 @@ function formatDate(value: string): string {
 }
 
 function dueCopy(event: MaintenanceEvent): string {
-  if (event.nextDueDate === null) return 'No date reminder';
-  const date = formatDate(event.nextDueDate);
-  if (event.dueStatus === 'overdue') return `Overdue since ${date}`;
-  if (event.dueStatus === 'due') return `Due today · ${date}`;
-  return `Next check · ${date}`;
+  const parts: string[] = [];
+  if (event.nextDueDate !== null) {
+    const date = formatDate(event.nextDueDate);
+    if (event.dueStatus === 'overdue') parts.push(`Lewat jadwal (${date})`);
+    else if (event.dueStatus === 'due') parts.push(`Jatuh tempo hari ini (${date})`);
+    else parts.push(`Cek berikutnya ${date}`);
+  }
+  if (event.nextDueDistanceKm !== null) {
+    parts.push(`Target ${event.nextDueDistanceKm.toLocaleString()} km`);
+  }
+  return parts.join(' · ') || 'Catatan reguler';
 }
 
 async function loadEvents(): Promise<void> {
@@ -75,13 +85,24 @@ async function saveEvent(): Promise<void> {
           performedAt: form.performedAt,
           notes: form.notes.trim() || null,
           nextDueDate: form.nextDueDate || null,
+          performedAtDistanceKm:
+            form.performedAtDistanceKm !== null &&
+            form.performedAtDistanceKm >= 0
+              ? Number(form.performedAtDistanceKm)
+              : null,
+          nextDueDistanceKm:
+            form.nextDueDistanceKm !== null && form.nextDueDistanceKm >= 0
+              ? Number(form.nextDueDistanceKm)
+              : null,
         },
       },
     );
     events.value = [response.event, ...events.value];
     form.notes = '';
     form.nextDueDate = '';
-    successMessage.value = 'Maintenance log saved.';
+    form.performedAtDistanceKm = null;
+    form.nextDueDistanceKm = null;
+    successMessage.value = 'Catatan perawatan berhasil disimpan.';
   } catch (error: unknown) {
     errorMessage.value = getApiErrorMessage(error);
   } finally {
@@ -96,15 +117,16 @@ onMounted(loadEvents);
   <section class="maintenance" aria-labelledby="maintenance-title">
     <div class="section-heading maintenance__heading">
       <div>
-        <p class="section-heading__eyebrow">Service notebook</p>
-        <h2 id="maintenance-title">Maintenance</h2>
-        <p>Log work by date and add an optional next-check reminder.</p>
+        <p class="section-heading__eyebrow">Buku Servis Digital</p>
+        <h2 id="maintenance-title">Riwayat Perawatan</h2>
+        <p>Catat servis rantai, rem, suspensi, dan pasang pengingat tanggal &amp; jarak tempuh (odometer).</p>
       </div>
     </div>
 
+    <!-- Form Input Servis -->
     <form class="maintenance-form" @submit.prevent="saveEvent">
       <label>
-        <span>What did you do?</span>
+        <span>Jenis Perawatan</span>
         <select v-model="form.type" required>
           <option
             v-for="type in MAINTENANCE_EVENT_TYPES"
@@ -116,88 +138,114 @@ onMounted(loadEvents);
         </select>
       </label>
 
-      <div class="maintenance-form__dates">
+      <div class="maintenance-form__grid-2">
         <label>
-          <span>Service date</span>
-          <input v-model="form.performedAt" type="date" :max="today" required />
+          <span>Tanggal Servis</span>
+          <input v-model="form.performedAt" type="date" required />
         </label>
         <label>
-          <span>Next check <small>optional</small></span>
+          <span>Ingatkan Kembali Pada</span>
+          <input v-model="form.nextDueDate" type="date" :min="form.performedAt" />
+        </label>
+      </div>
+
+      <!-- Distance / Odometer Reminder (MAINT-004) -->
+      <div class="maintenance-form__grid-2">
+        <label>
+          <span>Odometer Saat Servis (km)</span>
           <input
-            v-model="form.nextDueDate"
-            type="date"
-            :min="form.performedAt"
+            v-model.number="form.performedAtDistanceKm"
+            type="number"
+            min="0"
+            step="1"
+            placeholder="Contoh: 1200"
+          />
+        </label>
+        <label>
+          <span>Ingatkan Pada Odometer (km)</span>
+          <input
+            v-model.number="form.nextDueDistanceKm"
+            type="number"
+            min="0"
+            step="1"
+            placeholder="Contoh: 1500 (tiap 300 km)"
           />
         </label>
       </div>
 
       <label>
-        <span>Notes <small>optional</small></span>
+        <span>Catatan Tambahan (Merek pelumas, tekanan ban, dll.)</span>
         <textarea
           v-model="form.notes"
-          maxlength="2000"
-          rows="3"
-          placeholder="Parts checked, conditions, or what to watch next."
+          rows="2"
+          placeholder="Contoh: Menggunakan dry lube Squirt, rantai dibersihkan total..."
         />
       </label>
 
-      <button class="button button--primary" type="submit" :disabled="saving">
-        {{ saving ? 'Saving log…' : 'Save maintenance log' }}
+      <button
+        class="button button--primary button--full"
+        type="submit"
+        :disabled="saving"
+      >
+        {{ saving ? 'Menyimpan…' : 'Simpan Catatan Servis' }}
       </button>
+
+      <p v-if="errorMessage" class="state-card state-card--error" role="alert">
+        {{ errorMessage }}
+      </p>
+      <p
+        v-if="successMessage"
+        class="state-card state-card--success"
+        role="status"
+      >
+        ✓ {{ successMessage }}
+      </p>
     </form>
 
-    <p v-if="successMessage" class="maintenance__success" role="status">
-      {{ successMessage }}
-    </p>
-    <div v-if="errorMessage" class="state-card state-card--error" role="alert">
-      <p>{{ errorMessage }}</p>
-      <button
-        v-if="!loading"
-        class="text-button"
-        type="button"
-        @click="loadEvents"
+    <!-- List of Service Records -->
+    <div class="maintenance-list">
+      <p v-if="loading" class="state-card" role="status">
+        Memuat riwayat servis…
+      </p>
+      <p
+        v-else-if="events.length === 0"
+        class="state-card state-card--empty"
+        role="status"
       >
-        Try loading history again
-      </button>
-    </div>
-
-    <p v-if="loading" class="state-card" role="status">
-      Opening the service notebook…
-    </p>
-    <div
-      v-else-if="events.length === 0 && !errorMessage"
-      class="maintenance-empty"
-    >
-      <span aria-hidden="true">✓</span>
-      <div>
-        <strong>No maintenance logged yet</strong>
-        <p>Your first service note will appear here.</p>
-      </div>
-    </div>
-    <ol
-      v-else-if="events.length > 0"
-      class="maintenance-list"
-      aria-label="Maintenance history"
-    >
-      <li v-for="event in events" :key="event.id" class="maintenance-event">
-        <div class="maintenance-event__marker" aria-hidden="true" />
-        <div>
-          <div class="maintenance-event__topline">
-            <strong>{{ MAINTENANCE_EVENT_LABELS[event.type] }}</strong>
-            <time :datetime="event.performedAt">{{
-              formatDate(event.performedAt)
-            }}</time>
-          </div>
-          <p v-if="event.notes">{{ event.notes }}</p>
+        Belum ada riwayat servis untuk sepeda ini.
+      </p>
+      <article
+        v-for="event in events"
+        v-else
+        :key="event.id"
+        class="maintenance-card"
+        :class="{
+          'maintenance-card--overdue': event.dueStatus === 'overdue',
+          'maintenance-card--due': event.dueStatus === 'due',
+        }"
+      >
+        <div class="maintenance-card__top">
+          <span class="type-badge">{{ MAINTENANCE_EVENT_LABELS[event.type] }}</span>
           <span
-            class="maintenance-event__due"
-            :class="`maintenance-event__due--${event.dueStatus}`"
+            class="due-pill"
+            :class="`due-pill--${event.dueStatus}`"
           >
             {{ dueCopy(event) }}
           </span>
         </div>
-      </li>
-    </ol>
+
+        <div class="maintenance-card__meta">
+          <span class="meta-date">📅 {{ formatDate(event.performedAt) }}</span>
+          <span v-if="event.performedAtDistanceKm !== null" class="meta-dist">
+            🛣️ Odometer: {{ event.performedAtDistanceKm.toLocaleString() }} km
+          </span>
+        </div>
+
+        <p v-if="event.notes" class="maintenance-card__notes">
+          {{ event.notes }}
+        </p>
+      </article>
+    </div>
   </section>
 </template>
 
@@ -205,164 +253,133 @@ onMounted(loadEvents);
 .maintenance {
   display: grid;
   gap: 1.25rem;
-  padding-top: 1rem;
-}
-
-.maintenance__heading p:last-child {
-  max-width: 38rem;
-  margin: 0.5rem 0 0;
-  color: var(--color-asphalt);
-  line-height: 1.6;
 }
 
 .maintenance-form {
   display: grid;
-  gap: 1rem;
+  gap: 0.85rem;
   padding: 1.15rem;
+  border-radius: 1.15rem;
+  background: var(--color-white);
   border: 1px solid var(--color-sand);
-  border-radius: var(--radius-card);
-  background: rgb(255 255 255 / 82%);
 }
 
 .maintenance-form label {
   display: grid;
-  gap: 0.45rem;
-  color: var(--color-ink);
-  font-size: 0.85rem;
+  gap: 0.3rem;
+  font-size: 0.76rem;
   font-weight: 800;
-}
-
-.maintenance-form small {
   color: var(--color-asphalt);
-  font-weight: 600;
 }
 
-.maintenance-form select,
 .maintenance-form input,
+.maintenance-form select,
 .maintenance-form textarea {
   width: 100%;
-  min-height: 2.9rem;
-  padding: 0.7rem 0.8rem;
+  padding: 0.55rem 0.75rem;
+  border-radius: 0.65rem;
   border: 1px solid var(--color-sand);
-  border-radius: 0.8rem;
   background: var(--color-white);
-  color: var(--color-ink);
-  font: inherit;
+  font-size: 0.82rem;
+  box-sizing: border-box;
+  outline: none;
 }
 
-.maintenance-form textarea {
-  resize: vertical;
+.maintenance-form input:focus,
+.maintenance-form select:focus,
+.maintenance-form textarea:focus {
+  border-color: var(--color-ink);
 }
 
-.maintenance-form__dates {
+.maintenance-form__grid-2 {
   display: grid;
-  gap: 1rem;
+  grid-template-columns: 1fr 1fr;
+  gap: 0.65rem;
 }
 
-.maintenance__success {
-  margin: 0;
-  padding: 0.85rem 1rem;
-  border-radius: 0.85rem;
-  background: rgb(201 243 106 / 35%);
-  font-weight: 750;
-}
-
-.maintenance-empty {
-  display: flex;
-  align-items: center;
-  gap: 0.9rem;
-  padding: 1.1rem;
-  border: 1px dashed var(--color-sand);
-  border-radius: 1rem;
-  background: var(--color-white);
-}
-
-.maintenance-empty > span {
-  display: grid;
-  width: 2.5rem;
-  height: 2.5rem;
-  flex: 0 0 auto;
-  place-items: center;
-  border-radius: 50%;
-  background: var(--color-chain-lime);
-  font-weight: 900;
-}
-
-.maintenance-empty p,
-.maintenance-event p {
-  margin: 0.3rem 0 0;
-  color: var(--color-asphalt);
-  line-height: 1.55;
+@media (max-width: 32rem) {
+  .maintenance-form__grid-2 {
+    grid-template-columns: 1fr;
+  }
 }
 
 .maintenance-list {
   display: grid;
-  margin: 0;
-  padding: 0;
-  gap: 0.8rem;
-  list-style: none;
+  gap: 0.65rem;
 }
 
-.maintenance-event {
+.maintenance-card {
   display: grid;
-  grid-template-columns: auto minmax(0, 1fr);
-  gap: 0.8rem;
-  padding: 1rem;
-  border: 1px solid rgb(64 80 95 / 12%);
+  gap: 0.45rem;
+  padding: 0.95rem 1.15rem;
   border-radius: 1rem;
   background: var(--color-white);
+  border: 1px solid var(--color-sand);
+  transition: all 120ms ease;
 }
 
-.maintenance-event__marker {
-  width: 0.7rem;
-  height: 0.7rem;
-  margin-top: 0.35rem;
-  border: 2px solid var(--color-ink);
-  border-radius: 50%;
-  background: var(--color-chain-lime);
+.maintenance-card--overdue {
+  border-left: 4px solid #ef4444;
 }
 
-.maintenance-event__topline {
+.maintenance-card--due {
+  border-left: 4px solid #f59e0b;
+}
+
+.maintenance-card__top {
   display: flex;
-  align-items: baseline;
+  align-items: center;
   justify-content: space-between;
+  gap: 0.5rem;
   flex-wrap: wrap;
-  gap: 0.4rem 1rem;
 }
 
-.maintenance-event__topline time {
+.type-badge {
+  font-size: 0.86rem;
+  font-weight: 850;
+  color: var(--color-ink);
+}
+
+.due-pill {
+  font-size: 0.7rem;
+  font-weight: 800;
+  padding: 0.15rem 0.5rem;
+  border-radius: 9999px;
+  background: var(--color-sand);
   color: var(--color-asphalt);
-  font-size: 0.78rem;
+}
+
+.due-pill--overdue {
+  background: #fef2f2;
+  color: #dc2626;
+}
+
+.due-pill--due {
+  background: #fffbeb;
+  color: #d97706;
+}
+
+.due-pill--upcoming {
+  background: rgb(201 243 106 / 35%);
+  color: #166534;
+}
+
+.maintenance-card__meta {
+  display: flex;
+  align-items: center;
+  gap: 0.85rem;
+  font-size: 0.72rem;
+  color: var(--color-asphalt);
   font-weight: 750;
 }
 
-.maintenance-event__due {
-  display: inline-flex;
-  margin-top: 0.75rem;
-  padding: 0.35rem 0.55rem;
-  border-radius: 0.55rem;
+.maintenance-card__notes {
+  margin: 0;
+  font-size: 0.78rem;
+  color: var(--color-ink);
+  line-height: 1.35;
   background: var(--color-sand);
-  font-size: 0.74rem;
-  font-weight: 800;
-}
-
-.maintenance-event__due--upcoming {
-  background: rgb(142 221 244 / 38%);
-}
-
-.maintenance-event__due--due,
-.maintenance-event__due--overdue {
-  background: rgb(255 140 117 / 24%);
-  color: #752719;
-}
-
-@media (min-width: 42rem) {
-  .maintenance-form {
-    padding: 1.4rem;
-  }
-
-  .maintenance-form__dates {
-    grid-template-columns: repeat(2, minmax(0, 1fr));
-  }
+  padding: 0.45rem 0.65rem;
+  border-radius: 0.5rem;
 }
 </style>

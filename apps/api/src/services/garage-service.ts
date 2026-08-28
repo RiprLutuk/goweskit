@@ -45,6 +45,7 @@ function mapBike(bike: StoredBike): Bike {
     brand: bike.brand,
     model: bike.model,
     modelYear: bike.modelYear,
+    photoUrl: bike.photoUrl,
     notes: bike.notes,
     specs: bike.specs.map(mapSpec),
     createdAt: bike.createdAt.toISOString(),

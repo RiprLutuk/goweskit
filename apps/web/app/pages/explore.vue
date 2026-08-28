@@ -22,7 +22,6 @@ const BANDUNG_CENTER: Coordinate = {
 const api = useApi();
 const center = ref<Coordinate>(BANDUNG_CENTER);
 const userLocation = ref<Coordinate | null>(null);
-const centerLabel = ref('Bandung demo area');
 const radiusKm = ref(15);
 const category = ref('all');
 const bikeType = ref('all');
@@ -31,6 +30,11 @@ const surface = ref('all');
 const verificationStatus = ref('all');
 const freshness = ref('all');
 const beginnerOnly = ref(false);
+const searchQuery = ref('');
+const showFilterModal = ref(false);
+const showContributionsModal = ref(false);
+const isDesktopSidebarOpen = ref(true);
+
 const places = ref<NearbyPlace[]>([]);
 const routes = ref<NearbyRoute[]>([]);
 const selectedId = ref<string | null>(null);
@@ -40,10 +44,135 @@ const errorMessage = ref('');
 const locationMessage = ref('');
 const mapError = ref(false);
 
-const allItems = computed<ExploreItem[]>(() => [
-  ...places.value,
-  ...routes.value,
-]);
+// ── Interactive Bottom Sheet Gesture State (Mobile) ─────────
+type SheetPosition = 'collapsed' | 'half' | 'expanded';
+const sheetPosition = ref<SheetPosition>('half');
+const isDraggingSheet = ref(false);
+const sheetCustomHeight = ref<number | null>(null);
+
+let dragStartY = 0;
+let dragStartHeight = 0;
+
+function getSheetDefaultHeightPx(pos: SheetPosition): number {
+  if (typeof window === 'undefined') return 300;
+  const vh = window.innerHeight;
+  const bottomBarOffset = 70;
+  switch (pos) {
+    case 'collapsed':
+      return 68;
+    case 'half':
+      return Math.round(vh * 0.48 - bottomBarOffset);
+    case 'expanded':
+      return Math.round(vh * 0.86 - bottomBarOffset);
+  }
+}
+
+function onTouchStartDrag(e: TouchEvent | MouseEvent): void {
+  isDraggingSheet.value = true;
+  dragStartY =
+    'touches' in e && e.touches[0]
+      ? e.touches[0].clientY
+      : (e as MouseEvent).clientY;
+  const currentHeight =
+    sheetCustomHeight.value ?? getSheetDefaultHeightPx(sheetPosition.value);
+  dragStartHeight = currentHeight;
+}
+
+function onTouchMoveDrag(e: TouchEvent | MouseEvent): void {
+  if (!isDraggingSheet.value) return;
+  const clientY =
+    'touches' in e && e.touches[0]
+      ? e.touches[0].clientY
+      : (e as MouseEvent).clientY;
+  const delta = dragStartY - clientY;
+  const vh = window.innerHeight;
+  const newHeight = Math.max(
+    65,
+    Math.min(vh * 0.86 - 70, dragStartHeight + delta),
+  );
+  sheetCustomHeight.value = newHeight;
+}
+
+function onTouchEndDrag(): void {
+  if (!isDraggingSheet.value) return;
+  isDraggingSheet.value = false;
+  const finalHeight =
+    sheetCustomHeight.value ?? getSheetDefaultHeightPx(sheetPosition.value);
+  const vh = window.innerHeight;
+
+  const collapsedPx = 68;
+  const halfPx = Math.round(vh * 0.48 - 70);
+  const expandedPx = Math.round(vh * 0.86 - 70);
+
+  const distToCollapsed = Math.abs(finalHeight - collapsedPx);
+  const distToHalf = Math.abs(finalHeight - halfPx);
+  const distToExpanded = Math.abs(finalHeight - expandedPx);
+
+  if (distToCollapsed <= distToHalf && distToCollapsed <= distToExpanded) {
+    sheetPosition.value = 'collapsed';
+  } else if (distToHalf <= distToExpanded) {
+    sheetPosition.value = 'half';
+  } else {
+    sheetPosition.value = 'expanded';
+  }
+  sheetCustomHeight.value = null;
+}
+
+function toggleSheetPosition(): void {
+  if (sheetPosition.value === 'collapsed') {
+    sheetPosition.value = 'half';
+  } else if (sheetPosition.value === 'half') {
+    sheetPosition.value = 'expanded';
+  } else {
+    sheetPosition.value = 'collapsed';
+  }
+  sheetCustomHeight.value = null;
+}
+
+function cleanName(rawName: string): string {
+  return rawName.replace(/^\[(Place|Route)\]\s*/i, '').trim();
+}
+
+function cleanDescription(rawDesc: string | null | undefined): string {
+  if (!rawDesc) return '';
+  return rawDesc.replace(/\s*\(Seed id:\s*[0-9a-f-]+\)\.?/i, '').trim();
+}
+
+function getItemIcon(item: ExploreItem): string {
+  if (item.kind === 'route') return '🚵';
+  switch (item.type) {
+    case 'workshop':
+      return '🔧';
+    case 'store':
+      return '🚲';
+    case 'coffee':
+      return '☕';
+    case 'water':
+      return '💧';
+    case 'trailhead':
+      return '🌲';
+    case 'bike_park':
+      return '🚵';
+    case 'meeting_point':
+      return '🏁';
+    case 'rest':
+      return '🛖';
+    default:
+      return '📍';
+  }
+}
+
+const allItems = computed<ExploreItem[]>(() => {
+  const list = [...places.value, ...routes.value];
+  if (!searchQuery.value.trim()) return list;
+  const q = searchQuery.value.toLowerCase();
+  return list.filter(
+    (item) =>
+      cleanName(item.name).toLowerCase().includes(q) ||
+      cleanDescription(item.description).toLowerCase().includes(q),
+  );
+});
+
 const selectedItem = computed<ExploreItem | null>(
   () => allItems.value.find(({ id }) => id === selectedId.value) ?? null,
 );
@@ -55,7 +184,6 @@ function optionalFilter(value: string): string | undefined {
 async function loadNearby(): Promise<void> {
   loading.value = true;
   errorMessage.value = '';
-  selectedId.value = null;
   try {
     const selectedPlaceType = PLACE_TYPES.find(
       (value) => value === category.value,
@@ -98,7 +226,7 @@ async function loadNearby(): Promise<void> {
 function useMyLocation(): void {
   locationMessage.value = '';
   if (!('geolocation' in navigator)) {
-    locationMessage.value = 'This browser does not provide location access.';
+    locationMessage.value = 'Browser tidak mendukung GPS.';
     return;
   }
 
@@ -111,31 +239,20 @@ function useMyLocation(): void {
       };
       userLocation.value = coordinate;
       center.value = coordinate;
-      centerLabel.value = 'Your one-time location';
       locating.value = false;
-      locationMessage.value =
-        'Location used for this search only. GowesKit does not save or share it.';
       void loadNearby();
     },
     () => {
       locating.value = false;
-      locationMessage.value =
-        'Location was not available. The Bandung demo area is still usable.';
+      locationMessage.value = 'GPS tidak tersedia. Menggunakan Area Bandung.';
     },
     { enableHighAccuracy: false, timeout: 10_000, maximumAge: 60_000 },
   );
 }
 
-function resetToDemoArea(): void {
-  center.value = BANDUNG_CENTER;
-  userLocation.value = null;
-  centerLabel.value = 'Bandung demo area';
-  locationMessage.value = 'Showing seeded demo data around Bandung.';
-  void loadNearby();
-}
-
 function selectItem(selection: { kind: 'place' | 'route'; id: string }): void {
   selectedId.value = selection.id;
+  sheetPosition.value = 'half';
 }
 
 function formatDistance(meters: number): string {
@@ -157,424 +274,1169 @@ function itemDistance(item: ExploreItem): number {
     : item.distanceFromUserMeters;
 }
 
-function applyQuickPreset(preset: 'workshop' | 'water' | 'trail' | 'coffee'): void {
-  category.value = preset;
+function applyCategory(cat: string): void {
+  category.value = cat;
   void loadNearby();
 }
 
-onMounted(loadNearby);
+onMounted(() => {
+  void loadNearby();
+  window.addEventListener('mousemove', onTouchMoveDrag);
+  window.addEventListener('mouseup', onTouchEndDrag);
+});
+
+onBeforeUnmount(() => {
+  window.removeEventListener('mousemove', onTouchMoveDrag);
+  window.removeEventListener('mouseup', onTouchEndDrag);
+});
 </script>
 
 <template>
-  <div class="page-stack explore-page">
-    <header class="page-heading explore-heading">
-      <span class="status-chip status-chip--sky">Explore Bandung · demo</span>
-      <h1>Find a ride, workshop, or good place to pause.</h1>
-      <p>
-        Nearby results use PostGIS and favor verified, recently confirmed data.
-        Seeded locations and route lines are demonstrations, not turn-by-turn navigation.
-      </p>
-    </header>
-
-    <div class="privacy-strip">
-      <span aria-hidden="true">⌖</span>
-      <p>
-        <strong>Your exact location stays private.</strong> Location access only
-        happens after you explicitly press the button, is used once for nearby radius search, and is never published.
-      </p>
+  <div class="native-map-view">
+    <!-- 1. FULL-BLEED MAP CANVAS (100% OF SCREEN) -->
+    <div class="map-canvas-container">
+      <ClientOnly>
+        <ExploreMap
+          :center="center"
+          :places="places"
+          :routes="routes"
+          :selected-id="selectedId"
+          :user-location="userLocation"
+          @select="selectItem"
+          @map-error="mapError = true"
+        />
+        <template #fallback>
+          <div class="map-loading-placeholder">Memuat peta…</div>
+        </template>
+      </ClientOnly>
     </div>
 
-    <!-- Quick Preset Filter Chips -->
-    <div class="explore-presets-row">
-      <span class="presets-label">Quick filter:</span>
-      <button class="preset-pill" type="button" @click="applyQuickPreset('workshop')">
-        🔧 Workshops
-      </button>
-      <button class="preset-pill" type="button" @click="applyQuickPreset('water')">
-        💧 Water Refills
-      </button>
-      <button class="preset-pill" type="button" @click="applyQuickPreset('coffee')">
-        ☕ Coffee Stops
-      </button>
-      <button class="preset-pill" type="button" @click="category = 'routes'; loadNearby()">
-        ⛰️ Routes Only
-      </button>
-      <button class="preset-pill" type="button" @click="category = 'all'; loadNearby()">
-        ✨ Show All
-      </button>
-    </div>
-
-    <div class="explore-layout">
-      <aside class="explore-filters" aria-labelledby="explore-filter-title">
-        <div class="section-heading explore-filters__heading">
-          <div>
-            <p class="section-heading__eyebrow">Search area</p>
-            <h2 id="explore-filter-title">Tune the map</h2>
-          </div>
-          <span class="count-chip">{{ places.length + routes.length }}</span>
+    <!-- 2. DESKTOP FLOATING LEFT SIDEBAR (Apple/Google Maps Desktop View) -->
+    <aside
+      class="desktop-explore-panel"
+      :class="{ 'desktop-explore-panel--collapsed': !isDesktopSidebarOpen }"
+    >
+      <!-- Panel Header & Search Input -->
+      <div class="panel-header">
+        <div class="panel-brand-row">
+          <NuxtLink to="/" class="panel-brand-link">
+            <span class="panel-brand-icon">🚴</span>
+            <span class="panel-brand-text">GowesKit <strong>Explore</strong></span>
+          </NuxtLink>
+          <button
+            class="sidebar-toggle-btn"
+            type="button"
+            :title="isDesktopSidebarOpen ? 'Tutup sidebar' : 'Buka sidebar'"
+            @click="isDesktopSidebarOpen = !isDesktopSidebarOpen"
+          >
+            {{ isDesktopSidebarOpen ? '◀' : '▶' }}
+          </button>
         </div>
 
-        <div class="location-actions">
+        <div class="panel-search-box">
+          <span class="search-icon" aria-hidden="true">🔍</span>
+          <input
+            v-model="searchQuery"
+            type="search"
+            placeholder="Cari rute, tanjakan, bengkel…"
+            class="search-input"
+          />
           <button
-            class="button button--primary"
+            v-if="searchQuery"
+            class="search-clear-btn"
             type="button"
+            @click="searchQuery = ''"
+          >
+            ✕
+          </button>
+          <button
+            class="overlay-icon-btn"
+            :class="{ 'overlay-icon-btn--active': userLocation !== null }"
+            type="button"
+            :title="locating ? 'Mencari lokasi…' : 'Lokasi Saya'"
             :disabled="locating"
             @click="useMyLocation"
           >
-            {{ locating ? 'Finding you…' : '⌖ Use my location once' }}
+            {{ locating ? '…' : '⌖' }}
           </button>
-          <button class="text-button" type="button" @click="resetToDemoArea">
-            Reset to Bandung demo
+          <button
+            class="overlay-icon-btn"
+            type="button"
+            title="Filter & Radius"
+            @click="showFilterModal = !showFilterModal"
+          >
+            ⚙️
+          </button>
+          <button
+            class="overlay-icon-btn overlay-icon-btn--primary"
+            type="button"
+            title="Upload GPX atau Lapor Bahaya"
+            @click="showContributionsModal = true"
+          >
+            ➕
           </button>
         </div>
-        <p class="area-label">⌖ {{ centerLabel }}</p>
-        <p v-if="locationMessage" class="location-message" role="status">
-          {{ locationMessage }}
-        </p>
 
-        <form class="explore-filter-form" @submit.prevent="loadNearby">
-          <label for="explore-radius">
-            Radius
-            <select id="explore-radius" v-model="radiusKm">
+        <!-- Category Horizontal Pills -->
+        <div class="category-scroll-strip">
+          <button
+            class="cat-chip"
+            :class="{ 'cat-chip--active': category === 'all' }"
+            type="button"
+            @click="applyCategory('all')"
+          >
+            Semua ({{ allItems.length }})
+          </button>
+          <button
+            class="cat-chip"
+            :class="{ 'cat-chip--active': category === 'routes' }"
+            type="button"
+            @click="applyCategory('routes')"
+          >
+            🚵 Rute
+          </button>
+          <button
+            class="cat-chip"
+            :class="{ 'cat-chip--active': category === 'workshop' }"
+            type="button"
+            @click="applyCategory('workshop')"
+          >
+            🔧 Bengkel
+          </button>
+          <button
+            class="cat-chip"
+            :class="{ 'cat-chip--active': category === 'store' }"
+            type="button"
+            @click="applyCategory('store')"
+          >
+            🚲 Toko
+          </button>
+          <button
+            class="cat-chip"
+            :class="{ 'cat-chip--active': category === 'coffee' }"
+            type="button"
+            @click="applyCategory('coffee')"
+          >
+            ☕ Kopi
+          </button>
+          <button
+            class="cat-chip"
+            :class="{ 'cat-chip--active': category === 'water' }"
+            type="button"
+            @click="applyCategory('water')"
+          >
+            💧 Air
+          </button>
+          <button
+            class="cat-chip"
+            :class="{ 'cat-chip--active': category === 'trailhead' }"
+            type="button"
+            @click="applyCategory('trailhead')"
+          >
+            🌲 Trail
+          </button>
+        </div>
+      </div>
+
+      <!-- Panel Body: Selected Spot or List of Spots -->
+      <div class="panel-body">
+        <!-- A. Selected Spot Detail View -->
+        <article v-if="selectedItem" class="desktop-selected-card">
+          <div class="card-headline-row">
+            <div class="pill-badge-stack">
+              <span class="type-pill">{{ typeLabel(selectedItem) }}</span>
+              <span class="dist-pill">{{ formatDistance(itemDistance(selectedItem)) }}</span>
+            </div>
+            <button class="dismiss-btn" type="button" @click="selectedId = null">✕ Tutup</button>
+          </div>
+
+          <h2 class="card-item-title">{{ cleanName(selectedItem.name) }}</h2>
+          <p class="card-item-desc">{{ cleanDescription(selectedItem.description) }}</p>
+
+          <!-- Route Elevation Sparkline Curve -->
+          <div v-if="selectedItem.kind === 'route'" class="route-spark-box">
+            <div class="spark-labels">
+              <span>+{{ selectedItem.elevationGainMeters }}m Elevasi</span>
+              <span class="spark-difficulty">{{ selectedItem.difficulty }} · {{ selectedItem.surface }}</span>
+            </div>
+            <svg viewBox="0 0 300 45" class="spark-svg" aria-hidden="true">
+              <path
+                d="M0 40 Q 60 30, 120 22 T 240 10 L 300 6 L 300 45 L 0 45 Z"
+                fill="rgba(56, 189, 248, 0.25)"
+              />
+              <path
+                d="M0 40 Q 60 30, 120 22 T 240 10 L 300 6"
+                fill="none"
+                stroke="#0284c7"
+                stroke-width="2.5"
+                stroke-linecap="round"
+              />
+            </svg>
+          </div>
+
+          <div class="card-bottom-actions">
+            <NuxtLink class="action-btn action-btn--primary" to="/safety">
+              Mulai Gowes 🚴
+            </NuxtLink>
+            <button class="action-btn action-btn--secondary" type="button" @click="showContributionsModal = true">
+              Ulasan &amp; Laporan
+            </button>
+          </div>
+        </article>
+
+        <!-- B. Default Scrollable Spot & Track Feed -->
+        <div v-else class="desktop-feed-wrapper">
+          <div class="desktop-feed-meta">
+            <span>Ditemukan <strong>{{ allItems.length }}</strong> tempat &amp; rute</span>
+            <span v-if="loading">Memuat data…</span>
+          </div>
+
+          <div class="desktop-feed-list">
+            <p v-if="allItems.length === 0 && !loading" class="empty-feed-hint">
+              Tidak ada tempat atau rute yang cocok dengan filter.
+            </p>
+            <button
+              v-for="item in allItems"
+              :key="item.id"
+              class="feed-card-row"
+              type="button"
+              @click="selectItem({ kind: item.kind, id: item.id })"
+            >
+              <div class="feed-card-icon">
+                {{ getItemIcon(item) }}
+              </div>
+              <div class="feed-card-body">
+                <div class="feed-card-top">
+                  <span class="feed-card-title">{{ cleanName(item.name) }}</span>
+                  <span class="feed-card-dist">{{ formatDistance(itemDistance(item)) }}</span>
+                </div>
+                <p class="feed-card-desc">{{ cleanDescription(item.description) || 'Informasi rute & tempat gowes' }}</p>
+              </div>
+            </button>
+          </div>
+        </div>
+      </div>
+    </aside>
+
+    <!-- 3. MOBILE-ONLY TOP OVERLAY SEARCH -->
+    <div class="mobile-top-overlay">
+      <div class="search-pill-container">
+        <span class="search-icon" aria-hidden="true">🔍</span>
+        <input
+          v-model="searchQuery"
+          type="search"
+          placeholder="Cari rute, tanjakan, bengkel…"
+          class="search-input"
+        />
+        <button
+          class="overlay-icon-btn overlay-icon-btn--primary"
+          type="button"
+          title="Upload GPX atau Lapor Hazard"
+          @click="showContributionsModal = true"
+        >
+          ➕
+        </button>
+        <button
+          class="overlay-icon-btn"
+          :class="{ 'overlay-icon-btn--active': userLocation !== null }"
+          type="button"
+          :title="locating ? 'Mencari lokasi…' : 'Lokasi Saya'"
+          :disabled="locating"
+          @click="useMyLocation"
+        >
+          {{ locating ? '…' : '⌖' }}
+        </button>
+        <button
+          class="overlay-icon-btn"
+          type="button"
+          title="Filter & Radius"
+          @click="showFilterModal = !showFilterModal"
+        >
+          ⚙️
+        </button>
+      </div>
+
+      <!-- Quick Category Horizontal Pills (Mobile) -->
+      <div class="category-scroll-strip">
+        <button
+          class="cat-chip"
+          :class="{ 'cat-chip--active': category === 'all' }"
+          type="button"
+          @click="applyCategory('all')"
+        >
+          Semua
+        </button>
+        <button
+          class="cat-chip"
+          :class="{ 'cat-chip--active': category === 'routes' }"
+          type="button"
+          @click="applyCategory('routes')"
+        >
+          🚵 Rute
+        </button>
+        <button
+          class="cat-chip"
+          :class="{ 'cat-chip--active': category === 'workshop' }"
+          type="button"
+          @click="applyCategory('workshop')"
+        >
+          🔧 Bengkel
+        </button>
+        <button
+          class="cat-chip"
+          :class="{ 'cat-chip--active': category === 'store' }"
+          type="button"
+          @click="applyCategory('store')"
+        >
+          🚲 Toko
+        </button>
+        <button
+          class="cat-chip"
+          :class="{ 'cat-chip--active': category === 'coffee' }"
+          type="button"
+          @click="applyCategory('coffee')"
+        >
+          ☕ Kopi
+        </button>
+        <button
+          class="cat-chip"
+          :class="{ 'cat-chip--active': category === 'water' }"
+          type="button"
+          @click="applyCategory('water')"
+        >
+          💧 Air
+        </button>
+        <button
+          class="cat-chip"
+          :class="{ 'cat-chip--active': category === 'trailhead' }"
+          type="button"
+          @click="applyCategory('trailhead')"
+        >
+          🌲 Trail
+        </button>
+      </div>
+    </div>
+
+    <!-- 4. MOBILE-ONLY DRAGGABLE BOTTOM SHEET (Above Bottom Navigation) -->
+    <div
+      class="mobile-bottom-sheet"
+      :class="[
+        `mobile-bottom-sheet--${sheetPosition}`,
+        { 'mobile-bottom-sheet--dragging': isDraggingSheet },
+      ]"
+      :style="sheetCustomHeight ? { height: `${sheetCustomHeight}px` } : {}"
+    >
+      <!-- Touch/Grabber Area -->
+      <div
+        class="sheet-drag-touch-zone"
+        role="button"
+        tabindex="0"
+        aria-label="Tarik atau ketuk untuk ubah tinggi panel"
+        @touchstart.passive="onTouchStartDrag"
+        @touchmove="onTouchMoveDrag"
+        @touchend="onTouchEndDrag"
+        @mousedown="onTouchStartDrag"
+        @click="toggleSheetPosition"
+      >
+        <div class="sheet-grabber-bar" aria-hidden="true" />
+      </div>
+
+      <!-- A. Selected Spot View (Mobile) -->
+      <article v-if="selectedItem" class="sheet-selected-card">
+        <div class="card-headline-row">
+          <div class="pill-badge-stack">
+            <span class="type-pill">{{ typeLabel(selectedItem) }}</span>
+            <span class="dist-pill">{{ formatDistance(itemDistance(selectedItem)) }}</span>
+          </div>
+          <button class="dismiss-btn" type="button" @click="selectedId = null">✕</button>
+        </div>
+
+        <h2 class="card-item-title">{{ cleanName(selectedItem.name) }}</h2>
+        <p class="card-item-desc">{{ cleanDescription(selectedItem.description) }}</p>
+
+        <div v-if="selectedItem.kind === 'route'" class="route-spark-box">
+          <div class="spark-labels">
+            <span>+{{ selectedItem.elevationGainMeters }}m Climb</span>
+            <span class="spark-difficulty">{{ selectedItem.difficulty }} · {{ selectedItem.surface }}</span>
+          </div>
+          <svg viewBox="0 0 300 45" class="spark-svg" aria-hidden="true">
+            <path
+              d="M0 40 Q 60 30, 120 22 T 240 10 L 300 6 L 300 45 L 0 45 Z"
+              fill="rgba(56, 189, 248, 0.2)"
+            />
+            <path
+              d="M0 40 Q 60 30, 120 22 T 240 10 L 300 6"
+              fill="none"
+              stroke="#0284c7"
+              stroke-width="2.5"
+              stroke-linecap="round"
+            />
+          </svg>
+        </div>
+
+        <div class="card-bottom-actions">
+          <NuxtLink class="action-btn action-btn--primary" to="/safety">
+            Mulai Gowes 🚴
+          </NuxtLink>
+          <button class="action-btn action-btn--secondary" type="button" @click="showContributionsModal = true">
+            Ulasan &amp; Laporan
+          </button>
+        </div>
+      </article>
+
+      <!-- B. Spot Feed (Mobile) -->
+      <div v-else class="sheet-feed-container">
+        <div
+          class="sheet-feed-header"
+          role="button"
+          tabindex="0"
+          @click="toggleSheetPosition"
+        >
+          <strong>Spot &amp; Rute Sekitar</strong>
+          <div class="header-right-pills">
+            <span class="feed-count-badge">{{ allItems.length }}</span>
+            <span class="sheet-expand-hint">{{ sheetPosition === 'expanded' ? '▼' : '▲' }}</span>
+          </div>
+        </div>
+
+        <div class="sheet-feed-list">
+          <button
+            v-for="item in allItems"
+            :key="item.id"
+            class="feed-card-row"
+            type="button"
+            @click="selectItem({ kind: item.kind, id: item.id })"
+          >
+            <div class="feed-card-icon">
+              {{ getItemIcon(item) }}
+            </div>
+            <div class="feed-card-body">
+              <div class="feed-card-top">
+                <span class="feed-card-title">{{ cleanName(item.name) }}</span>
+                <span class="feed-card-dist">{{ formatDistance(itemDistance(item)) }}</span>
+              </div>
+              <p class="feed-card-desc">{{ cleanDescription(item.description) }}</p>
+            </div>
+          </button>
+        </div>
+      </div>
+    </div>
+
+    <!-- 5. FILTER & RADIUS MODAL -->
+    <div v-if="showFilterModal" class="native-modal-backdrop" @click.self="showFilterModal = false">
+      <div class="native-modal-sheet">
+        <div class="modal-header">
+          <h2>Filter &amp; Jarak</h2>
+          <button class="modal-close" type="button" @click="showFilterModal = false">✕</button>
+        </div>
+        <div class="modal-body-grid">
+          <label>
+            Radius Pencarian
+            <select v-model="radiusKm" @change="loadNearby">
               <option :value="5">5 km</option>
               <option :value="10">10 km</option>
               <option :value="15">15 km</option>
               <option :value="25">25 km</option>
-              <option :value="50">50 km maximum</option>
+              <option :value="50">50 km</option>
             </select>
           </label>
-
-          <label for="explore-category">
-            Map layer
-            <select id="explore-category" v-model="category">
-              <option value="all">All places and routes</option>
-              <option value="places">All places</option>
-              <option value="routes">All routes</option>
-              <optgroup label="Places">
-                <option
-                  v-for="value in PLACE_TYPES"
-                  :key="value"
-                  :value="value"
-                >
-                  {{ value.replaceAll('_', ' ') }}
-                </option>
-              </optgroup>
-              <optgroup label="Routes">
-                <option
-                  v-for="value in ROUTE_TYPES"
-                  :key="value"
-                  :value="value"
-                >
-                  {{ value }} route
-                </option>
-              </optgroup>
+          <label>
+            Tingkat Kesulitan
+            <select v-model="difficulty" @change="loadNearby">
+              <option value="all">Semua Tingkat</option>
+              <option v-for="d in ROUTE_DIFFICULTIES" :key="d" :value="d">{{ d }}</option>
             </select>
           </label>
-
-          <label for="explore-bike-type">
-            Bicycle type
-            <select id="explore-bike-type" v-model="bikeType">
-              <option value="all">Any bicycle</option>
-              <option value="mtb_hardtail">MTB Hardtail</option>
-              <option value="folding">Folding Bike</option>
-              <option value="road">Road Bike</option>
-              <option value="gravel">Gravel Bike</option>
+          <label>
+            Tipe Sepeda
+            <select v-model="bikeType" @change="loadNearby">
+              <option value="all">Semua Sepeda</option>
+              <option value="mtb_hardtail">MTB</option>
+              <option value="gravel">Gravel</option>
+              <option value="road">Road</option>
+              <option value="folding">Lipat</option>
             </select>
           </label>
-
-          <div class="filter-pair">
-            <label for="explore-difficulty">
-              Difficulty
-              <select id="explore-difficulty" v-model="difficulty">
-                <option value="all">Any</option>
-                <option
-                  v-for="value in ROUTE_DIFFICULTIES"
-                  :key="value"
-                  :value="value"
-                >
-                  {{ value }}
-                </option>
-              </select>
-            </label>
-            <label for="explore-surface">
-              Surface
-              <select id="explore-surface" v-model="surface">
-                <option value="all">Any</option>
-                <option
-                  v-for="value in ROUTE_SURFACES"
-                  :key="value"
-                  :value="value"
-                >
-                  {{ value }}
-                </option>
-              </select>
-            </label>
-          </div>
-
-          <div class="filter-pair">
-            <label for="explore-verification">
-              Verification
-              <select id="explore-verification" v-model="verificationStatus">
-                <option value="all">Any</option>
-                <option
-                  v-for="value in VERIFICATION_STATUSES"
-                  :key="value"
-                  :value="value"
-                >
-                  {{ value.replaceAll('_', ' ') }}
-                </option>
-              </select>
-            </label>
-            <label for="explore-freshness">
-              Freshness
-              <select id="explore-freshness" v-model="freshness">
-                <option value="all">Any</option>
-                <option
-                  v-for="value in FRESHNESS_STATUSES"
-                  :key="value"
-                  :value="value"
-                >
-                  {{ value }}
-                </option>
-              </select>
-            </label>
-          </div>
-
-          <label class="check-control">
-            <input v-model="beginnerOnly" type="checkbox" />
-            Beginner-friendly only
-          </label>
-
-          <button
-            class="button button--primary"
-            type="submit"
-            :disabled="loading"
-          >
-            {{ loading ? 'Searching…' : 'Apply filters' }}
-          </button>
-        </form>
-      </aside>
-
-      <section class="explore-results" aria-labelledby="explore-map-title">
-        <div class="map-heading">
-          <div>
-            <p class="section-heading__eyebrow">Nearby now</p>
-            <h2 id="explore-map-title">{{ centerLabel }}</h2>
-          </div>
-          <span>{{ radiusKm }} km radius</span>
         </div>
-
-        <p
-          v-if="errorMessage"
-          class="state-card state-card--error"
-          role="alert"
-        >
-          {{ errorMessage }}
-        </p>
-
-        <div v-else class="map-frame" :aria-busy="loading">
-          <ClientOnly>
-            <ExploreMap
-              :center="center"
-              :places="places"
-              :routes="routes"
-              :selected-id="selectedId"
-              :user-location="userLocation"
-              @select="selectItem"
-              @map-error="mapError = true"
-            />
-            <template #fallback>
-              <div class="map-fallback">Preparing the cycling map…</div>
-            </template>
-          </ClientOnly>
-          <div class="map-legend" aria-label="Map legend">
-            <span><i class="legend-dot legend-dot--place" /> Place</span>
-            <span><i class="legend-line" /> Route</span>
-            <span v-if="userLocation"
-              ><i class="legend-dot legend-dot--you" /> You</span
-            >
-          </div>
-        </div>
-
-        <!-- Selected Item Detail Modal/Card -->
-        <article v-if="selectedItem" class="explore-detail">
-          <div class="explore-detail__topline">
-            <span class="result-type">{{ typeLabel(selectedItem) }}</span>
-            <button
-              class="text-button"
-              type="button"
-              @click="selectedId = null"
-            >
-              ✕ Close
-            </button>
-          </div>
-          <h3>{{ selectedItem.name }}</h3>
-          <p>{{ selectedItem.description }}</p>
-
-          <!-- Elevation Profile if Route -->
-          <div v-if="selectedItem.kind === 'route'" class="route-elevation-card">
-            <strong>Elevation Profile (Climb Preview)</strong>
-            <div class="elevation-graph">
-              <svg viewBox="0 0 300 80" class="elevation-svg" aria-label="Route elevation profile">
-                <path
-                  d="M0 65 Q 60 50, 120 40 T 240 20 L 300 15 L 300 80 L 0 80 Z"
-                  fill="rgb(142 221 244 / 35%)"
-                />
-                <path
-                  d="M0 65 Q 60 50, 120 40 T 240 20 L 300 15"
-                  fill="none"
-                  stroke="#2988a5"
-                  stroke-width="3"
-                  stroke-linecap="round"
-                />
-                <circle cx="0" cy="65" r="4" fill="#17202a" />
-                <circle cx="300" cy="15" r="4" fill="#c9f36a" stroke="#17202a" stroke-width="2" />
-              </svg>
-              <div class="elevation-labels">
-                <span>Start: ~760m</span>
-                <span>Peak: ~{{ 760 + selectedItem.elevationGainMeters }}m</span>
-              </div>
-            </div>
-          </div>
-
-          <dl class="explore-facts">
-            <div>
-              <dt>From Search Point</dt>
-              <dd>{{ formatDistance(itemDistance(selectedItem)) }}</dd>
-            </div>
-            <div>
-              <dt>Freshness</dt>
-              <dd>{{ selectedItem.freshness }}</dd>
-            </div>
-            <div>
-              <dt>Verification</dt>
-              <dd>
-                {{ selectedItem.verificationStatus.replaceAll('_', ' ') }}
-              </dd>
-            </div>
-            <div v-if="selectedItem.kind === 'route'">
-              <dt>Route Distance</dt>
-              <dd>
-                {{ formatDistance(selectedItem.distanceMeters) }} ·
-                {{ selectedItem.elevationGainMeters }} m climbing ·
-                {{ selectedItem.difficulty }}
-              </dd>
-            </div>
-            <div v-else>
-              <dt>Address</dt>
-              <dd>{{ selectedItem.address }}</dd>
-            </div>
-          </dl>
-        </article>
-
-        <!-- Result List Sheet -->
-        <div class="result-sheet">
-          <div class="result-sheet__handle" aria-hidden="true" />
-          <div class="section-heading">
-            <div>
-              <p class="section-heading__eyebrow">Map results</p>
-              <h2>Places and routes</h2>
-            </div>
-            <span class="count-chip">{{ allItems.length }}</span>
-          </div>
-
-          <p v-if="loading" class="state-card" role="status">
-            Measuring nearby cycling spots…
-          </p>
-          <p v-else-if="allItems.length === 0" class="state-card">
-            No demo results match these filters. Try a wider radius or fewer
-            filters.
-          </p>
-          <div v-else class="explore-card-list">
-            <button
-              v-for="item in allItems"
-              :key="item.id"
-              class="explore-card"
-              :class="{ 'explore-card--selected': item.id === selectedId }"
-              type="button"
-              @click="selectItem({ kind: item.kind, id: item.id })"
-            >
-              <span class="result-type">{{ typeLabel(item) }}</span>
-              <strong>{{ item.name }}</strong>
-              <span>{{ item.description }}</span>
-              <small>
-                {{ formatDistance(itemDistance(item)) }} away ·
-                {{ item.freshness }} ·
-                {{ item.verificationStatus.replaceAll('_', ' ') }}
-              </small>
-            </button>
-          </div>
-        </div>
-      </section>
+        <button class="button button--primary button--full" type="button" @click="showFilterModal = false">
+          Terapkan Filter
+        </button>
+      </div>
     </div>
 
-    <!-- Community Reviews, Hazards & GPX Section -->
-    <ExploreContributions :selected-item="selectedItem" />
+    <!-- 6. CONTRIBUTIONS MODAL SHEET -->
+    <div
+      v-if="showContributionsModal"
+      class="native-modal-backdrop"
+      @click.self="showContributionsModal = false"
+    >
+      <div class="native-modal-sheet native-modal-sheet--large">
+        <div class="modal-header">
+          <h2>Kontribusi Komunitas</h2>
+          <button class="modal-close" type="button" @click="showContributionsModal = false">✕</button>
+        </div>
+        <div class="modal-scroll-body">
+          <ExploreContributions :selected-item="selectedItem" />
+        </div>
+      </div>
+    </div>
   </div>
 </template>
 
 <style scoped>
-.explore-presets-row {
+/* Full-Bleed Map Viewport (Takes 100% of Screen on all devices) */
+.native-map-view {
+  position: relative;
+  width: 100%;
+  height: 100%;
+  min-height: 100vh;
+  min-height: 100dvh;
+  overflow: hidden;
+  background: var(--color-sand);
+}
+
+.map-canvas-container {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+}
+
+.map-loading-placeholder {
+  display: grid;
+  place-content: center;
+  height: 100%;
+  color: var(--color-asphalt);
+  font-size: 0.85rem;
+  font-weight: 750;
+  background: var(--color-sand);
+}
+
+/* ═════════════════════════════════════════════════════════════
+   DESKTOP FLOATING LEFT SIDEBAR (Apple Maps / Google Maps Web)
+   ═════════════════════════════════════════════════════════════ */
+.desktop-explore-panel {
+  display: none;
+  position: absolute;
+  top: 1.25rem;
+  left: 1.25rem;
+  bottom: 1.25rem;
+  width: 25rem;
+  max-width: calc(100vw - 2.5rem);
+  background: rgb(255 255 255 / 96%);
+  backdrop-filter: blur(24px);
+  -webkit-backdrop-filter: blur(24px);
+  border-radius: 1.25rem;
+  border: 1px solid rgb(23 32 42 / 12%);
+  box-shadow: 0 16px 40px rgb(0 0 0 / 16%);
+  z-index: 30;
+  flex-direction: column;
+  overflow: hidden;
+  transition: transform 250ms cubic-bezier(0.2, 0.8, 0.2, 1);
+}
+
+@media (min-width: 48rem) {
+  .desktop-explore-panel {
+    display: flex;
+  }
+  .mobile-top-overlay,
+  .mobile-bottom-sheet {
+    display: none !important;
+  }
+}
+
+.desktop-explore-panel--collapsed {
+  transform: translateX(calc(-100% + 3.2rem));
+}
+
+.panel-header {
+  padding: 1rem 1rem 0.65rem;
+  border-bottom: 1px solid rgb(23 32 42 / 08%);
+  display: grid;
+  gap: 0.65rem;
+  background: var(--color-white);
+  flex-shrink: 0;
+}
+
+.panel-brand-row {
   display: flex;
   align-items: center;
-  flex-wrap: wrap;
-  gap: 0.5rem;
-  padding: 0.65rem 1rem;
-  border-radius: 0.9rem;
-  background: var(--color-white);
-  border: 1px solid var(--color-sand);
+  justify-content: space-between;
 }
 
-.presets-label {
-  font-size: 0.78rem;
-  font-weight: 800;
+.panel-brand-link {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.45rem;
+  text-decoration: none;
+  color: var(--color-ink);
+}
+
+.panel-brand-icon {
+  font-size: 1.25rem;
+}
+
+.panel-brand-text {
+  font-size: 0.95rem;
+  font-weight: 700;
+  letter-spacing: -0.02em;
+}
+
+.sidebar-toggle-btn {
+  border: none;
+  background: var(--color-sand);
+  width: 1.8rem;
+  height: 1.8rem;
+  border-radius: 0.5rem;
+  font-size: 0.72rem;
+  cursor: pointer;
+  display: grid;
+  place-items: center;
+  color: var(--color-ink);
+}
+
+.panel-search-box {
+  display: flex;
+  align-items: center;
+  gap: 0.35rem;
+  padding: 0.35rem 0.45rem 0.35rem 0.75rem;
+  border-radius: 9999px;
+  background: var(--color-sand);
+  border: 1px solid rgb(23 32 42 / 08%);
+}
+
+.search-icon {
+  font-size: 0.82rem;
+  opacity: 0.55;
+}
+
+.search-input {
+  flex: 1;
+  border: none;
+  background: transparent;
+  outline: none;
+  font-size: 0.8rem;
+  font-weight: 750;
+  color: var(--color-ink);
+  min-width: 0;
+}
+
+.search-clear-btn {
+  border: none;
+  background: none;
+  font-size: 0.75rem;
   color: var(--color-asphalt);
-  margin-right: 0.25rem;
+  cursor: pointer;
+  padding: 0.2rem;
 }
 
-.preset-pill {
-  padding: 0.35rem 0.65rem;
-  border: 1px solid var(--color-sand);
-  border-radius: 0.6rem;
+.overlay-icon-btn {
+  display: grid;
+  place-items: center;
+  width: 1.9rem;
+  height: 1.9rem;
+  border-radius: 50%;
+  border: 1px solid rgb(23 32 42 / 10%);
   background: var(--color-white);
   color: var(--color-ink);
-  font-size: 0.76rem;
+  font-size: 0.78rem;
+  cursor: pointer;
+  flex-shrink: 0;
+  transition: transform 90ms ease;
+}
+
+.overlay-icon-btn:active {
+  transform: scale(0.92);
+}
+
+.overlay-icon-btn--primary {
+  background: var(--color-chain-lime);
+  border-color: var(--color-ink);
+  font-weight: 900;
+}
+
+.overlay-icon-btn--active {
+  background: var(--color-chain-lime);
+}
+
+.category-scroll-strip {
+  display: flex;
+  gap: 0.35rem;
+  overflow-x: auto;
+  padding-bottom: 0.1rem;
+  scrollbar-width: none;
+}
+
+.category-scroll-strip::-webkit-scrollbar {
+  display: none;
+}
+
+.cat-chip {
+  flex: 0 0 auto;
+  padding: 0.3rem 0.65rem;
+  border-radius: 9999px;
+  background: var(--color-white);
+  border: 1px solid rgb(23 32 42 / 10%);
+  color: var(--color-ink);
+  font-size: 0.72rem;
   font-weight: 800;
   cursor: pointer;
   transition: all 120ms ease;
 }
 
-.preset-pill:hover {
+.cat-chip--active {
   background: var(--color-ink);
   color: var(--color-white);
   border-color: var(--color-ink);
 }
 
-.route-elevation-card {
-  margin: 1rem 0;
-  padding: 1rem;
-  border-radius: 0.9rem;
+.panel-body {
+  flex: 1;
+  min-height: 0;
+  overflow-y: auto;
+  padding: 0.85rem;
+}
+
+.desktop-selected-card {
+  display: grid;
+  gap: 0.65rem;
+}
+
+.desktop-feed-wrapper {
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
+}
+
+.desktop-feed-meta {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  font-size: 0.74rem;
+  color: var(--color-asphalt);
+  padding: 0 0.2rem;
+}
+
+.desktop-feed-list {
+  display: grid;
+  gap: 0.45rem;
+}
+
+.empty-feed-hint {
+  text-align: center;
+  font-size: 0.8rem;
+  color: var(--color-asphalt);
+  padding: 2rem 1rem;
+}
+
+/* ═════════════════════════════════════════════════════════════
+   MOBILE-ONLY TOP OVERLAY & BOTTOM SHEET
+   ═════════════════════════════════════════════════════════════ */
+.mobile-top-overlay {
+  position: absolute;
+  top: max(0.85rem, var(--safe-top));
+  left: 0.85rem;
+  right: 0.85rem;
+  display: grid;
+  gap: 0.45rem;
+  z-index: 20;
+  pointer-events: none;
+}
+
+.mobile-top-overlay .search-pill-container {
+  display: flex;
+  align-items: center;
+  gap: 0.35rem;
+  padding: 0.35rem 0.45rem 0.35rem 0.85rem;
+  border-radius: 9999px;
+  background: rgb(255 255 255 / 94%);
+  backdrop-filter: blur(20px);
+  -webkit-backdrop-filter: blur(20px);
+  border: 1px solid rgb(23 32 42 / 12%);
+  box-shadow: 0 6px 20px rgb(0 0 0 / 12%);
+  pointer-events: auto;
+}
+
+.mobile-top-overlay .category-scroll-strip {
+  pointer-events: auto;
+}
+
+.mobile-bottom-sheet {
+  position: absolute;
+  bottom: max(4.2rem, calc(3.8rem + var(--safe-bottom)));
+  left: 0;
+  right: 0;
+  background: rgb(255 255 255 / 96%);
+  backdrop-filter: blur(24px);
+  -webkit-backdrop-filter: blur(24px);
+  border-top: 1px solid rgb(23 32 42 / 08%);
+  border-top-left-radius: 1.5rem;
+  border-top-right-radius: 1.5rem;
+  box-shadow: 0 -8px 30px rgb(0 0 0 / 16%);
+  display: flex;
+  flex-direction: column;
+  z-index: 40;
+  transition: height 280ms cubic-bezier(0.2, 0.8, 0.2, 1);
+  padding-bottom: 0.5rem;
+}
+
+.mobile-bottom-sheet--collapsed {
+  height: 4.4rem;
+  max-height: 4.4rem;
+  overflow: hidden;
+}
+
+.mobile-bottom-sheet--half {
+  height: calc(48vh - 4rem);
+  max-height: calc(48vh - 4rem);
+}
+
+.mobile-bottom-sheet--expanded {
+  height: calc(88vh - 4.5rem);
+  max-height: calc(88vh - 4.5rem);
+}
+
+.mobile-bottom-sheet--dragging {
+  transition: none !important;
+}
+
+.sheet-drag-touch-zone {
+  width: 100%;
+  padding: 0.6rem 0 0.35rem;
+  cursor: grab;
+  touch-action: none;
+  display: flex;
+  justify-content: center;
+  user-select: none;
+  -webkit-user-select: none;
+}
+
+.sheet-grabber-bar {
+  width: 2.6rem;
+  height: 0.3rem;
+  border-radius: 9999px;
+  background: rgb(15 23 42 / 25%);
+}
+
+.sheet-selected-card {
+  padding: 0.35rem 1.1rem 0.85rem;
+  display: grid;
+  gap: 0.45rem;
+  overflow-y: auto;
+}
+
+.card-headline-row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+}
+
+.pill-badge-stack {
+  display: flex;
+  gap: 0.35rem;
+}
+
+.type-pill {
+  padding: 0.15rem 0.45rem;
+  border-radius: 0.4rem;
+  background: var(--color-chain-lime);
+  color: var(--color-ink);
+  font-family: var(--font-mono);
+  font-size: 0.62rem;
+  font-weight: 900;
+  text-transform: uppercase;
+}
+
+.dist-pill {
+  padding: 0.15rem 0.45rem;
+  border-radius: 0.4rem;
+  background: rgb(237 228 210 / 70%);
+  font-family: var(--font-mono);
+  font-size: 0.62rem;
+  font-weight: 850;
+}
+
+.dismiss-btn {
+  border: none;
+  background: none;
+  font-size: 0.78rem;
+  color: var(--color-asphalt);
+  cursor: pointer;
+  padding: 0.2rem;
+  font-weight: 750;
+}
+
+.card-item-title {
+  margin: 0;
+  font-size: 1.15rem;
+  font-weight: 850;
+  letter-spacing: -0.02em;
+  color: var(--color-ink);
+}
+
+.card-item-desc {
+  margin: 0;
+  font-size: 0.76rem;
+  color: var(--color-asphalt);
+  line-height: 1.35;
+}
+
+.route-spark-box {
+  display: grid;
+  gap: 0.2rem;
+  padding: 0.45rem 0.65rem;
+  border-radius: 0.65rem;
   background: rgb(237 228 210 / 30%);
   border: 1px solid var(--color-sand);
 }
 
-.elevation-graph {
-  margin-top: 0.5rem;
-}
-
-.elevation-svg {
-  width: 100%;
-  height: 4.5rem;
-  border-radius: 0.5rem;
-  background: var(--color-white);
-}
-
-.elevation-labels {
+.spark-labels {
   display: flex;
   justify-content: space-between;
-  margin-top: 0.35rem;
-  font-size: 0.72rem;
+  font-size: 0.68rem;
+  font-weight: 850;
+  color: var(--color-ink);
+}
+
+.spark-difficulty {
   color: var(--color-asphalt);
-  font-family: ui-monospace, monospace;
+  text-transform: capitalize;
+}
+
+.spark-svg {
+  width: 100%;
+  height: 2.2rem;
+}
+
+.card-bottom-actions {
+  display: grid;
+  grid-template-columns: 1.2fr 1fr;
+  gap: 0.45rem;
+  margin-top: 0.2rem;
+}
+
+.action-btn {
+  display: grid;
+  place-items: center;
+  padding: 0.5rem 0.75rem;
+  border-radius: 0.75rem;
+  font-size: 0.78rem;
+  font-weight: 850;
+  text-decoration: none;
+  cursor: pointer;
+  transition: transform 90ms ease;
+}
+
+.action-btn:active {
+  transform: scale(0.96);
+}
+
+.action-btn--primary {
+  background: var(--color-ink);
+  color: var(--color-white);
+  border: none;
+}
+
+.action-btn--secondary {
+  background: var(--color-white);
+  color: var(--color-ink);
+  border: 1px solid var(--color-sand);
+}
+
+.sheet-feed-container {
+  display: flex;
+  flex-direction: column;
+  padding: 0 0.85rem 0.65rem;
+  min-height: 0;
+  flex: 1;
+  overflow: hidden;
+}
+
+.sheet-feed-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: 0.45rem;
+  font-size: 0.85rem;
+  color: var(--color-ink);
+  cursor: pointer;
+  user-select: none;
+}
+
+.header-right-pills {
+  display: flex;
+  align-items: center;
+  gap: 0.35rem;
+}
+
+.sheet-expand-hint {
+  font-size: 0.65rem;
+  color: var(--color-asphalt);
+}
+
+.feed-count-badge {
+  font-family: var(--font-mono);
+  font-size: 0.65rem;
+  font-weight: 850;
+  padding: 0.1rem 0.4rem;
+  border-radius: 9999px;
+  background: rgb(201 243 106 / 50%);
+}
+
+.sheet-feed-list {
+  display: grid;
+  gap: 0.4rem;
+  overflow-y: auto;
+  padding-right: 0.2rem;
+  -webkit-overflow-scrolling: touch;
+}
+
+.feed-card-row {
+  display: flex;
+  align-items: center;
+  gap: 0.65rem;
+  padding: 0.6rem 0.75rem;
+  border-radius: 0.85rem;
+  border: 1px solid var(--color-sand);
+  background: var(--color-white);
+  text-align: left;
+  cursor: pointer;
+  transition: all 120ms ease;
+  width: 100%;
+}
+
+.feed-card-row:hover {
+  border-color: var(--color-ink);
+}
+
+.feed-card-row:active {
+  transform: scale(0.98);
+  background: rgb(201 243 106 / 15%);
+}
+
+.feed-card-icon {
+  font-size: 1.25rem;
+  width: 1.9rem;
+  height: 1.9rem;
+  display: grid;
+  place-items: center;
+  border-radius: 0.5rem;
+  background: var(--color-sand);
+  flex-shrink: 0;
+}
+
+.feed-card-body {
+  flex: 1;
+  min-width: 0;
+}
+
+.feed-card-top {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+}
+
+.feed-card-title {
+  font-size: 0.84rem;
+  font-weight: 850;
+  color: var(--color-ink);
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.feed-card-dist {
+  font-family: var(--font-mono);
+  font-size: 0.68rem;
+  font-weight: 800;
+  color: var(--color-asphalt);
+  margin-left: 0.4rem;
+  flex-shrink: 0;
+}
+
+.feed-card-desc {
+  margin: 0.05rem 0 0;
+  font-size: 0.7rem;
+  color: var(--color-asphalt);
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+/* Modals */
+.native-modal-backdrop {
+  position: fixed;
+  inset: 0;
+  background: rgb(15 23 42 / 60%);
+  backdrop-filter: blur(6px);
+  -webkit-backdrop-filter: blur(6px);
+  display: grid;
+  place-items: center;
+  z-index: 100;
+  padding: 1rem;
+}
+
+.native-modal-sheet {
+  width: 100%;
+  max-width: 28rem;
+  background: var(--color-white);
+  border-radius: 1.25rem;
+  padding: 1.25rem;
+  box-shadow: 0 12px 40px rgb(0 0 0 / 25%);
+  display: grid;
+  gap: 1rem;
+}
+
+.native-modal-sheet--large {
+  max-width: 38rem;
+  max-height: 85vh;
+  display: flex;
+  flex-direction: column;
+}
+
+.modal-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+}
+
+.modal-header h2 {
+  margin: 0;
+  font-size: 1.1rem;
+  font-weight: 850;
+}
+
+.modal-close {
+  border: none;
+  background: none;
+  font-size: 1rem;
+  color: var(--color-asphalt);
+  cursor: pointer;
+}
+
+.modal-body-grid {
+  display: grid;
+  gap: 0.75rem;
+}
+
+.modal-body-grid label {
+  display: grid;
+  gap: 0.25rem;
+  font-size: 0.75rem;
+  font-weight: 800;
+  color: var(--color-asphalt);
+}
+
+.modal-body-grid select {
+  padding: 0.5rem;
+  border-radius: 0.65rem;
+  border: 1px solid var(--color-sand);
+  background: var(--color-white);
+  font-size: 0.82rem;
+}
+
+.modal-scroll-body {
+  overflow-y: auto;
+  max-height: 70vh;
 }
 </style>

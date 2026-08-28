@@ -32,6 +32,8 @@ const repository: MaintenanceRepository = {
       performedAt: input.performedAt,
       notes: input.notes ?? null,
       nextDueDate: input.nextDueDate ?? null,
+      performedAtDistanceKm: input.performedAtDistanceKm ?? null,
+      nextDueDistanceKm: input.nextDueDistanceKm ?? null,
       createdAt: new Date('2026-08-20T08:00:00.000Z'),
     }),
 };

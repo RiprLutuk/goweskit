@@ -374,6 +374,7 @@ export const userBikes = pgTable(
     brand: varchar('brand', { length: 100 }),
     model: varchar('model', { length: 100 }),
     modelYear: integer('model_year'),
+    photoUrl: text('photo_url'),
     notes: text('notes'),
     createdAt: timestamp('created_at', { withTimezone: true })
       .notNull()
@@ -471,6 +472,8 @@ export const maintenanceEvents = pgTable(
     performedAt: date('performed_at', { mode: 'string' }).notNull(),
     notes: text('notes'),
     nextDueDate: date('next_due_date', { mode: 'string' }),
+    performedAtDistanceKm: integer('performed_at_distance_km'),
+    nextDueDistanceKm: integer('next_due_distance_km'),
     createdAt: timestamp('created_at', { withTimezone: true })
       .notNull()
       .defaultNow(),

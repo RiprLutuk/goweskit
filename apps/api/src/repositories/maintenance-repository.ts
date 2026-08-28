@@ -15,6 +15,8 @@ export interface StoredMaintenanceEvent {
   performedAt: string;
   notes: string | null;
   nextDueDate: string | null;
+  performedAtDistanceKm: number | null;
+  nextDueDistanceKm: number | null;
   createdAt: Date;
 }
 
@@ -55,6 +57,8 @@ export class DrizzleMaintenanceRepository implements MaintenanceRepository {
         performedAt: input.performedAt,
         notes: input.notes ?? null,
         nextDueDate: input.nextDueDate ?? null,
+        performedAtDistanceKm: input.performedAtDistanceKm ?? null,
+        nextDueDistanceKm: input.nextDueDistanceKm ?? null,
       })
       .returning();
 

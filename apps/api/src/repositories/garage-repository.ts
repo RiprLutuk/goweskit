@@ -26,6 +26,7 @@ export interface StoredBike {
   brand: string | null;
   model: string | null;
   modelYear: number | null;
+  photoUrl: string | null;
   notes: string | null;
   specs: StoredBikeSpec[];
   createdAt: Date;
@@ -85,6 +86,7 @@ export class DrizzleGarageRepository implements GarageRepository {
           brand: input.brand ?? null,
           model: input.model ?? null,
           modelYear: input.modelYear ?? null,
+          photoUrl: input.photoUrl ?? null,
           notes: input.notes ?? null,
         })
         .returning({ id: userBikes.id });
@@ -133,6 +135,7 @@ export class DrizzleGarageRepository implements GarageRepository {
     if (input.brand !== undefined) patch.brand = input.brand;
     if (input.model !== undefined) patch.model = input.model;
     if (input.modelYear !== undefined) patch.modelYear = input.modelYear;
+    if (input.photoUrl !== undefined) patch.photoUrl = input.photoUrl;
     if (input.notes !== undefined) patch.notes = input.notes;
 
     await this.database

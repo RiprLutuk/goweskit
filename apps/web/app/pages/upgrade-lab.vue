@@ -142,28 +142,20 @@ async function evaluate(): Promise<void> {
       Preparing the workbench…
     </p>
 
-    <!-- Signed out state with 1-click Demo helper -->
+    <!-- Signed out state -->
     <div v-else-if="!user" class="state-card guest-upgrade-box">
       <div class="guest-upgrade-content">
         <span class="guest-upgrade-icon">⚡</span>
         <div>
-          <h2>Test Upgrade Lab with Demo Bikes</h2>
+          <h2>Check Upgrades on Your Bike</h2>
           <p>
-            Sign in with the pre-seeded demo account to test compatibility against an MTB Hardtail (Boost),
-            Folding Bike (20-inch), or Road Bike (12s XDR).
+            Sign in to select any bicycle from your personal Garage and verify candidate component standards.
           </p>
         </div>
       </div>
       <div class="action-row">
-        <button
-          class="button button--primary"
-          type="button"
-          :disabled="demoLoggingIn"
-          @click="quickDemoLogin"
-        >
-          {{ demoLoggingIn ? 'Loading demo bikes…' : '⚡ 1-Click Demo Login' }}
-        </button>
-        <NuxtLink class="button button--secondary" to="/login">Sign In</NuxtLink>
+        <NuxtLink class="button button--primary" to="/login">Sign In</NuxtLink>
+        <NuxtLink class="button button--secondary" to="/register">Create Account</NuxtLink>
       </div>
     </div>
 

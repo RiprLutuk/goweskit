@@ -41,6 +41,8 @@ function mapEvent(
     performedAt: event.performedAt,
     notes: event.notes,
     nextDueDate: event.nextDueDate,
+    performedAtDistanceKm: event.performedAtDistanceKm,
+    nextDueDistanceKm: event.nextDueDistanceKm,
     dueStatus: getMaintenanceDueStatus(event.nextDueDate, today),
     createdAt: event.createdAt.toISOString(),
   };

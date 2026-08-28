@@ -11,11 +11,14 @@ const { user, initialized, refresh } = useAuth();
 const bike = ref<Bike | null>(null);
 const loading = ref(true);
 const savingCode = ref<BikeSpecCode | null>(null);
+const savingPhoto = ref(false);
 const errorMessage = ref('');
 const successNotice = ref('');
 const activeTab = ref<'specs' | 'components' | 'maintenance'>('specs');
 const specGroupFilter = ref('all');
 const selections = reactive<Record<string, string>>({});
+const showPhotoModal = ref(false);
+const photoInputUrl = ref('');
 
 const bikeId = computed(() => String(route.params.id));
 
@@ -31,6 +34,7 @@ onMounted(async () => {
 async function loadBike(): Promise<void> {
   try {
     bike.value = (await api<BikeResponse>(`/bikes/${bikeId.value}`)).bike;
+    photoInputUrl.value = bike.value.photoUrl || '';
     for (const definition of BIKE_SPEC_DEFINITIONS) {
       const spec = bike.value.specs.find(
         ({ standardCode }) => standardCode === definition.code,
@@ -71,7 +75,7 @@ async function saveSpec(code: BikeSpecCode): Promise<void> {
         ...bike.value.specs.filter(({ standardCode }) => standardCode !== code),
         response.spec,
       ];
-      successNotice.value = `Updated ${code.replaceAll('_', ' ')}.`;
+      successNotice.value = `Standar ${code.replaceAll('_', ' ')} berhasil disimpan.`;
     }
   } catch (error: unknown) {
     errorMessage.value = getApiErrorMessage(error);
@@ -80,8 +84,40 @@ async function saveSpec(code: BikeSpecCode): Promise<void> {
   }
 }
 
+async function saveBikePhoto(): Promise<void> {
+  if (!bike.value) return;
+  savingPhoto.value = true;
+  errorMessage.value = '';
+  try {
+    const response = await api<BikeResponse>(`/bikes/${bikeId.value}`, {
+      method: 'PATCH',
+      body: { photoUrl: photoInputUrl.value.trim() || null },
+    });
+    bike.value = response.bike;
+    showPhotoModal.value = false;
+    successNotice.value = 'Foto sepeda berhasil diperbarui.';
+  } catch (error: unknown) {
+    errorMessage.value = getApiErrorMessage(error);
+  } finally {
+    savingPhoto.value = false;
+  }
+}
+
+function handlePhotoFileUpload(event: Event): void {
+  const input = event.target as HTMLInputElement;
+  const file = input.files?.[0];
+  if (!file) return;
+  const reader = new FileReader();
+  reader.onload = (e) => {
+    if (typeof e.target?.result === 'string') {
+      photoInputUrl.value = e.target.result;
+    }
+  };
+  reader.readAsDataURL(file);
+}
+
 async function deleteBike(): Promise<void> {
-  if (!window.confirm('Remove this bike from your Garage?')) return;
+  if (!window.confirm('Hapus sepeda ini dari My Garage?')) return;
   try {
     await api(`/bikes/${bikeId.value}`, { method: 'DELETE' });
     await navigateTo('/garage');
@@ -115,13 +151,13 @@ function specStatus(code: string): 'known' | 'unknown' | 'missing' {
 
 <template>
   <div class="page-stack bike-detail-page">
-    <NuxtLink class="back-link" to="/garage">← Back to My Garage</NuxtLink>
+    <NuxtLink class="back-link" to="/garage">← Kembali ke My Garage</NuxtLink>
 
     <p v-if="loading" class="state-card" role="status">
-      Checking bike details…
+      Memuat detail sepeda…
     </p>
     <div v-else-if="!user" class="state-card signed-out-state">
-      <p>Sign in to view this bike.</p>
+      <p>Masuk akun untuk melihat sepeda Anda.</p>
       <NuxtLink class="button button--primary" to="/login">Sign in</NuxtLink>
     </div>
     <p
@@ -129,15 +165,32 @@ function specStatus(code: string): 'known' | 'unknown' | 'missing' {
       class="state-card state-card--error"
       role="alert"
     >
-      {{ errorMessage || 'Bike not found.' }}
+      {{ errorMessage || 'Sepeda tidak ditemukan.' }}
     </p>
 
     <template v-else>
       <header class="bike-hero-rich">
         <div class="bike-hero-rich__top">
-          <div class="bike-hero-rich__icon" aria-hidden="true">
-            {{ bikeTypeIcon(bike.bicycleType.slug) }}
+          <!-- Bike Visual with Photo Support (GARAGE-007) -->
+          <div
+            class="bike-hero-rich__visual"
+            role="button"
+            tabindex="0"
+            title="Klik untuk ubah foto sepeda"
+            @click="showPhotoModal = true"
+          >
+            <img
+              v-if="bike.photoUrl"
+              :src="bike.photoUrl"
+              :alt="bike.nickname"
+              class="bike-hero-photo"
+            />
+            <div v-else class="bike-hero-rich__icon" aria-hidden="true">
+              {{ bikeTypeIcon(bike.bicycleType.slug) }}
+            </div>
+            <span class="photo-edit-badge" aria-hidden="true">📷</span>
           </div>
+
           <div class="bike-hero-rich__info">
             <span class="status-chip status-chip--lime">{{ bike.bicycleType.name }}</span>
             <h1>{{ bike.nickname }}</h1>
@@ -154,20 +207,20 @@ function specStatus(code: string): 'known' | 'unknown' | 'missing' {
               class="button button--primary"
               :to="`/upgrade-lab?bike=${bike.id}`"
             >
-              ⚡ Check Upgrade
+              ⚡ Cek Upgrade Lab
             </NuxtLink>
             <button
               class="text-button text-button--danger"
               type="button"
               @click="deleteBike"
             >
-              Remove bike
+              Hapus Sepeda
             </button>
           </div>
         </div>
 
         <div v-if="bike.notes" class="bike-notes-box">
-          <strong>Notes:</strong> {{ bike.notes }}
+          <strong>Catatan:</strong> {{ bike.notes }}
         </div>
       </header>
 
@@ -179,7 +232,7 @@ function specStatus(code: string): 'known' | 'unknown' | 'missing' {
       </p>
 
       <!-- Sub-navigation Tabs -->
-      <nav class="bike-tabs-bar" role="tablist" aria-label="Bike management tabs">
+      <nav class="bike-tabs-bar" role="tablist" aria-label="Tab manajemen sepeda">
         <button
           class="bike-tab"
           :class="{ 'bike-tab--active': activeTab === 'specs' }"
@@ -188,7 +241,7 @@ function specStatus(code: string): 'known' | 'unknown' | 'missing' {
           :aria-selected="activeTab === 'specs'"
           @click="activeTab = 'specs'"
         >
-          📏 Technical Standards
+          📏 Standar Teknis
         </button>
         <button
           class="bike-tab"
@@ -198,7 +251,7 @@ function specStatus(code: string): 'known' | 'unknown' | 'missing' {
           :aria-selected="activeTab === 'components'"
           @click="activeTab = 'components'"
         >
-          ⚙️ Installed Components
+          🔩 Komponen Terpasang
         </button>
         <button
           class="bike-tab"
@@ -208,239 +261,274 @@ function specStatus(code: string): 'known' | 'unknown' | 'missing' {
           :aria-selected="activeTab === 'maintenance'"
           @click="activeTab = 'maintenance'"
         >
-          📒 Service Notebook
+          🔧 Riwayat Servis
         </button>
       </nav>
 
-      <!-- TAB 1: Specs & Standards -->
-      <section v-if="activeTab === 'specs'" aria-labelledby="specs-title" class="tab-section">
-        <div class="section-heading">
-          <div>
-            <p class="section-heading__eyebrow">100% Deterministic Provenance</p>
-            <h2 id="specs-title">Normalized Standards</h2>
-            <p class="section-desc">
-              Record verified interfaces. "I don't know" is a valid value and will be surfaced
-              whenever a check depends on it.
-            </p>
+      <!-- TAB 1: TECHNICAL SPECS & STANDARDS -->
+      <section v-if="activeTab === 'specs'" class="tab-section">
+        <div class="spec-filters-bar">
+          <div class="spec-filters-label">Kategori Komponen:</div>
+          <div class="spec-category-chips">
+            <button
+              class="filter-pill"
+              :class="{ 'filter-pill--active': specGroupFilter === 'all' }"
+              type="button"
+              @click="specGroupFilter = 'all'"
+            >
+              Semua ({{ BIKE_SPEC_DEFINITIONS.length }})
+            </button>
+            <button
+              class="filter-pill"
+              :class="{ 'filter-pill--active': specGroupFilter === 'frame' }"
+              type="button"
+              @click="specGroupFilter = 'frame'"
+            >
+              Frame &amp; As Roda
+            </button>
+            <button
+              class="filter-pill"
+              :class="{ 'filter-pill--active': specGroupFilter === 'wheels' }"
+              type="button"
+              @click="specGroupFilter = 'wheels'"
+            >
+              Roda &amp; Freehub
+            </button>
+            <button
+              class="filter-pill"
+              :class="{ 'filter-pill--active': specGroupFilter === 'drivetrain' }"
+              type="button"
+              @click="specGroupFilter = 'drivetrain'"
+            >
+              Drivetrain &amp; BB
+            </button>
+            <button
+              class="filter-pill"
+              :class="{ 'filter-pill--active': specGroupFilter === 'fork_headset' }"
+              type="button"
+              @click="specGroupFilter = 'fork_headset'"
+            >
+              Garpu &amp; Headset
+            </button>
+            <button
+              class="filter-pill"
+              :class="{ 'filter-pill--active': specGroupFilter === 'brakes' }"
+              type="button"
+              @click="specGroupFilter = 'brakes'"
+            >
+              Rem &amp; Rotor
+            </button>
+            <button
+              class="filter-pill"
+              :class="{ 'filter-pill--active': specGroupFilter === 'cockpit_seating' }"
+              type="button"
+              @click="specGroupFilter = 'cockpit_seating'"
+            >
+              Seatpost &amp; Kokpit
+            </button>
           </div>
-          <span class="count-chip">{{ bike.specs.length }} / 17</span>
         </div>
 
-        <!-- Spec Group Filter -->
-        <div class="spec-category-chips" role="group" aria-label="Filter standards by group">
-          <button
-            class="filter-pill"
-            :class="{ 'filter-pill--active': specGroupFilter === 'all' }"
-            type="button"
-            @click="specGroupFilter = 'all'"
-          >
-            All Specs (17)
-          </button>
-          <button
-            class="filter-pill"
-            :class="{ 'filter-pill--active': specGroupFilter === 'wheel' }"
-            type="button"
-            @click="specGroupFilter = 'wheel'"
-          >
-            Wheels &amp; Axles
-          </button>
-          <button
-            class="filter-pill"
-            :class="{ 'filter-pill--active': specGroupFilter === 'drivetrain' }"
-            type="button"
-            @click="specGroupFilter = 'drivetrain'"
-          >
-            Drivetrain &amp; BB
-          </button>
-          <button
-            class="filter-pill"
-            :class="{ 'filter-pill--active': specGroupFilter === 'frame' }"
-            type="button"
-            @click="specGroupFilter = 'frame'"
-          >
-            Fork, Brakes &amp; Frame
-          </button>
-        </div>
-
-        <div class="spec-list">
+        <div class="specs-grid">
           <article
-            v-for="definition in filteredDefinitions"
-            :key="definition.code"
-            class="spec-row"
-            :class="`spec-row--${specStatus(definition.code)}`"
+            v-for="def in filteredDefinitions"
+            :key="def.code"
+            class="spec-card-clean"
+            :class="`spec-card-clean--${specStatus(def.code)}`"
           >
-            <div class="spec-row__copy">
-              <div class="spec-row__topline">
-                <strong>{{ definition.label }}</strong>
-                <span
-                  class="spec-tag"
-                  :class="`spec-tag--${specStatus(definition.code)}`"
-                >
-                  {{
-                    specStatus(definition.code) === 'known'
-                      ? '✓ Confirmed'
-                      : specStatus(definition.code) === 'unknown'
-                        ? '? Unknown'
-                        : '— Not recorded'
-                  }}
-                </span>
+            <div class="spec-card-clean__header">
+              <div class="spec-card-clean__topline">
+                <span class="spec-status-dot" :class="`dot--${specStatus(def.code)}`" />
+                <h3 class="spec-card-clean__title">{{ def.label }}</h3>
               </div>
-              <span>{{ definition.description }}</span>
+              <span class="spec-tag" :class="`spec-tag--${specStatus(def.code)}`">
+                {{ specStatus(def.code) === 'known' ? 'Tervalidasi' : specStatus(def.code) === 'unknown' ? 'Belum Tahu' : 'Belum Diisi' }}
+              </span>
             </div>
 
-            <label class="visually-hidden" :for="`spec-${definition.code}`">
-              {{ definition.label }} value
-            </label>
-            <select
-              :id="`spec-${definition.code}`"
-              v-model="selections[definition.code]"
-            >
-              <option value="missing">Not recorded</option>
-              <option value="unknown">I don’t know</option>
-              <option
-                v-for="option in definition.values"
-                :key="option.code"
-                :value="option.code"
+            <p class="spec-card-clean__desc">{{ def.description }}</p>
+
+            <div class="spec-card-clean__form">
+              <select
+                v-model="selections[def.code]"
+                :aria-label="def.label"
+                class="spec-select"
+                @change="saveSpec(def.code)"
               >
-                {{ option.label }}
-              </option>
-            </select>
-
-            <button
-              class="button button--secondary"
-              type="button"
-              :disabled="
-                selections[definition.code] === 'missing' ||
-                savingCode === definition.code
-              "
-              @click="saveSpec(definition.code)"
-            >
-              {{ savingCode === definition.code ? 'Saving…' : 'Save' }}
-            </button>
-
-            <p
-              v-if="selections[definition.code] === 'unknown'"
-              class="unknown-note"
-            >
-              <strong>Unknown is okay.</strong> {{ definition.guidance }}
-            </p>
-            <p
-              v-else-if="selections[definition.code] === 'missing'"
-              class="missing-note"
-            >
-              This detail has not been recorded yet.
-            </p>
+                <option value="missing" disabled>Pilih standar…</option>
+                <option value="unknown">Belum tahu standar ini</option>
+                <option
+                  v-for="opt in def.values"
+                  :key="opt.code"
+                  :value="opt.code"
+                >
+                  {{ opt.label }}
+                </option>
+              </select>
+              <span v-if="savingCode === def.code" class="save-indicator">Menyimpan…</span>
+            </div>
           </article>
         </div>
       </section>
 
-      <!-- TAB 2: Installed Components -->
+      <!-- TAB 2: INSTALLED COMPONENTS -->
       <section v-else-if="activeTab === 'components'" class="tab-section">
         <InstalledComponents :bike-id="bike.id" />
       </section>
 
-      <!-- TAB 3: Maintenance Service Notebook -->
+      <!-- TAB 3: MAINTENANCE NOTEBOOK -->
       <section v-else-if="activeTab === 'maintenance'" class="tab-section">
         <MaintenanceLog :bike-id="bike.id" />
       </section>
     </template>
+
+    <!-- PHOTO MODAL (GARAGE-007) -->
+    <div v-if="showPhotoModal" class="native-modal-backdrop" @click.self="showPhotoModal = false">
+      <div class="native-modal-sheet">
+        <div class="modal-header">
+          <h2>Foto Sepeda</h2>
+          <button class="modal-close" type="button" @click="showPhotoModal = false">✕</button>
+        </div>
+
+        <form class="clean-form" @submit.prevent="saveBikePhoto">
+          <label>
+            <span>Upload Foto dari Perangkat</span>
+            <input type="file" accept="image/*" @change="handlePhotoFileUpload" />
+          </label>
+
+          <label>
+            <span>Atau Masukkan URL Foto</span>
+            <input
+              v-model="photoInputUrl"
+              type="url"
+              placeholder="https://images.unsplash.com/... atau tautan gambar"
+            />
+          </label>
+
+          <div v-if="photoInputUrl" class="photo-preview-box">
+            <img :src="photoInputUrl" alt="Preview foto sepeda" class="modal-photo-preview" />
+          </div>
+
+          <button class="button button--primary button--full" :disabled="savingPhoto" type="submit">
+            {{ savingPhoto ? 'Menyimpan…' : 'Simpan Foto' }}
+          </button>
+        </form>
+      </div>
+    </div>
   </div>
 </template>
 
 <style scoped>
 .bike-detail-page {
-  gap: 2rem;
+  display: grid;
+  gap: 1.25rem;
 }
 
 .back-link {
-  width: fit-content;
-  color: var(--color-asphalt);
+  font-size: 0.82rem;
   font-weight: 800;
+  color: var(--color-ink);
   text-decoration: none;
-}
-
-.back-link:hover {
-  text-decoration: underline;
 }
 
 .bike-hero-rich {
   display: grid;
-  gap: 1.25rem;
-  padding: clamp(1.25rem, 5vw, 2.25rem);
-  border: 1px solid rgb(64 80 95 / 14%);
-  border-radius: var(--radius-card);
+  gap: 1rem;
+  padding: 1.25rem;
+  border-radius: 1.25rem;
   background: var(--color-white);
-  box-shadow: var(--shadow-card);
+  border: 1px solid var(--color-sand);
 }
 
 .bike-hero-rich__top {
   display: grid;
   grid-template-columns: auto 1fr auto;
+  gap: 1rem;
   align-items: center;
-  gap: 1.25rem;
+}
+
+.bike-hero-rich__visual {
+  position: relative;
+  width: 4.5rem;
+  height: 4.5rem;
+  border-radius: 1rem;
+  background: var(--color-sand);
+  overflow: hidden;
+  display: grid;
+  place-items: center;
+  cursor: pointer;
+  border: 1px solid var(--color-sand);
+}
+
+.bike-hero-photo {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
 }
 
 .bike-hero-rich__icon {
-  display: grid;
-  width: 4rem;
-  height: 4rem;
-  place-items: center;
-  border-radius: 1.1rem;
-  background: var(--color-chain-lime);
   font-size: 2rem;
 }
 
+.photo-edit-badge {
+  position: absolute;
+  bottom: 0.2rem;
+  right: 0.2rem;
+  font-size: 0.75rem;
+  background: rgb(255 255 255 / 85%);
+  padding: 0.15rem 0.3rem;
+  border-radius: 0.4rem;
+  backdrop-filter: blur(4px);
+}
+
 .bike-hero-rich__info h1 {
-  margin: 0.3rem 0 0.15rem;
-  font-size: clamp(2rem, 8vw, 3.5rem);
-  line-height: 1;
-  letter-spacing: -0.05em;
+  margin: 0.2rem 0;
+  font-size: 1.35rem;
+  font-weight: 850;
+  letter-spacing: -0.02em;
 }
 
 .bike-hero-rich__info p {
   margin: 0;
+  font-size: 0.82rem;
   color: var(--color-asphalt);
-  font-size: 0.95rem;
+  font-weight: 700;
 }
 
 .bike-hero-rich__actions {
   display: flex;
   flex-direction: column;
+  gap: 0.45rem;
   align-items: flex-end;
-  gap: 0.5rem;
 }
 
 .bike-notes-box {
-  padding: 0.85rem 1rem;
-  border-radius: 0.85rem;
-  background: rgb(237 228 210 / 40%);
-  font-size: 0.88rem;
-  color: var(--color-asphalt);
+  padding: 0.65rem 0.85rem;
+  border-radius: 0.75rem;
+  background: var(--color-sand);
+  font-size: 0.78rem;
+  color: var(--color-ink);
 }
 
+/* Tabs */
 .bike-tabs-bar {
   display: flex;
-  flex-wrap: wrap;
-  gap: 0.5rem;
-  border-bottom: 2px solid var(--color-sand);
-  padding-bottom: 0.75rem;
+  gap: 0.45rem;
+  overflow-x: auto;
+  padding: 0.2rem 0;
 }
 
 .bike-tab {
-  padding: 0.65rem 1.1rem;
+  padding: 0.55rem 0.95rem;
+  border-radius: 0.75rem;
   border: 1px solid var(--color-sand);
-  border-radius: 0.85rem;
   background: var(--color-white);
   color: var(--color-ink);
-  font: inherit;
-  font-size: 0.85rem;
-  font-weight: 800;
+  font-size: 0.8rem;
+  font-weight: 850;
   cursor: pointer;
+  white-space: nowrap;
   transition: all 120ms ease;
-}
-
-.bike-tab:hover {
-  border-color: var(--color-ink);
 }
 
 .bike-tab--active {
@@ -451,29 +539,34 @@ function specStatus(code: string): 'known' | 'unknown' | 'missing' {
 
 .tab-section {
   display: grid;
-  gap: 1.5rem;
+  gap: 1rem;
 }
 
-.section-desc {
-  margin: 0.35rem 0 0;
+.spec-filters-bar {
+  display: grid;
+  gap: 0.45rem;
+}
+
+.spec-filters-label {
+  font-size: 0.74rem;
+  font-weight: 800;
   color: var(--color-asphalt);
-  font-size: 0.88rem;
 }
 
 .spec-category-chips {
   display: flex;
   flex-wrap: wrap;
-  gap: 0.5rem;
+  gap: 0.35rem;
 }
 
 .filter-pill {
-  padding: 0.4rem 0.75rem;
+  padding: 0.35rem 0.7rem;
+  border-radius: 9999px;
   border: 1px solid var(--color-sand);
-  border-radius: 0.7rem;
   background: var(--color-white);
-  color: var(--color-ink);
-  font-size: 0.78rem;
+  font-size: 0.74rem;
   font-weight: 800;
+  color: var(--color-ink);
   cursor: pointer;
 }
 
@@ -483,28 +576,75 @@ function specStatus(code: string): 'known' | 'unknown' | 'missing' {
   border-color: var(--color-ink);
 }
 
-.spec-row__topline {
+/* Specs Grid */
+.specs-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(18rem, 1fr));
+  gap: 0.75rem;
+}
+
+.spec-card-clean {
+  display: grid;
+  gap: 0.45rem;
+  padding: 0.85rem 1rem;
+  border-radius: 0.95rem;
+  background: var(--color-white);
+  border: 1px solid var(--color-sand);
+}
+
+.spec-card-clean__header {
   display: flex;
   align-items: center;
-  gap: 0.65rem;
+  justify-content: space-between;
+  gap: 0.4rem;
+}
+
+.spec-card-clean__topline {
+  display: flex;
+  align-items: center;
+  gap: 0.45rem;
+}
+
+.spec-status-dot {
+  width: 0.5rem;
+  height: 0.5rem;
+  border-radius: 50%;
+}
+
+.dot--known {
+  background: #16a34a;
+}
+
+.dot--unknown {
+  background: #0284c7;
+}
+
+.dot--missing {
+  background: #d1d5db;
+}
+
+.spec-card-clean__title {
+  margin: 0;
+  font-size: 0.84rem;
+  font-weight: 850;
 }
 
 .spec-tag {
-  padding: 0.15rem 0.45rem;
-  border-radius: 0.4rem;
-  font-family: ui-monospace, monospace;
-  font-size: 0.68rem;
-  font-weight: 800;
+  font-family: var(--font-mono);
+  font-size: 0.64rem;
+  font-weight: 850;
+  padding: 0.1rem 0.4rem;
+  border-radius: 0.35rem;
 }
 
 .spec-tag--known {
   background: rgb(201 243 106 / 40%);
-  color: #2b7a1e;
+  color: #166534;
 }
 
 .spec-tag--unknown {
-  background: rgb(142 221 244 / 45%);
-  color: #176b87;
+  background: #e0f2fe;
+  color: #0369a1;
 }
 
 .spec-tag--missing {
@@ -512,11 +652,113 @@ function specStatus(code: string): 'known' | 'unknown' | 'missing' {
   color: var(--color-asphalt);
 }
 
-.state-card--success {
-  border-color: #7db942;
-  background: rgb(201 243 106 / 25%);
-  color: #2b7a1e;
+.spec-card-clean__desc {
+  margin: 0;
+  font-size: 0.72rem;
+  color: var(--color-asphalt);
+  line-height: 1.35;
+}
+
+.spec-card-clean__form {
+  display: flex;
+  align-items: center;
+  gap: 0.45rem;
+  margin-top: 0.2rem;
+}
+
+.spec-select {
+  flex: 1;
+  padding: 0.45rem 0.65rem;
+  border-radius: 0.6rem;
+  border: 1px solid var(--color-sand);
+  background: var(--color-white);
+  font-size: 0.78rem;
+  outline: none;
+}
+
+.save-indicator {
+  font-size: 0.68rem;
+  color: #16a34a;
   font-weight: 800;
+}
+
+/* Modals */
+.native-modal-backdrop {
+  position: fixed;
+  inset: 0;
+  background: rgb(15 23 42 / 60%);
+  backdrop-filter: blur(6px);
+  -webkit-backdrop-filter: blur(6px);
+  display: grid;
+  place-items: center;
+  z-index: 100;
+  padding: 1rem;
+}
+
+.native-modal-sheet {
+  width: 100%;
+  max-width: 26rem;
+  background: var(--color-white);
+  border-radius: 1.25rem;
+  padding: 1.25rem;
+  box-shadow: 0 12px 40px rgb(0 0 0 / 25%);
+  display: grid;
+  gap: 1rem;
+}
+
+.modal-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+}
+
+.modal-header h2 {
+  margin: 0;
+  font-size: 1.1rem;
+  font-weight: 850;
+}
+
+.modal-close {
+  border: none;
+  background: none;
+  font-size: 1rem;
+  color: var(--color-asphalt);
+  cursor: pointer;
+}
+
+.clean-form {
+  display: grid;
+  gap: 0.65rem;
+}
+
+.clean-form label {
+  display: grid;
+  gap: 0.25rem;
+  font-size: 0.74rem;
+  font-weight: 800;
+  color: var(--color-asphalt);
+}
+
+.clean-form input {
+  padding: 0.5rem 0.65rem;
+  border-radius: 0.65rem;
+  border: 1px solid var(--color-sand);
+  background: var(--color-white);
+  font-size: 0.8rem;
+}
+
+.photo-preview-box {
+  width: 100%;
+  height: 10rem;
+  border-radius: 0.85rem;
+  overflow: hidden;
+  background: var(--color-sand);
+}
+
+.modal-photo-preview {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
 }
 
 @media (max-width: 48rem) {

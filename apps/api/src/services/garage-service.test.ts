@@ -46,6 +46,7 @@ class MemoryGarageRepository implements GarageRepository {
       brand: input.brand ?? null,
       model: input.model ?? null,
       modelYear: input.modelYear ?? null,
+      photoUrl: input.photoUrl ?? null,
       notes: input.notes ?? null,
       specs: specs.map((spec) => ({ ...spec, updatedAt: now })),
       createdAt: now,

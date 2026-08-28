@@ -87,12 +87,36 @@ button, a, input, select, textarea, [role="button"] {
 .app-shell {
   width: min(100%, 60rem);
   margin: 0 auto;
-  padding: 0 0.85rem max(6.5rem, calc(5.5rem + var(--safe-bottom)));
+  padding: 0 0.85rem max(7.5rem, calc(6.5rem + var(--safe-bottom)));
   flex: 1 0 auto;
 }
 
+.app-shell--explore {
+  width: 100% !important;
+  max-width: 100% !important;
+  margin: 0 !important;
+  padding: 0 !important;
+  min-height: 100vh;
+  min-height: 100dvh;
+  height: 100vh;
+  height: 100dvh;
+  overflow: hidden;
+}
+
+.main-content--explore {
+  width: 100% !important;
+  max-width: 100% !important;
+  margin: 0 !important;
+  padding: 0 !important;
+  min-height: 100vh;
+  min-height: 100dvh;
+  height: 100vh;
+  height: 100dvh;
+  overflow: hidden;
+}
+
 @media (min-width: 48rem) {
-  .app-shell {
+  .app-shell:not(.app-shell--explore) {
     padding: 0 1.5rem 4.5rem;
   }
 }

@@ -47,6 +47,20 @@ export const createMaintenanceEventRequestSchema = z
     performedAt: z.iso.date(),
     notes: z.string().trim().min(1).max(2000).nullable().optional(),
     nextDueDate: z.iso.date().nullable().optional(),
+    performedAtDistanceKm: z
+      .number()
+      .int()
+      .min(0)
+      .max(1_000_000)
+      .nullable()
+      .optional(),
+    nextDueDistanceKm: z
+      .number()
+      .int()
+      .min(0)
+      .max(1_000_000)
+      .nullable()
+      .optional(),
   })
   .refine(
     ({ nextDueDate, performedAt }) =>
@@ -56,6 +70,19 @@ export const createMaintenanceEventRequestSchema = z
     {
       message: 'Next due date cannot be before the service date.',
       path: ['nextDueDate'],
+    },
+  )
+  .refine(
+    ({ nextDueDistanceKm, performedAtDistanceKm }) =>
+      nextDueDistanceKm === null ||
+      nextDueDistanceKm === undefined ||
+      performedAtDistanceKm === null ||
+      performedAtDistanceKm === undefined ||
+      nextDueDistanceKm >= performedAtDistanceKm,
+    {
+      message:
+        'Next due distance cannot be lower than the performed distance.',
+      path: ['nextDueDistanceKm'],
     },
   );
 
@@ -70,6 +97,8 @@ export const maintenanceEventSchema = z.object({
   performedAt: z.iso.date(),
   notes: z.string().nullable(),
   nextDueDate: z.iso.date().nullable(),
+  performedAtDistanceKm: z.number().int().nullable().default(null),
+  nextDueDistanceKm: z.number().int().nullable().default(null),
   dueStatus: maintenanceDueStatusSchema,
   createdAt: z.iso.datetime(),
 });

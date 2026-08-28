@@ -25,6 +25,7 @@ const reputationScore = ref(0);
 // Preferences
 const distanceUnit = ref('km');
 const highContrast = ref(false);
+const autoLocation = ref(true);
 
 onMounted(async () => {
   if (!initialized.value) await refresh();
@@ -49,6 +50,7 @@ async function loadUserStats(): Promise<void> {
 }
 
 async function signOut(): Promise<void> {
+  if (!window.confirm('Yakin ingin keluar dari akun GowesKit?')) return;
   signingOut.value = true;
   errorMessage.value = '';
   try {
@@ -81,468 +83,585 @@ async function quickDemoLogin(): Promise<void> {
 </script>
 
 <template>
-  <div class="page-stack profile-page">
-    <header class="page-heading">
-      <span class="status-chip status-chip--lime">Rider Profile</span>
-      <h1>My Account &amp; Preferences</h1>
-      <p>
-        Manage your personal account, saved garage assets, safety contacts,
-        and platform display settings.
-      </p>
+  <div class="native-container profile-container">
+    <!-- Header -->
+    <header class="native-page-header">
+      <span class="native-eyebrow">Profil &amp; Akun</span>
+      <h1 class="native-title">Pengaturan Saya</h1>
+      <p class="native-sub">Kelola garasi sepeda, kontak darurat, preferensi display, dan aplikasi PWA.</p>
     </header>
 
     <p v-if="!initialized" class="state-card" role="status">
-      Checking your session…
+      Memeriksa sesi akun…
     </p>
 
-    <!-- Logged in State -->
+    <!-- 1. LOGGED IN STATE -->
     <template v-else-if="user">
-      <section class="profile-card" aria-labelledby="profile-card-title">
-        <div class="profile-card__header">
-          <span class="profile-card__avatar" aria-hidden="true">
-            {{ user.displayName.slice(0, 1) }}
-          </span>
-          <div class="profile-card__details">
-            <h2 id="profile-card-title">{{ user.displayName }}</h2>
-            <p>{{ user.email }}</p>
-            <span class="status-chip status-chip--sky">Verified Rider</span>
+      <!-- Profile Hero Card (Apple Health / Strava Style) -->
+      <section class="native-hero-card" aria-label="Profil Rider">
+        <div class="hero-user-row">
+          <div class="hero-avatar">
+            <span>{{ user.displayName.slice(0, 1).toUpperCase() }}</span>
           </div>
+          <div class="hero-user-info">
+            <h2>{{ user.displayName }}</h2>
+            <p>{{ user.email }}</p>
+            <div class="hero-badge-row">
+              <span class="status-chip status-chip--lime">✓ Rider Terverifikasi</span>
+              <span class="status-chip status-chip--sand">Member GowesKit</span>
+            </div>
+          </div>
+        </div>
+
+        <!-- 3-Metric Quick Counters -->
+        <div class="hero-metrics-grid">
+          <NuxtLink to="/garage" class="metric-card">
+            <span class="metric-icon">🚲</span>
+            <span class="metric-value">{{ bikeCount }}</span>
+            <span class="metric-label">Sepeda Garasi</span>
+          </NuxtLink>
+
+          <NuxtLink to="/safety" class="metric-card">
+            <span class="metric-icon">🛡️</span>
+            <span class="metric-value">{{ contactCount }}</span>
+            <span class="metric-label">Kontak Darurat</span>
+          </NuxtLink>
+
+          <NuxtLink to="/community/reputation" class="metric-card">
+            <span class="metric-icon">🏆</span>
+            <span class="metric-value">{{ reputationScore }}</span>
+            <span class="metric-label">Skor Reputasi</span>
+          </NuxtLink>
+        </div>
+      </section>
+
+      <!-- 2. INSET GROUPED LIST: WORKSHOP & GARAGE -->
+      <section class="native-section">
+        <h3 class="section-label">Garasi &amp; Workshop</h3>
+        <div class="native-grouped-list">
+          <NuxtLink to="/garage" class="list-item">
+            <div class="item-icon-box bg-lime">🚲</div>
+            <div class="item-content">
+              <strong>My Garage</strong>
+              <small>Kelola sepeda, spesifikasi komponen, &amp; foto</small>
+            </div>
+            <span class="item-chevron">›</span>
+          </NuxtLink>
+
+          <NuxtLink to="/upgrade-lab" class="list-item">
+            <div class="item-icon-box bg-sky">⚡</div>
+            <div class="item-content">
+              <strong>Upgrade Lab</strong>
+              <small>Simulasi kecocokan komponen &amp; standar teknis</small>
+            </div>
+            <span class="item-chevron">›</span>
+          </NuxtLink>
+
+          <NuxtLink to="/learn" class="list-item">
+            <div class="item-icon-box bg-sand">📚</div>
+            <div class="item-content">
+              <strong>Katalog Anatomi &amp; Tipe Sepeda</strong>
+              <small>Pelajari standar as roda, headset, bottom bracket</small>
+            </div>
+            <span class="item-chevron">›</span>
+          </NuxtLink>
+        </div>
+      </section>
+
+      <!-- 3. INSET GROUPED LIST: SAFETY & COMMUNITY -->
+      <section class="native-section">
+        <h3 class="section-label">Keamanan &amp; Komunitas</h3>
+        <div class="native-grouped-list">
+          <NuxtLink to="/safety" class="list-item">
+            <div class="item-icon-box bg-coral">🛡️</div>
+            <div class="item-content">
+              <strong>Ride Safety &amp; Live Tracking</strong>
+              <small>Kontak terpercaya &amp; sesi gowes solo aman</small>
+            </div>
+            <span class="item-chevron">›</span>
+          </NuxtLink>
+
+          <NuxtLink to="/community" class="list-item">
+            <div class="item-icon-box bg-lime">👥</div>
+            <div class="item-content">
+              <strong>Komunitas &amp; Event Gowes</strong>
+              <small>Jadwal mabar, rute bersama, &amp; teman se-hobi</small>
+            </div>
+            <span class="item-chevron">›</span>
+          </NuxtLink>
+
+          <NuxtLink to="/community/reputation" class="list-item">
+            <div class="item-icon-box bg-sand">🏅</div>
+            <div class="item-content">
+              <strong>Skor &amp; Riwayat Kontribusi</strong>
+              <small>Poin reputasi laporan rute, review spot, &amp; GPX</small>
+            </div>
+            <span class="item-chevron">›</span>
+          </NuxtLink>
+        </div>
+      </section>
+
+      <!-- 4. INSET GROUPED LIST: PREFERENCES & DISPLAY -->
+      <section class="native-section">
+        <h3 class="section-label">Preferensi Tampilan</h3>
+        <div class="native-grouped-list">
+          <div class="list-item no-click">
+            <div class="item-icon-box bg-sand">📏</div>
+            <div class="item-content">
+              <strong>Satuan Jarak</strong>
+              <small>Format pengukuran rute dan servis</small>
+            </div>
+            <select v-model="distanceUnit" class="native-inline-select">
+              <option value="km">Kilometer (km)</option>
+              <option value="miles">Mil (miles)</option>
+            </select>
+          </div>
+
+          <div class="list-item no-click">
+            <div class="item-icon-box bg-sand">📍</div>
+            <div class="item-content">
+              <strong>Deteksi GPS Otomatis</strong>
+              <small>Fokuskan peta ke lokasi saya saat dibuka</small>
+            </div>
+            <input v-model="autoLocation" type="checkbox" class="native-toggle" />
+          </div>
+
+          <div class="list-item no-click">
+            <div class="item-icon-box bg-sand">🎨</div>
+            <div class="item-content">
+              <strong>Kontras Tinggi Diagram</strong>
+              <small>Pertegas garis anatomi rangka sepeda</small>
+            </div>
+            <input v-model="highContrast" type="checkbox" class="native-toggle" />
+          </div>
+        </div>
+      </section>
+
+      <!-- 5. INSET GROUPED LIST: NATIVE PWA & HARDWARE -->
+      <section class="native-section">
+        <h3 class="section-label">Aplikasi PWA &amp; Fitur Native</h3>
+        <div class="native-grouped-list">
+          <div class="list-item no-click">
+            <div class="item-icon-box bg-lime">📲</div>
+            <div class="item-content">
+              <strong>Status Mode Aplikasi</strong>
+              <small v-if="isStandalone">Telah terpasang sebagai Standalone PWA</small>
+              <small v-else-if="canInstall">Siap di-install ke layar beranda HP</small>
+              <small v-else>Berjalan di browser web mobile</small>
+            </div>
+            <span class="status-pill-small" :class="isStandalone ? 'pill--green' : 'pill--blue'">
+              {{ isStandalone ? 'Standalone' : (canInstall ? 'Siap Install' : 'Web') }}
+            </span>
+          </div>
+
           <button
-            class="button button--secondary button--sm"
+            v-if="!isStandalone && (canInstall || isIOS)"
+            class="list-item list-item--action"
+            type="button"
+            @click="isIOS ? (showInstallGuide = true) : installApp()"
+          >
+            <div class="item-icon-box bg-lime">⚡</div>
+            <div class="item-content">
+              <strong class="text-primary">{{ isIOS ? 'Tambah ke Home Screen (iOS Safari)' : 'Install GowesKit ke HP' }}</strong>
+              <small>Nikmati akses offline cepat dan layar penuh</small>
+            </div>
+            <span class="item-chevron">›</span>
+          </button>
+
+          <button class="list-item list-item--action" type="button" @click="testHaptic">
+            <div class="item-icon-box bg-sky">📳</div>
+            <div class="item-content">
+              <strong>Uji Respon Getar (Haptic Feedback)</strong>
+              <small>{{ hapticFeedbackSent ? '✓ Berhasil Bergetar!' : 'Sentuhan tombol SOS & navigasi' }}</small>
+            </div>
+            <span class="test-badge">{{ hapticFeedbackSent ? '✓ Aktif' : 'Tes' }}</span>
+          </button>
+        </div>
+      </section>
+
+      <!-- 6. LOGOUT BUTTON -->
+      <section class="native-section">
+        <div class="native-grouped-list">
+          <button
+            class="list-item list-item--danger"
             type="button"
             :disabled="signingOut"
             @click="signOut"
           >
-            {{ signingOut ? 'Signing out…' : 'Sign out' }}
-          </button>
-        </div>
-
-        <!-- Stats Overview -->
-        <dl class="profile-stats-grid">
-          <div class="profile-stat-box">
-            <dt>Garage Bikes</dt>
-            <dd>{{ bikeCount }}</dd>
-            <NuxtLink to="/garage" class="stat-link">Open Garage →</NuxtLink>
-          </div>
-          <div class="profile-stat-box">
-            <dt>Trusted Contacts</dt>
-            <dd>{{ contactCount }}</dd>
-            <NuxtLink to="/safety" class="stat-link">Manage Safety →</NuxtLink>
-          </div>
-          <div class="profile-stat-box">
-            <dt>Contribution Score</dt>
-            <dd>{{ reputationScore }}</dd>
-            <NuxtLink to="/community/reputation" class="stat-link">View Record →</NuxtLink>
-          </div>
-        </dl>
-      </section>
-
-      <!-- Quick Navigation Grid -->
-      <section class="menu-cards-grid" aria-label="Account shortcuts">
-        <NuxtLink class="menu-tile" to="/garage">
-          <span class="menu-tile__icon">🚲</span>
-          <div>
-            <strong>My Garage</strong>
-            <small>Manage bikes, installed components, and service notebook</small>
-          </div>
-        </NuxtLink>
-
-        <NuxtLink class="menu-tile" to="/upgrade-lab">
-          <span class="menu-tile__icon">⚡</span>
-          <div>
-            <strong>Upgrade Lab</strong>
-            <small>Evaluate candidate component compatibility</small>
-          </div>
-        </NuxtLink>
-
-        <NuxtLink class="menu-tile" to="/safety">
-          <span class="menu-tile__icon">🛡️</span>
-          <div>
-            <strong>Ride Safety</strong>
-            <small>Trusted contacts and expiring private share links</small>
-          </div>
-        </NuxtLink>
-
-        <NuxtLink class="menu-tile" to="/community/reputation">
-          <span class="menu-tile__icon">🏆</span>
-          <div>
-            <strong>Contributor Reputation</strong>
-            <small>Transparent activity score and moderation audit</small>
-          </div>
-        </NuxtLink>
-      </section>
-
-      <!-- Preferences & Settings -->
-      <section class="preferences-card" aria-labelledby="pref-title">
-        <h2 id="pref-title">Display Preferences</h2>
-        <div class="pref-options-stack">
-          <label class="pref-row">
-            <div>
-              <strong>Distance Unit</strong>
-              <small>Choose your preferred measurement scale</small>
+            <div class="item-icon-box bg-danger">🚪</div>
+            <div class="item-content">
+              <strong>{{ signingOut ? 'Keluar Akun…' : 'Keluar dari Akun' }}</strong>
             </div>
-            <select v-model="distanceUnit">
-              <option value="km">Kilometers (km / m)</option>
-              <option value="miles">Miles (mi / ft)</option>
-            </select>
-          </label>
-
-          <label class="pref-row">
-            <div>
-              <strong>High Contrast Borders</strong>
-              <small>Sharpen component diagrams and spec chips</small>
-            </div>
-            <input v-model="highContrast" type="checkbox" />
-          </label>
-        </div>
-      </section>
-
-      <!-- Native PWA App Status & Hardware Controls -->
-      <section class="pwa-settings-card" aria-labelledby="pwa-status-title">
-        <div class="pwa-settings-card__header">
-          <span class="pwa-settings-icon" aria-hidden="true">📲</span>
-          <div>
-            <p class="technical-label">Progressive Web App</p>
-            <h2 id="pwa-status-title">Native App Experience</h2>
-          </div>
-        </div>
-
-        <div class="pwa-status-row">
-          <div v-if="isStandalone" class="pwa-badge pwa-badge--installed">
-            <span>✓ Installed in Standalone App Mode</span>
-          </div>
-          <div v-else-if="canInstall" class="pwa-badge pwa-badge--ready">
-            <span>⚡ Ready to install on your device</span>
-          </div>
-          <div v-else class="pwa-badge pwa-badge--browser">
-            <span>🌐 Running in Mobile Browser</span>
-          </div>
-        </div>
-
-        <p class="pwa-desc">
-          GowesKit operates completely offline with service worker caching,
-          fullscreen standalone window mode, and haptic feedback.
-        </p>
-
-        <div class="action-row">
-          <button
-            v-if="!isStandalone && (canInstall || isIOS)"
-            class="button button--primary"
-            type="button"
-            @click="isIOS ? (showInstallGuide = true) : installApp()"
-          >
-            {{ isIOS ? '📱 Add to Home Screen (iOS)' : '⚡ Install App on Device' }}
-          </button>
-          <button
-            class="button button--secondary"
-            type="button"
-            @click="testHaptic"
-          >
-            {{ hapticFeedbackSent ? '✓ Vibrated!' : '📳 Test Haptic Feedback' }}
+            <span class="item-chevron">›</span>
           </button>
         </div>
       </section>
     </template>
 
-    <!-- Signed out State -->
-    <div v-else class="state-card guest-me-card">
-      <span class="guest-me-icon">👤</span>
-      <h2>You are currently in Guest Mode</h2>
+    <!-- 7. SIGNED OUT / GUEST STATE -->
+    <div v-else class="native-guest-card">
+      <div class="guest-icon">🚲</div>
+      <h2>Anda Berada dalam Mode Tamu</h2>
       <p>
-        Sign in to save your personal bikes, record maintenance history, and
-        start private solo-ride safety sessions.
+        Masuk akun GowesKit untuk menyimpan sepeda di My Garage, mencatat riwayat servis, dan mengaktifkan fitur keselamatan solo-ride.
       </p>
 
-      <div class="action-row">
+      <div class="guest-actions">
+        <NuxtLink class="button button--primary button--full" to="/login">
+          Masuk ke Akun
+        </NuxtLink>
+        <NuxtLink class="button button--secondary button--full" to="/register">
+          Daftar Akun Baru
+        </NuxtLink>
         <button
-          class="button button--primary"
+          class="button button--sand button--full"
           type="button"
           :disabled="demoLoggingIn"
           @click="quickDemoLogin"
         >
-          {{ demoLoggingIn ? 'Signing in…' : '⚡ 1-Click Demo Login' }}
+          {{ demoLoggingIn ? 'Memuat Demo…' : '⚡ Masuk dengan Akun Demo (1-Klik)' }}
         </button>
-        <NuxtLink class="button button--secondary" to="/login">Sign in with email</NuxtLink>
-        <NuxtLink class="button button--secondary" to="/register">Create new account</NuxtLink>
       </div>
     </div>
 
-    <p
-      v-if="errorMessage"
-      class="form-message form-message--error"
-      role="alert"
-    >
+    <p v-if="errorMessage" class="state-card state-card--error" role="alert">
       {{ errorMessage }}
     </p>
   </div>
 </template>
 
 <style scoped>
-.profile-page {
-  gap: 2rem;
-}
-
-.profile-card {
+.profile-container {
   display: grid;
   gap: 1.5rem;
-  padding: clamp(1.25rem, 5vw, 2.25rem);
-  border: 1px solid rgb(64 80 95 / 14%);
-  border-radius: var(--radius-card);
-  background: var(--color-white);
-  box-shadow: var(--shadow-card);
+  padding-bottom: 2rem;
 }
 
-.profile-card__header {
+.native-page-header {
   display: grid;
-  grid-template-columns: auto 1fr auto;
-  align-items: center;
-  gap: 1.25rem;
+  gap: 0.25rem;
 }
 
-.profile-card__avatar {
-  display: grid;
-  width: 4.5rem;
-  height: 4.5rem;
-  place-items: center;
-  border-radius: 1.25rem;
-  background: var(--color-chain-lime);
-  font-size: 2rem;
-  font-weight: 900;
-}
-
-.profile-card__details h2 {
-  margin: 0 0 0.2rem;
-  font-size: 1.6rem;
-  letter-spacing: -0.03em;
-}
-
-.profile-card__details p {
-  margin: 0 0 0.5rem;
-  color: var(--color-asphalt);
-}
-
-.profile-stats-grid {
-  display: grid;
-  grid-template-columns: repeat(auto-fit, minmax(10rem, 1fr));
-  gap: 0.85rem;
-  margin: 0;
-  padding-top: 1rem;
-  border-top: 1px solid var(--color-sand);
-}
-
-.profile-stat-box {
-  padding: 1rem;
-  border-radius: 1rem;
-  background: rgb(237 228 210 / 35%);
-}
-
-.profile-stat-box dt {
+.native-eyebrow {
+  font-family: var(--font-mono);
   font-size: 0.72rem;
-  font-weight: 800;
+  font-weight: 850;
   text-transform: uppercase;
   color: var(--color-asphalt);
+  letter-spacing: 0.05em;
 }
 
-.profile-stat-box dd {
-  margin: 0.25rem 0 0.5rem;
-  font-family: ui-monospace, monospace;
-  font-size: 1.8rem;
-  font-weight: 900;
-}
-
-.stat-link {
-  font-size: 0.78rem;
-  font-weight: 800;
+.native-title {
+  margin: 0;
+  font-size: 1.65rem;
+  font-weight: 850;
+  letter-spacing: -0.03em;
   color: var(--color-ink);
-  text-decoration: none;
 }
 
-.stat-link:hover {
-  text-decoration: underline;
-}
-
-.menu-cards-grid {
-  display: grid;
-  grid-template-columns: repeat(auto-fit, minmax(15rem, 1fr));
-  gap: 0.85rem;
-}
-
-.menu-tile {
-  display: flex;
-  align-items: center;
-  gap: 1rem;
-  padding: 1.15rem;
-  border: 1px solid var(--color-sand);
-  border-radius: var(--radius-card);
-  background: var(--color-white);
-  color: inherit;
-  text-decoration: none;
-  box-shadow: var(--shadow-card);
-  transition: border-color 120ms ease, transform 120ms ease;
-}
-
-.menu-tile:hover {
-  border-color: var(--color-ink);
-  transform: translateY(-2px);
-}
-
-.menu-tile__icon {
-  font-size: 1.8rem;
-}
-
-.menu-tile strong {
-  display: block;
-  font-size: 1rem;
-}
-
-.menu-tile small {
+.native-sub {
+  margin: 0;
+  font-size: 0.84rem;
   color: var(--color-asphalt);
-  font-size: 0.78rem;
   line-height: 1.4;
 }
 
-.preferences-card {
-  padding: 1.35rem;
-  border: 1px solid var(--color-sand);
-  border-radius: var(--radius-card);
-  background: var(--color-white);
-  box-shadow: var(--shadow-card);
-}
-
-.preferences-card h2 {
-  margin: 0 0 1rem;
-  font-size: 1.3rem;
-}
-
-.pref-options-stack {
+/* Hero Profile Card */
+.native-hero-card {
   display: grid;
+  gap: 1.25rem;
+  padding: 1.25rem;
+  border-radius: 1.35rem;
+  background: var(--color-white);
+  border: 1px solid var(--color-sand);
+  box-shadow: 0 4px 20px rgb(23 32 42 / 5%);
+}
+
+.hero-user-row {
+  display: flex;
+  align-items: center;
   gap: 1rem;
 }
 
-.pref-row {
+.hero-avatar {
+  width: 3.8rem;
+  height: 3.8rem;
+  border-radius: 1rem;
+  background: var(--color-chain-lime);
+  border: 2px solid var(--color-ink);
+  display: grid;
+  place-items: center;
+  font-size: 1.5rem;
+  font-weight: 900;
+  color: var(--color-ink);
+  box-shadow: 0 2px 0 var(--color-ink);
+  flex-shrink: 0;
+}
+
+.hero-user-info {
+  display: grid;
+  gap: 0.2rem;
+  min-width: 0;
+}
+
+.hero-user-info h2 {
+  margin: 0;
+  font-size: 1.2rem;
+  font-weight: 850;
+  letter-spacing: -0.02em;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.hero-user-info p {
+  margin: 0;
+  font-size: 0.78rem;
+  color: var(--color-asphalt);
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.hero-badge-row {
+  display: flex;
+  gap: 0.35rem;
+  margin-top: 0.2rem;
+  flex-wrap: wrap;
+}
+
+/* 3-Metrics Grid */
+.hero-metrics-grid {
+  display: grid;
+  grid-template-columns: 1fr 1fr 1fr;
+  gap: 0.65rem;
+  padding-top: 0.85rem;
+  border-top: 1px solid var(--color-sand);
+}
+
+.metric-card {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  text-align: center;
+  padding: 0.65rem 0.4rem;
+  border-radius: 0.85rem;
+  background: var(--color-canvas);
+  border: 1px solid var(--color-sand);
+  text-decoration: none;
+  color: var(--color-ink);
+  transition: transform 90ms ease, background-color 120ms ease;
+}
+
+.metric-card:active {
+  transform: scale(0.96);
+  background: rgb(201 243 106 / 20%);
+}
+
+.metric-icon {
+  font-size: 1.15rem;
+  margin-bottom: 0.15rem;
+}
+
+.metric-value {
+  font-size: 1.2rem;
+  font-weight: 900;
+  letter-spacing: -0.03em;
+}
+
+.metric-label {
+  font-size: 0.66rem;
+  font-weight: 750;
+  color: var(--color-asphalt);
+}
+
+/* Native Inset Grouped Lists (iOS Settings Style) */
+.native-section {
+  display: grid;
+  gap: 0.45rem;
+}
+
+.section-label {
+  margin: 0 0 0 0.35rem;
+  font-size: 0.74rem;
+  font-weight: 800;
+  text-transform: uppercase;
+  color: var(--color-asphalt);
+  letter-spacing: 0.04em;
+}
+
+.native-grouped-list {
+  display: flex;
+  flex-direction: column;
+  border-radius: 1.15rem;
+  background: var(--color-white);
+  border: 1px solid var(--color-sand);
+  overflow: hidden;
+  box-shadow: 0 2px 10px rgb(23 32 42 / 3%);
+}
+
+.list-item {
   display: flex;
   align-items: center;
-  justify-content: space-between;
-  padding: 0.85rem;
-  border-radius: 0.85rem;
-  background: rgb(237 228 210 / 25%);
+  gap: 0.85rem;
+  padding: 0.75rem 1rem;
+  text-decoration: none;
+  color: var(--color-ink);
+  background: var(--color-white);
+  border: none;
+  border-bottom: 1px solid rgb(23 32 42 / 6%);
+  width: 100%;
+  text-align: left;
+  cursor: pointer;
+  transition: background-color 100ms ease;
+}
+
+.list-item:last-child {
+  border-bottom: none;
+}
+
+.list-item:not(.no-click):active {
+  background: rgb(23 32 42 / 4%);
+}
+
+.list-item--danger strong {
+  color: #dc2626;
+}
+
+.item-icon-box {
+  width: 2.1rem;
+  height: 2.1rem;
+  border-radius: 0.65rem;
+  display: grid;
+  place-items: center;
+  font-size: 1.05rem;
+  flex-shrink: 0;
+}
+
+.bg-lime {
+  background: rgb(201 243 106 / 40%);
+}
+
+.bg-sky {
+  background: rgb(142 221 244 / 45%);
+}
+
+.bg-coral {
+  background: rgb(255 140 117 / 30%);
+}
+
+.bg-sand {
+  background: var(--color-sand);
+}
+
+.bg-danger {
+  background: #fee2e2;
+}
+
+.item-content {
+  flex: 1;
+  min-width: 0;
+  display: grid;
+  gap: 0.1rem;
+}
+
+.item-content strong {
+  font-size: 0.86rem;
+  font-weight: 800;
+  letter-spacing: -0.01em;
+}
+
+.item-content small {
+  font-size: 0.72rem;
+  color: var(--color-asphalt);
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.item-chevron {
+  font-size: 1.15rem;
+  color: var(--color-asphalt);
+  opacity: 0.45;
+  font-weight: 600;
+}
+
+.native-inline-select {
+  padding: 0.35rem 0.6rem;
+  border-radius: 0.5rem;
+  border: 1px solid var(--color-sand);
+  background: var(--color-sand);
+  font-size: 0.78rem;
+  font-weight: 750;
+  color: var(--color-ink);
+  outline: none;
+}
+
+.native-toggle {
+  width: 2.5rem;
+  height: 1.4rem;
+  accent-color: var(--color-ink);
   cursor: pointer;
 }
 
-.pref-row strong {
-  display: block;
-  font-size: 0.9rem;
+.status-pill-small {
+  font-family: var(--font-mono);
+  font-size: 0.65rem;
+  font-weight: 850;
+  padding: 0.15rem 0.5rem;
+  border-radius: 9999px;
 }
 
-.pref-row small {
-  color: var(--color-asphalt);
-  font-size: 0.78rem;
+.pill--green {
+  background: rgb(201 243 106 / 50%);
+  color: #166534;
 }
 
-.pref-row select {
-  padding: 0.45rem 0.65rem;
+.pill--blue {
+  background: #e0f2fe;
+  color: #0369a1;
+}
+
+.test-badge {
+  font-size: 0.72rem;
+  font-weight: 800;
+  padding: 0.2rem 0.55rem;
   border-radius: 0.5rem;
-  border: 1px solid var(--color-sand);
-  background: var(--color-white);
-  font: inherit;
+  background: var(--color-sand);
+  color: var(--color-ink);
 }
 
-.pref-row input[type='checkbox'] {
-  width: 1.25rem;
-  height: 1.25rem;
-  accent-color: var(--color-ink);
-}
-
-.guest-me-card {
+/* Guest Card */
+.native-guest-card {
   display: grid;
   gap: 1rem;
-  padding: clamp(1.5rem, 5vw, 2.5rem);
-  text-align: left;
-}
-
-.guest-me-icon {
-  font-size: 2.5rem;
-}
-
-.guest-me-card h2 {
-  margin: 0;
-}
-
-.guest-me-card p {
-  margin: 0;
-  color: var(--color-asphalt);
-}
-
-.button--sm {
-  min-height: 2.3rem;
-  padding: 0.35rem 0.75rem;
-  font-size: 0.8rem;
-}
-
-.pwa-settings-card {
-  display: grid;
-  gap: 1rem;
-  padding: 1.35rem;
-  border: 1px solid var(--color-sand);
-  border-radius: var(--radius-card);
+  text-align: center;
+  padding: 2rem 1.5rem;
+  border-radius: 1.35rem;
   background: var(--color-white);
-  box-shadow: var(--shadow-card);
+  border: 1px solid var(--color-sand);
 }
 
-.pwa-settings-card__header {
-  display: flex;
-  align-items: center;
-  gap: 0.75rem;
+.guest-icon {
+  font-size: 3rem;
 }
 
-.pwa-settings-icon {
-  font-size: 1.8rem;
-}
-
-.pwa-settings-card__header h2 {
+.native-guest-card h2 {
   margin: 0;
   font-size: 1.3rem;
+  font-weight: 850;
 }
 
-.pwa-status-row {
-  display: flex;
-  flex-wrap: wrap;
-  gap: 0.5rem;
-}
-
-.pwa-badge {
-  padding: 0.35rem 0.65rem;
-  border-radius: 0.6rem;
-  font-size: 0.76rem;
-  font-weight: 800;
-}
-
-.pwa-badge--installed {
-  background: rgb(201 243 106 / 40%);
-  color: #2b7a1e;
-}
-
-.pwa-badge--ready {
-  background: rgb(142 221 244 / 45%);
-  color: #176b87;
-}
-
-.pwa-badge--browser {
-  background: var(--color-sand);
-  color: var(--color-asphalt);
-}
-
-.pwa-desc {
+.native-guest-card p {
   margin: 0;
+  font-size: 0.84rem;
   color: var(--color-asphalt);
-  font-size: 0.85rem;
-  line-height: 1.5;
+  line-height: 1.4;
 }
 
-@media (max-width: 48rem) {
-  .profile-card__header {
-    grid-template-columns: 1fr;
-    justify-items: start;
-  }
+.guest-actions {
+  display: grid;
+  gap: 0.65rem;
+  margin-top: 0.5rem;
 }
 </style>
