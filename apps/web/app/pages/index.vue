@@ -2,7 +2,6 @@
 import type {
   Bike,
   BikeListResponse,
-  NearbyCommunity,
   NearbyEvent,
   NearbyEventsResponse,
   NearbyExploreResponse,
@@ -13,7 +12,7 @@ import type {
 const api = useApi();
 const { user, initialized, refresh } = useAuth();
 const { weather, fetchLiveWeather } = useWeather();
-const { coords: userCoords, cityName: userCityName, isLiveGps, requestLocation } = useUserLocation();
+const { cityName: userCityName, isLiveGps, requestLocation } = useUserLocation();
 
 const bikes = ref<Bike[]>([]);
 const routes = ref<NearbyRoute[]>([]);

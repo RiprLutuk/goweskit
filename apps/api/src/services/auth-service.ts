@@ -76,11 +76,9 @@ export class AuthService {
         });
       }
 
-      if (storedUser === null) {
-        storedUser = await this.repository.findUserByGoogleSubject(
-          identity.subject,
-        );
-      }
+      storedUser ??= await this.repository.findUserByGoogleSubject(
+        identity.subject,
+      );
       if (storedUser === null) {
         throw new AppError(
           'AUTH_GOOGLE_ACCOUNT_CONFLICT',
@@ -122,10 +120,11 @@ export class AuthService {
 
   public async login(input: LoginRequest): Promise<AuthenticatedSession> {
     const storedUser = await this.repository.findUserByEmail(input.email);
+    const passwordHash = storedUser?.passwordHash;
     if (
-      storedUser === null ||
-      storedUser.passwordHash === null ||
-      !(await verifyPassword(input.password, storedUser.passwordHash))
+      passwordHash === undefined ||
+      passwordHash === null ||
+      !(await verifyPassword(input.password, passwordHash))
     ) {
       throw new AppError(
         'AUTH_INVALID_CREDENTIALS',

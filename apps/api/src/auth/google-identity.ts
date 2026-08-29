@@ -31,20 +31,26 @@ export class GoogleIdentityVerifier {
         audience: this.clientId,
       });
       const payload = ticket.getPayload();
-      const email = payload?.email?.trim().toLowerCase();
-      const subject = payload?.sub?.trim();
+      if (payload === undefined) {
+        throw new Error('Google identity claims are incomplete.');
+      }
+      const email = payload.email?.trim().toLowerCase();
+      const subject = payload.sub.trim();
       if (
-        payload === undefined ||
         payload.email_verified !== true ||
         email === undefined ||
         email.length === 0 ||
-        subject === undefined ||
         subject.length === 0
       ) {
         throw new Error('Google identity claims are incomplete.');
       }
       const fallbackName = email.split('@')[0] ?? 'Rider';
-      const displayName = (payload.name?.trim() || fallbackName).slice(0, 80);
+      const googleName = payload.name?.trim();
+      const displayName = (
+        googleName === undefined || googleName.length === 0
+          ? fallbackName
+          : googleName
+      ).slice(0, 80);
       const emailDomain = email.split('@')[1] ?? '';
       return {
         displayName,

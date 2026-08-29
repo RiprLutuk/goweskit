@@ -40,6 +40,7 @@ import type { GarageService } from './services/garage-service.js';
 import type { InstalledComponentService } from './services/installed-component-service.js';
 import type { MaintenanceService } from './services/maintenance-service.js';
 import type { SavedItemService } from './services/saved-item-service.js';
+import type { OtpService } from './services/otp-service.js';
 
 export interface HealthResponse {
   status: 'ok';
@@ -73,6 +74,7 @@ export interface AppServices {
 export interface BuildAppOptions {
   authRateLimiter?: AuthRateLimiter;
   googleIdentityVerifier?: GoogleIdentityVerifier;
+  otpService?: OtpService;
   services?: AppServices;
   cookieSecure?: boolean;
   logger?: FastifyServerOptions['logger'];
@@ -215,6 +217,9 @@ export function buildApp(options: BuildAppOptions = {}): FastifyInstance {
       ...(options.googleIdentityVerifier === undefined
         ? {}
         : { googleIdentityVerifier: options.googleIdentityVerifier }),
+      ...(options.otpService === undefined
+        ? {}
+        : { otpService: options.otpService }),
     });
     registerLearnRoutes(app, options.services.catalog);
     registerGarageRoutes(app, options.services.auth, options.services.garage);

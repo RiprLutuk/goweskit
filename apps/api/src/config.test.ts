@@ -16,6 +16,7 @@ describe('API configuration', () => {
     expect(readConfig(environment)).toMatchObject({
       environment: 'development',
       googleClientId: null,
+      otpDemoEnabled: true,
       r2: {
         accountId: 'account-id',
         accessKeyId: 'access-key-id',
@@ -45,6 +46,7 @@ describe('API configuration', () => {
     expect(readConfig(production)).toMatchObject({
       environment: 'production',
       googleClientId: 'google-client-id.apps.googleusercontent.com',
+      otpDemoEnabled: false,
       sessionCookieSecure: true,
       trustProxyHops: 1,
       webOrigin: 'https://goweskit.example',
@@ -54,6 +56,7 @@ describe('API configuration', () => {
       { ...production, SESSION_COOKIE_SECURE: 'false' },
       { ...production, TRUST_PROXY_HOPS: '0' },
       { ...production, WEB_ORIGIN: 'http://goweskit.example' },
+      { ...production, OTP_DEMO_ENABLED: 'true' },
     ]) {
       expect(() => readConfig(invalid)).toThrow();
     }

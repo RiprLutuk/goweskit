@@ -1,11 +1,8 @@
 <script setup lang="ts">
 import {
-  FRESHNESS_STATUSES,
   PLACE_TYPES,
   ROUTE_DIFFICULTIES,
-  ROUTE_SURFACES,
   ROUTE_TYPES,
-  VERIFICATION_STATUSES,
   type Coordinate,
   type NearbyExploreResponse,
   type NearbyPlace,

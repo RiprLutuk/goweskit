@@ -10,7 +10,6 @@ const anatomy = ref<BicycleAnatomy | null>(null);
 const loading = ref(true);
 const errorMessage = ref('');
 const activeHotspotIndex = ref<number | null>(null);
-const categoryFilter = ref('all');
 
 const slug = computed(() => String(route.params.slug));
 
@@ -30,18 +29,6 @@ async function loadAnatomy(): Promise<void> {
     loading.value = false;
   }
 }
-
-const activeHotspot = computed(() => {
-  if (
-    anatomy.value === null ||
-    activeHotspotIndex.value === null ||
-    activeHotspotIndex.value < 0 ||
-    activeHotspotIndex.value >= anatomy.value.hotspots.length
-  ) {
-    return null;
-  }
-  return anatomy.value.hotspots[activeHotspotIndex.value];
-});
 
 function selectHotspot(index: number | null): void {
   if (index === null || activeHotspotIndex.value === index) {

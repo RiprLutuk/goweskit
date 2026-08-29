@@ -41,6 +41,7 @@ export const apiErrorCodeSchema = z.enum([
   'OTP_EXPIRED',
   'OTP_MAX_ATTEMPTS_EXCEEDED',
   'OTP_INVALID',
+  'OTP_UNAVAILABLE',
   'INTERNAL_ERROR',
 ]);
 

@@ -14,24 +14,42 @@ export const OTP_EXPIRATION_SECONDS = 300; // 5 minutes
 export const OTP_RESEND_COOLDOWN_SECONDS = 30; // 30 seconds cooldown between resends
 export const MAX_OTP_ATTEMPTS = 5;
 
+export interface OtpServiceOptions {
+  allowTestCode?: boolean;
+  enabled?: boolean;
+  exposeCode?: boolean;
+}
+
 export class OtpService {
   private readonly store = new Map<string, OtpRecord>();
+  private readonly allowTestCode: boolean;
+  private readonly enabled: boolean;
+  private readonly exposeCode: boolean;
+
+  public constructor(options: OtpServiceOptions = {}) {
+    this.allowTestCode = options.allowTestCode ?? true;
+    this.enabled = options.enabled ?? true;
+    this.exposeCode = options.exposeCode ?? true;
+  }
 
   /**
    * Generates and stores a 6-digit OTP code for the given email.
    */
-  public async sendOtp(input: SendOtpRequest): Promise<SendOtpResponse> {
+  public sendOtp(input: SendOtpRequest): SendOtpResponse {
+    this.assertEnabled();
     const normalizedEmail = input.email.trim().toLowerCase();
     const now = Date.now();
 
     const existing = this.store.get(normalizedEmail);
     if (existing !== undefined) {
-      const elapsedSinceLastSend = Math.floor((now - existing.lastSentAt) / 1000);
+      const elapsedSinceLastSend = Math.floor(
+        (now - existing.lastSentAt) / 1000,
+      );
       if (elapsedSinceLastSend < OTP_RESEND_COOLDOWN_SECONDS) {
         const waitTime = OTP_RESEND_COOLDOWN_SECONDS - elapsedSinceLastSend;
         throw new AppError(
           'OTP_RATE_LIMITED',
-          `Silakan tunggu ${waitTime} detik sebelum meminta kode OTP baru.`,
+          `Silakan tunggu ${String(waitTime)} detik sebelum meminta kode OTP baru.`,
           429,
         );
       }
@@ -48,13 +66,11 @@ export class OtpService {
       lastSentAt: now,
     });
 
-    // In a production setup with SMTP/SES/Resend, dispatch email here.
-    // For local development and demo testing, include demoOtp for frictionless UX.
     return {
       success: true,
-      message: `Kode verifikasi OTP 6-digit telah dikirim ke ${normalizedEmail}.`,
+      message: `Kode verifikasi OTP 6-digit tersedia untuk ${normalizedEmail}.`,
       expiresInSeconds: OTP_EXPIRATION_SECONDS,
-      demoOtp: code,
+      ...(this.exposeCode ? { demoOtp: code } : {}),
     };
   }
 
@@ -62,11 +78,12 @@ export class OtpService {
    * Verifies the OTP code for an email. Consumes the OTP if valid.
    */
   public verifyOtp(email: string, code: string): boolean {
+    this.assertEnabled();
     const normalizedEmail = email.trim().toLowerCase();
     const trimmedCode = code.trim();
 
     // Universal test/demo bypass code for automated integration tests
-    if (trimmedCode === '123456') {
+    if (this.allowTestCode && trimmedCode === '123456') {
       return true;
     }
 
@@ -102,7 +119,7 @@ export class OtpService {
       const remaining = MAX_OTP_ATTEMPTS - record.attempts;
       throw new AppError(
         'OTP_INVALID',
-        `Kode OTP salah. Sisa ${remaining} kesempatan percobaan.`,
+        `Kode OTP salah. Sisa ${String(remaining)} kesempatan percobaan.`,
         400,
       );
     }
@@ -110,5 +127,15 @@ export class OtpService {
     // Successfully verified -> consume OTP
     this.store.delete(normalizedEmail);
     return true;
+  }
+
+  private assertEnabled(): void {
+    if (!this.enabled) {
+      throw new AppError(
+        'OTP_UNAVAILABLE',
+        'Email OTP is not configured. Continue with Google or password sign-in.',
+        503,
+      );
+    }
   }
 }

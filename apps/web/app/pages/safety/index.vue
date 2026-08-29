@@ -12,7 +12,7 @@ import type {
 import { buildSafetyShareUrl, SOS_HOLD_DURATION_MS } from '../../safety';
 
 const api = useApi();
-const { user, initialized, refresh, login } = useAuth();
+const { user, initialized, refresh } = useAuth();
 const { triggerHaptic } = usePwa();
 
 const contacts = ref<TrustedContact[]>([]);

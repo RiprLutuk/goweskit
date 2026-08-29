@@ -13,6 +13,7 @@ const environmentSchema = z.object({
   API_PORT: z.coerce.number().int().min(1).max(65_535).default(4000),
   DATABASE_URL: z.url().default('postgresql://lutuk@localhost:1921/goweskit'),
   GOOGLE_CLIENT_ID: optionalSecret,
+  OTP_DEMO_ENABLED: z.enum(['true', 'false']).optional(),
   R2_ACCOUNT_ID: z.string().trim().min(1),
   R2_ACCESS_KEY_ID: z.string().trim().min(1),
   R2_SECRET_ACCESS_KEY: z.string().trim().min(1),
@@ -42,6 +43,7 @@ export interface AppConfig {
   databaseUrl: string;
   environment: 'development' | 'test' | 'production';
   googleClientId: string | null;
+  otpDemoEnabled: boolean;
   r2: {
     accountId: string;
     accessKeyId: string;
@@ -73,6 +75,9 @@ export function readConfig(
     if (parsed.GOOGLE_CLIENT_ID === undefined) {
       throw new Error('GOOGLE_CLIENT_ID is required in production.');
     }
+    if (parsed.OTP_DEMO_ENABLED === 'true') {
+      throw new Error('OTP_DEMO_ENABLED cannot be true in production.');
+    }
   }
 
   return {
@@ -80,6 +85,10 @@ export function readConfig(
     databaseUrl: parsed.DATABASE_URL,
     environment: parsed.NODE_ENV,
     googleClientId: parsed.GOOGLE_CLIENT_ID ?? null,
+    otpDemoEnabled:
+      parsed.OTP_DEMO_ENABLED === undefined
+        ? parsed.NODE_ENV !== 'production'
+        : parsed.OTP_DEMO_ENABLED === 'true',
     r2: {
       accountId: parsed.R2_ACCOUNT_ID,
       accessKeyId: parsed.R2_ACCESS_KEY_ID,
