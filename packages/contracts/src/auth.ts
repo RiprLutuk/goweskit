@@ -54,3 +54,5 @@ export type GoogleAuthRequest = z.infer<typeof googleAuthRequestSchema>;
 
 export const authUserResponseSchema = z.object({ user: userSchema });
 export type AuthUserResponse = z.infer<typeof authUserResponseSchema>;
+
+export const SESSION_COOKIE_NAME = 'goweskit_session';

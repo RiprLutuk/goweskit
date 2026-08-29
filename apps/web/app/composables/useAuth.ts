@@ -1,17 +1,26 @@
-import type {
-  AuthUserResponse,
-  GoogleAuthRequest,
-  LoginRequest,
-  RegisterRequest,
-  User,
+import {
+  SESSION_COOKIE_NAME,
+  type AuthUserResponse,
+  type GoogleAuthRequest,
+  type LoginRequest,
+  type RegisterRequest,
+  type User,
 } from '@goweskit/contracts';
 
 export function useAuth() {
   const api = useApi();
+  const sessionCookie = useCookie(SESSION_COOKIE_NAME);
   const user = useState<User | null>('auth-user', () => null);
   const initialized = useState('auth-initialized', () => false);
 
   async function refresh(): Promise<User | null> {
+    // If no session cookie is present, do not fire an unauthenticated request that yields 401
+    if (!sessionCookie.value) {
+      user.value = null;
+      initialized.value = true;
+      return null;
+    }
+
     try {
       const response = await api<AuthUserResponse>('/auth/me');
       user.value = response.user;
