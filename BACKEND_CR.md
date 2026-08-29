@@ -141,10 +141,13 @@ This document tracks all backend API Change Requests (CR), endpoint proposals, a
   "success": true,
   "message": "Kode verifikasi OTP 6-digit telah dikirim ke rider@example.com.",
   "expiresInSeconds": 300,
-  "demoOtp": "123456"
+  "demoOtp": "<local development only>"
 }
 ```
 - **Rate Limiting**: Cooldown 30 detik antar permintaan kirim ulang, maksimal 5x percobaan salah per kode OTP.
+- **Production boundary**: `OTP_DEMO_ENABLED=false`; demo OTP and the universal
+  test code are disabled. Google auth accepts only a signed Google ID token and
+  the API verifies it against `GOOGLE_CLIENT_ID` before creating a session.
 
 ---
 
@@ -161,5 +164,4 @@ This document tracks all backend API Change Requests (CR), endpoint proposals, a
   - `R2_KEY_PREFIX`: Bucket key prefix (default: `goweskit/bike-photos`).
 - **Lifecycle**: Uploads with immutable cache-control, auto-deletes old objects from R2 when photo is replaced or removed.
 - **Elevation Sample Density**: Titik koordinat elevasi rute saat ini dihitung secara deterministik berbasis titik GPX rute terverifikasi.
-
 

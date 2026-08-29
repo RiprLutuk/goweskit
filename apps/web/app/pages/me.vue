@@ -6,6 +6,7 @@ const api = useApi();
 const { user, initialized, refresh, logout, login } = useAuth();
 const { loading: googleLoading, triggerGoogleSignIn } = useGoogleAuth();
 const { canInstall, isStandalone, isIOS, showInstallGuide, installApp, triggerHaptic } = usePwa();
+const { toast, alert } = useNotify();
 
 const errorMessage = ref('');
 const signingOut = ref(false);
@@ -46,13 +47,22 @@ async function loadUserStats(): Promise<void> {
 function testHaptic(): void {
   triggerHaptic([30, 60, 30]);
   hapticFeedbackSent.value = true;
+  toast.info('Haptic Feedback Aktif', 'Getaran respon perangkat berhasil dipicu.');
   setTimeout(() => {
     hapticFeedbackSent.value = false;
   }, 2000);
 }
 
 async function signOut(): Promise<void> {
-  if (!window.confirm('Yakin ingin keluar dari akun GowesKit?')) return;
+  const confirmed = await alert.confirm({
+    title: 'Keluar dari Akun?',
+    text: 'Sesi login Anda akan diakhiri dengan aman.',
+    confirmText: 'Ya, Keluar Akun',
+    cancelText: 'Tetap Masuk',
+    icon: 'warning',
+  });
+  if (!confirmed) return;
+
   signingOut.value = true;
   errorMessage.value = '';
   try {
@@ -60,8 +70,11 @@ async function signOut(): Promise<void> {
     bikeCount.value = 0;
     contactCount.value = 0;
     reputationScore.value = 0;
+    toast.success('Berhasil Keluar', 'Sampai jumpa di gowes berikutnya!');
   } catch (error: unknown) {
-    errorMessage.value = getApiErrorMessage(error);
+    const msg = getApiErrorMessage(error);
+    errorMessage.value = msg;
+    alert.error('Gagal Keluar Akun', msg);
   } finally {
     signingOut.value = false;
   }
@@ -75,9 +88,12 @@ async function quickDemoLogin(): Promise<void> {
       email: 'demo@goweskit.local',
       password: 'GowesKitDemo123!',
     });
+    toast.success('Login Demo Berhasil', 'Masuk sebagai Demo Rider.');
     await loadUserStats();
   } catch (error: unknown) {
-    errorMessage.value = getApiErrorMessage(error);
+    const msg = getApiErrorMessage(error);
+    errorMessage.value = msg;
+    alert.error('Gagal Masuk Demo', msg);
   } finally {
     demoLoggingIn.value = false;
   }

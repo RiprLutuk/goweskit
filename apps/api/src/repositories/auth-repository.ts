@@ -1,5 +1,5 @@
 import type { User } from '@goweskit/contracts';
-import { and, eq, gt, isNull } from 'drizzle-orm';
+import { and, eq, gt } from 'drizzle-orm';
 
 import type { Database } from '../db/client.js';
 import { sessions, users } from '../db/schema.js';
@@ -24,10 +24,6 @@ export interface AuthRepository {
   }): Promise<StoredUser | null>;
   findUserByEmail(email: string): Promise<StoredUser | null>;
   findUserByGoogleSubject(subject: string): Promise<StoredUser | null>;
-  linkGoogleSubject(
-    userId: string,
-    subject: string,
-  ): Promise<StoredUser | null>;
   createSession(
     userId: string,
     tokenHash: string,
@@ -106,23 +102,6 @@ export class DrizzleAuthRepository implements AuthRepository {
         .values({ ...input, passwordHash: null })
         .returning();
       return created === undefined ? null : toStoredUser(created);
-    } catch (error: unknown) {
-      if (isUniqueViolation(error)) return null;
-      throw error;
-    }
-  }
-
-  public async linkGoogleSubject(
-    userId: string,
-    subject: string,
-  ): Promise<StoredUser | null> {
-    try {
-      const [updated] = await this.database
-        .update(users)
-        .set({ googleSubject: subject, updatedAt: new Date() })
-        .where(and(eq(users.id, userId), isNull(users.googleSubject)))
-        .returning();
-      return updated === undefined ? null : toStoredUser(updated);
     } catch (error: unknown) {
       if (isUniqueViolation(error)) return null;
       throw error;

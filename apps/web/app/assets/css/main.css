@@ -1385,3 +1385,164 @@ button, a, input, select, textarea, [role="button"] {
     transition-duration: 0.01ms !important;
   }
 }
+
+/* ══════════════════════════════════════════════════════════
+   GOWESKIT SWEETALERT2 & TOAST CUSTOM THEME
+   ══════════════════════════════════════════════════════════ */
+.goweskit-modal-popup {
+  border-radius: 1.5rem !important;
+  padding: 2rem 1.5rem 1.75rem !important;
+  background: var(--color-white) !important;
+  border: 1px solid var(--color-sand) !important;
+  box-shadow: 0 24px 60px rgb(23 32 42 / 22%) !important;
+  font-family: var(--font-ui) !important;
+  max-width: 90vw !important;
+  width: 26rem !important;
+}
+
+.goweskit-modal-title {
+  font-size: 1.35rem !important;
+  font-weight: 850 !important;
+  letter-spacing: -0.02em !important;
+  color: var(--color-ink) !important;
+  margin-top: 0.5rem !important;
+}
+
+.goweskit-modal-text {
+  font-size: 0.88rem !important;
+  color: var(--color-asphalt) !important;
+  line-height: 1.45 !important;
+  margin-top: 0.4rem !important;
+}
+
+.goweskit-modal-actions {
+  display: flex !important;
+  gap: 0.65rem !important;
+  width: 100% !important;
+  margin-top: 1.25rem !important;
+  justify-content: center !important;
+}
+
+.goweskit-btn-confirm {
+  background: var(--color-ink) !important;
+  color: var(--color-white) !important;
+  padding: 0.75rem 1.5rem !important;
+  border-radius: 9999px !important;
+  font-weight: 850 !important;
+  font-size: 0.88rem !important;
+  border: none !important;
+  cursor: pointer !important;
+  box-shadow: 0 4px 14px rgb(23 32 42 / 18%) !important;
+  transition: transform 90ms ease, background-color 120ms ease !important;
+}
+
+.goweskit-btn-confirm:active {
+  transform: scale(0.97) !important;
+}
+
+.goweskit-btn-cancel {
+  background: var(--color-sand) !important;
+  color: var(--color-ink) !important;
+  padding: 0.75rem 1.4rem !important;
+  border-radius: 9999px !important;
+  font-weight: 800 !important;
+  font-size: 0.88rem !important;
+  border: none !important;
+  cursor: pointer !important;
+  transition: transform 90ms ease, background-color 120ms ease !important;
+}
+
+.goweskit-btn-cancel:active {
+  transform: scale(0.97) !important;
+}
+
+/* Toast Theme */
+.goweskit-toast-popup {
+  border-radius: 1.15rem !important;
+  padding: 0.85rem 1.15rem !important;
+  background: var(--color-white) !important;
+  border: 1.5px solid var(--color-sand) !important;
+  box-shadow: 0 12px 36px rgb(23 32 42 / 14%) !important;
+  font-family: var(--font-ui) !important;
+  color: var(--color-ink) !important;
+}
+
+.goweskit-toast-title {
+  font-size: 0.88rem !important;
+  font-weight: 800 !important;
+  letter-spacing: -0.01em !important;
+  color: var(--color-ink) !important;
+}
+
+.goweskit-toast-bar {
+  background: var(--color-chain-lime) !important;
+  height: 3px !important;
+}
+
+/* ══════════════════════════════════════════════════════════
+   INLINE FORM FIELD VALIDATION STYLES
+   ══════════════════════════════════════════════════════════ */
+.form-field {
+  display: grid;
+  gap: 0.35rem;
+  width: 100%;
+}
+
+.form-field label {
+  display: grid;
+  gap: 0.3rem;
+}
+
+.field-label {
+  font-size: 0.82rem;
+  font-weight: 800;
+  color: var(--color-ink);
+  letter-spacing: -0.01em;
+}
+
+.input-control {
+  width: 100%;
+  padding: 0.75rem 0.95rem;
+  border-radius: 0.85rem;
+  border: 1.5px solid var(--color-sand);
+  background: var(--color-white);
+  color: var(--color-ink);
+  font-size: 0.9rem;
+  font-family: inherit;
+  outline: none;
+  transition: border-color 120ms ease, box-shadow 120ms ease;
+}
+
+.input-control:focus {
+  border-color: var(--color-ink);
+  box-shadow: 0 0 0 3px rgb(23 32 42 / 8%);
+}
+
+.input-control.is-invalid {
+  border-color: #dc2626 !important;
+  background: #fef2f2 !important;
+  box-shadow: 0 0 0 3px rgb(220 38 38 / 12%) !important;
+}
+
+.field-error-msg {
+  display: flex;
+  align-items: center;
+  gap: 0.35rem;
+  font-size: 0.76rem;
+  font-weight: 750;
+  color: #dc2626;
+  margin-top: 0.15rem;
+  animation: fieldFadeIn 150ms ease;
+}
+
+@keyframes fieldFadeIn {
+  from {
+    opacity: 0;
+    transform: translateY(-3px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+

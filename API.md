@@ -11,9 +11,26 @@ Base:
 ```text
 POST /auth/register
 POST /auth/login
+POST /auth/google
+POST /auth/otp/send
 POST /auth/logout
 GET  /auth/me
 ```
+
+Google Sign-In accepts only a Google Identity Services ID token:
+
+```json
+{ "idToken": "<signed Google ID token>" }
+```
+
+The API verifies the token against `GOOGLE_CLIENT_ID` and keys accounts by the
+verified Google `sub` claim. It never trusts a browser-supplied email or display
+name as proof of identity. Production refuses to start without a Google client
+ID.
+
+Email OTP is demo-only until a delivery provider and persistent code store are
+configured. Set `OTP_DEMO_ENABLED=true` only for local development; it is
+rejected in production.
 
 ## Learn
 

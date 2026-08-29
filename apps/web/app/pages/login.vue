@@ -1,20 +1,51 @@
 <script setup lang="ts">
 const { login } = useAuth();
 const { loading: googleLoading, triggerGoogleSignIn } = useGoogleAuth();
+const { toast, alert } = useNotify();
+
 const email = ref('');
 const password = ref('');
 const submitting = ref(false);
 const demoLoggingIn = ref(false);
 const errorMessage = ref('');
 
+const errors = reactive({
+  email: '',
+  password: '',
+});
+
+function validate(): boolean {
+  errors.email = '';
+  errors.password = '';
+
+  const cleanEmail = email.value.trim().toLowerCase();
+  const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+  if (!cleanEmail) {
+    errors.email = 'Alamat email wajib diisi.';
+  } else if (!emailRegex.test(cleanEmail)) {
+    errors.email = 'Format email tidak valid (contoh: rider@goweskit.id).';
+  }
+
+  if (!password.value) {
+    errors.password = 'Kata sandi wajib diisi.';
+  }
+
+  return !errors.email && !errors.password;
+}
+
 async function submit(): Promise<void> {
+  if (!validate()) return;
+
   errorMessage.value = '';
   submitting.value = true;
   try {
-    await login({ email: email.value, password: password.value });
+    await login({ email: email.value.trim().toLowerCase(), password: password.value });
+    toast.success('Berhasil Masuk!', 'Selamat datang kembali di GowesKit.');
     await navigateTo('/me');
   } catch (error: unknown) {
-    errorMessage.value = getApiErrorMessage(error);
+    const msg = getApiErrorMessage(error);
+    errorMessage.value = msg;
+    alert.error('Gagal Masuk', msg);
   } finally {
     submitting.value = false;
   }
@@ -28,9 +59,12 @@ async function quickDemoLogin(): Promise<void> {
       email: 'demo@goweskit.local',
       password: 'GowesKitDemo123!',
     });
+    toast.success('Login Demo Berhasil', 'Masuk sebagai Demo Rider.');
     await navigateTo('/me');
   } catch (error: unknown) {
-    errorMessage.value = getApiErrorMessage(error);
+    const msg = getApiErrorMessage(error);
+    errorMessage.value = msg;
+    alert.error('Gagal Masuk Demo', msg);
   } finally {
     demoLoggingIn.value = false;
   }
@@ -74,37 +108,40 @@ async function continueWithGoogle(): Promise<void> {
         </div>
       </div>
 
-      <form class="auth-form" @submit.prevent="submit">
-        <label>
-          <span>Alamat Email</span>
-          <input
-            v-model="email"
-            type="email"
-            autocomplete="email"
-            required
-            maxlength="320"
-            placeholder="nama@email.com"
-          />
-        </label>
-        <label>
-          <span>Kata Sandi</span>
-          <input
-            v-model="password"
-            type="password"
-            autocomplete="current-password"
-            required
-            maxlength="128"
-            placeholder="••••••••"
-          />
-        </label>
+      <form class="auth-form" novalidate @submit.prevent="submit">
+        <div class="form-field">
+          <label>
+            <span class="field-label">Alamat Email</span>
+            <input
+              v-model="email"
+              type="email"
+              autocomplete="email"
+              maxlength="320"
+              placeholder="nama@email.com"
+              class="input-control"
+              :class="{ 'is-invalid': errors.email }"
+              @input="errors.email = ''"
+            />
+          </label>
+          <span v-if="errors.email" class="field-error-msg">⚠️ {{ errors.email }}</span>
+        </div>
 
-        <p
-          v-if="errorMessage"
-          class="state-card state-card--error"
-          role="alert"
-        >
-          {{ errorMessage }}
-        </p>
+        <div class="form-field">
+          <label>
+            <span class="field-label">Kata Sandi</span>
+            <input
+              v-model="password"
+              type="password"
+              autocomplete="current-password"
+              maxlength="128"
+              placeholder="••••••••"
+              class="input-control"
+              :class="{ 'is-invalid': errors.password }"
+              @input="errors.password = ''"
+            />
+          </label>
+          <span v-if="errors.password" class="field-error-msg">⚠️ {{ errors.password }}</span>
+        </div>
 
         <button
           class="button button--primary button--full"

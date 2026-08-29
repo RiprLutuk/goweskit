@@ -27,6 +27,8 @@ erDiagram
 id
 display_name
 email
+password_hash (nullable for provider-only accounts)
+google_subject (nullable, unique when present)
 avatar_url
 locale
 created_at

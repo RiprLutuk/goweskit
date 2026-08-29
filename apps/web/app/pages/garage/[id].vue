@@ -13,6 +13,7 @@ import type {
 const route = useRoute();
 const api = useApi();
 const { user, initialized, refresh } = useAuth();
+const { toast, alert } = useNotify();
 const bike = ref<Bike | null>(null);
 const loading = ref(true);
 const savingCode = ref<BikeSpecCode | null>(null);
@@ -130,12 +131,23 @@ function handlePhotoFileUpload(event: Event): void {
 }
 
 async function deleteBike(): Promise<void> {
-  if (!window.confirm('Hapus sepeda ini dari My Garage?')) return;
+  const confirmed = await alert.confirm({
+    title: 'Hapus Sepeda?',
+    text: `Hapus "${bike.value?.name ?? 'Sepeda'}" dari My Garage?`,
+    confirmText: 'Ya, Hapus',
+    cancelText: 'Batal',
+    icon: 'warning',
+  });
+  if (!confirmed) return;
+
   try {
     await api(`/bikes/${bikeId.value}`, { method: 'DELETE' });
+    toast.success('Sepeda Dihapus', 'Sepeda berhasil dihapus dari garasi Anda.');
     await navigateTo('/garage');
   } catch (error: unknown) {
-    errorMessage.value = getApiErrorMessage(error);
+    const msg = getApiErrorMessage(error);
+    errorMessage.value = msg;
+    alert.error('Gagal Menghapus Sepeda', msg);
   }
 }
 

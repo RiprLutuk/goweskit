@@ -52,17 +52,6 @@ class MemoryAuthRepository implements AuthRepository {
     return Promise.resolve(this.user);
   }
 
-  public linkGoogleSubject(
-    userId: string,
-    subject: string,
-  ): Promise<StoredUser | null> {
-    if (this.user?.id !== userId || this.user.googleSubject !== null) {
-      return Promise.resolve(null);
-    }
-    this.user = { ...this.user, googleSubject: subject };
-    return Promise.resolve(this.user);
-  }
-
   public createSession(
     userId: string,
     tokenHash: string,
@@ -138,7 +127,6 @@ describe('AuthService', () => {
       subject: 'google-subject-budi',
       email: 'budi.google@gmail.com',
       displayName: 'Budi Google',
-      emailAuthoritative: true,
     };
     const session = await service.loginWithGoogle(identity);
 
@@ -150,7 +138,7 @@ describe('AuthService', () => {
     expect(secondSession.user.id).toBe(session.user.id);
   });
 
-  it('does not silently link a non-authoritative Google email to a password account', async () => {
+  it('does not silently link any Google identity to an existing password account', async () => {
     const repository = new MemoryAuthRepository();
     const service = new AuthService(repository);
     await service.register(registration);
@@ -160,7 +148,6 @@ describe('AuthService', () => {
         subject: 'google-subject-other',
         email: registration.email,
         displayName: registration.displayName,
-        emailAuthoritative: false,
       }),
     ).rejects.toMatchObject({ code: 'AUTH_GOOGLE_LINK_REQUIRED' });
   });

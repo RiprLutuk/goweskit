@@ -4,6 +4,7 @@ import type { SendOtpResponse } from '@goweskit/contracts';
 const api = useApi();
 const { register, login } = useAuth();
 const { loading: googleLoading, triggerGoogleSignIn } = useGoogleAuth();
+const { toast, alert } = useNotify();
 
 // Step 1: Form Data | Step 2: OTP Verification
 const step = ref<1 | 2>(1);
@@ -14,9 +15,16 @@ const otpCode = ref('');
 const submitting = ref(false);
 const sendingOtp = ref(false);
 const errorMessage = ref('');
-const infoMessage = ref('');
 const resendCountdown = ref(0);
 const demoOtpHint = ref('');
+
+// Field-level error messages
+const errors = reactive({
+  displayName: '',
+  email: '',
+  password: '',
+  otp: '',
+});
 
 let timerInterval: ReturnType<typeof setInterval> | undefined;
 
@@ -37,24 +45,67 @@ function startCountdown(seconds: number): void {
   }, 1000);
 }
 
+function validateStep1(): boolean {
+  errors.displayName = '';
+  errors.email = '';
+  errors.password = '';
+
+  const cleanName = displayName.value.trim();
+  if (!cleanName) {
+    errors.displayName = 'Nama lengkap wajib diisi.';
+  } else if (cleanName.length < 2) {
+    errors.displayName = 'Nama minimal 2 karakter.';
+  }
+
+  const cleanEmail = email.value.trim().toLowerCase();
+  const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+  if (!cleanEmail) {
+    errors.email = 'Alamat email wajib diisi.';
+  } else if (!emailRegex.test(cleanEmail)) {
+    errors.email = 'Format email tidak valid (contoh: rider@goweskit.id).';
+  }
+
+  if (!password.value) {
+    errors.password = 'Kata sandi wajib diisi.';
+  } else if (password.value.length < 8) {
+    errors.password = 'Kata sandi minimal 8 karakter.';
+  }
+
+  return !errors.displayName && !errors.email && !errors.password;
+}
+
+function validateStep2(): boolean {
+  errors.otp = '';
+  const cleanOtp = otpCode.value.trim();
+  if (!cleanOtp) {
+    errors.otp = 'Kode OTP 6-digit wajib diisi.';
+  } else if (!/^\d{6}$/.test(cleanOtp)) {
+    errors.otp = 'Kode OTP harus berupa 6 digit angka.';
+  }
+  return !errors.otp;
+}
+
 async function requestOtp(): Promise<void> {
-  if (!email.value || !displayName.value || password.value.length < 8) return;
+  if (!validateStep1()) return;
+
   errorMessage.value = '';
-  infoMessage.value = '';
   sendingOtp.value = true;
   try {
     const res = await api<SendOtpResponse>('/auth/otp/send', {
       method: 'POST',
       body: { email: email.value.trim().toLowerCase(), purpose: 'register' },
     });
-    infoMessage.value = res.message;
+    
+    toast.success('Kode OTP Terkirim', `Kode verifikasi 6-digit telah dikirim ke ${email.value}`);
     if (res.demoOtp) {
       demoOtpHint.value = res.demoOtp;
     }
     step.value = 2;
     startCountdown(30);
   } catch (error: unknown) {
-    errorMessage.value = getApiErrorMessage(error);
+    const msg = getApiErrorMessage(error);
+    errorMessage.value = msg;
+    alert.error('Gagal Mengirim OTP', msg);
   } finally {
     sendingOtp.value = false;
   }
@@ -69,23 +120,22 @@ async function resendOtp(): Promise<void> {
       method: 'POST',
       body: { email: email.value.trim().toLowerCase(), purpose: 'register' },
     });
-    infoMessage.value = 'Kode OTP baru telah dikirimkan.';
+    toast.info('Kode Baru Terkirim', 'Silakan periksa kembali email Anda.');
     if (res.demoOtp) {
       demoOtpHint.value = res.demoOtp;
     }
     startCountdown(30);
   } catch (error: unknown) {
-    errorMessage.value = getApiErrorMessage(error);
+    const msg = getApiErrorMessage(error);
+    errorMessage.value = msg;
+    alert.error('Gagal Mengirim Ulang OTP', msg);
   } finally {
     sendingOtp.value = false;
   }
 }
 
 async function submitOtpRegistration(): Promise<void> {
-  if (otpCode.value.trim().length !== 6) {
-    errorMessage.value = 'Masukkan 6 digit kode OTP.';
-    return;
-  }
+  if (!validateStep2()) return;
 
   errorMessage.value = '';
   submitting.value = true;
@@ -96,6 +146,9 @@ async function submitOtpRegistration(): Promise<void> {
       password: password.value,
       otp: otpCode.value.trim(),
     });
+    
+    toast.success('Pendaftaran Berhasil!', 'Selamat datang di GowesKit.');
+    
     // Auto login after successful registration
     await login({
       email: email.value.trim().toLowerCase(),
@@ -103,7 +156,9 @@ async function submitOtpRegistration(): Promise<void> {
     });
     await navigateTo('/me');
   } catch (error: unknown) {
-    errorMessage.value = getApiErrorMessage(error);
+    const msg = getApiErrorMessage(error);
+    errorMessage.value = msg;
+    alert.error('Verifikasi Gagal', msg);
   } finally {
     submitting.value = false;
   }
@@ -152,50 +207,57 @@ async function continueWithGoogle(): Promise<void> {
         </div>
       </div>
 
-      <!-- STEP 1: Registration Form -->
-      <form v-if="step === 1" class="auth-form" @submit.prevent="requestOtp">
-        <label>
-          <span>Nama Lengkap / Panggilan</span>
-          <input
-            v-model="displayName"
-            autocomplete="name"
-            required
-            minlength="2"
-            maxlength="80"
-            placeholder="Contoh: Budi Santoso"
-          />
-        </label>
-        <label>
-          <span>Alamat Email</span>
-          <input
-            v-model="email"
-            type="email"
-            autocomplete="email"
-            required
-            maxlength="320"
-            placeholder="nama@email.com"
-          />
-        </label>
-        <label>
-          <span>Kata Sandi</span>
-          <input
-            v-model="password"
-            type="password"
-            autocomplete="new-password"
-            required
-            minlength="8"
-            maxlength="128"
-            placeholder="Minimal 8 karakter"
-          />
-        </label>
+      <!-- STEP 1: Registration Form (No Native HTML Tooltips) -->
+      <form v-if="step === 1" class="auth-form" novalidate @submit.prevent="requestOtp">
+        <div class="form-field">
+          <label>
+            <span class="field-label">Nama Lengkap / Panggilan</span>
+            <input
+              v-model="displayName"
+              autocomplete="name"
+              maxlength="80"
+              placeholder="Contoh: Budi Santoso"
+              class="input-control"
+              :class="{ 'is-invalid': errors.displayName }"
+              @input="errors.displayName = ''"
+            />
+          </label>
+          <span v-if="errors.displayName" class="field-error-msg">⚠️ {{ errors.displayName }}</span>
+        </div>
 
-        <p
-          v-if="errorMessage"
-          class="state-card state-card--error"
-          role="alert"
-        >
-          {{ errorMessage }}
-        </p>
+        <div class="form-field">
+          <label>
+            <span class="field-label">Alamat Email</span>
+            <input
+              v-model="email"
+              type="email"
+              autocomplete="email"
+              maxlength="320"
+              placeholder="nama@email.com"
+              class="input-control"
+              :class="{ 'is-invalid': errors.email }"
+              @input="errors.email = ''"
+            />
+          </label>
+          <span v-if="errors.email" class="field-error-msg">⚠️ {{ errors.email }}</span>
+        </div>
+
+        <div class="form-field">
+          <label>
+            <span class="field-label">Kata Sandi</span>
+            <input
+              v-model="password"
+              type="password"
+              autocomplete="new-password"
+              maxlength="128"
+              placeholder="Minimal 8 karakter"
+              class="input-control"
+              :class="{ 'is-invalid': errors.password }"
+              @input="errors.password = ''"
+            />
+          </label>
+          <span v-if="errors.password" class="field-error-msg">⚠️ {{ errors.password }}</span>
+        </div>
 
         <button
           class="button button--primary button--full"
@@ -206,30 +268,33 @@ async function continueWithGoogle(): Promise<void> {
         </button>
       </form>
 
-      <!-- STEP 2: OTP Verification Form -->
-      <form v-else class="auth-form" @submit.prevent="submitOtpRegistration">
+      <!-- STEP 2: OTP Verification Form (No Native HTML Tooltips) -->
+      <form v-else class="auth-form" novalidate @submit.prevent="submitOtpRegistration">
         <!-- Demo OTP quick helper if available -->
         <div v-if="demoOtpHint" class="demo-otp-helper">
           <span>Kode verifikasi Anda: <strong>{{ demoOtpHint }}</strong></span>
-          <button type="button" class="btn-copy-otp" @click="otpCode = demoOtpHint">
+          <button type="button" class="btn-copy-otp" @click="otpCode = demoOtpHint; errors.otp = ''">
             Gunakan Kode
           </button>
         </div>
 
-        <label>
-          <span>Kode Verifikasi 6 Digit</span>
-          <input
-            v-model="otpCode"
-            type="text"
-            inputmode="numeric"
-            pattern="[0-9]*"
-            maxlength="6"
-            required
-            autofocus
-            placeholder="123456"
-            class="otp-digit-input"
-          />
-        </label>
+        <div class="form-field">
+          <label>
+            <span class="field-label">Kode Verifikasi 6 Digit</span>
+            <input
+              v-model="otpCode"
+              type="text"
+              inputmode="numeric"
+              maxlength="6"
+              autofocus
+              placeholder="123456"
+              class="input-control otp-digit-input"
+              :class="{ 'is-invalid': errors.otp }"
+              @input="errors.otp = ''"
+            />
+          </label>
+          <span v-if="errors.otp" class="field-error-msg">⚠️ {{ errors.otp }}</span>
+        </div>
 
         <div class="otp-resend-row">
           <button
@@ -250,18 +315,10 @@ async function continueWithGoogle(): Promise<void> {
           </button>
         </div>
 
-        <p
-          v-if="errorMessage"
-          class="state-card state-card--error"
-          role="alert"
-        >
-          {{ errorMessage }}
-        </p>
-
         <button
           class="button button--primary button--full"
           type="submit"
-          :disabled="submitting || otpCode.length !== 6"
+          :disabled="submitting"
         >
           {{ submitting ? 'Memverifikasi…' : 'Verifikasi & Buat Akun' }}
         </button>

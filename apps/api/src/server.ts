@@ -9,6 +9,7 @@ import { GoogleIdentityVerifier } from './auth/google-identity.js';
 import { AuthRateLimiter } from './auth/rate-limiter.js';
 import { readConfig } from './config.js';
 import { createDatabase } from './db/client.js';
+import { registerGracefulShutdown } from './lifecycle.js';
 import { DrizzleAuthRepository } from './repositories/auth-repository.js';
 import { DrizzleCatalogRepository } from './repositories/catalog-repository.js';
 import { DrizzleCommunityRepository } from './repositories/community-repository.js';
@@ -115,6 +116,7 @@ const app = buildApp({
     ),
   },
 });
+const removeShutdownHandlers = registerGracefulShutdown(app);
 
 let safetyCleanupRunning = false;
 const safetyCleanupInterval = setInterval(
@@ -135,6 +137,7 @@ const safetyCleanupInterval = setInterval(
 safetyCleanupInterval.unref();
 
 app.addHook('onClose', async () => {
+  removeShutdownHandlers();
   clearInterval(safetyCleanupInterval);
   await databaseClient.close();
 });
@@ -148,4 +151,5 @@ try {
 } catch (error: unknown) {
   app.log.error(error);
   process.exitCode = 1;
+  await app.close();
 }

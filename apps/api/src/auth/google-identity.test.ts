@@ -29,7 +29,6 @@ describe('GoogleIdentityVerifier', () => {
       subject: 'google-subject-1',
       email: 'rider@gmail.com',
       displayName: 'Rider Tangerang',
-      emailAuthoritative: true,
     });
   });
 

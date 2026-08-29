@@ -9,6 +9,8 @@ import type {
 
 const api = useApi();
 const { user, initialized, refresh } = useAuth();
+const { toast, alert } = useNotify();
+
 const bicycleTypes = ref<BicycleType[]>([]);
 const loading = ref(true);
 const submitting = ref(false);
@@ -25,6 +27,11 @@ const specSelections = reactive<Record<string, string>>(
     BIKE_SPEC_DEFINITIONS.map(({ code }) => [code, 'missing']),
   ),
 );
+
+const errors = reactive({
+  nickname: '',
+  bicycleTypeId: '',
+});
 
 onMounted(async () => {
   if (!initialized.value) await refresh();
@@ -138,26 +145,45 @@ function selectedSpecs(): BikeSpecMutation[] {
   return specs;
 }
 
+function validate(): boolean {
+  errors.nickname = '';
+  errors.bicycleTypeId = '';
+
+  if (!nickname.value.trim()) {
+    errors.nickname = 'Nama panggilan sepeda wajib diisi.';
+  }
+  if (!bicycleTypeId.value) {
+    errors.bicycleTypeId = 'Pilih tipe sepeda.';
+  }
+
+  return !errors.nickname && !errors.bicycleTypeId;
+}
+
 async function submit(): Promise<void> {
+  if (!validate()) return;
+
   errorMessage.value = '';
   submitting.value = true;
   try {
     const response = await api<BikeResponse>('/bikes', {
       method: 'POST',
       body: {
-        nickname: nickname.value,
+        nickname: nickname.value.trim(),
         bicycleTypeId: bicycleTypeId.value,
-        brand: brand.value || null,
-        model: model.value || null,
+        brand: brand.value.trim() || null,
+        model: model.value.trim() || null,
         modelYear: modelYear.value,
         photoUrl: photoUrl.value.trim() || null,
-        notes: notes.value || null,
+        notes: notes.value.trim() || null,
         specs: selectedSpecs(),
       },
     });
+    toast.success('Sepeda Ditambahkan!', `"${response.bike.nickname}" siap dikelola di garasi.`);
     await navigateTo(`/garage/${response.bike.id}`);
   } catch (error: unknown) {
-    errorMessage.value = getApiErrorMessage(error);
+    const msg = getApiErrorMessage(error);
+    errorMessage.value = msg;
+    alert.error('Gagal Menambah Sepeda', msg);
   } finally {
     submitting.value = false;
   }
@@ -180,7 +206,7 @@ async function submit(): Promise<void> {
       <NuxtLink class="button button--primary" to="/login">Sign in</NuxtLink>
     </div>
 
-    <form v-else class="form-stack" @submit.prevent="submit">
+    <form v-else class="form-stack" novalidate @submit.prevent="submit">
       <!-- Quick Presets Helper -->
       <div class="presets-banner">
         <strong>⚡ Quick Presets (Optional)</strong>
@@ -211,27 +237,42 @@ async function submit(): Promise<void> {
       </div>
 
       <div class="field-grid">
-        <label>
-          <span>Bike nickname *</span>
-          <input
-            v-model="nickname"
-            required
-            maxlength="80"
-            placeholder="e.g. Si Rimba, Blue Comet, Daily Commuter"
-          />
-        </label>
-        <label>
-          <span>Bicycle type *</span>
-          <select v-model="bicycleTypeId" required>
-            <option
-              v-for="type in bicycleTypes"
-              :key="type.id"
-              :value="type.id"
+        <div class="form-field">
+          <label>
+            <span class="field-label">Bike nickname *</span>
+            <input
+              v-model="nickname"
+              maxlength="80"
+              placeholder="e.g. Si Rimba, Blue Comet, Daily Commuter"
+              class="input-control"
+              :class="{ 'is-invalid': errors.nickname }"
+              @input="errors.nickname = ''"
+            />
+          </label>
+          <span v-if="errors.nickname" class="field-error-msg">⚠️ {{ errors.nickname }}</span>
+        </div>
+
+        <div class="form-field">
+          <label>
+            <span class="field-label">Bicycle type *</span>
+            <select
+              v-model="bicycleTypeId"
+              class="input-control"
+              :class="{ 'is-invalid': errors.bicycleTypeId }"
+              @change="errors.bicycleTypeId = ''"
             >
-              {{ type.name }}
-            </option>
-          </select>
-        </label>
+              <option
+                v-for="type in bicycleTypes"
+                :key="type.id"
+                :value="type.id"
+              >
+                {{ type.name }}
+              </option>
+            </select>
+          </label>
+          <span v-if="errors.bicycleTypeId" class="field-error-msg">⚠️ {{ errors.bicycleTypeId }}</span>
+        </div>
+
         <label>
           <span>Brand <small>optional</small></span>
           <input v-model="brand" maxlength="100" placeholder="e.g. Polygon, Trek, Giant, Dahon" />

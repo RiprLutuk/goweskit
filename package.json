@@ -15,6 +15,7 @@
     "format:check": "prettier --check .",
     "lint": "pnpm -r lint",
     "packages:build": "pnpm --filter @goweskit/bike-domain build && pnpm --filter @goweskit/contracts build && pnpm --filter @goweskit/ui build",
+    "release:verify": "node scripts/verify-api-deployment.mjs",
     "typecheck": "pnpm -r typecheck",
     "test": "pnpm packages:build && pnpm -r test"
   },

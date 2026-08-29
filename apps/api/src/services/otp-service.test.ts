@@ -4,9 +4,9 @@ import { AppError } from '../errors.js';
 import { OtpService } from './otp-service.js';
 
 describe('OtpService', () => {
-  it('generates a 6-digit numeric OTP and verifies it successfully', async () => {
+  it('generates a 6-digit numeric OTP and verifies it successfully', () => {
     const service = new OtpService();
-    const result = await service.sendOtp({
+    const result = service.sendOtp({
       email: 'rider@example.com',
       purpose: 'register',
     });
@@ -26,9 +26,9 @@ describe('OtpService', () => {
     );
   });
 
-  it('rejects invalid OTP codes and tracks remaining attempts', async () => {
+  it('rejects invalid OTP codes and tracks remaining attempts', () => {
     const service = new OtpService();
-    await service.sendOtp({
+    service.sendOtp({
       email: 'test@example.com',
       purpose: 'register',
     });

@@ -18,7 +18,6 @@ export interface AuthenticatedSession {
 export interface VerifiedGoogleIdentity {
   displayName: string;
   email: string;
-  emailAuthoritative: boolean;
   subject: string;
 }
 
@@ -57,16 +56,10 @@ export class AuthService {
             409,
           );
         }
-        if (!identity.emailAuthoritative) {
-          throw new AppError(
-            'AUTH_GOOGLE_LINK_REQUIRED',
-            'Sign in with your password before linking this Google account.',
-            409,
-          );
-        }
-        storedUser = await this.repository.linkGoogleSubject(
-          existingEmailUser.id,
-          identity.subject,
+        throw new AppError(
+          'AUTH_GOOGLE_LINK_REQUIRED',
+          'Sign in with your password before linking this Google account.',
+          409,
         );
       } else {
         storedUser = await this.repository.createGoogleUser({
@@ -120,9 +113,15 @@ export class AuthService {
 
   public async login(input: LoginRequest): Promise<AuthenticatedSession> {
     const storedUser = await this.repository.findUserByEmail(input.email);
-    const passwordHash = storedUser?.passwordHash;
+    if (storedUser === null) {
+      throw new AppError(
+        'AUTH_INVALID_CREDENTIALS',
+        'Email or password is incorrect.',
+        401,
+      );
+    }
+    const passwordHash = storedUser.passwordHash;
     if (
-      passwordHash === undefined ||
       passwordHash === null ||
       !(await verifyPassword(input.password, passwordHash))
     ) {

@@ -51,14 +51,9 @@ export class GoogleIdentityVerifier {
           ? fallbackName
           : googleName
       ).slice(0, 80);
-      const emailDomain = email.split('@')[1] ?? '';
       return {
         displayName,
         email,
-        emailAuthoritative:
-          emailDomain === 'gmail.com' ||
-          emailDomain === 'googlemail.com' ||
-          (payload.hd?.trim().length ?? 0) > 0,
         subject,
       };
     } catch {

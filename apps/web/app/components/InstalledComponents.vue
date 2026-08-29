@@ -16,6 +16,7 @@ import type {
 const props = defineProps<{ bikeId: string }>();
 
 const api = useApi();
+const { toast, alert } = useNotify();
 const categories = ref<ComponentCategory[]>([]);
 const components = ref<InstalledComponent[]>([]);
 const loading = ref(true);
@@ -177,9 +178,15 @@ async function saveComponent(): Promise<void> {
 }
 
 async function deleteComponent(component: InstalledComponent): Promise<void> {
-  if (!window.confirm(`Remove “${component.customName}” from this bike?`)) {
-    return;
-  }
+  const confirmed = await alert.confirm({
+    title: 'Hapus Komponen?',
+    text: `Hapus komponen “${component.customName}” dari sepeda ini?`,
+    confirmText: 'Ya, Hapus',
+    cancelText: 'Batal',
+    icon: 'warning',
+  });
+  if (!confirmed) return;
+
   deletingId.value = component.id;
   errorMessage.value = '';
   try {
@@ -188,8 +195,11 @@ async function deleteComponent(component: InstalledComponent): Promise<void> {
     });
     components.value = components.value.filter(({ id }) => id !== component.id);
     if (editingId.value === component.id) resetForm();
+    toast.success('Komponen Dihapus', `“${component.customName}” telah dihapus.`);
   } catch (error: unknown) {
-    errorMessage.value = getApiErrorMessage(error);
+    const msg = getApiErrorMessage(error);
+    errorMessage.value = msg;
+    alert.error('Gagal Menghapus Komponen', msg);
   } finally {
     deletingId.value = null;
   }

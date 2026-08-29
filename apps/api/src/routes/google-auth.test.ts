@@ -45,6 +45,10 @@ function configuredVerifier() {
     verifyIdToken: () =>
       Promise.resolve({
         getPayload: () => ({
+          aud: 'google-client-id',
+          exp: 1_900_000_000,
+          iat: 1_800_000_000,
+          iss: 'accounts.google.com',
           sub: 'google-subject-1',
           email: user.email,
           email_verified: true,

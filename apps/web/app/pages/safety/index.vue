@@ -14,6 +14,7 @@ import { buildSafetyShareUrl, SOS_HOLD_DURATION_MS } from '../../safety';
 const api = useApi();
 const { user, initialized, refresh } = useAuth();
 const { triggerHaptic } = usePwa();
+const { toast, alert } = useNotify();
 
 const contacts = ref<TrustedContact[]>([]);
 const sessions = ref<SafetySession[]>([]);
@@ -109,15 +110,24 @@ async function createContact(): Promise<void> {
     contactForm.email = '';
     contactForm.note = '';
     showAddContact.value = false;
+    toast.success('Kontak Ditambahkan', `${response.contact.name} berhasil disimpan.`);
   } catch (error: unknown) {
     contactError.value = getApiErrorMessage(error);
+    alert.error('Gagal Menyimpan Kontak', contactError.value);
   } finally {
     contactSaving.value = false;
   }
 }
 
 async function deleteContact(contact: TrustedContact): Promise<void> {
-  if (!window.confirm(`Hapus ${contact.name} dari daftar kontak darurat?`)) return;
+  const confirmed = await alert.confirm({
+    title: 'Hapus Kontak Darurat?',
+    text: `Hapus ${contact.name} dari daftar kontak darurat?`,
+    confirmText: 'Hapus',
+    cancelText: 'Batal',
+    icon: 'warning',
+  });
+  if (!confirmed) return;
   contactError.value = '';
   try {
     await api(`/trusted-contacts/${contact.id}`, { method: 'DELETE' });
@@ -125,8 +135,10 @@ async function deleteContact(contact: TrustedContact): Promise<void> {
     if (startForm.trustedContactId === contact.id) {
       startForm.trustedContactId = contacts.value[0]?.id ?? '';
     }
+    toast.success('Kontak Dihapus', `${contact.name} telah dihapus.`);
   } catch (error: unknown) {
     contactError.value = getApiErrorMessage(error);
+    alert.error('Gagal Menghapus Kontak', contactError.value);
   }
 }
 

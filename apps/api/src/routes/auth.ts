@@ -37,7 +37,7 @@ export function registerAuthRoutes(
 
   app.post<{ Reply: SendOtpResponse }>(
     '/api/v1/auth/otp/send',
-    async (request) => {
+    (request) => {
       const input = parseInput(sendOtpRequestSchema, request.body);
       return otpService.sendOtp(input);
     },
