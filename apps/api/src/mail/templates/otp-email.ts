@@ -1,13 +1,8 @@
-import type { SendOtpRequest } from '@goweskit/contracts';
-
-export function buildOtpEmailHtml(
-  otpCode: string,
-  purpose: SendOtpRequest['purpose'],
-): { html: string; text: string } {
-  const actionLabel =
-    purpose === 'reset_password'
-      ? 'mereset kata sandi akun GowesKit Anda'
-      : 'verifikasi dan pendaftaran akun GowesKit Anda';
+export function buildOtpEmailHtml(otpCode: string): {
+  html: string;
+  text: string;
+} {
+  const actionLabel = 'verifikasi dan pendaftaran akun GowesKit Anda';
 
   const text = `Halo Rider!
 
@@ -33,7 +28,7 @@ Workshop & Safety Platform`;
   <table role="presentation" width="100%" cellspacing="0" cellpadding="0" border="0" style="background-color: #F6F5F0; padding: 40px 16px;">
     <tr>
       <td align="center">
-        
+
         <!-- Main Card -->
         <table role="presentation" width="100%" cellspacing="0" cellpadding="0" border="0" style="max-width: 460px; background-color: #FFFFFF; border-radius: 20px; border: 1px solid #E6E4DD; box-shadow: 0 4px 20px rgba(23, 32, 42, 0.04); overflow: hidden;">
           
