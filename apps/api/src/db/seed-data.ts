@@ -672,11 +672,11 @@ export const DEMO_PLACE_SEEDS = [
   {
     id: '20000000-0000-4000-8000-000000000001',
     type: 'workshop',
-    name: 'Demo Workshop Dago',
+    name: 'Demo Workshop Karawaci',
     description:
       'Practice listing for tune-ups, brake checks, and beginner-friendly bike inspection.',
-    coordinate: { longitude: 107.6134, latitude: -6.8863 },
-    address: 'Dago, Bandung · demo data',
+    coordinate: { longitude: 106.6052, latitude: -6.1812 },
+    address: 'Karawaci, Tangerang · demo data',
     bicycleTypes: ['mtb_hardtail', 'road', 'gravel', 'folding'],
     beginnerFriendly: true,
     verificationStatus: 'staff_verified',
@@ -685,11 +685,11 @@ export const DEMO_PLACE_SEEDS = [
   {
     id: '20000000-0000-4000-8000-000000000002',
     type: 'store',
-    name: 'Demo Bike Store Braga',
+    name: 'Demo Bike Store Lippo Village',
     description:
       'Practice listing for parts, helmets, lights, tubes, and basic cycling supplies.',
-    coordinate: { longitude: 107.6098, latitude: -6.9178 },
-    address: 'Braga, Bandung · demo data',
+    coordinate: { longitude: 106.5998, latitude: -6.1978 },
+    address: 'Lippo Village, Tangerang · demo data',
     bicycleTypes: ['road', 'gravel', 'folding'],
     beginnerFriendly: true,
     verificationStatus: 'community_verified',
@@ -698,11 +698,11 @@ export const DEMO_PLACE_SEEDS = [
   {
     id: '20000000-0000-4000-8000-000000000003',
     type: 'water',
-    name: 'Demo Refill Point Gasibu',
+    name: 'Demo Refill Point Karawaci',
     description:
       'Practice public-water marker near a popular morning-ride gathering area.',
-    coordinate: { longitude: 107.6186, latitude: -6.9002 },
-    address: 'Gasibu, Bandung · demo data',
+    coordinate: { longitude: 106.6086, latitude: -6.1802 },
+    address: 'Karawaci, Tangerang · demo data',
     bicycleTypes: ['mtb_hardtail', 'road', 'gravel', 'folding'],
     beginnerFriendly: true,
     verificationStatus: 'community_verified',
@@ -711,11 +711,11 @@ export const DEMO_PLACE_SEEDS = [
   {
     id: '20000000-0000-4000-8000-000000000004',
     type: 'coffee',
-    name: 'Demo Coffee Stop Ciumbuleuit',
+    name: 'Demo Coffee Stop Lippo Village',
     description:
       'Practice coffee-stop marker with bicycle parking and a gentle regroup point.',
-    coordinate: { longitude: 107.604, latitude: -6.8745 },
-    address: 'Ciumbuleuit, Bandung · demo data',
+    coordinate: { longitude: 106.594, latitude: -6.1545 },
+    address: 'Lippo Village, Tangerang · demo data',
     bicycleTypes: ['road', 'gravel', 'folding'],
     beginnerFriendly: true,
     verificationStatus: 'unverified',
@@ -724,11 +724,11 @@ export const DEMO_PLACE_SEEDS = [
   {
     id: '20000000-0000-4000-8000-000000000005',
     type: 'trailhead',
-    name: 'Demo Tahura Trailhead',
+    name: 'Demo Cisadane Trailhead',
     description:
       'Practice trail entry marker. Check local access and conditions before riding.',
-    coordinate: { longitude: 107.6322, latitude: -6.8566 },
-    address: 'North Bandung · demo data',
+    coordinate: { longitude: 106.6222, latitude: -6.1366 },
+    address: 'Cisadane corridor, Tangerang · demo data',
     bicycleTypes: ['mtb_hardtail', 'gravel'],
     beginnerFriendly: false,
     verificationStatus: 'staff_verified',
@@ -737,11 +737,11 @@ export const DEMO_PLACE_SEEDS = [
   {
     id: '20000000-0000-4000-8000-000000000006',
     type: 'bike_park',
-    name: 'Demo Arcamanik Bike Park',
+    name: 'Demo Gading Serpong Bike Park',
     description:
       'Practice skills-area marker for controlled MTB drills and short sessions.',
-    coordinate: { longitude: 107.683, latitude: -6.9155 },
-    address: 'Arcamanik, Bandung · demo data',
+    coordinate: { longitude: 106.673, latitude: -6.1955 },
+    address: 'Gading Serpong, Tangerang · demo data',
     bicycleTypes: ['mtb_hardtail'],
     beginnerFriendly: false,
     verificationStatus: 'community_verified',
@@ -750,11 +750,11 @@ export const DEMO_PLACE_SEEDS = [
   {
     id: '20000000-0000-4000-8000-000000000007',
     type: 'meeting_point',
-    name: 'Demo Meeting Point Asia Afrika',
+    name: 'Demo Meeting Point Pasar Lama',
     description:
       'Practice group-ride meeting marker in the city center. No live rider locations are shown.',
-    coordinate: { longitude: 107.6087, latitude: -6.9218 },
-    address: 'Asia Afrika, Bandung · demo data',
+    coordinate: { longitude: 106.5987, latitude: -6.2018 },
+    address: 'Pasar Lama, Tangerang · demo data',
     bicycleTypes: ['road', 'gravel', 'folding'],
     beginnerFriendly: true,
     verificationStatus: 'staff_verified',
@@ -763,11 +763,11 @@ export const DEMO_PLACE_SEEDS = [
   {
     id: '20000000-0000-4000-8000-000000000008',
     type: 'rest',
-    name: 'Demo Rest Stop Punclut',
+    name: 'Demo Rest Stop Panunggangan',
     description:
-      'Practice rest marker after a climb. Carry water and verify opening conditions yourself.',
-    coordinate: { longitude: 107.6172, latitude: -6.8437 },
-    address: 'Punclut, Bandung · demo data',
+      'Practice rest marker along a longer flat loop. Carry water and verify opening conditions yourself.',
+    coordinate: { longitude: 106.6072, latitude: -6.1237 },
+    address: 'Panunggangan, Tangerang · demo data',
     bicycleTypes: ['road', 'gravel', 'mtb_hardtail'],
     beginnerFriendly: false,
     verificationStatus: 'unverified',

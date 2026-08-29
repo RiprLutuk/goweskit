@@ -40,6 +40,13 @@ export interface HealthResponse {
   status: 'ok';
 }
 
+export interface ReadinessResponse {
+  status: 'degraded' | 'ok';
+  checks: {
+    database: 'ok' | 'unavailable';
+  };
+}
+
 export interface AppServices {
   auth: AuthService;
   catalog: CatalogService;
@@ -62,6 +69,9 @@ export interface BuildAppOptions {
   services?: AppServices;
   cookieSecure?: boolean;
   logger?: FastifyServerOptions['logger'];
+  readinessCheck?: () => Promise<void>;
+  strictTransportSecurity?: boolean;
+  trustProxy?: FastifyServerOptions['trustProxy'];
   webOrigin?: string;
 }
 
@@ -69,6 +79,7 @@ export function buildApp(options: BuildAppOptions = {}): FastifyInstance {
   const app = Fastify({
     logger: options.logger ?? true,
     genReqId: () => randomUUID(),
+    trustProxy: options.trustProxy ?? false,
   });
 
   void app.register(cookie);
@@ -79,6 +90,24 @@ export function buildApp(options: BuildAppOptions = {}): FastifyInstance {
 
   app.addHook('onRequest', (request, reply, done) => {
     reply.header('x-request-id', request.id);
+    reply.header(
+      'content-security-policy',
+      "default-src 'none'; frame-ancestors 'none'; base-uri 'none'",
+    );
+    reply.header(
+      'permissions-policy',
+      'camera=(), microphone=(), geolocation=(self)',
+    );
+    reply.header('referrer-policy', 'no-referrer');
+    reply.header('x-content-type-options', 'nosniff');
+    reply.header('x-frame-options', 'DENY');
+    reply.header('x-permitted-cross-domain-policies', 'none');
+    if (options.strictTransportSecurity === true) {
+      reply.header(
+        'strict-transport-security',
+        'max-age=31536000; includeSubDomains',
+      );
+    }
     done();
   });
 
@@ -120,6 +149,29 @@ export function buildApp(options: BuildAppOptions = {}): FastifyInstance {
       },
     },
     () => ({ status: 'ok' }),
+  );
+
+  app.get<{ Reply: ReadinessResponse }>(
+    '/health/ready',
+    async (request, reply) => {
+      try {
+        await options.readinessCheck?.();
+        return { status: 'ok', checks: { database: 'ok' } };
+      } catch (error: unknown) {
+        request.log.warn(
+          {
+            dependency: 'database',
+            errorName:
+              error instanceof Error ? error.name : 'UnknownReadinessError',
+          },
+          'Readiness dependency unavailable',
+        );
+        return reply.status(503).send({
+          status: 'degraded',
+          checks: { database: 'unavailable' },
+        });
+      }
+    },
   );
 
   if (options.services !== undefined) {

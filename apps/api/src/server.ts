@@ -60,6 +60,12 @@ const safetyService = new SafetyService(
 const app = buildApp({
   webOrigin: config.webOrigin,
   cookieSecure: config.sessionCookieSecure,
+  readinessCheck: databaseClient.ping,
+  strictTransportSecurity: config.environment === 'production',
+  trustProxy:
+    config.trustProxyHops === 0
+      ? false
+      : (_address, hop) => hop < config.trustProxyHops,
   services: {
     auth: authService,
     catalog: new CatalogService(

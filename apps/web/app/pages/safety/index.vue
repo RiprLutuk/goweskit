@@ -336,13 +336,17 @@ function statusBadge(status: SafetySession['status']): { label: string; class: s
     <header class="native-page-header">
       <div class="header-topline">
         <span class="native-eyebrow">Keselamatan Solo-Ride</span>
-        <span v-if="activeSession" class="live-pill" :class="activeSession.status === 'sos' ? 'live-pill--sos' : 'live-pill--active'">
-          {{ activeSession.status === 'sos' ? '🚨 SOS AKTIF' : '🟢 LIVE RIDE' }}
+        <span
+          v-if="activeSession"
+          class="live-beacon-pill"
+          :class="activeSession.status === 'sos' ? 'live-beacon-pill--sos' : 'live-beacon-pill--active'"
+        >
+          <span class="beacon-dot" /> {{ activeSession.status === 'sos' ? 'SOS DARURAT' : 'LIVE TRACKING' }}
         </span>
       </div>
-      <h1 class="native-title">Ride Safety &amp; Live Tracking</h1>
+      <h1 class="native-title">Ride Safety Beacon</h1>
       <p class="native-sub">
-        Bagikan lokasi langsung sementara secara privat kepada kontak darurat saat gowes sendiri dengan token berdurasi terbatas.
+        Bagikan pantauan lokasi langsung sementara secara privat kepada keluarga/rekan saat gowes solo.
       </p>
     </header>
 
@@ -352,7 +356,7 @@ function statusBadge(status: SafetySession['status']): { label: string; class: s
     <!-- Signed-out state -->
     <div v-else-if="!user" class="native-guest-box">
       <div class="guest-icon">🛡️</div>
-      <h2>Aktifkan Fitur Ride Safety</h2>
+      <h2>Aktifkan Ride Safety Beacon</h2>
       <p>Masuk ke akun GowesKit Anda untuk mendaftarkan kontak darurat dan memulai sesi pemantauan gowes solo.</p>
       <div class="guest-actions">
         <NuxtLink class="button button--primary button--full" to="/login">Masuk ke Akun</NuxtLink>
@@ -363,67 +367,80 @@ function statusBadge(status: SafetySession['status']): { label: string; class: s
     <!-- LOGGED IN USER CONTENT -->
     <template v-else>
       <!-- ══════════════════════════════════════════════════════════
-           1. ACTIVE RIDE SESSION BANNER & CONTROLS
+           1. ACTIVE RIDE SESSION BANNER & CONTROLS (CLEAN HUD)
            ══════════════════════════════════════════════════════════ -->
       <section
         v-if="activeSession"
-        class="active-session-card"
-        :class="{ 'active-session-card--sos': activeSession.status === 'sos' }"
+        class="pro-beacon-card"
+        :class="{ 'pro-beacon-card--sos': activeSession.status === 'sos' }"
       >
-        <div class="active-session-top">
-          <div class="active-session-title-group">
-            <span class="live-dot" />
-            <h2>{{ activeSession.status === 'sos' ? '🚨 Kondisi Darurat (SOS) Aktif!' : 'Sesi Gowes Sedang Berlangsung' }}</h2>
+        <!-- Telemetry Top Row -->
+        <div class="beacon-header-row">
+          <div class="beacon-status-indicator">
+            <span class="beacon-pulse-circle" :class="{ 'beacon-pulse-circle--sos': activeSession.status === 'sos' }" />
+            <h2 class="beacon-heading">
+              {{ activeSession.status === 'sos' ? 'Darurat (SOS) Aktif' : 'Sesi Gowes Sedang Berjalan' }}
+            </h2>
           </div>
-          <span class="session-badge" :class="statusBadge(activeSession.status).class">
-            {{ statusBadge(activeSession.status).label }}
+          <span class="beacon-status-tag" :class="activeSession.status === 'sos' ? 'tag-sos' : 'tag-active'">
+            {{ activeSession.status === 'sos' ? '🚨 SOS' : '🟢 AKTIF' }}
           </span>
         </div>
 
-        <p v-if="activeSession.status === 'sos'" class="sos-alert-desc">
-          Status darurat telah disiarkan ke tautan kontak terpercaya Anda. Tetap tenang dan cari tempat aman.
+        <p v-if="activeSession.status === 'sos'" class="sos-banner-note">
+          Status darurat telah dikirim ke kontak terpercaya Anda. Tetap tenang dan cari lokasi yang aman.
         </p>
 
-        <!-- Session Meta Details -->
-        <div class="session-meta-grid">
-          <div class="meta-item">
-            <small>Mulai Gowes</small>
-            <strong>{{ formatDate(activeSession.startedAt) }}</strong>
+        <!-- Compact Time Strip -->
+        <div class="beacon-timestrip">
+          <div class="timestrip-col">
+            <span class="timestrip-label">MULAI</span>
+            <strong class="timestrip-val">{{ formatDate(activeSession.startedAt) }}</strong>
           </div>
-          <div class="meta-item">
-            <small>Estimasi Berakhir</small>
-            <strong>{{ formatDate(activeSession.expectedEndAt) }}</strong>
+          <div class="timestrip-sep" />
+          <div class="timestrip-col">
+            <span class="timestrip-label">ESTIMASI</span>
+            <strong class="timestrip-val">{{ formatDate(activeSession.expectedEndAt) }}</strong>
           </div>
-          <div class="meta-item">
-            <small>Tautan Kedaluwarsa</small>
-            <strong>{{ formatDate(activeSession.shareExpiresAt) }}</strong>
+          <div class="timestrip-sep" />
+          <div class="timestrip-col">
+            <span class="timestrip-label">KEDALUWARSA</span>
+            <strong class="timestrip-val">{{ formatDate(activeSession.shareExpiresAt) }}</strong>
           </div>
         </div>
 
-        <!-- High-Entropy Private Share Link Box -->
-        <div v-if="shareUrl" class="share-link-box">
-          <div class="share-link-header">
-            <strong>🔗 Tautan Pantau Privat (Enkripsi Kedaluwarsa)</strong>
-            <small>Hanya orang yang memiliki link ini yang dapat melihat lokasi Anda</small>
+        <!-- Share URL Bar (If available) -->
+        <div v-if="shareUrl" class="beacon-share-row">
+          <div class="share-url-snippet" :title="shareUrl">
+            <span class="share-icon">🔗</span>
+            <span class="share-url-text">{{ shareUrl }}</span>
           </div>
-          <input :value="shareUrl" readonly class="share-url-field" />
-          <div class="share-buttons-row">
-            <button class="share-btn share-btn--wa" type="button" @click="shareViaWhatsApp">
-              💬 Kirim via WhatsApp
+          <div class="share-action-buttons">
+            <button
+              type="button"
+              class="share-btn-copy"
+              @click="copyShareLink"
+            >
+              📋 Salin
             </button>
-            <button class="share-btn share-btn--copy" type="button" @click="copyShareLink">
-              📋 Salin Tautan
+            <button
+              type="button"
+              class="share-btn-wa"
+              @click="shareViaWhatsApp"
+            >
+              💬 WhatsApp
             </button>
           </div>
-          <span v-if="copyStatus" class="copy-notice">{{ copyStatus }}</span>
         </div>
+        <p v-if="copyStatus" class="share-copy-toast">{{ copyStatus }}</p>
 
-        <!-- Apple Emergency SOS Press-and-Hold Action Button -->
-        <div v-if="activeSession.status === 'active'" class="sos-action-container">
+        <!-- Tactile SOS Beacon Area -->
+        <div v-if="activeSession.status === 'active'" class="beacon-sos-trigger-area">
           <button
-            class="sos-hold-btn"
-            :class="{ 'sos-hold-btn--holding': holdingSos }"
             type="button"
+            class="sos-round-btn"
+            :class="{ 'sos-round-btn--holding': holdingSos }"
+            :disabled="actionPending !== null"
             @mousedown="beginSosHold"
             @mouseup="cancelSosHold"
             @mouseleave="cancelSosHold"
@@ -431,39 +448,54 @@ function statusBadge(status: SafetySession['status']): { label: string; class: s
             @touchend="cancelSosHold"
             @touchcancel="cancelSosHold"
           >
-            <span class="sos-hold-label">🚨 SOS</span>
-            <span class="sos-hold-sub">Tahan 3 Detik</span>
+            <div class="sos-btn-content">
+              <span class="sos-btn-icon">🚨</span>
+              <strong class="sos-btn-title">{{ holdingSos ? 'Tahan...' : 'SOS' }}</strong>
+              <span class="sos-btn-sub">Tahan 3 Detik</span>
+            </div>
+            <div v-if="holdingSos" class="sos-hold-ring" />
           </button>
-          <small class="sos-hint">Tekan dan tahan tombol merah untuk mengaktifkan status darurat bagi kontak terpercaya Anda.</small>
+          <p class="sos-btn-caption">
+            Tekan dan tahan tombol untuk mengaktifkan sinyal darurat ke kontak terpercaya.
+          </p>
         </div>
 
-        <!-- Session Action Buttons -->
-        <div class="active-session-actions">
+        <!-- Primary Action Buttons Row -->
+        <div class="beacon-actions-row">
           <button
-            class="session-btn session-btn--gps"
             type="button"
-            :disabled="locationSaving"
+            class="beacon-action-btn beacon-action-btn--primary"
+            :disabled="locationSaving || actionPending !== null"
             @click="updateLocation"
           >
-            {{ locationSaving ? 'Membaca GPS…' : '📍 Perbarui Lokasi Saya' }}
+            <span v-if="locationSaving">Memperbarui GPS…</span>
+            <span v-else>📍 Update Lokasi</span>
           </button>
+
           <button
-            class="session-btn session-btn--end"
             type="button"
+            class="beacon-action-btn beacon-action-btn--secondary"
             :disabled="actionPending !== null"
             @click="mutateSession('end')"
           >
-            ⏹️ Selesaikan Gowes
+            <span v-if="actionPending === 'end'">Menutup…</span>
+            <span v-else>⏹️ Selesaikan</span>
           </button>
+        </div>
+
+        <!-- Revoke Link -->
+        <div class="beacon-revoke-row">
           <button
-            class="session-btn session-btn--revoke"
             type="button"
+            class="beacon-revoke-link"
             :disabled="actionPending !== null"
             @click="mutateSession('revoke')"
           >
-            🚫 Cabut Akses (Revoke)
+            🚫 Cabut Akses Tautan (Revoke Token)
           </button>
         </div>
+
+        <p v-if="sessionError" class="state-card state-card--error mt-2">{{ sessionError }}</p>
       </section>
 
       <!-- ══════════════════════════════════════════════════════════
@@ -713,158 +745,313 @@ function statusBadge(status: SafetySession['status']): { label: string; class: s
   line-height: 1.4;
 }
 
-/* Active Session Card */
-.active-session-card {
+/* 1. Pro Telemetry Beacon Card (Garmin LiveTrack & Apple Workout style) */
+.pro-beacon-card {
   display: grid;
-  gap: 1rem;
-  padding: 1.25rem;
-  border-radius: 1.35rem;
+  gap: 0.85rem;
+  padding: 1.15rem 1.25rem;
+  border-radius: 1.25rem;
   background: var(--color-white);
-  border: 2px solid var(--color-chain-lime);
-  box-shadow: 0 6px 24px rgb(23 32 42 / 8%);
+  border: 1.5px solid var(--color-chain-lime);
+  box-shadow: 0 4px 20px rgb(23 32 42 / 6%);
 }
 
-.active-session-card--sos {
+.pro-beacon-card--sos {
   border-color: #ef4444;
   background: #fffafa;
 }
 
-.active-session-top {
+.beacon-header-row {
   display: flex;
   align-items: center;
   justify-content: space-between;
   gap: 0.5rem;
-  flex-wrap: wrap;
 }
 
-.active-session-title-group {
+.beacon-status-indicator {
   display: flex;
   align-items: center;
   gap: 0.5rem;
 }
 
-.live-dot {
-  width: 0.65rem;
-  height: 0.65rem;
+.beacon-pulse-circle {
+  width: 0.6rem;
+  height: 0.6rem;
   border-radius: 50%;
   background: #22c55e;
-  animation: pulse 1.5s infinite;
+  box-shadow: 0 0 0 0 rgba(34, 197, 94, 0.7);
+  animation: beacon-pulse 1.8s infinite;
 }
 
-@keyframes pulse {
-  0% { transform: scale(0.95); opacity: 0.8; }
-  50% { transform: scale(1.2); opacity: 1; }
-  100% { transform: scale(0.95); opacity: 0.8; }
+.beacon-pulse-circle--sos {
+  background: #ef4444;
+  box-shadow: 0 0 0 0 rgba(239, 68, 68, 0.7);
+  animation: sos-pulse 1.2s infinite;
 }
 
-.active-session-top h2 {
+@keyframes beacon-pulse {
+  0% { transform: scale(0.95); box-shadow: 0 0 0 0 rgba(34, 197, 94, 0.7); }
+  70% { transform: scale(1); box-shadow: 0 0 0 8px rgba(34, 197, 94, 0); }
+  100% { transform: scale(0.95); box-shadow: 0 0 0 0 rgba(34, 197, 94, 0); }
+}
+
+@keyframes sos-pulse {
+  0% { transform: scale(0.95); box-shadow: 0 0 0 0 rgba(239, 68, 68, 0.8); }
+  70% { transform: scale(1.05); box-shadow: 0 0 0 10px rgba(239, 68, 68, 0); }
+  100% { transform: scale(0.95); box-shadow: 0 0 0 0 rgba(239, 68, 68, 0); }
+}
+
+.beacon-heading {
   margin: 0;
-  font-size: 1.15rem;
-  font-weight: 850;
-}
-
-.session-badge {
-  font-size: 0.72rem;
-  font-weight: 850;
-  padding: 0.2rem 0.6rem;
-  border-radius: 9999px;
-}
-
-.badge--green {
-  background: rgb(201 243 106 / 50%);
-  color: #166534;
-}
-
-.badge--red {
-  background: #fee2e2;
-  color: #dc2626;
-}
-
-.badge--sand {
-  background: var(--color-sand);
-  color: var(--color-asphalt);
-}
-
-.sos-alert-desc {
-  margin: 0;
-  font-size: 0.82rem;
-  font-weight: 800;
-  color: #dc2626;
-  background: #fee2e2;
-  padding: 0.65rem 0.85rem;
-  border-radius: 0.75rem;
-}
-
-.session-meta-grid {
-  display: grid;
-  grid-template-columns: 1fr 1fr 1fr;
-  gap: 0.5rem;
-  padding: 0.75rem;
-  border-radius: 0.85rem;
-  background: var(--color-canvas);
-  border: 1px solid var(--color-sand);
-}
-
-.meta-item {
-  display: grid;
-  gap: 0.15rem;
-}
-
-.meta-item small {
-  font-size: 0.68rem;
-  color: var(--color-asphalt);
-  font-weight: 750;
-}
-
-.meta-item strong {
-  font-size: 0.8rem;
+  font-size: 1.05rem;
   font-weight: 850;
   color: var(--color-ink);
 }
 
-/* Share Link Box */
-.share-link-box {
+.beacon-status-tag {
+  font-family: var(--font-mono);
+  font-size: 0.68rem;
+  font-weight: 900;
+  padding: 0.15rem 0.5rem;
+  border-radius: 9999px;
+}
+
+.tag-active {
+  background: rgb(201 243 106 / 60%);
+  color: #166534;
+}
+
+.tag-sos {
+  background: #fee2e2;
+  color: #dc2626;
+}
+
+.sos-banner-note {
+  margin: 0;
+  font-size: 0.78rem;
+  font-weight: 800;
+  color: #dc2626;
+  background: #fee2e2;
+  padding: 0.55rem 0.75rem;
+  border-radius: 0.65rem;
+}
+
+/* Compact Timestrip */
+.beacon-timestrip {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 0.6rem 0.75rem;
+  border-radius: 0.8rem;
+  background: var(--color-canvas);
+  border: 1px solid var(--color-sand);
+}
+
+.timestrip-col {
   display: grid;
-  gap: 0.5rem;
-  padding: 0.85rem;
-  border-radius: 0.95rem;
+  gap: 0.1rem;
+  text-align: center;
+  flex: 1;
+}
+
+.timestrip-label {
+  font-family: var(--font-mono);
+  font-size: 0.58rem;
+  font-weight: 850;
+  color: var(--color-asphalt);
+  letter-spacing: 0.04em;
+}
+
+.timestrip-val {
+  font-family: var(--font-mono);
+  font-size: 0.76rem;
+  font-weight: 850;
+  color: var(--color-ink);
+}
+
+.timestrip-sep {
+  width: 1px;
+  height: 1.4rem;
   background: var(--color-sand);
 }
 
-.share-link-header strong {
-  font-size: 0.82rem;
-  display: block;
+/* Share URL Bar */
+.beacon-share-row {
+  display: flex;
+  flex-direction: column;
+  gap: 0.45rem;
+  padding: 0.65rem 0.75rem;
+  border-radius: 0.8rem;
+  background: var(--color-sand);
 }
 
-.share-link-header small {
-  font-size: 0.72rem;
-  color: var(--color-asphalt);
+.share-url-snippet {
+  display: flex;
+  align-items: center;
+  gap: 0.35rem;
+  overflow: hidden;
 }
 
-.share-url-field {
-  width: 100%;
-  padding: 0.45rem 0.65rem;
-  border-radius: 0.5rem;
-  border: 1px solid rgb(23 32 42 / 12%);
-  background: var(--color-white);
+.share-url-text {
   font-family: var(--font-mono);
-  font-size: 0.74rem;
-  outline: none;
+  font-size: 0.72rem;
+  color: var(--color-ink);
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
 }
 
-.share-buttons-row {
+.share-action-buttons {
   display: grid;
   grid-template-columns: 1fr 1fr;
-  gap: 0.45rem;
+  gap: 0.4rem;
 }
 
-.share-btn {
-  padding: 0.45rem 0.75rem;
-  border-radius: 0.65rem;
-  font-size: 0.78rem;
+.share-btn-copy,
+.share-btn-wa {
+  padding: 0.4rem 0.6rem;
+  border-radius: 0.55rem;
+  font-size: 0.74rem;
   font-weight: 850;
   border: none;
   cursor: pointer;
+}
+
+.share-btn-copy {
+  background: var(--color-white);
+  color: var(--color-ink);
+  border: 1px solid rgb(23 32 42 / 10%);
+}
+
+.share-btn-wa {
+  background: #25d366;
+  color: #ffffff;
+}
+
+.share-copy-toast {
+  margin: 0;
+  font-size: 0.72rem;
+  font-weight: 850;
+  color: #166534;
+  text-align: center;
+}
+
+/* Tactile Round SOS Button */
+.beacon-sos-trigger-area {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 0.4rem;
+  padding: 0.5rem 0;
+}
+
+.sos-round-btn {
+  position: relative;
+  width: 6.8rem;
+  height: 6.8rem;
+  border-radius: 50%;
+  background: radial-gradient(circle, #ef4444 0%, #dc2626 100%);
+  border: 3.5px solid #ffffff;
+  box-shadow: 0 6px 20px rgb(239 68 68 / 38%);
+  color: #ffffff;
+  cursor: pointer;
+  user-select: none;
+  -webkit-user-select: none;
+  touch-action: none;
+  transition: transform 120ms ease, box-shadow 120ms ease;
+  display: grid;
+  place-items: center;
+}
+
+.sos-round-btn--holding {
+  transform: scale(0.92);
+  box-shadow: 0 0 0 10px rgb(239 68 68 / 30%);
+  background: #b91c1c;
+}
+
+.sos-btn-content {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 0.05rem;
+}
+
+.sos-btn-icon {
+  font-size: 1.2rem;
+}
+
+.sos-btn-title {
+  font-size: 1.2rem;
+  font-weight: 900;
+  letter-spacing: 0.02em;
+}
+
+.sos-btn-sub {
+  font-size: 0.6rem;
+  font-weight: 800;
+  opacity: 0.9;
+}
+
+.sos-btn-caption {
+  margin: 0;
+  font-size: 0.7rem;
+  color: var(--color-asphalt);
+  text-align: center;
+  max-width: 18rem;
+}
+
+/* Action Buttons Row */
+.beacon-actions-row {
+  display: grid;
+  grid-template-columns: 1.2fr 1fr;
+  gap: 0.5rem;
+}
+
+.beacon-action-btn {
+  padding: 0.6rem 0.85rem;
+  border-radius: 0.75rem;
+  font-size: 0.8rem;
+  font-weight: 850;
+  border: 1px solid transparent;
+  cursor: pointer;
+  text-align: center;
+  transition: transform 90ms ease;
+}
+
+.beacon-action-btn:active {
+  transform: scale(0.97);
+}
+
+.beacon-action-btn--primary {
+  background: var(--color-ink);
+  color: var(--color-white);
+}
+
+.beacon-action-btn--secondary {
+  background: var(--color-canvas);
+  border-color: var(--color-sand);
+  color: var(--color-ink);
+}
+
+.beacon-revoke-row {
+  display: flex;
+  justify-content: center;
+  padding-top: 0.15rem;
+}
+
+.beacon-revoke-link {
+  background: none;
+  border: none;
+  color: #dc2626;
+  font-size: 0.74rem;
+  font-weight: 800;
+  cursor: pointer;
+  text-decoration: underline;
+  opacity: 0.85;
+}
+
+.beacon-revoke-link:hover {
+  opacity: 1;
 }
 
 .share-btn--wa {
