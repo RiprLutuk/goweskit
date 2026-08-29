@@ -94,11 +94,23 @@ export function useGoogleAuth() {
         });
 
         // Trigger Google One-Tap / Account Selector
-        window.google!.accounts.id.prompt(() => {
-          // If prompt closes without selection, reset loading state
+        window.google!.accounts.id.prompt((notification: any) => {
+          if (notification?.isNotDisplayed?.()) {
+            const reason = notification.getNotDisplayedReason?.();
+            console.warn('[Google Auth] Prompt not displayed reason:', reason);
+          }
+          if (notification?.isSkippedMoment?.()) {
+            const reason = notification.getSkippedReason?.();
+            console.warn('[Google Auth] Prompt skipped reason:', reason);
+          }
+          if (notification?.isDismissedMoment?.()) {
+            const reason = notification.getDismissedReason?.();
+            console.warn('[Google Auth] Prompt dismissed reason:', reason);
+          }
+          // Reset loading state after prompt interaction
           setTimeout(() => {
             if (loading.value) loading.value = false;
-          }, 3000);
+          }, 2000);
         });
       });
     } catch (err: unknown) {
