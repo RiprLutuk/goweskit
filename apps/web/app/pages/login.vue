@@ -1,5 +1,6 @@
 <script setup lang="ts">
 const { login } = useAuth();
+const { loading: googleLoading, triggerGoogleSignIn } = useGoogleAuth();
 const email = ref('');
 const password = ref('');
 const submitting = ref(false);
@@ -35,8 +36,9 @@ async function quickDemoLogin(): Promise<void> {
   }
 }
 
-function continueWithGoogle(): void {
-  alert('Integrasi Google OAuth (Sign-in with Google) segera aktif.');
+async function continueWithGoogle(): Promise<void> {
+  errorMessage.value = '';
+  await triggerGoogleSignIn();
 }
 </script>
 

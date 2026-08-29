@@ -1,4 +1,5 @@
 import {
+  googleAuthRequestSchema,
   loginRequestSchema,
   registerRequestSchema,
   sendOtpRequestSchema,
@@ -56,6 +57,20 @@ export function registerAuthRoutes(
     async (request, reply) => {
       const input = parseInput(loginRequestSchema, request.body);
       const session = await options.authService.login(input);
+
+      reply.setCookie(SESSION_COOKIE_NAME, session.token, {
+        ...cookieOptions,
+        expires: session.expiresAt,
+      });
+      return { user: session.user };
+    },
+  );
+
+  app.post<{ Reply: AuthUserResponse }>(
+    '/api/v1/auth/google',
+    async (request, reply) => {
+      const input = parseInput(googleAuthRequestSchema, request.body);
+      const session = await options.authService.loginWithGoogle(input);
 
       reply.setCookie(SESSION_COOKIE_NAME, session.token, {
         ...cookieOptions,

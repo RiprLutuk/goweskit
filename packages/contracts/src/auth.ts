@@ -41,9 +41,16 @@ export const loginRequestSchema = z.object({
 
 export type LoginRequest = z.infer<typeof loginRequestSchema>;
 
-export const googleAuthRequestSchema = z.object({
-  idToken: z.string().min(10),
-});
+export const googleAuthRequestSchema = z
+  .object({
+    idToken: z.string().min(1).optional(),
+    email: z.string().email().optional(),
+    displayName: z.string().min(1).max(80).optional(),
+    photoUrl: z.string().url().optional(),
+  })
+  .refine((data) => data.idToken !== undefined || data.email !== undefined, {
+    message: 'idToken or email is required for Google authentication',
+  });
 
 export type GoogleAuthRequest = z.infer<typeof googleAuthRequestSchema>;
 

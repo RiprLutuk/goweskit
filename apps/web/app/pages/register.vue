@@ -3,6 +3,7 @@ import type { SendOtpResponse } from '@goweskit/contracts';
 
 const api = useApi();
 const { register, login } = useAuth();
+const { loading: googleLoading, triggerGoogleSignIn } = useGoogleAuth();
 
 // Step 1: Form Data | Step 2: OTP Verification
 const step = ref<1 | 2>(1);
@@ -108,9 +109,9 @@ async function submitOtpRegistration(): Promise<void> {
   }
 }
 
-function continueWithGoogle(): void {
-  // Placeholder / Trigger for Google OAuth2 Redirect or Google One Tap
-  alert('Integrasi Google OAuth (Sign-in with Google) segera aktif.');
+async function continueWithGoogle(): Promise<void> {
+  errorMessage.value = '';
+  await triggerGoogleSignIn();
 }
 </script>
 

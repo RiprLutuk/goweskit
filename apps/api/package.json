@@ -25,6 +25,7 @@
     "dotenv": "17.4.2",
     "drizzle-orm": "0.45.2",
     "fastify": "5.12.1",
+    "google-auth-library": "^11.0.2",
     "pg": "8.23.0",
     "zod": "4.4.3"
   },

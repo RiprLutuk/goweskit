@@ -96,4 +96,24 @@ describe('AuthService', () => {
       code: 'AUTH_INVALID_CREDENTIALS',
     });
   });
+
+  it('authenticates or auto-provisions a user via Google login', async () => {
+    const repository = new MemoryAuthRepository();
+    const service = new AuthService(repository);
+
+    const session = await service.loginWithGoogle({
+      email: 'budi.google@example.com',
+      displayName: 'Budi Google',
+    });
+
+    expect(session.user.email).toBe('budi.google@example.com');
+    expect(session.user.displayName).toBe('Budi Google');
+    expect(session.token).toHaveLength(43);
+
+    // Logging in again with the same Google email should reuse the user
+    const secondSession = await service.loginWithGoogle({
+      email: 'budi.google@example.com',
+    });
+    expect(secondSession.user.id).toBe(session.user.id);
+  });
 });

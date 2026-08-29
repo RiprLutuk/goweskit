@@ -1,5 +1,6 @@
 import type {
   AuthUserResponse,
+  GoogleAuthRequest,
   LoginRequest,
   RegisterRequest,
   User,
@@ -40,11 +41,21 @@ export function useAuth() {
     return response.user;
   }
 
+  async function loginWithGoogle(input: GoogleAuthRequest): Promise<User> {
+    const response = await api<AuthUserResponse>('/auth/google', {
+      method: 'POST',
+      body: input,
+    });
+    user.value = response.user;
+    initialized.value = true;
+    return response.user;
+  }
+
   async function logout(): Promise<void> {
     await api('/auth/logout', { method: 'POST' });
     user.value = null;
     initialized.value = true;
   }
 
-  return { user, initialized, refresh, register, login, logout };
+  return { user, initialized, refresh, register, login, loginWithGoogle, logout };
 }
