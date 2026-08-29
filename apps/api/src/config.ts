@@ -11,6 +11,12 @@ const environmentSchema = z.object({
     .enum(['development', 'test', 'production'])
     .default('development'),
   API_PORT: z.coerce.number().int().min(1).max(65_535).default(4000),
+  BREVO_API_KEY: optionalSecret,
+  BREVO_SENDER_NAME: z.string().trim().default('GowesKit'),
+  BREVO_SENDER_EMAIL: z
+    .string()
+    .email()
+    .default('no-reply@goweskit.demo.pandanteknik.com'),
   DATABASE_URL: z.url().default('postgresql://lutuk@localhost:1921/goweskit'),
   GOOGLE_CLIENT_ID: optionalSecret,
   OTP_DEMO_ENABLED: z.enum(['true', 'false']).optional(),
@@ -41,6 +47,11 @@ const environmentSchema = z.object({
 export interface AppConfig {
   apiPort: number;
   databaseUrl: string;
+  email: {
+    apiKey?: string;
+    senderName: string;
+    senderEmail: string;
+  };
   environment: 'development' | 'test' | 'production';
   googleClientId: string | null;
   otpDemoEnabled: boolean;
@@ -83,6 +94,11 @@ export function readConfig(
   return {
     apiPort: parsed.API_PORT,
     databaseUrl: parsed.DATABASE_URL,
+    email: {
+      apiKey: parsed.BREVO_API_KEY,
+      senderName: parsed.BREVO_SENDER_NAME,
+      senderEmail: parsed.BREVO_SENDER_EMAIL,
+    },
     environment: parsed.NODE_ENV,
     googleClientId: parsed.GOOGLE_CLIENT_ID ?? null,
     otpDemoEnabled:

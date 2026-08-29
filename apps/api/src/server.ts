@@ -29,6 +29,7 @@ import {
   SAFETY_PUBLIC_RATE_LIMIT_REQUESTS,
   SAFETY_PUBLIC_RATE_LIMIT_WINDOW_SECONDS,
 } from '@goweskit/contracts/safety';
+import { EmailWorker } from './mail/email-worker.js';
 import { AuthService } from './services/auth-service.js';
 import { CatalogService } from './services/catalog-service.js';
 import { CompatibilityService } from './services/compatibility-service.js';
@@ -47,6 +48,13 @@ const googleIdentityVerifier =
   config.googleClientId === null
     ? undefined
     : new GoogleIdentityVerifier(config.googleClientId);
+
+const emailWorker = new EmailWorker({
+  apiKey: config.email.apiKey,
+  senderName: config.email.senderName,
+  senderEmail: config.email.senderEmail,
+});
+
 const authService = new AuthService(
   new DrizzleAuthRepository(databaseClient.database),
 );
@@ -69,6 +77,7 @@ const app = buildApp({
   authRateLimiter: new AuthRateLimiter(),
   otpService: new OtpService({
     allowTestCode: config.otpDemoEnabled,
+    emailWorker,
     enabled: config.otpDemoEnabled,
     exposeCode: config.otpDemoEnabled,
   }),

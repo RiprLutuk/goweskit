@@ -2,6 +2,8 @@ import { randomInt } from 'node:crypto';
 import type { SendOtpRequest, SendOtpResponse } from '@goweskit/contracts';
 
 import { AppError } from '../errors.js';
+import { type EmailWorker } from '../mail/email-worker.js';
+import { buildOtpEmailHtml } from '../mail/templates/otp-email.js';
 
 interface OtpRecord {
   code: string;
@@ -16,6 +18,7 @@ export const MAX_OTP_ATTEMPTS = 5;
 
 export interface OtpServiceOptions {
   allowTestCode?: boolean;
+  emailWorker?: EmailWorker;
   enabled?: boolean;
   exposeCode?: boolean;
 }
@@ -23,17 +26,19 @@ export interface OtpServiceOptions {
 export class OtpService {
   private readonly store = new Map<string, OtpRecord>();
   private readonly allowTestCode: boolean;
+  private readonly emailWorker?: EmailWorker;
   private readonly enabled: boolean;
   private readonly exposeCode: boolean;
 
   public constructor(options: OtpServiceOptions = {}) {
     this.allowTestCode = options.allowTestCode ?? true;
+    this.emailWorker = options.emailWorker;
     this.enabled = options.enabled ?? true;
     this.exposeCode = options.exposeCode ?? true;
   }
 
   /**
-   * Generates and stores a 6-digit OTP code for the given email.
+   * Generates, stores, and asynchronously dispatches a 6-digit OTP code email via background worker.
    */
   public sendOtp(input: SendOtpRequest): SendOtpResponse {
     this.assertEnabled();
@@ -66,9 +71,20 @@ export class OtpService {
       lastSentAt: now,
     });
 
+    // Enqueue non-blocking email delivery job to background EmailWorker
+    if (this.emailWorker) {
+      const { html, text } = buildOtpEmailHtml(normalizedEmail, code);
+      this.emailWorker.enqueue({
+        to: normalizedEmail,
+        subject: `[GowesKit] ${code} adalah Kode Verifikasi OTP Anda`,
+        html,
+        text,
+      });
+    }
+
     return {
       success: true,
-      message: `Kode verifikasi OTP 6-digit tersedia untuk ${normalizedEmail}.`,
+      message: `Kode verifikasi OTP 6-digit telah dikirimkan ke ${normalizedEmail}.`,
       expiresInSeconds: OTP_EXPIRATION_SECONDS,
       ...(this.exposeCode ? { demoOtp: code } : {}),
     };

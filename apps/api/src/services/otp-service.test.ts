@@ -1,4 +1,4 @@
-import { describe, expect, it } from 'vitest';
+import { describe, expect, it, vi } from 'vitest';
 
 import { AppError } from '../errors.js';
 import { OtpService } from './otp-service.js';
@@ -56,5 +56,24 @@ describe('OtpService', () => {
     expect(() => service.verifyOtp('rider@example.com', '123456')).toThrow(
       expect.objectContaining({ code: 'OTP_UNAVAILABLE' }),
     );
+  });
+
+  it('enqueues OTP email to background emailWorker', async () => {
+    const enqueueMock = vi.fn();
+    const service = new OtpService({
+      emailWorker: { enqueue: enqueueMock } as any,
+    });
+
+    const res = service.sendOtp({
+      email: 'worker-test@example.com',
+      purpose: 'register',
+    });
+
+    expect(res.success).toBe(true);
+    expect(enqueueMock).toHaveBeenCalledTimes(1);
+    const job = enqueueMock.mock.calls[0][0];
+    expect(job.to).toBe('worker-test@example.com');
+    expect(job.subject).toContain(res.demoOtp);
+    expect(job.html).toContain(res.demoOtp);
   });
 });
