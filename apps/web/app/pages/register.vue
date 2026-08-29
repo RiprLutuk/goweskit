@@ -175,7 +175,7 @@ async function continueWithGoogle(): Promise<void> {
     <section class="native-auth-card" aria-labelledby="register-title">
       <!-- Header -->
       <div class="auth-header">
-        <span class="auth-icon">🚴‍♂️</span>
+        <BrandLogo size="lg" :show-tagline="false" class="auth-brand-center" />
         <span class="auth-eyebrow">Gabung Bersama Kami</span>
         <h1 id="register-title" class="auth-title">
           {{ step === 1 ? 'Daftar Akun Baru' : 'Verifikasi Kode OTP' }}
@@ -355,6 +355,11 @@ async function continueWithGoogle(): Promise<void> {
   text-align: center;
   display: grid;
   gap: 0.25rem;
+}
+
+.auth-brand-center {
+  justify-content: center;
+  margin-bottom: 0.35rem;
 }
 
 .auth-icon {

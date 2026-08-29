@@ -37,25 +37,8 @@ const userPillName = computed(() => {
     <!-- 100% Full-Bleed Sticky Top App Bar (Hidden on /explore for full-screen map experience) -->
     <header v-if="!route.path.startsWith('/explore')" class="site-header">
       <div class="site-header__container">
-        <!-- Left: Brand Logo Lockup -->
-        <NuxtLink class="brand" to="/" aria-label="GowesKit home">
-          <div class="brand__mark-box">
-            <svg
-              class="brand__mark"
-              viewBox="0 0 48 48"
-              aria-hidden="true"
-              focusable="false"
-            >
-              <circle cx="14" cy="30" r="9" />
-              <circle cx="35" cy="30" r="9" />
-              <path d="m14 30 8-14 7 14H14Zm8-14h8m-11-4h6" />
-            </svg>
-          </div>
-          <div class="brand__text-group">
-            <span class="brand__name">GowesKit</span>
-            <span class="brand__tagline">Workshop &amp; Safety</span>
-          </div>
-        </NuxtLink>
+        <!-- Left: Pro Cycling Brand Lockup -->
+        <BrandLogo />
 
         <!-- Center: Desktop Navigation Bar (Only on screens >= 768px) -->
         <nav class="desktop-nav" aria-label="Desktop primary navigation">
@@ -144,54 +127,6 @@ const userPillName = computed(() => {
   margin: 0 auto;
   padding: 0 1.25rem;
   gap: 1rem;
-}
-
-.brand {
-  display: inline-flex;
-  align-items: center;
-  gap: 0.6rem;
-  text-decoration: none;
-  color: var(--color-ink);
-}
-
-.brand__mark-box {
-  display: grid;
-  place-items: center;
-  width: 2.2rem;
-  height: 2.2rem;
-  border-radius: 0.65rem;
-  background: var(--color-chain-lime);
-  border: 1.5px solid var(--color-ink);
-  box-shadow: 0 2px 0 var(--color-ink);
-}
-
-.brand__mark {
-  width: 1.3rem;
-  height: 1.3rem;
-  fill: none;
-  stroke: var(--color-ink);
-  stroke-linecap: round;
-  stroke-linejoin: round;
-  stroke-width: 2.5;
-}
-
-.brand__text-group {
-  display: flex;
-  flex-direction: column;
-}
-
-.brand__name {
-  font-size: 1.1rem;
-  font-weight: 900;
-  letter-spacing: -0.03em;
-  line-height: 1.05;
-}
-
-.brand__tagline {
-  font-size: 0.62rem;
-  font-weight: 700;
-  color: var(--color-asphalt);
-  letter-spacing: 0.02em;
 }
 
 /* Center Desktop Navigation */

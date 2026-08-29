@@ -393,10 +393,7 @@ onBeforeUnmount(() => {
       <!-- Panel Header & Search Input -->
       <div class="panel-header">
         <div class="panel-brand-row">
-          <NuxtLink to="/" class="panel-brand-link">
-            <span class="panel-brand-icon">🚴</span>
-            <span class="panel-brand-text">GowesKit <strong>Explore</strong></span>
-          </NuxtLink>
+          <BrandLogo size="sm" tagline="Explore Radar" />
           <button
             class="sidebar-toggle-btn"
             type="button"

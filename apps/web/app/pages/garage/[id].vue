@@ -133,7 +133,7 @@ function handlePhotoFileUpload(event: Event): void {
 async function deleteBike(): Promise<void> {
   const confirmed = await alert.confirm({
     title: 'Hapus Sepeda?',
-    text: `Hapus "${bike.value?.name ?? 'Sepeda'}" dari My Garage?`,
+    text: `Hapus "${bike.value?.nickname ?? 'Sepeda'}" dari My Garage?`,
     confirmText: 'Ya, Hapus',
     cancelText: 'Batal',
     icon: 'warning',

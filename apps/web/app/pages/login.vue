@@ -80,7 +80,7 @@ async function continueWithGoogle(): Promise<void> {
   <div class="native-container auth-container">
     <section class="native-auth-card" aria-labelledby="login-title">
       <div class="auth-header">
-        <span class="auth-icon">🚲</span>
+        <BrandLogo size="lg" :show-tagline="false" class="auth-brand-center" />
         <span class="auth-eyebrow">Selamat Datang Kembali</span>
         <h1 id="login-title" class="auth-title">Masuk ke Akun</h1>
         <p class="auth-sub">Kelola garasi, catatan servis, dan kontak darurat solo-ride Anda.</p>
@@ -192,6 +192,11 @@ async function continueWithGoogle(): Promise<void> {
   text-align: center;
   display: grid;
   gap: 0.25rem;
+}
+
+.auth-brand-center {
+  justify-content: center;
+  margin-bottom: 0.35rem;
 }
 
 .auth-icon {
