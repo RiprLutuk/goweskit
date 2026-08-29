@@ -126,7 +126,7 @@ This document tracks all backend API Change Requests (CR), endpoint proposals, a
 ### CR-005: 6-Digit Email OTP Verification & 1-Tap Google Sign-In
 - **Endpoints**:
   - `POST /api/v1/auth/otp/send`: Request 6-digit numeric OTP with 5-min TTL and rate limiting cooldown.
-  - `POST /api/v1/auth/register`: Accepts optional `otp` field (validated before creating user).
+  - `POST /api/v1/auth/register`: Requires a valid `register` OTP before creating the user.
   - `POST /api/v1/auth/google`: Accepts Google ID token credential for instant 1-tap sign in.
 - **Request Body for `POST /api/v1/auth/otp/send`**:
 ```json
@@ -144,11 +144,12 @@ This document tracks all backend API Change Requests (CR), endpoint proposals, a
   "demoOtp": "<local development only>"
 }
 ```
-- **Rate Limiting**: Cooldown 30 detik antar permintaan kirim ulang, maksimal 5x percobaan salah per kode OTP.
+- **Rate Limiting**: Cooldown 30 detik antar permintaan kirim ulang, maksimal 5 email per alamat per jam, dan maksimal 5x percobaan salah per kode OTP.
 - **Production boundary**: `OTP_DEMO_ENABLED=false`; demo OTP and the universal
   test code are disabled. Brevo delivery requires `BREVO_API_KEY` plus an active
   `BREVO_SENDER_EMAIL`; provider failures return `OTP_DELIVERY_FAILED` without
-  exposing raw errors. Google auth accepts only a signed Google ID token and the
+  exposing raw errors. OTP records are purpose-bound, HMAC-protected, and
+  bounded in memory. Google auth accepts only a signed Google ID token and the
   API verifies it against `GOOGLE_CLIENT_ID` before creating a session.
 
 ---

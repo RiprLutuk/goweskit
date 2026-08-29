@@ -1,4 +1,5 @@
 import { existsSync } from 'node:fs';
+import { randomBytes } from 'node:crypto';
 import { resolve } from 'node:path';
 const rootEnvPath = resolve(import.meta.dirname, '../../../.env');
 if (existsSync(rootEnvPath)) process.loadEnvFile(rootEnvPath);
@@ -51,6 +52,8 @@ const googleIdentityVerifier =
 const emailWorker =
   config.email === null ? undefined : new EmailWorker(config.email);
 const otpDemoEnabled = config.otpDemoEnabled && emailWorker === undefined;
+const otpHashSecret =
+  config.otpHmacSecret ?? randomBytes(32).toString('base64url');
 
 const authService = new AuthService(
   new DrizzleAuthRepository(databaseClient.database),
@@ -77,6 +80,7 @@ const app = buildApp({
     ...(emailWorker === undefined ? {} : { emailWorker }),
     enabled: emailWorker !== undefined || otpDemoEnabled,
     exposeCode: otpDemoEnabled,
+    hashSecret: otpHashSecret,
   }),
   webOrigin: config.webOrigin,
   cookieSecure: config.sessionCookieSecure,

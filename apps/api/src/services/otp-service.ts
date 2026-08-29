@@ -1,4 +1,4 @@
-import { randomInt } from 'node:crypto';
+import { createHmac, randomInt, timingSafeEqual } from 'node:crypto';
 import type { SendOtpRequest, SendOtpResponse } from '@goweskit/contracts';
 
 import { AppError } from '../errors.js';
@@ -6,46 +6,68 @@ import { type EmailWorker } from '../mail/email-worker.js';
 import { buildOtpEmailHtml } from '../mail/templates/otp-email.js';
 
 interface OtpRecord {
-  code: string;
+  codeHash: Buffer;
   expiresAt: number;
   attempts: number;
   lastSentAt: number;
 }
 
-export const OTP_EXPIRATION_SECONDS = 300; // 5 minutes
-export const OTP_RESEND_COOLDOWN_SECONDS = 30; // 30 seconds cooldown between resends
+interface RecipientRateLimit {
+  count: number;
+  resetsAt: number;
+}
+
+export const OTP_EXPIRATION_SECONDS = 300;
+export const OTP_RESEND_COOLDOWN_SECONDS = 30;
 export const MAX_OTP_ATTEMPTS = 5;
+export const MAX_OTP_RECORDS = 10_000;
+export const MAX_RECIPIENT_SENDS_PER_HOUR = 5;
+const RECIPIENT_RATE_LIMIT_WINDOW_MS = 60 * 60 * 1000;
 
 export interface OtpServiceOptions {
   allowTestCode?: boolean;
   emailWorker?: EmailWorker;
   enabled?: boolean;
   exposeCode?: boolean;
+  hashSecret?: string;
+  maxRecords?: number;
 }
 
 export class OtpService {
   private readonly store = new Map<string, OtpRecord>();
+  private readonly recipientRateLimits = new Map<string, RecipientRateLimit>();
   private readonly allowTestCode: boolean;
   private readonly emailWorker: EmailWorker | undefined;
   private readonly enabled: boolean;
   private readonly exposeCode: boolean;
+  private readonly hashSecret: string | undefined;
+  private readonly maxRecords: number;
 
   public constructor(options: OtpServiceOptions = {}) {
-    this.allowTestCode = options.allowTestCode ?? true;
+    this.allowTestCode = options.allowTestCode ?? false;
     this.emailWorker = options.emailWorker;
-    this.enabled = options.enabled ?? true;
-    this.exposeCode = options.exposeCode ?? true;
+    this.enabled = options.enabled ?? false;
+    this.exposeCode = options.exposeCode ?? false;
+    this.hashSecret = options.hashSecret;
+    this.maxRecords = options.maxRecords ?? MAX_OTP_RECORDS;
+
+    if (this.maxRecords < 1 || !Number.isInteger(this.maxRecords)) {
+      throw new Error('OTP max records must be a positive integer.');
+    }
+    if (this.enabled && this.hashSecret === undefined) {
+      throw new Error('OTP hash secret is required when OTP is enabled.');
+    }
   }
 
-  /**
-   * Generates, stores, and delivers a 6-digit OTP code before confirming success.
-   */
+  /** Generates, stores, and delivers a purpose-bound OTP before success. */
   public async sendOtp(input: SendOtpRequest): Promise<SendOtpResponse> {
     this.assertEnabled();
     const normalizedEmail = input.email.trim().toLowerCase();
+    const recordKey = this.recordKey(normalizedEmail, input.purpose);
     const now = Date.now();
+    this.cleanupExpired(now);
 
-    const existing = this.store.get(normalizedEmail);
+    const existing = this.store.get(recordKey);
     if (existing !== undefined) {
       const elapsedSinceLastSend = Math.floor(
         (now - existing.lastSentAt) / 1000,
@@ -60,12 +82,20 @@ export class OtpService {
       }
     }
 
-    // Generate 6-digit numeric OTP (100000 - 999999)
+    this.consumeRecipientQuota(normalizedEmail, now);
+    if (existing === undefined && this.store.size >= this.maxRecords) {
+      throw new AppError(
+        'OTP_RATE_LIMITED',
+        'Terlalu banyak permintaan OTP. Silakan coba lagi nanti.',
+        429,
+      );
+    }
+
     const code = randomInt(100_000, 1_000_000).toString();
     const expiresAt = now + OTP_EXPIRATION_SECONDS * 1000;
 
-    this.store.set(normalizedEmail, {
-      code,
+    this.store.set(recordKey, {
+      codeHash: this.hashCode(recordKey, code),
       expiresAt,
       attempts: 0,
       lastSentAt: now,
@@ -81,7 +111,7 @@ export class OtpService {
           text,
         });
       } catch {
-        this.store.delete(normalizedEmail);
+        this.store.delete(recordKey);
         throw new AppError(
           'OTP_DELIVERY_FAILED',
           'Kode OTP tidak dapat dikirim. Silakan coba lagi nanti.',
@@ -101,20 +131,22 @@ export class OtpService {
     };
   }
 
-  /**
-   * Verifies the OTP code for an email. Consumes the OTP if valid.
-   */
-  public verifyOtp(email: string, code: string): boolean {
+  /** Verifies and consumes an OTP only for the requested purpose. */
+  public verifyOtp(
+    email: string,
+    code: string,
+    purpose: SendOtpRequest['purpose'],
+  ): boolean {
     this.assertEnabled();
     const normalizedEmail = email.trim().toLowerCase();
     const trimmedCode = code.trim();
+    const recordKey = this.recordKey(normalizedEmail, purpose);
 
-    // Universal test/demo bypass code for automated integration tests
     if (this.allowTestCode && trimmedCode === '123456') {
       return true;
     }
 
-    const record = this.store.get(normalizedEmail);
+    const record = this.store.get(recordKey);
     if (record === undefined) {
       throw new AppError(
         'OTP_NOT_FOUND',
@@ -124,7 +156,7 @@ export class OtpService {
     }
 
     if (Date.now() > record.expiresAt) {
-      this.store.delete(normalizedEmail);
+      this.store.delete(recordKey);
       throw new AppError(
         'OTP_EXPIRED',
         'Kode OTP telah kedaluwarsa. Silakan minta kode baru.',
@@ -133,7 +165,7 @@ export class OtpService {
     }
 
     if (record.attempts >= MAX_OTP_ATTEMPTS) {
-      this.store.delete(normalizedEmail);
+      this.store.delete(recordKey);
       throw new AppError(
         'OTP_MAX_ATTEMPTS_EXCEEDED',
         'Terlalu banyak percobaan salah. Silakan minta kode OTP baru.',
@@ -141,7 +173,8 @@ export class OtpService {
       );
     }
 
-    if (record.code !== trimmedCode) {
+    const suppliedHash = this.hashCode(recordKey, trimmedCode);
+    if (!timingSafeEqual(record.codeHash, suppliedHash)) {
       record.attempts += 1;
       const remaining = MAX_OTP_ATTEMPTS - record.attempts;
       throw new AppError(
@@ -151,8 +184,7 @@ export class OtpService {
       );
     }
 
-    // Successfully verified -> consume OTP
-    this.store.delete(normalizedEmail);
+    this.store.delete(recordKey);
     return true;
   }
 
@@ -164,5 +196,53 @@ export class OtpService {
         503,
       );
     }
+  }
+
+  private cleanupExpired(now: number): void {
+    for (const [key, record] of this.store) {
+      if (now > record.expiresAt) this.store.delete(key);
+    }
+    for (const [email, rateLimit] of this.recipientRateLimits) {
+      if (now >= rateLimit.resetsAt) this.recipientRateLimits.delete(email);
+    }
+  }
+
+  private consumeRecipientQuota(email: string, now: number): void {
+    const current = this.recipientRateLimits.get(email);
+    if (current !== undefined && now < current.resetsAt) {
+      if (current.count >= MAX_RECIPIENT_SENDS_PER_HOUR) {
+        throw new AppError(
+          'OTP_RATE_LIMITED',
+          'Terlalu banyak kode OTP dikirim ke alamat ini. Silakan coba lagi nanti.',
+          429,
+        );
+      }
+      current.count += 1;
+      return;
+    }
+
+    if (this.recipientRateLimits.size >= this.maxRecords) {
+      throw new AppError(
+        'OTP_RATE_LIMITED',
+        'Terlalu banyak permintaan OTP. Silakan coba lagi nanti.',
+        429,
+      );
+    }
+    this.recipientRateLimits.set(email, {
+      count: 1,
+      resetsAt: now + RECIPIENT_RATE_LIMIT_WINDOW_MS,
+    });
+  }
+
+  private hashCode(recordKey: string, code: string): Buffer {
+    return createHmac('sha256', this.hashSecret ?? '')
+      .update(recordKey)
+      .update(':')
+      .update(code)
+      .digest();
+  }
+
+  private recordKey(email: string, purpose: SendOtpRequest['purpose']): string {
+    return `${purpose}:${email}`;
   }
 }

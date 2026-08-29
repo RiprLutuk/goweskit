@@ -47,9 +47,7 @@ export function registerAuthRoutes(
     '/api/v1/auth/register',
     async (request, reply) => {
       const input = parseInput(registerRequestSchema, request.body);
-      if (input.otp) {
-        otpService.verifyOtp(input.email, input.otp);
-      }
+      otpService.verifyOtp(input.email, input.otp, 'register');
       const user = await options.authService.register(input);
       return reply.status(201).send({ user });
     },

@@ -16,15 +16,14 @@ export const registerRequestSchema = z.object({
   otp: z
     .string()
     .trim()
-    .regex(/^\d{6}$/u, 'Kode OTP harus 6 digit angka')
-    .optional(),
+    .regex(/^\d{6}$/u, 'Kode OTP harus 6 digit angka'),
 });
 
 export type RegisterRequest = z.infer<typeof registerRequestSchema>;
 
 export const sendOtpRequestSchema = z.object({
   email: z.email().trim().toLowerCase().max(320),
-  purpose: z.enum(['register', 'reset_password']).default('register'),
+  purpose: z.literal('register').default('register'),
 });
 
 export type SendOtpRequest = z.infer<typeof sendOtpRequestSchema>;

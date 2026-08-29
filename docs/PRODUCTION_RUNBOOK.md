@@ -17,6 +17,7 @@ SESSION_COOKIE_SECURE=true
 TRUST_PROXY_HOPS=1
 GOOGLE_CLIENT_ID=<Google Web OAuth client ID>
 OTP_DEMO_ENABLED=false
+OTP_HMAC_SECRET=<at least 32 random bytes, encoded for environment storage>
 BREVO_API_KEY=<Brevo REST API key>
 BREVO_SENDER_NAME=GowesKit
 BREVO_SENDER_EMAIL=<active verified Brevo sender>
@@ -87,7 +88,9 @@ data restore is genuinely required, stop writes first and restore the reviewed
 ## Current provider boundary
 
 Email OTP uses Brevo's transactional REST API and is enabled only when both the
-API key and verified sender email are configured. The API never returns the OTP
-when Brevo is active. OTP state remains process-local in v0.1, so keep a single
-API instance; moving to multiple API instances requires a shared bounded
-one-time-code store first.
+API key and verified sender email are configured. Registration requires a valid
+purpose-bound OTP. The API stores only an HMAC of each code, limits delivery to
+five messages per recipient per hour, bounds in-memory records, and never
+returns the OTP when Brevo is active. OTP state remains process-local in v0.1,
+so keep a single API instance; moving to multiple API instances requires a
+shared bounded one-time-code store first.

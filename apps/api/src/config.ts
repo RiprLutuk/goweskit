@@ -26,6 +26,7 @@ const environmentSchema = z.object({
   DATABASE_URL: z.url().default('postgresql://lutuk@localhost:1921/goweskit'),
   GOOGLE_CLIENT_ID: optionalSecret,
   OTP_DEMO_ENABLED: z.enum(['true', 'false']).optional(),
+  OTP_HMAC_SECRET: optionalSecret,
   R2_ACCOUNT_ID: z.string().trim().min(1),
   R2_ACCESS_KEY_ID: z.string().trim().min(1),
   R2_SECRET_ACCESS_KEY: z.string().trim().min(1),
@@ -61,6 +62,7 @@ export interface AppConfig {
   environment: 'development' | 'test' | 'production';
   googleClientId: string | null;
   otpDemoEnabled: boolean;
+  otpHmacSecret: string | null;
   r2: {
     accountId: string;
     accessKeyId: string;
@@ -107,6 +109,11 @@ export function readConfig(
     if (parsed.OTP_DEMO_ENABLED === 'true') {
       throw new Error('OTP_DEMO_ENABLED cannot be true in production.');
     }
+    if (emailConfigured && parsed.OTP_HMAC_SECRET === undefined) {
+      throw new Error(
+        'OTP_HMAC_SECRET is required when Brevo is configured in production.',
+      );
+    }
   }
 
   return {
@@ -127,6 +134,7 @@ export function readConfig(
       parsed.OTP_DEMO_ENABLED === undefined
         ? parsed.NODE_ENV !== 'production'
         : parsed.OTP_DEMO_ENABLED === 'true',
+    otpHmacSecret: parsed.OTP_HMAC_SECRET ?? null,
     r2: {
       accountId: parsed.R2_ACCOUNT_ID,
       accessKeyId: parsed.R2_ACCESS_KEY_ID,

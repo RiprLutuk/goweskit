@@ -18,6 +18,7 @@ describe('API configuration', () => {
       environment: 'development',
       googleClientId: null,
       otpDemoEnabled: true,
+      otpHmacSecret: null,
       r2: {
         accountId: 'account-id',
         accessKeyId: 'access-key-id',
@@ -69,6 +70,7 @@ describe('API configuration', () => {
       SESSION_COOKIE_SECURE: 'true',
       TRUST_PROXY_HOPS: '1',
       WEB_ORIGIN: 'https://goweskit.example',
+      OTP_HMAC_SECRET: 'production-otp-hmac-secret',
     };
     expect(readConfig(production)).toMatchObject({
       environment: 'production',
@@ -87,5 +89,14 @@ describe('API configuration', () => {
     ]) {
       expect(() => readConfig(invalid)).toThrow();
     }
+
+    expect(() =>
+      readConfig({
+        ...production,
+        BREVO_API_KEY: 'brevo-secret',
+        BREVO_SENDER_EMAIL: 'sender@example.com',
+        OTP_HMAC_SECRET: '',
+      }),
+    ).toThrow(/OTP_HMAC_SECRET/u);
   });
 });

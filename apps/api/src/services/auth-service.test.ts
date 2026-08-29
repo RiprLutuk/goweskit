@@ -86,6 +86,7 @@ class MemoryAuthRepository implements AuthRepository {
 const registration: RegisterRequest = {
   displayName: 'Ayu Rider',
   email: 'ayu@example.com',
+  otp: '123456',
   password: 'safe-password',
 };
 
