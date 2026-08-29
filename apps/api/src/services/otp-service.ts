@@ -102,7 +102,7 @@ export class OtpService {
     });
 
     if (this.emailWorker !== undefined) {
-      const { html, text } = buildOtpEmailHtml(code, input.purpose);
+      const { html, text } = buildOtpEmailHtml(code);
       try {
         await this.emailWorker.send({
           to: normalizedEmail,

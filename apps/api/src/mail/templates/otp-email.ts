@@ -1,85 +1,108 @@
-export function buildOtpEmailHtml(otpCode: string): {
-  html: string;
-  text: string;
-} {
-  const actionLabel = 'menyelesaikan pendaftaran akun GowesKit Anda';
+import type { SendOtpRequest } from '@goweskit/contracts';
+
+export function buildOtpEmailHtml(
+  otpCode: string,
+  purpose: SendOtpRequest['purpose'],
+): { html: string; text: string } {
+  const actionLabel =
+    purpose === 'reset_password'
+      ? 'mereset kata sandi akun GowesKit Anda'
+      : 'verifikasi dan pendaftaran akun GowesKit Anda';
 
   const text = `Halo Rider!
 
 Gunakan kode OTP berikut untuk ${actionLabel}:
 
-${otpCode}
+>> ${otpCode} <<
 
-Kode ini berlaku selama 5 menit. Jangan bagikan kode ini kepada siapa pun demi keamanan akun Anda.
+Kode ini berlaku selama 5 menit. Jangan bagikan kode ini kepada siapapun demi keamanan akun Anda.
 
 Salam gowes,
-Tim GowesKit`;
+Tim GowesKit
+Workshop & Safety Platform`;
 
   const html = `<!DOCTYPE html>
 <html lang="id">
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta http-equiv="X-UA-Compatible" content="IE=edge">
   <title>Kode Verifikasi GowesKit</title>
 </head>
-<body style="margin: 0; padding: 0; background-color: #F8F9FA; font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif; -webkit-font-smoothing: antialiased; color: #181D27;">
-  <table role="presentation" width="100%" cellspacing="0" cellpadding="0" border="0" style="background-color: #F8F9FA; padding: 48px 16px;">
+<body style="margin: 0; padding: 0; background-color: #F6F5F0; font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif; -webkit-font-smoothing: antialiased; -moz-osx-font-smoothing: grayscale; color: #17202A;">
+  <table role="presentation" width="100%" cellspacing="0" cellpadding="0" border="0" style="background-color: #F6F5F0; padding: 40px 16px;">
     <tr>
       <td align="center">
-        <!-- Main Card Container -->
-        <table role="presentation" width="100%" cellspacing="0" cellpadding="0" border="0" style="max-width: 460px; background-color: #FFFFFF; border-radius: 16px; border: 1px solid #E9EAEB; box-shadow: 0 1px 3px rgba(16, 24, 40, 0.06), 0 4px 12px rgba(16, 24, 40, 0.04); overflow: hidden;">
+        
+        <!-- Main Card -->
+        <table role="presentation" width="100%" cellspacing="0" cellpadding="0" border="0" style="max-width: 460px; background-color: #FFFFFF; border-radius: 20px; border: 1px solid #E6E4DD; box-shadow: 0 4px 20px rgba(23, 32, 42, 0.04); overflow: hidden;">
           
-          <!-- Brand Header -->
+          <!-- Top Header Brand -->
           <tr>
-            <td style="padding: 32px 36px 20px 36px;">
-              <table role="presentation" cellspacing="0" cellpadding="0" border="0">
+            <td style="padding: 32px 32px 24px 32px; border-bottom: 1px solid #F0EFE9;">
+              <table role="presentation" width="100%" cellspacing="0" cellpadding="0" border="0">
                 <tr>
-                  <td style="vertical-align: middle;">
+                  <td align="left" style="vertical-align: middle;">
                     <table role="presentation" cellspacing="0" cellpadding="0" border="0">
                       <tr>
-                        <td style="width: 32px; height: 32px; background-color: #17202A; border-radius: 8px; text-align: center; vertical-align: middle;">
-                          <span style="font-family: -apple-system, BlinkMacSystemFont, sans-serif; font-size: 16px; font-weight: 900; color: #C9F36A; line-height: 1; display: inline-block;">G</span>
+                        <!-- Monogram G Badge -->
+                        <td style="width: 36px; height: 36px; background-color: #17202A; border-radius: 10px; text-align: center; vertical-align: middle;">
+                          <span style="font-family: -apple-system, BlinkMacSystemFont, sans-serif; font-size: 18px; font-weight: 900; color: #C9F36A; line-height: 1; display: inline-block;">G</span>
                         </td>
-                        <td style="padding-left: 10px; vertical-align: middle;">
-                          <span style="font-size: 18px; font-weight: 800; color: #17202A; letter-spacing: -0.03em;">Gowes<span style="color: #0F766E;">Kit</span></span>
-                          <span style="display: inline-block; width: 5px; height: 5px; background-color: #C9F36A; border-radius: 50%; margin-left: 2px; vertical-align: baseline;"></span>
+                        <!-- Wordmark -->
+                        <td style="padding-left: 12px; vertical-align: middle;">
+                          <span style="font-size: 20px; font-weight: 900; color: #17202A; letter-spacing: -0.03em;">Gowes<span style="color: #0F766E;">Kit</span></span>
+                          <span style="display: inline-block; width: 6px; height: 6px; background-color: #C9F36A; border-radius: 50%; margin-left: 2px; vertical-align: middle;"></span>
                         </td>
                       </tr>
                     </table>
+                  </td>
+                  <td align="right" style="vertical-align: middle;">
+                    <span style="display: inline-block; font-size: 10px; font-weight: 800; color: #64748B; background-color: #F1F5F9; border: 1px solid #E2E8F0; padding: 4px 10px; border-radius: 9999px; letter-spacing: 0.06em; text-transform: uppercase;">
+                      Rider Security
+                    </span>
                   </td>
                 </tr>
               </table>
             </td>
           </tr>
 
-          <!-- Content Body -->
+          <!-- Main Content -->
           <tr>
-            <td style="padding: 0 36px 36px 36px;">
+            <td style="padding: 32px 32px 36px 32px;">
               
-              <h1 style="margin: 0 0 8px 0; font-size: 20px; font-weight: 700; color: #181D27; letter-spacing: -0.02em;">
-                Kode verifikasi Anda
+              <h1 style="margin: 0 0 10px 0; font-size: 22px; font-weight: 800; color: #17202A; letter-spacing: -0.03em; line-height: 1.25;">
+                Verifikasi Akun Anda
               </h1>
               
-              <p style="margin: 0 0 24px 0; font-size: 14px; line-height: 1.5; color: #535862;">
-                Gunakan kode 6-digit berikut untuk ${actionLabel}:
+              <p style="margin: 0 0 28px 0; font-size: 14px; line-height: 1.55; color: #4B5563;">
+                Gunakan kode OTP 6-digit berikut untuk ${actionLabel}:
               </p>
 
-              <!-- Sleek Clean OTP Box -->
-              <div style="background-color: #F8F9FA; border: 1px solid #E9EAEB; border-radius: 12px; padding: 18px 24px; text-align: center; margin-bottom: 24px;">
-                <span style="font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace; font-size: 32px; font-weight: 700; letter-spacing: 8px; color: #181D27; display: inline-block; padding-left: 8px;">
+              <!-- Pro Cycling Telemetry HUD Code Box -->
+              <div style="background-color: #17202A; border: 1.5px solid #24303E; border-radius: 16px; padding: 24px 20px; text-align: center; margin-bottom: 24px; box-shadow: inset 0 2px 4px rgba(0, 0, 0, 0.2);">
+                <div style="font-size: 11px; font-weight: 800; color: #8EDDF4; text-transform: uppercase; letter-spacing: 0.12em; margin-bottom: 8px;">
+                  Kode Verifikasi OTP
+                </div>
+                <div style="font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace; font-size: 38px; font-weight: 900; letter-spacing: 10px; color: #C9F36A; line-height: 1; padding-left: 10px;">
                   ${otpCode}
-                </span>
+                </div>
+                <div style="font-size: 10.5px; font-weight: 700; color: #94A3B8; letter-spacing: 0.08em; text-transform: uppercase; margin-top: 10px;">
+                  ⏱️ Berlaku 5 Menit · Single-Use
+                </div>
               </div>
 
-              <!-- Expiry & Safety Notice -->
-              <p style="margin: 0 0 24px 0; font-size: 13px; line-height: 1.5; color: #535862;">
-                ⏱️ Kode ini hanya berlaku selama <strong>5 menit</strong>. Jangan bagikan kode ini kepada siapa pun.
-              </p>
+              <!-- Security Notice -->
+              <table role="presentation" width="100%" cellspacing="0" cellpadding="0" border="0" style="background-color: #F8FAFC; border: 1px solid #E2E8F0; border-radius: 12px; padding: 14px 16px; margin-bottom: 24px;">
+                <tr>
+                  <td style="font-size: 12.5px; line-height: 1.5; color: #475569;">
+                    🔒 <strong>Keamanan:</strong> Jangan berikan kode ini kepada siapapun termasuk pihak GowesKit demi keamanan garasi dan data solo-ride Anda.
+                  </td>
+                </tr>
+              </table>
 
-              <hr style="border: none; border-top: 1px solid #F0F1F2; margin: 24px 0;" />
-
-              <p style="margin: 0; font-size: 12px; line-height: 1.5; color: #717680;">
-                Jika Anda tidak meminta kode ini, Anda dapat mengabaikan email ini dengan aman.
+              <p style="margin: 0; font-size: 12px; line-height: 1.5; color: #94A3B8;">
+                Jika Anda tidak merasa meminta kode ini, Anda dapat mengabaikan email ini dengan aman.
               </p>
 
             </td>
@@ -87,11 +110,12 @@ Tim GowesKit`;
 
         </table>
 
-        <!-- Subtle Minimal Footer -->
+        <!-- Footer -->
         <table role="presentation" width="100%" cellspacing="0" cellpadding="0" border="0" style="max-width: 460px; margin-top: 24px;">
           <tr>
-            <td style="text-align: center; font-size: 12px; color: #94969C; line-height: 1.5;">
-              GowesKit — Workshop &amp; Safety Platform for Cyclists
+            <td align="center" style="font-size: 11.5px; color: #94A3B8; line-height: 1.5;">
+              <strong>GowesKit</strong> · Workshop &amp; Safety Platform for Cyclists<br>
+              © ${String(new Date().getFullYear())} GowesKit. All rights reserved.
             </td>
           </tr>
         </table>
