@@ -104,6 +104,31 @@ describe('demo Community seed', () => {
     ).toBe(true);
   });
 
+  it('keeps public demo discovery data around Tangerang without implying a private home location', () => {
+    const pointSeeds = [
+      ...DEMO_PLACE_SEEDS,
+      ...DEMO_COMMUNITY_SEEDS,
+      ...DEMO_RIDE_EVENT_SEEDS,
+      ...DEMO_SAFETY_LOCATION_SEEDS,
+      ...DEMO_HAZARD_REPORT_SEEDS,
+    ];
+    for (const item of pointSeeds) {
+      expect(item.coordinate.longitude).toBeGreaterThanOrEqual(106.55);
+      expect(item.coordinate.longitude).toBeLessThanOrEqual(106.7);
+      expect(item.coordinate.latitude).toBeGreaterThanOrEqual(-6.25);
+      expect(item.coordinate.latitude).toBeLessThanOrEqual(-6.1);
+    }
+    for (const route of DEMO_ROUTE_SEEDS) {
+      for (const [longitude, latitude] of route.coordinates) {
+        expect(longitude).toBeGreaterThanOrEqual(106.55);
+        expect(longitude).toBeLessThanOrEqual(106.7);
+        expect(latitude).toBeGreaterThanOrEqual(-6.25);
+        expect(latitude).toBeLessThanOrEqual(-6.1);
+      }
+    }
+    expect(JSON.stringify(pointSeeds)).not.toMatch(/bandung/iu);
+  });
+
   it('keeps memberships, participation, and moderation references coherent', () => {
     const communityIds = new Set(DEMO_COMMUNITY_SEEDS.map(({ id }) => id));
     const eventIds = new Set(DEMO_RIDE_EVENT_SEEDS.map(({ id }) => id));

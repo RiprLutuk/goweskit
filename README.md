@@ -54,7 +54,7 @@ pnpm dev
 `pnpm db:seed` is safe to run repeatedly in local development. It refreshes the
 four P0 bicycle types, 20 component categories, six normalized standards, and a
 demo Garage with four bikes. It also refreshes eight clearly labelled demo
-places and four demo routes around Bandung. Sign in with:
+places and four demo routes around Karawaci and Tangerang. Sign in with:
 
 ```text
 Email: demo@goweskit.local

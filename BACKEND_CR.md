@@ -12,6 +12,7 @@ This document tracks all backend API Change Requests (CR), endpoint proposals, a
 | **CR-002** | Garage | `PATCH /api/v1/bikes/:id` | `PATCH` | P2 | **Implemented & Integrated ✅** | Added `photoUrl` (max 900 KB base64) to DB, contracts, repository, & UI modal |
 | **CR-003** | User/Explore | `/api/v1/user/saved-items` | `POST` | P2 | **Implemented & Integrated ✅** | Bookmark/save favorite places or routes in Explore (`POST /api/v1/user/saved-items`) |
 | **CR-004** | Explore | `/api/v1/explore/routes/:id/elevation` | `GET` | P2 | **Implemented & Integrated ✅** | Dynamic elevation profile coordinates & live SVG climb chart in Explore |
+| **CR-005** | Auth | `/api/v1/auth/otp/send` & Google OAuth | `POST` | P1 | **Implemented & Integrated ✅** | 6-digit Email OTP validation during registration & 1-tap Google Sign-In |
 
 ---
 
@@ -119,6 +120,31 @@ This document tracks all backend API Change Requests (CR), endpoint proposals, a
   "averageGradientPercent": 4.3
 }
 ```
+
+---
+
+### CR-005: 6-Digit Email OTP Verification & 1-Tap Google Sign-In
+- **Endpoints**:
+  - `POST /api/v1/auth/otp/send`: Request 6-digit numeric OTP with 5-min TTL and rate limiting cooldown.
+  - `POST /api/v1/auth/register`: Accepts optional `otp` field (validated before creating user).
+  - `POST /api/v1/auth/google`: Accepts Google ID token credential for instant 1-tap sign in.
+- **Request Body for `POST /api/v1/auth/otp/send`**:
+```json
+{
+  "email": "rider@example.com",
+  "purpose": "register"
+}
+```
+- **Response `200 OK`**:
+```json
+{
+  "success": true,
+  "message": "Kode verifikasi OTP 6-digit telah dikirim ke rider@example.com.",
+  "expiresInSeconds": 300,
+  "demoOtp": "123456"
+}
+```
+- **Rate Limiting**: Cooldown 30 detik antar permintaan kirim ulang, maksimal 5x percobaan salah per kode OTP.
 
 ---
 
