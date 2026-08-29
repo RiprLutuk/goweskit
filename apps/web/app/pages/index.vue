@@ -13,6 +13,7 @@ import type {
 const api = useApi();
 const { user, initialized, refresh } = useAuth();
 const { weather, fetchLiveWeather } = useWeather();
+const { coords: userCoords, cityName: userCityName, isLiveGps, requestLocation } = useUserLocation();
 
 const bikes = ref<Bike[]>([]);
 const routes = ref<NearbyRoute[]>([]);
@@ -101,6 +102,14 @@ const fallbackEvents: NearbyEvent[] = [
 onMounted(async () => {
   if (!initialized.value) await refresh();
 
+  // 1. Auto-request real device GPS location immediately
+  const loc = await requestLocation();
+  const center = { latitude: loc.latitude, longitude: loc.longitude };
+
+  // 2. Fetch real-time Open-Meteo weather with actual GPS coordinates & reverse geocoded city
+  void fetchLiveWeather(center.latitude, center.longitude, userCityName.value);
+
+  // 3. Load user bikes if authenticated
   if (user.value) {
     try {
       bikes.value = (await api<BikeListResponse>('/bikes')).bikes;
@@ -109,11 +118,12 @@ onMounted(async () => {
     }
   }
 
+  // 4. Fetch nearby explore routes & workshops around real location
   try {
     const exploreRes = await api<NearbyExploreResponse>('/explore/nearby', {
       method: 'POST',
       body: {
-        center: { longitude: 107.6191, latitude: -6.9175 },
+        center: { longitude: center.longitude, latitude: center.latitude },
         radiusKm: 25,
       },
     });
@@ -124,11 +134,12 @@ onMounted(async () => {
     places.value = [];
   }
 
+  // 5. Fetch nearby community ride events around real location
   try {
     const eventsRes = await api<NearbyEventsResponse>('/events/nearby', {
       method: 'POST',
       body: {
-        center: { longitude: 107.6191, latitude: -6.9175 },
+        center: { longitude: center.longitude, latitude: center.latitude },
         radiusKm: 25,
       },
     });
@@ -136,9 +147,6 @@ onMounted(async () => {
   } catch {
     events.value = [];
   }
-
-  // Fetch real-time Open-Meteo weather
-  void fetchLiveWeather(-6.9175, 107.6191, 'Bandung');
 
   loading.value = false;
 });
@@ -150,7 +158,7 @@ function formatKm(meters: number): string {
 
 <template>
   <div class="native-container home-container">
-    <!-- 1. Minimalist Rider Cockpit Bar (Real-Time Open-Meteo Weather & City Greeting) -->
+    <!-- 1. Minimalist Rider Cockpit Bar (Real-Time Open-Meteo Weather & Live GPS) -->
     <header class="rider-cockpit-bar">
       <div class="cockpit-left">
         <span class="cockpit-eyebrow">
@@ -162,6 +170,7 @@ function formatKm(meters: number): string {
         >
           <span class="weather-icon">{{ weather.icon }}</span>
           <span class="weather-text">{{ weather.cityName }} · {{ weather.temperatureC }}°C · {{ weather.cyclingAdvice }}</span>
+          <span v-if="isLiveGps" class="live-gps-dot" title="GPS Aktif">📍</span>
         </div>
       </div>
       <NuxtLink to="/safety" class="sos-quick-badge" title="Solo Ride Safety">

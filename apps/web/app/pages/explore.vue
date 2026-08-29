@@ -357,7 +357,7 @@ function applyCategory(cat: string): void {
 }
 
 onMounted(() => {
-  void loadNearby();
+  useMyLocation();
   window.addEventListener('mousemove', onTouchMoveDrag);
   window.addEventListener('mouseup', onTouchEndDrag);
 });

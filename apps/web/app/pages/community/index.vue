@@ -117,7 +117,9 @@ function useMyLocation(): void {
   );
 }
 
-onMounted(loadDirectory);
+onMounted(() => {
+  useMyLocation();
+});
 </script>
 
 <template>
