@@ -1,11 +1,12 @@
 import type { User } from '@goweskit/contracts';
-import { and, eq, gt } from 'drizzle-orm';
+import { and, eq, gt, isNull } from 'drizzle-orm';
 
 import type { Database } from '../db/client.js';
 import { sessions, users } from '../db/schema.js';
 
 export interface StoredUser extends User {
-  passwordHash: string;
+  googleSubject: string | null;
+  passwordHash: string | null;
 }
 
 export interface CreateUserInput {
@@ -16,7 +17,17 @@ export interface CreateUserInput {
 
 export interface AuthRepository {
   createUser(input: CreateUserInput): Promise<StoredUser | null>;
+  createGoogleUser(input: {
+    displayName: string;
+    email: string;
+    googleSubject: string;
+  }): Promise<StoredUser | null>;
   findUserByEmail(email: string): Promise<StoredUser | null>;
+  findUserByGoogleSubject(subject: string): Promise<StoredUser | null>;
+  linkGoogleSubject(
+    userId: string,
+    subject: string,
+  ): Promise<StoredUser | null>;
   createSession(
     userId: string,
     tokenHash: string,
@@ -31,6 +42,7 @@ function toStoredUser(row: typeof users.$inferSelect): StoredUser {
     id: row.id,
     displayName: row.displayName,
     email: row.email,
+    googleSubject: row.googleSubject,
     passwordHash: row.passwordHash,
     createdAt: row.createdAt.toISOString(),
   };
@@ -70,6 +82,51 @@ export class DrizzleAuthRepository implements AuthRepository {
       .where(eq(users.email, email))
       .limit(1);
     return user === undefined ? null : toStoredUser(user);
+  }
+
+  public async findUserByGoogleSubject(
+    subject: string,
+  ): Promise<StoredUser | null> {
+    const [user] = await this.database
+      .select()
+      .from(users)
+      .where(eq(users.googleSubject, subject))
+      .limit(1);
+    return user === undefined ? null : toStoredUser(user);
+  }
+
+  public async createGoogleUser(input: {
+    displayName: string;
+    email: string;
+    googleSubject: string;
+  }): Promise<StoredUser | null> {
+    try {
+      const [created] = await this.database
+        .insert(users)
+        .values({ ...input, passwordHash: null })
+        .returning();
+      return created === undefined ? null : toStoredUser(created);
+    } catch (error: unknown) {
+      if (isUniqueViolation(error)) return null;
+      throw error;
+    }
+  }
+
+  public async linkGoogleSubject(
+    userId: string,
+    subject: string,
+  ): Promise<StoredUser | null> {
+    try {
+      const [updated] = await this.database
+        .update(users)
+        .set({ googleSubject: subject, updatedAt: new Date() })
+        .where(and(eq(users.id, userId), isNull(users.googleSubject)))
+        .returning();
+      return updated === undefined ? null : toStoredUser(updated);
+    } catch (error: unknown) {
+      if (isUniqueViolation(error)) return null;
+      throw error;
+    }
   }
 
   public async createSession(

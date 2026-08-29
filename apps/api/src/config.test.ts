@@ -15,6 +15,7 @@ describe('API configuration', () => {
   it('reads and normalizes required R2 configuration', () => {
     expect(readConfig(environment)).toMatchObject({
       environment: 'development',
+      googleClientId: null,
       r2: {
         accountId: 'account-id',
         accessKeyId: 'access-key-id',
@@ -35,6 +36,7 @@ describe('API configuration', () => {
   it('requires secure HTTPS and trusted proxy configuration in production', () => {
     const production = {
       ...environment,
+      GOOGLE_CLIENT_ID: 'google-client-id.apps.googleusercontent.com',
       NODE_ENV: 'production',
       SESSION_COOKIE_SECURE: 'true',
       TRUST_PROXY_HOPS: '1',
@@ -42,6 +44,7 @@ describe('API configuration', () => {
     };
     expect(readConfig(production)).toMatchObject({
       environment: 'production',
+      googleClientId: 'google-client-id.apps.googleusercontent.com',
       sessionCookieSecure: true,
       trustProxyHops: 1,
       webOrigin: 'https://goweskit.example',

@@ -10,12 +10,15 @@ import {
 import type { FastifyInstance } from 'fastify';
 
 import { SESSION_COOKIE_NAME } from '../auth/session.js';
+import type { GoogleIdentityVerifier } from '../auth/google-identity.js';
+import { AppError } from '../errors.js';
 import { parseInput } from '../http/validation.js';
 import type { AuthService } from '../services/auth-service.js';
 import { OtpService } from '../services/otp-service.js';
 
 export interface AuthRoutesOptions {
   authService: AuthService;
+  googleIdentityVerifier?: GoogleIdentityVerifier;
   otpService?: OtpService;
   cookieSecure: boolean;
 }
@@ -70,7 +73,17 @@ export function registerAuthRoutes(
     '/api/v1/auth/google',
     async (request, reply) => {
       const input = parseInput(googleAuthRequestSchema, request.body);
-      const session = await options.authService.loginWithGoogle(input);
+      if (options.googleIdentityVerifier === undefined) {
+        throw new AppError(
+          'AUTH_GOOGLE_UNAVAILABLE',
+          'Google sign-in is not configured.',
+          503,
+        );
+      }
+      const identity = await options.googleIdentityVerifier.verify(
+        input.idToken,
+      );
+      const session = await options.authService.loginWithGoogle(identity);
 
       reply.setCookie(SESSION_COOKIE_NAME, session.token, {
         ...cookieOptions,

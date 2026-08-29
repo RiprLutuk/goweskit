@@ -9,6 +9,11 @@ import Fastify, {
 } from 'fastify';
 
 import { AppError } from './errors.js';
+import type {
+  AuthRateLimiter,
+  AuthRateLimitScope,
+} from './auth/rate-limiter.js';
+import type { GoogleIdentityVerifier } from './auth/google-identity.js';
 import type { ExploreContributionService } from './explore-contributions/service.js';
 import {
   registerExploreContributionRoutes,
@@ -66,6 +71,8 @@ export interface AppServices {
 }
 
 export interface BuildAppOptions {
+  authRateLimiter?: AuthRateLimiter;
+  googleIdentityVerifier?: GoogleIdentityVerifier;
   services?: AppServices;
   cookieSecure?: boolean;
   logger?: FastifyServerOptions['logger'];
@@ -86,6 +93,33 @@ export function buildApp(options: BuildAppOptions = {}): FastifyInstance {
   void app.register(cors, {
     origin: options.webOrigin ?? 'http://localhost:3000',
     credentials: true,
+  });
+
+  const authMutationScopes = new Map<string, AuthRateLimitScope>([
+    ['/api/v1/auth/google', 'google'],
+    ['/api/v1/auth/login', 'login'],
+    ['/api/v1/auth/otp/send', 'otp'],
+    ['/api/v1/auth/register', 'register'],
+  ]);
+  app.addHook('onRequest', async (request, reply) => {
+    if (request.method !== 'POST' || options.authRateLimiter === undefined) {
+      return;
+    }
+    const scope = authMutationScopes.get(request.url.split('?')[0] ?? '');
+    if (scope === undefined) return;
+    const decision = options.authRateLimiter.consume(
+      scope,
+      request.ip,
+      new Date(),
+    );
+    if (decision.allowed) return;
+    reply.header('retry-after', String(decision.retryAfterSeconds));
+    throw new AppError(
+      'RATE_LIMITED',
+      'Too many authentication attempts. Try again later.',
+      429,
+      { retryAfterSeconds: decision.retryAfterSeconds },
+    );
   });
 
   app.addHook('onRequest', (request, reply, done) => {
@@ -178,6 +212,9 @@ export function buildApp(options: BuildAppOptions = {}): FastifyInstance {
     registerAuthRoutes(app, {
       authService: options.services.auth,
       cookieSecure: options.cookieSecure ?? false,
+      ...(options.googleIdentityVerifier === undefined
+        ? {}
+        : { googleIdentityVerifier: options.googleIdentityVerifier }),
     });
     registerLearnRoutes(app, options.services.catalog);
     registerGarageRoutes(app, options.services.auth, options.services.garage);

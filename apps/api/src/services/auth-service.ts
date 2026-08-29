@@ -1,4 +1,4 @@
-import type { GoogleAuthRequest, LoginRequest, RegisterRequest, User } from '@goweskit/contracts';
+import type { LoginRequest, RegisterRequest, User } from '@goweskit/contracts';
 
 import { hashPassword, verifyPassword } from '../auth/password.js';
 import {
@@ -13,6 +13,13 @@ export interface AuthenticatedSession {
   user: User;
   token: string;
   expiresAt: Date;
+}
+
+export interface VerifiedGoogleIdentity {
+  displayName: string;
+  email: string;
+  emailAuthoritative: boolean;
+  subject: string;
 }
 
 function toPublicUser(user: {
@@ -33,70 +40,57 @@ export class AuthService {
   public constructor(private readonly repository: AuthRepository) {}
 
   public async loginWithGoogle(
-    input: GoogleAuthRequest,
+    identity: VerifiedGoogleIdentity,
   ): Promise<AuthenticatedSession> {
-    let email = input.email?.trim().toLowerCase();
-    let displayName = input.displayName?.trim();
-
-    // If idToken is provided, decode JWT payload
-    if (input.idToken) {
-      try {
-        const parts = input.idToken.split('.');
-        if (parts.length === 3 && parts[1] !== undefined) {
-          const payloadJson = Buffer.from(parts[1], 'base64url').toString('utf8');
-          const payload = JSON.parse(payloadJson) as {
-            email?: string;
-            name?: string;
-            given_name?: string;
-          };
-          if (payload.email) email = payload.email.trim().toLowerCase();
-          if (payload.name) displayName = payload.name.trim();
-        }
-      } catch {
-        // Fallback to explicit fields
-      }
-    }
-
-    if (!email) {
-      throw new AppError(
-        'AUTH_INVALID_CREDENTIALS',
-        'Google authentication did not return a valid email address.',
-        400,
-      );
-    }
-
-    if (!displayName) {
-      displayName = email.split('@')[0] ?? 'Rider';
-    }
-
-    // Find existing user or auto-register rider account
-    let storedUser = await this.repository.findUserByEmail(email);
+    let storedUser = await this.repository.findUserByGoogleSubject(
+      identity.subject,
+    );
     if (storedUser === null) {
-      const randomSecret = `GoogleOAuth_${Math.random().toString(36).slice(2)}_${Date.now()}`;
-      storedUser = await this.repository.createUser({
-        displayName,
-        email,
-        passwordHash: await hashPassword(randomSecret),
-      });
+      const existingEmailUser = await this.repository.findUserByEmail(
+        identity.email,
+      );
+      if (existingEmailUser !== null) {
+        if (existingEmailUser.googleSubject !== null) {
+          throw new AppError(
+            'AUTH_GOOGLE_ACCOUNT_CONFLICT',
+            'This Google identity cannot be linked to the account.',
+            409,
+          );
+        }
+        if (!identity.emailAuthoritative) {
+          throw new AppError(
+            'AUTH_GOOGLE_LINK_REQUIRED',
+            'Sign in with your password before linking this Google account.',
+            409,
+          );
+        }
+        storedUser = await this.repository.linkGoogleSubject(
+          existingEmailUser.id,
+          identity.subject,
+        );
+      } else {
+        storedUser = await this.repository.createGoogleUser({
+          displayName: identity.displayName,
+          email: identity.email,
+          googleSubject: identity.subject,
+        });
+      }
 
       if (storedUser === null) {
+        storedUser = await this.repository.findUserByGoogleSubject(
+          identity.subject,
+        );
+      }
+      if (storedUser === null) {
         throw new AppError(
-          'AUTH_EMAIL_EXISTS',
-          'Could not create account for Google user.',
+          'AUTH_GOOGLE_ACCOUNT_CONFLICT',
+          'This Google identity cannot be linked to the account.',
           409,
         );
       }
     }
 
-    const token = createSessionToken();
-    const expiresAt = new Date(Date.now() + SESSION_DURATION_MS);
-    await this.repository.createSession(
-      storedUser.id,
-      hashSessionToken(token),
-      expiresAt,
-    );
-
-    return { user: toPublicUser(storedUser), token, expiresAt };
+    return this.createAuthenticatedSession(storedUser);
   }
 
   public async register(input: RegisterRequest): Promise<User> {
@@ -130,6 +124,7 @@ export class AuthService {
     const storedUser = await this.repository.findUserByEmail(input.email);
     if (
       storedUser === null ||
+      storedUser.passwordHash === null ||
       !(await verifyPassword(input.password, storedUser.passwordHash))
     ) {
       throw new AppError(
@@ -139,15 +134,7 @@ export class AuthService {
       );
     }
 
-    const token = createSessionToken();
-    const expiresAt = new Date(Date.now() + SESSION_DURATION_MS);
-    await this.repository.createSession(
-      storedUser.id,
-      hashSessionToken(token),
-      expiresAt,
-    );
-
-    return { user: toPublicUser(storedUser), token, expiresAt };
+    return this.createAuthenticatedSession(storedUser);
   }
 
   public async authenticate(token: string | undefined): Promise<User> {
@@ -174,5 +161,21 @@ export class AuthService {
     if (token !== undefined && token.length > 0) {
       await this.repository.deleteSession(hashSessionToken(token));
     }
+  }
+
+  private async createAuthenticatedSession(user: {
+    id: string;
+    displayName: string;
+    email: string;
+    createdAt: string;
+  }): Promise<AuthenticatedSession> {
+    const token = createSessionToken();
+    const expiresAt = new Date(Date.now() + SESSION_DURATION_MS);
+    await this.repository.createSession(
+      user.id,
+      hashSessionToken(token),
+      expiresAt,
+    );
+    return { user: toPublicUser(user), token, expiresAt };
   }
 }

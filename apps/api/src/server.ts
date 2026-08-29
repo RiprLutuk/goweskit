@@ -5,6 +5,8 @@ const rootEnvPath = resolve(import.meta.dirname, '../../../.env');
 if (existsSync(rootEnvPath)) process.loadEnvFile(rootEnvPath);
 
 import { buildApp } from './app.js';
+import { GoogleIdentityVerifier } from './auth/google-identity.js';
+import { AuthRateLimiter } from './auth/rate-limiter.js';
 import { readConfig } from './config.js';
 import { createDatabase } from './db/client.js';
 import { DrizzleAuthRepository } from './repositories/auth-repository.js';
@@ -39,6 +41,10 @@ import { R2BikePhotoStorage } from './storage/bike-photo-storage.js';
 
 const config = readConfig();
 const databaseClient = createDatabase(config.databaseUrl);
+const googleIdentityVerifier =
+  config.googleClientId === null
+    ? undefined
+    : new GoogleIdentityVerifier(config.googleClientId);
 const authService = new AuthService(
   new DrizzleAuthRepository(databaseClient.database),
 );
@@ -58,6 +64,7 @@ const safetyService = new SafetyService(
   ),
 );
 const app = buildApp({
+  authRateLimiter: new AuthRateLimiter(),
   webOrigin: config.webOrigin,
   cookieSecure: config.sessionCookieSecure,
   readinessCheck: databaseClient.ping,
@@ -66,6 +73,7 @@ const app = buildApp({
     config.trustProxyHops === 0
       ? false
       : (_address, hop) => hop < config.trustProxyHops,
+  ...(googleIdentityVerifier === undefined ? {} : { googleIdentityVerifier }),
   services: {
     auth: authService,
     catalog: new CatalogService(

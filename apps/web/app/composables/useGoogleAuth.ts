@@ -13,6 +13,7 @@ export function useGoogleAuth() {
       const displayName = customEmail ? customEmail.split('@')[0] || 'Google Rider' : 'Google Rider';
 
       await loginWithGoogle({
+        idToken: 'google-oauth-demo-token',
         email,
         displayName: `${displayName} (Google)`,
         photoUrl: 'https://images.unsplash.com/photo-1534528741775-53994a69daeb?w=150',

@@ -13,7 +13,11 @@ export const registerRequestSchema = z.object({
   displayName: z.string().trim().min(2).max(80),
   email: z.email().trim().toLowerCase().max(320),
   password: z.string().min(8).max(128),
-  otp: z.string().trim().regex(/^\d{6}$/u, 'Kode OTP harus 6 digit angka').optional(),
+  otp: z
+    .string()
+    .trim()
+    .regex(/^\d{6}$/u, 'Kode OTP harus 6 digit angka')
+    .optional(),
 });
 
 export type RegisterRequest = z.infer<typeof registerRequestSchema>;
@@ -43,14 +47,9 @@ export type LoginRequest = z.infer<typeof loginRequestSchema>;
 
 export const googleAuthRequestSchema = z
   .object({
-    idToken: z.string().min(1).optional(),
-    email: z.string().email().optional(),
-    displayName: z.string().min(1).max(80).optional(),
-    photoUrl: z.string().url().optional(),
+    idToken: z.string().trim().min(100).max(10_000),
   })
-  .refine((data) => data.idToken !== undefined || data.email !== undefined, {
-    message: 'idToken or email is required for Google authentication',
-  });
+  .strict();
 
 export type GoogleAuthRequest = z.infer<typeof googleAuthRequestSchema>;
 

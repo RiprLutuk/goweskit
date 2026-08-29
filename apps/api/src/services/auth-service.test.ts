@@ -21,6 +21,7 @@ class MemoryAuthRepository implements AuthRepository {
     this.user = {
       id: '019c9c80-2896-7593-bd02-509894b9ffff',
       ...input,
+      googleSubject: null,
       createdAt: '2026-08-27T00:00:00.000Z',
     };
     return Promise.resolve(this.user);
@@ -28,6 +29,38 @@ class MemoryAuthRepository implements AuthRepository {
 
   public findUserByEmail(email: string): Promise<StoredUser | null> {
     return Promise.resolve(this.user?.email === email ? this.user : null);
+  }
+
+  public findUserByGoogleSubject(subject: string): Promise<StoredUser | null> {
+    return Promise.resolve(
+      this.user?.googleSubject === subject ? this.user : null,
+    );
+  }
+
+  public createGoogleUser(input: {
+    displayName: string;
+    email: string;
+    googleSubject: string;
+  }): Promise<StoredUser | null> {
+    if (this.user?.email === input.email) return Promise.resolve(null);
+    this.user = {
+      id: '019c9c80-2896-7593-bd02-509894b9ffff',
+      ...input,
+      passwordHash: null,
+      createdAt: '2026-08-27T00:00:00.000Z',
+    };
+    return Promise.resolve(this.user);
+  }
+
+  public linkGoogleSubject(
+    userId: string,
+    subject: string,
+  ): Promise<StoredUser | null> {
+    if (this.user?.id !== userId || this.user.googleSubject !== null) {
+      return Promise.resolve(null);
+    }
+    this.user = { ...this.user, googleSubject: subject };
+    return Promise.resolve(this.user);
   }
 
   public createSession(
@@ -101,19 +134,34 @@ describe('AuthService', () => {
     const repository = new MemoryAuthRepository();
     const service = new AuthService(repository);
 
-    const session = await service.loginWithGoogle({
-      email: 'budi.google@example.com',
+    const identity = {
+      subject: 'google-subject-budi',
+      email: 'budi.google@gmail.com',
       displayName: 'Budi Google',
-    });
+      emailAuthoritative: true,
+    };
+    const session = await service.loginWithGoogle(identity);
 
-    expect(session.user.email).toBe('budi.google@example.com');
+    expect(session.user.email).toBe('budi.google@gmail.com');
     expect(session.user.displayName).toBe('Budi Google');
     expect(session.token).toHaveLength(43);
 
-    // Logging in again with the same Google email should reuse the user
-    const secondSession = await service.loginWithGoogle({
-      email: 'budi.google@example.com',
-    });
+    const secondSession = await service.loginWithGoogle(identity);
     expect(secondSession.user.id).toBe(session.user.id);
+  });
+
+  it('does not silently link a non-authoritative Google email to a password account', async () => {
+    const repository = new MemoryAuthRepository();
+    const service = new AuthService(repository);
+    await service.register(registration);
+
+    await expect(
+      service.loginWithGoogle({
+        subject: 'google-subject-other',
+        email: registration.email,
+        displayName: registration.displayName,
+        emailAuthoritative: false,
+      }),
+    ).rejects.toMatchObject({ code: 'AUTH_GOOGLE_LINK_REQUIRED' });
   });
 });

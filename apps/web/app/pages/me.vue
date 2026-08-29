@@ -6,18 +6,11 @@ const api = useApi();
 const { user, initialized, refresh, logout, login } = useAuth();
 const { loading: googleLoading, triggerGoogleSignIn } = useGoogleAuth();
 const { canInstall, isStandalone, isIOS, showInstallGuide, installApp, triggerHaptic } = usePwa();
+
 const errorMessage = ref('');
 const signingOut = ref(false);
 const demoLoggingIn = ref(false);
 const hapticFeedbackSent = ref(false);
-
-function testHaptic(): void {
-  triggerHaptic([30, 60, 30]);
-  hapticFeedbackSent.value = true;
-  setTimeout(() => {
-    hapticFeedbackSent.value = false;
-  }, 2000);
-}
 
 const bikeCount = ref(0);
 const contactCount = ref(0);
@@ -46,8 +39,16 @@ async function loadUserStats(): Promise<void> {
     if (contactsRes.status === 'fulfilled') contactCount.value = contactsRes.value.contacts.length;
     if (repRes.status === 'fulfilled') reputationScore.value = repRes.value.reputation.score;
   } catch {
-    // optional stats
+    // stats are optional
   }
+}
+
+function testHaptic(): void {
+  triggerHaptic([30, 60, 30]);
+  hapticFeedbackSent.value = true;
+  setTimeout(() => {
+    hapticFeedbackSent.value = false;
+  }, 2000);
 }
 
 async function signOut(): Promise<void> {
@@ -87,82 +88,89 @@ async function quickDemoLogin(): Promise<void> {
   <div class="native-container profile-container">
     <!-- Header -->
     <header class="native-page-header">
-      <span class="native-eyebrow">Profil &amp; Akun</span>
+      <div class="header-topline">
+        <span class="native-eyebrow">Rider Profile</span>
+        <span v-if="user" class="status-pill-header">
+          <span class="online-dot" /> Online
+        </span>
+      </div>
       <h1 class="native-title">Pengaturan Saya</h1>
-      <p class="native-sub">Kelola garasi sepeda, kontak darurat, preferensi display, dan aplikasi PWA.</p>
+      <p class="native-sub">Kelola garasi sepeda, kontak keselamatan solo, dan preferensi aplikasi GowesKit.</p>
     </header>
 
     <p v-if="!initialized" class="state-card" role="status">
       Memeriksa sesi akun…
     </p>
 
-    <!-- 1. LOGGED IN STATE -->
+    <!-- ══════════════════════════════════════════════════════════
+         1. LOGGED IN STATE (RIDER COCKPIT)
+         ══════════════════════════════════════════════════════════ -->
     <template v-else-if="user">
-      <!-- Profile Hero Card (Apple Health / Strava Style) -->
-      <section class="native-hero-card" aria-label="Profil Rider">
-        <div class="hero-user-row">
-          <div class="hero-avatar">
+      <!-- Athlete Profile Hero Card -->
+      <section class="pro-rider-card" aria-label="Profil Rider">
+        <div class="rider-header-row">
+          <div class="rider-avatar">
             <span>{{ user.displayName.slice(0, 1).toUpperCase() }}</span>
           </div>
-          <div class="hero-user-info">
-            <h2>{{ user.displayName }}</h2>
-            <p>{{ user.email }}</p>
-            <div class="hero-badge-row">
-              <span class="status-chip status-chip--lime">✓ Rider Terverifikasi</span>
-              <span class="status-chip status-chip--sand">Member GowesKit</span>
+          <div class="rider-info">
+            <div class="rider-name-row">
+              <h2>{{ user.displayName }}</h2>
+              <span class="rider-verified-badge" title="Rider Terverifikasi">✓</span>
+            </div>
+            <p class="rider-email">{{ user.email }}</p>
+            <div class="rider-tags">
+              <span class="rider-tag rider-tag--lime">Member GowesKit</span>
+              <span class="rider-tag rider-tag--sand">Solo &amp; Pelotons</span>
             </div>
           </div>
         </div>
 
-        <!-- 3-Metric Quick Counters -->
-        <div class="hero-metrics-grid">
-          <NuxtLink to="/garage" class="metric-card">
-            <span class="metric-icon">🚲</span>
-            <span class="metric-value">{{ bikeCount }}</span>
-            <span class="metric-label">Sepeda Garasi</span>
+        <!-- 3-Metric Athletic Counter Strip -->
+        <div class="rider-metrics-strip">
+          <NuxtLink to="/garage" class="metric-col">
+            <span class="metric-num">{{ bikeCount }}</span>
+            <span class="metric-label">🚲 Sepeda</span>
           </NuxtLink>
-
-          <NuxtLink to="/safety" class="metric-card">
-            <span class="metric-icon">🛡️</span>
-            <span class="metric-value">{{ contactCount }}</span>
-            <span class="metric-label">Kontak Darurat</span>
+          <div class="metric-divider" />
+          <NuxtLink to="/safety" class="metric-col">
+            <span class="metric-num">{{ contactCount }}</span>
+            <span class="metric-label">🛡️ Kontak</span>
           </NuxtLink>
-
-          <NuxtLink to="/community/reputation" class="metric-card">
-            <span class="metric-icon">🏆</span>
-            <span class="metric-value">{{ reputationScore }}</span>
-            <span class="metric-label">Skor Reputasi</span>
+          <div class="metric-divider" />
+          <NuxtLink to="/community/reputation" class="metric-col">
+            <span class="metric-num">{{ reputationScore }}</span>
+            <span class="metric-label">🏆 Poin</span>
           </NuxtLink>
         </div>
       </section>
 
-      <!-- 2. INSET GROUPED LIST: WORKSHOP & GARAGE -->
-      <section class="native-section">
-        <h3 class="section-label">Garasi &amp; Workshop</h3>
-        <div class="native-grouped-list">
-          <NuxtLink to="/garage" class="list-item">
-            <div class="item-icon-box bg-lime">🚲</div>
-            <div class="item-content">
+      <!-- 2. INSET GROUPED LIST: WORKSHOP & BIKES -->
+      <section class="settings-group">
+        <h3 class="group-heading">Garasi &amp; Komponen</h3>
+        <div class="inset-list">
+          <NuxtLink to="/garage" class="inset-item">
+            <div class="item-icon-box item-icon--lime">🚲</div>
+            <div class="item-body">
               <strong>My Garage</strong>
-              <small>Kelola sepeda, spesifikasi komponen, &amp; foto</small>
+              <small>Kelola koleksi sepeda, foto, &amp; anatomi komponen</small>
             </div>
             <span class="item-chevron">›</span>
           </NuxtLink>
 
-          <NuxtLink to="/upgrade-lab" class="list-item">
-            <div class="item-icon-box bg-sky">⚡</div>
-            <div class="item-content">
+          <NuxtLink to="/upgrade-lab" class="inset-item">
+            <div class="item-icon-box item-icon--sky">⚡</div>
+            <div class="item-body">
               <strong>Upgrade Lab</strong>
-              <small>Simulasi kecocokan komponen &amp; standar teknis</small>
+              <small>Simulasi kecocokan suku cadang &amp; standar as roda</small>
             </div>
             <span class="item-chevron">›</span>
           </NuxtLink>
 
-          <NuxtLink to="/learn" class="list-item">
-            <div class="item-icon-box bg-sand">📚</div>
-            <div class="item-content">
-              <strong>Katalog Anatomi &amp; Tipe Sepeda</strong>
-              <small>Pelajari standar as roda, headset, bottom bracket</small>
+          <NuxtLink to="/learn" class="inset-item">
+            <div class="item-icon-box item-icon--sand">📚</div>
+            <div class="item-body">
+              <strong>Ensiklopedia Anatomi Sepeda</strong>
+              <small>Kamus standar BB, headset, axle, &amp; rantai</small>
             </div>
             <span class="item-chevron">›</span>
           </NuxtLink>
@@ -170,128 +178,128 @@ async function quickDemoLogin(): Promise<void> {
       </section>
 
       <!-- 3. INSET GROUPED LIST: SAFETY & COMMUNITY -->
-      <section class="native-section">
-        <h3 class="section-label">Keamanan &amp; Komunitas</h3>
-        <div class="native-grouped-list">
-          <NuxtLink to="/safety" class="list-item">
-            <div class="item-icon-box bg-coral">🛡️</div>
-            <div class="item-content">
-              <strong>Ride Safety &amp; Live Tracking</strong>
-              <small>Kontak terpercaya &amp; sesi gowes solo aman</small>
+      <section class="settings-group">
+        <h3 class="group-heading">Keamanan &amp; Komunitas</h3>
+        <div class="inset-list">
+          <NuxtLink to="/safety" class="inset-item">
+            <div class="item-icon-box item-icon--coral">🛡️</div>
+            <div class="item-body">
+              <strong>Ride Safety Beacon</strong>
+              <small>Live tracking solo-ride, SOS darurat, &amp; kontak</small>
             </div>
             <span class="item-chevron">›</span>
           </NuxtLink>
 
-          <NuxtLink to="/community" class="list-item">
-            <div class="item-icon-box bg-lime">👥</div>
-            <div class="item-content">
-              <strong>Komunitas &amp; Event Gowes</strong>
-              <small>Jadwal mabar, rute bersama, &amp; teman se-hobi</small>
+          <NuxtLink to="/community" class="inset-item">
+            <div class="item-icon-box item-icon--lime">👥</div>
+            <div class="item-body">
+              <strong>Komunitas &amp; Jadwal Mabar</strong>
+              <small>Grup gowes lokal, mabar bareng, &amp; event</small>
             </div>
             <span class="item-chevron">›</span>
           </NuxtLink>
 
-          <NuxtLink to="/community/reputation" class="list-item">
-            <div class="item-icon-box bg-sand">🏅</div>
-            <div class="item-content">
+          <NuxtLink to="/community/reputation" class="inset-item">
+            <div class="item-icon-box item-icon--amber">🏅</div>
+            <div class="item-body">
               <strong>Skor &amp; Riwayat Kontribusi</strong>
-              <small>Poin reputasi laporan rute, review spot, &amp; GPX</small>
+              <small>Poin reputasi sharing rute &amp; review bengkel</small>
             </div>
             <span class="item-chevron">›</span>
           </NuxtLink>
         </div>
       </section>
 
-      <!-- 4. INSET GROUPED LIST: PREFERENCES & DISPLAY -->
-      <section class="native-section">
-        <h3 class="section-label">Preferensi Tampilan</h3>
-        <div class="native-grouped-list">
-          <div class="list-item no-click">
-            <div class="item-icon-box bg-sand">📏</div>
-            <div class="item-content">
+      <!-- 4. INSET GROUPED LIST: PREFERENCES -->
+      <section class="settings-group">
+        <h3 class="group-heading">Preferensi &amp; Display</h3>
+        <div class="inset-list">
+          <div class="inset-item inset-item--static">
+            <div class="item-icon-box item-icon--sand">📏</div>
+            <div class="item-body">
               <strong>Satuan Jarak</strong>
-              <small>Format pengukuran rute dan servis</small>
+              <small>Format elevasi dan jarak tempuh rute</small>
             </div>
-            <select v-model="distanceUnit" class="native-inline-select">
+            <select v-model="distanceUnit" class="custom-select">
               <option value="km">Kilometer (km)</option>
               <option value="miles">Mil (miles)</option>
             </select>
           </div>
 
-          <div class="list-item no-click">
-            <div class="item-icon-box bg-sand">📍</div>
-            <div class="item-content">
-              <strong>Deteksi GPS Otomatis</strong>
-              <small>Fokuskan peta ke lokasi saya saat dibuka</small>
+          <div class="inset-item inset-item--static">
+            <div class="item-icon-box item-icon--sand">📍</div>
+            <div class="item-body">
+              <strong>Auto GPS Location</strong>
+              <small>Otomatis pusatkan peta &amp; cuaca di titik Anda</small>
             </div>
-            <input v-model="autoLocation" type="checkbox" class="native-toggle" />
+            <input v-model="autoLocation" type="checkbox" class="toggle-checkbox" />
           </div>
 
-          <div class="list-item no-click">
-            <div class="item-icon-box bg-sand">🎨</div>
-            <div class="item-content">
-              <strong>Kontras Tinggi Diagram</strong>
-              <small>Pertegas garis anatomi rangka sepeda</small>
+          <div class="inset-item inset-item--static">
+            <div class="item-icon-box item-icon--sand">🎨</div>
+            <div class="item-body">
+              <strong>Kontras Tinggi Anatomi</strong>
+              <small>Pertegas garis diagram komponen sepeda</small>
             </div>
-            <input v-model="highContrast" type="checkbox" class="native-toggle" />
+            <input v-model="highContrast" type="checkbox" class="toggle-checkbox" />
           </div>
         </div>
       </section>
 
-      <!-- 5. INSET GROUPED LIST: NATIVE PWA & HARDWARE -->
-      <section class="native-section">
-        <h3 class="section-label">Aplikasi PWA &amp; Fitur Native</h3>
-        <div class="native-grouped-list">
-          <div class="list-item no-click">
-            <div class="item-icon-box bg-lime">📲</div>
-            <div class="item-content">
-              <strong>Status Mode Aplikasi</strong>
-              <small v-if="isStandalone">Telah terpasang sebagai Standalone PWA</small>
-              <small v-else-if="canInstall">Siap di-install ke layar beranda HP</small>
+      <!-- 5. INSET GROUPED LIST: PWA & HARDWARE -->
+      <section class="settings-group">
+        <h3 class="group-heading">Aplikasi Mobile &amp; PWA</h3>
+        <div class="inset-list">
+          <div class="inset-item inset-item--static">
+            <div class="item-icon-box item-icon--lime">📲</div>
+            <div class="item-body">
+              <strong>Status Aplikasi</strong>
+              <small v-if="isStandalone">Telah terpasang sebagai Mobile App (PWA)</small>
+              <small v-else-if="canInstall">Siap di-install ke layar utama HP</small>
               <small v-else>Berjalan di browser web mobile</small>
             </div>
             <span class="status-pill-small" :class="isStandalone ? 'pill--green' : 'pill--blue'">
-              {{ isStandalone ? 'Standalone' : (canInstall ? 'Siap Install' : 'Web') }}
+              {{ isStandalone ? 'Standalone' : (canInstall ? 'Siap Install' : 'Web Browser') }}
             </span>
           </div>
 
           <button
             v-if="!isStandalone && (canInstall || isIOS)"
-            class="list-item list-item--action"
+            class="inset-item"
             type="button"
             @click="isIOS ? (showInstallGuide = true) : installApp()"
           >
-            <div class="item-icon-box bg-lime">⚡</div>
-            <div class="item-content">
-              <strong class="text-primary">{{ isIOS ? 'Tambah ke Home Screen (iOS Safari)' : 'Install GowesKit ke HP' }}</strong>
-              <small>Nikmati akses offline cepat dan layar penuh</small>
+            <div class="item-icon-box item-icon--lime">⚡</div>
+            <div class="item-body">
+              <strong class="text-accent">{{ isIOS ? 'Tambah ke Home Screen (Safari iOS)' : 'Install GowesKit ke HP' }}</strong>
+              <small>Akses offline cepat dan tampilan layar penuh</small>
             </div>
             <span class="item-chevron">›</span>
           </button>
 
-          <button class="list-item list-item--action" type="button" @click="testHaptic">
-            <div class="item-icon-box bg-sky">📳</div>
-            <div class="item-content">
-              <strong>Uji Respon Getar (Haptic Feedback)</strong>
-              <small>{{ hapticFeedbackSent ? '✓ Berhasil Bergetar!' : 'Sentuhan tombol SOS & navigasi' }}</small>
+          <button class="inset-item" type="button" @click="testHaptic">
+            <div class="item-icon-box item-icon--sky">📳</div>
+            <div class="item-body">
+              <strong>Uji Respon Getar (Haptic)</strong>
+              <small>{{ hapticFeedbackSent ? '✓ Berhasil Bergetar!' : 'Sentuhan tombol darurat SOS & navigasi' }}</small>
             </div>
-            <span class="test-badge">{{ hapticFeedbackSent ? '✓ Aktif' : 'Tes' }}</span>
+            <span class="haptic-chip">{{ hapticFeedbackSent ? '✓ Aktif' : 'Tes' }}</span>
           </button>
         </div>
       </section>
 
       <!-- 6. LOGOUT BUTTON -->
-      <section class="native-section">
-        <div class="native-grouped-list">
+      <section class="settings-group">
+        <div class="inset-list">
           <button
-            class="list-item list-item--danger"
+            class="inset-item inset-item--logout"
             type="button"
             :disabled="signingOut"
             @click="signOut"
           >
-            <div class="item-icon-box bg-danger">🚪</div>
-            <div class="item-content">
-              <strong>{{ signingOut ? 'Keluar Akun…' : 'Keluar dari Akun' }}</strong>
+            <div class="item-icon-box item-icon--danger">🚪</div>
+            <div class="item-body">
+              <strong class="text-danger">{{ signingOut ? 'Keluar Akun…' : 'Keluar dari Akun' }}</strong>
             </div>
             <span class="item-chevron">›</span>
           </button>
@@ -299,19 +307,36 @@ async function quickDemoLogin(): Promise<void> {
       </section>
     </template>
 
-    <!-- 7. SIGNED OUT / GUEST STATE -->
-    <div v-else class="native-guest-card">
-      <div class="guest-icon">🚲</div>
-      <h2>Anda Berada dalam Mode Tamu</h2>
-      <p>
-        Masuk akun GowesKit untuk menyimpan sepeda di My Garage, mencatat riwayat servis, dan mengaktifkan fitur keselamatan solo-ride.
+    <!-- ══════════════════════════════════════════════════════════
+         2. GUEST STATE (PROMOTIONAL CLEAN HERO)
+         ══════════════════════════════════════════════════════════ -->
+    <div v-else class="pro-guest-card">
+      <div class="guest-badge-circle">🚲</div>
+      <h2 class="guest-title">Buka Fitur Lengkap GowesKit</h2>
+      <p class="guest-sub">
+        Simpan sepeda di My Garage, verifikasi standar komponen, bagikan live tracking solo-ride, dan gabung mabar komunitas.
       </p>
 
-      <div class="guest-actions">
+      <div class="guest-perks-list">
+        <div class="perk-item">
+          <span class="perk-icon">✓</span>
+          <span>Garasi digital &amp; spek komponen terverifikasi</span>
+        </div>
+        <div class="perk-item">
+          <span class="perk-icon">✓</span>
+          <span>Live ride safety beacon dengan token kedaluwarsa</span>
+        </div>
+        <div class="perk-item">
+          <span class="perk-icon">✓</span>
+          <span>Jadwal gowes mabar &amp; discover rute GPX lokal</span>
+        </div>
+      </div>
+
+      <div class="guest-action-group">
         <!-- 1-Tap Google Sign In -->
         <button
           type="button"
-          class="google-btn"
+          class="google-action-btn"
           :disabled="googleLoading"
           @click="triggerGoogleSignIn()"
         >
@@ -321,22 +346,25 @@ async function quickDemoLogin(): Promise<void> {
             <path d="M5.84 14.09c-.22-.66-.35-1.36-.35-2.09s.13-1.43.35-2.09V7.06H2.18C1.43 8.55 1 10.22 1 12s.43 3.45 1.18 4.94l2.85-2.22.81-.63z" fill="#FBBC05"/>
             <path d="M12 5.38c1.62 0 3.06.56 4.21 1.64l3.15-3.15C17.45 2.09 14.97 1 12 1 7.7 1 3.99 3.47 2.18 7.06l3.66 2.84c.87-2.6 3.3-4.52 6.16-4.52z" fill="#EA4335"/>
           </svg>
-          <span>{{ googleLoading ? 'Memproses…' : 'Lanjutkan dengan Google' }}</span>
+          <span>{{ googleLoading ? 'Menghubungkan…' : 'Lanjutkan dengan Google' }}</span>
         </button>
 
-        <NuxtLink class="button button--primary button--full" to="/login">
-          Masuk ke Akun
-        </NuxtLink>
-        <NuxtLink class="button button--secondary button--full" to="/register">
-          Daftar Akun Baru
-        </NuxtLink>
+        <div class="guest-buttons-row">
+          <NuxtLink class="button button--primary button--full" to="/login">
+            Masuk ke Akun
+          </NuxtLink>
+          <NuxtLink class="button button--secondary button--full" to="/register">
+            Daftar Akun Baru
+          </NuxtLink>
+        </div>
+
         <button
-          class="button button--sand button--full"
+          class="button button--sand button--full demo-pill-btn"
           type="button"
           :disabled="demoLoggingIn"
           @click="quickDemoLogin"
         >
-          {{ demoLoggingIn ? 'Memuat Demo…' : '⚡ Masuk dengan Akun Demo (1-Klik)' }}
+          {{ demoLoggingIn ? 'Memuat Demo…' : '⚡ Jelajahi Akun Demo (1-Klik)' }}
         </button>
       </div>
     </div>
@@ -350,13 +378,19 @@ async function quickDemoLogin(): Promise<void> {
 <style scoped>
 .profile-container {
   display: grid;
-  gap: 1.5rem;
-  padding-bottom: 2rem;
+  gap: 1.25rem;
+  padding-bottom: 2.5rem;
 }
 
 .native-page-header {
   display: grid;
-  gap: 0.25rem;
+  gap: 0.35rem;
+}
+
+.header-topline {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
 }
 
 .native-eyebrow {
@@ -366,6 +400,26 @@ async function quickDemoLogin(): Promise<void> {
   text-transform: uppercase;
   color: var(--color-asphalt);
   letter-spacing: 0.05em;
+}
+
+.status-pill-header {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.35rem;
+  font-family: var(--font-mono);
+  font-size: 0.68rem;
+  font-weight: 850;
+  color: #166534;
+  background: rgb(201 243 106 / 40%);
+  padding: 0.15rem 0.5rem;
+  border-radius: 9999px;
+}
+
+.online-dot {
+  width: 0.45rem;
+  height: 0.45rem;
+  border-radius: 50%;
+  background: #22c55e;
 }
 
 .native-title {
@@ -383,10 +437,12 @@ async function quickDemoLogin(): Promise<void> {
   line-height: 1.4;
 }
 
-/* Hero Profile Card */
-.native-hero-card {
+/* ══════════════════════════════════════════════════════════
+   1. PRO RIDER ATHLETE HERO CARD
+   ══════════════════════════════════════════════════════════ */
+.pro-rider-card {
   display: grid;
-  gap: 1.25rem;
+  gap: 1rem;
   padding: 1.25rem;
   border-radius: 1.35rem;
   background: var(--color-white);
@@ -394,130 +450,168 @@ async function quickDemoLogin(): Promise<void> {
   box-shadow: 0 4px 20px rgb(23 32 42 / 5%);
 }
 
-.hero-user-row {
+.rider-header-row {
   display: flex;
   align-items: center;
-  gap: 1rem;
+  gap: 0.95rem;
 }
 
-.hero-avatar {
-  width: 3.8rem;
-  height: 3.8rem;
+.rider-avatar {
+  width: 3.4rem;
+  height: 3.4rem;
   border-radius: 1rem;
-  background: var(--color-chain-lime);
-  border: 2px solid var(--color-ink);
+  background: linear-gradient(135deg, var(--color-ink) 0%, #334155 100%);
+  color: var(--color-white);
   display: grid;
   place-items: center;
-  font-size: 1.5rem;
+  font-size: 1.4rem;
   font-weight: 900;
-  color: var(--color-ink);
-  box-shadow: 0 2px 0 var(--color-ink);
   flex-shrink: 0;
+  box-shadow: 0 4px 12px rgb(23 32 42 / 15%);
 }
 
-.hero-user-info {
+.rider-info {
   display: grid;
-  gap: 0.2rem;
+  gap: 0.15rem;
   min-width: 0;
+  flex: 1;
 }
 
-.hero-user-info h2 {
+.rider-name-row {
+  display: flex;
+  align-items: center;
+  gap: 0.4rem;
+}
+
+.rider-name-row h2 {
   margin: 0;
   font-size: 1.2rem;
   font-weight: 850;
   letter-spacing: -0.02em;
+  color: var(--color-ink);
   white-space: nowrap;
   overflow: hidden;
   text-overflow: ellipsis;
 }
 
-.hero-user-info p {
+.rider-verified-badge {
+  font-size: 0.65rem;
+  font-weight: 900;
+  color: #166534;
+  background: var(--color-chain-lime);
+  width: 1.1rem;
+  height: 1.1rem;
+  border-radius: 50%;
+  display: grid;
+  place-items: center;
+  flex-shrink: 0;
+}
+
+.rider-email {
   margin: 0;
-  font-size: 0.78rem;
+  font-size: 0.76rem;
   color: var(--color-asphalt);
   white-space: nowrap;
   overflow: hidden;
   text-overflow: ellipsis;
 }
 
-.hero-badge-row {
+.rider-tags {
   display: flex;
   gap: 0.35rem;
   margin-top: 0.2rem;
-  flex-wrap: wrap;
 }
 
-/* 3-Metrics Grid */
-.hero-metrics-grid {
-  display: grid;
-  grid-template-columns: 1fr 1fr 1fr;
-  gap: 0.65rem;
-  padding-top: 0.85rem;
-  border-top: 1px solid var(--color-sand);
+.rider-tag {
+  font-size: 0.65rem;
+  font-weight: 800;
+  padding: 0.1rem 0.45rem;
+  border-radius: 9999px;
 }
 
-.metric-card {
+.rider-tag--lime {
+  background: rgb(201 243 106 / 40%);
+  color: #166534;
+}
+
+.rider-tag--sand {
+  background: var(--color-sand);
+  color: var(--color-asphalt);
+}
+
+/* Metrics Counter Strip */
+.rider-metrics-strip {
   display: flex;
-  flex-direction: column;
   align-items: center;
-  text-align: center;
-  padding: 0.65rem 0.4rem;
-  border-radius: 0.85rem;
+  justify-content: space-around;
+  padding: 0.75rem 0.5rem;
+  border-radius: 0.95rem;
   background: var(--color-canvas);
   border: 1px solid var(--color-sand);
+}
+
+.metric-col {
+  display: grid;
+  gap: 0.1rem;
+  text-align: center;
   text-decoration: none;
   color: var(--color-ink);
-  transition: transform 90ms ease, background-color 120ms ease;
+  flex: 1;
+  transition: transform 90ms ease;
 }
 
-.metric-card:active {
-  transform: scale(0.96);
-  background: rgb(201 243 106 / 20%);
+.metric-col:active {
+  transform: scale(0.95);
 }
 
-.metric-icon {
-  font-size: 1.15rem;
-  margin-bottom: 0.15rem;
-}
-
-.metric-value {
-  font-size: 1.2rem;
+.metric-num {
+  font-family: var(--font-mono);
+  font-size: 1.25rem;
   font-weight: 900;
-  letter-spacing: -0.03em;
+  letter-spacing: -0.02em;
+  color: var(--color-ink);
 }
 
 .metric-label {
-  font-size: 0.66rem;
+  font-size: 0.68rem;
   font-weight: 750;
   color: var(--color-asphalt);
 }
 
-/* Native Inset Grouped Lists (iOS Settings Style) */
-.native-section {
-  display: grid;
-  gap: 0.45rem;
+.metric-divider {
+  width: 1px;
+  height: 1.6rem;
+  background: var(--color-sand);
 }
 
-.section-label {
+/* ══════════════════════════════════════════════════════════
+   2. INSET GROUPED LISTS (iOS Settings Style)
+   ══════════════════════════════════════════════════════════ */
+.settings-group {
+  display: grid;
+  gap: 0.4rem;
+}
+
+.group-heading {
   margin: 0 0 0 0.35rem;
-  font-size: 0.74rem;
-  font-weight: 800;
+  font-size: 0.72rem;
+  font-weight: 850;
   text-transform: uppercase;
   color: var(--color-asphalt);
-  letter-spacing: 0.04em;
+  letter-spacing: 0.05em;
 }
 
-.native-grouped-list {
+.inset-list {
   display: flex;
   flex-direction: column;
   border-radius: 1.15rem;
   background: var(--color-white);
   border: 1px solid var(--color-sand);
   overflow: hidden;
-  box-shadow: 0 2px 10px rgb(23 32 42 / 3%);
+  box-shadow: 0 2px 8px rgb(23 32 42 / 3%);
 }
 
-.list-item {
+.inset-item {
   display: flex;
   align-items: center;
   gap: 0.85rem;
@@ -533,16 +627,16 @@ async function quickDemoLogin(): Promise<void> {
   transition: background-color 100ms ease;
 }
 
-.list-item:last-child {
+.inset-item:last-child {
   border-bottom: none;
 }
 
-.list-item:not(.no-click):active {
+.inset-item:not(.inset-item--static):active {
   background: rgb(23 32 42 / 4%);
 }
 
-.list-item--danger strong {
-  color: #dc2626;
+.inset-item--static {
+  cursor: default;
 }
 
 .item-icon-box {
@@ -555,40 +649,44 @@ async function quickDemoLogin(): Promise<void> {
   flex-shrink: 0;
 }
 
-.bg-lime {
-  background: rgb(201 243 106 / 40%);
+.item-icon--lime {
+  background: rgb(201 243 106 / 45%);
 }
 
-.bg-sky {
+.item-icon--sky {
   background: rgb(142 221 244 / 45%);
 }
 
-.bg-coral {
+.item-icon--coral {
   background: rgb(255 140 117 / 30%);
 }
 
-.bg-sand {
+.item-icon--amber {
+  background: #fef3c7;
+}
+
+.item-icon--sand {
   background: var(--color-sand);
 }
 
-.bg-danger {
+.item-icon--danger {
   background: #fee2e2;
 }
 
-.item-content {
+.item-body {
   flex: 1;
   min-width: 0;
   display: grid;
   gap: 0.1rem;
 }
 
-.item-content strong {
+.item-body strong {
   font-size: 0.86rem;
   font-weight: 800;
   letter-spacing: -0.01em;
 }
 
-.item-content small {
+.item-body small {
   font-size: 0.72rem;
   color: var(--color-asphalt);
   white-space: nowrap;
@@ -599,24 +697,32 @@ async function quickDemoLogin(): Promise<void> {
 .item-chevron {
   font-size: 1.15rem;
   color: var(--color-asphalt);
-  opacity: 0.45;
+  opacity: 0.4;
   font-weight: 600;
 }
 
-.native-inline-select {
+.text-accent {
+  color: #166534;
+}
+
+.text-danger {
+  color: #dc2626;
+}
+
+.custom-select {
   padding: 0.35rem 0.6rem;
-  border-radius: 0.5rem;
+  border-radius: 0.55rem;
   border: 1px solid var(--color-sand);
   background: var(--color-sand);
-  font-size: 0.78rem;
-  font-weight: 750;
+  font-size: 0.76rem;
+  font-weight: 800;
   color: var(--color-ink);
   outline: none;
 }
 
-.native-toggle {
-  width: 2.5rem;
-  height: 1.4rem;
+.toggle-checkbox {
+  width: 2.4rem;
+  height: 1.35rem;
   accent-color: var(--color-ink);
   cursor: pointer;
 }
@@ -639,7 +745,7 @@ async function quickDemoLogin(): Promise<void> {
   color: #0369a1;
 }
 
-.test-badge {
+.haptic-chip {
   font-size: 0.72rem;
   font-weight: 800;
   padding: 0.2rem 0.55rem;
@@ -648,59 +754,117 @@ async function quickDemoLogin(): Promise<void> {
   color: var(--color-ink);
 }
 
-/* Guest Card */
-.native-guest-card {
+/* ══════════════════════════════════════════════════════════
+   3. PROMOTIONAL GUEST CARD
+   ══════════════════════════════════════════════════════════ */
+.pro-guest-card {
   display: grid;
-  gap: 1rem;
-  text-align: center;
-  padding: 2rem 1.5rem;
+  gap: 1.15rem;
+  padding: 2rem 1.35rem;
   border-radius: 1.35rem;
   background: var(--color-white);
   border: 1px solid var(--color-sand);
+  box-shadow: 0 6px 24px rgb(23 32 42 / 5%);
+  text-align: center;
 }
 
-.guest-icon {
-  font-size: 3rem;
+.guest-badge-circle {
+  width: 3.8rem;
+  height: 3.8rem;
+  border-radius: 50%;
+  background: var(--color-canvas);
+  border: 2px solid var(--color-chain-lime);
+  display: grid;
+  place-items: center;
+  font-size: 1.8rem;
+  margin: 0 auto;
 }
 
-.native-guest-card h2 {
+.guest-title {
   margin: 0;
-  font-size: 1.3rem;
+  font-size: 1.35rem;
   font-weight: 850;
+  letter-spacing: -0.02em;
+  color: var(--color-ink);
 }
 
-.native-guest-card p {
+.guest-sub {
   margin: 0;
-  font-size: 0.84rem;
+  font-size: 0.82rem;
   color: var(--color-asphalt);
   line-height: 1.4;
 }
 
-.guest-actions {
+.guest-perks-list {
   display: grid;
-  gap: 0.65rem;
-  margin-top: 0.5rem;
+  gap: 0.45rem;
+  text-align: left;
+  padding: 0.85rem 1rem;
+  border-radius: 0.95rem;
+  background: var(--color-canvas);
+  border: 1px solid var(--color-sand);
 }
 
-.google-btn {
+.perk-item {
+  display: flex;
+  align-items: center;
+  gap: 0.55rem;
+  font-size: 0.78rem;
+  font-weight: 750;
+  color: var(--color-ink);
+}
+
+.perk-icon {
+  font-weight: 900;
+  color: #166534;
+  background: var(--color-chain-lime);
+  width: 1rem;
+  height: 1rem;
+  border-radius: 50%;
+  display: grid;
+  place-items: center;
+  font-size: 0.6rem;
+  flex-shrink: 0;
+}
+
+.guest-action-group {
+  display: grid;
+  gap: 0.65rem;
+}
+
+.google-action-btn {
   display: flex;
   align-items: center;
   justify-content: center;
   gap: 0.65rem;
   width: 100%;
-  padding: 0.65rem 1rem;
-  border-radius: 0.75rem;
+  padding: 0.7rem 1rem;
+  border-radius: 0.8rem;
   background: var(--color-white);
   border: 1.5px solid var(--color-sand);
   color: var(--color-ink);
-  font-size: 0.84rem;
-  font-weight: 800;
+  font-size: 0.86rem;
+  font-weight: 850;
   cursor: pointer;
-  box-shadow: 0 2px 6px rgb(23 32 42 / 4%);
-  transition: background-color 120ms ease;
+  box-shadow: 0 2px 8px rgb(23 32 42 / 6%);
+  transition: transform 90ms ease, background-color 100ms ease;
 }
 
-.google-btn:hover {
+.google-action-btn:active {
+  transform: scale(0.98);
+}
+
+.google-action-btn:hover {
   background: var(--color-sand);
+}
+
+.guest-buttons-row {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 0.5rem;
+}
+
+.demo-pill-btn {
+  font-size: 0.78rem !important;
 }
 </style>

@@ -1,6 +1,7 @@
 import { afterEach, describe, expect, it } from 'vitest';
 
 import { buildApp } from './app.js';
+import { AuthRateLimiter } from './auth/rate-limiter.js';
 
 const openApps: ReturnType<typeof buildApp>[] = [];
 
@@ -76,5 +77,34 @@ describe('GET /health', () => {
       checks: { database: 'unavailable' },
     });
     expect(response.body).not.toContain('secret database URL');
+  });
+
+  it('rate limits authentication mutations by proxy-aware requester IP', async () => {
+    const authRateLimiter = new AuthRateLimiter({
+      google: { maxRequests: 1, windowSeconds: 60 },
+      login: { maxRequests: 1, windowSeconds: 60 },
+      otp: { maxRequests: 1, windowSeconds: 60 },
+      register: { maxRequests: 1, windowSeconds: 60 },
+    });
+    const app = buildApp({
+      authRateLimiter,
+      logger: false,
+      trustProxy: (_address, hop) => hop < 1,
+    });
+    openApps.push(app);
+
+    const request = () =>
+      app.inject({
+        method: 'POST',
+        url: '/api/v1/auth/login',
+        headers: { 'x-forwarded-for': '203.0.113.7' },
+      });
+    expect((await request()).statusCode).toBe(404);
+    const blocked = await request();
+    expect(blocked.statusCode).toBe(429);
+    expect(blocked.headers['retry-after']).toBe('60');
+    expect(blocked.json()).toMatchObject({
+      error: { code: 'RATE_LIMITED' },
+    });
   });
 });

@@ -1,11 +1,18 @@
 import { z } from 'zod';
 
+const optionalSecret = z.preprocess(
+  (value) =>
+    typeof value === 'string' && value.trim().length === 0 ? undefined : value,
+  z.string().trim().min(1).optional(),
+);
+
 const environmentSchema = z.object({
   NODE_ENV: z
     .enum(['development', 'test', 'production'])
     .default('development'),
   API_PORT: z.coerce.number().int().min(1).max(65_535).default(4000),
   DATABASE_URL: z.url().default('postgresql://lutuk@localhost:1921/goweskit'),
+  GOOGLE_CLIENT_ID: optionalSecret,
   R2_ACCOUNT_ID: z.string().trim().min(1),
   R2_ACCESS_KEY_ID: z.string().trim().min(1),
   R2_SECRET_ACCESS_KEY: z.string().trim().min(1),
@@ -34,6 +41,7 @@ export interface AppConfig {
   apiPort: number;
   databaseUrl: string;
   environment: 'development' | 'test' | 'production';
+  googleClientId: string | null;
   r2: {
     accountId: string;
     accessKeyId: string;
@@ -62,12 +70,16 @@ export function readConfig(
     if (parsed.TRUST_PROXY_HOPS < 1) {
       throw new Error('TRUST_PROXY_HOPS must be at least 1 in production.');
     }
+    if (parsed.GOOGLE_CLIENT_ID === undefined) {
+      throw new Error('GOOGLE_CLIENT_ID is required in production.');
+    }
   }
 
   return {
     apiPort: parsed.API_PORT,
     databaseUrl: parsed.DATABASE_URL,
     environment: parsed.NODE_ENV,
+    googleClientId: parsed.GOOGLE_CLIENT_ID ?? null,
     r2: {
       accountId: parsed.R2_ACCOUNT_ID,
       accessKeyId: parsed.R2_ACCESS_KEY_ID,

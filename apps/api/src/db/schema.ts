@@ -50,7 +50,8 @@ export const users = pgTable(
     id: uuid('id').primaryKey().defaultRandom(),
     displayName: varchar('display_name', { length: 80 }).notNull(),
     email: varchar('email', { length: 320 }).notNull(),
-    passwordHash: text('password_hash').notNull(),
+    passwordHash: text('password_hash'),
+    googleSubject: varchar('google_subject', { length: 255 }),
     createdAt: timestamp('created_at', { withTimezone: true })
       .notNull()
       .defaultNow(),
@@ -58,7 +59,10 @@ export const users = pgTable(
       .notNull()
       .defaultNow(),
   },
-  (table) => [uniqueIndex('users_email_unique').on(table.email)],
+  (table) => [
+    uniqueIndex('users_email_unique').on(table.email),
+    uniqueIndex('users_google_subject_unique').on(table.googleSubject),
+  ],
 );
 
 export const sessions = pgTable(
