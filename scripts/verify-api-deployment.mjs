@@ -1,4 +1,5 @@
-const apiOrigin = (process.argv[2] ?? process.env.API_ORIGIN ?? '').replace(
+const positionalOrigin = process.argv.slice(2).find((value) => value !== '--');
+const apiOrigin = (positionalOrigin ?? process.env.API_ORIGIN ?? '').replace(
   /\/+$/u,
   '',
 );
