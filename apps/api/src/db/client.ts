@@ -8,6 +8,8 @@ export function createDatabase(databaseUrl: string) {
     application_name: 'goweskit-api',
     connectionString: databaseUrl,
     connectionTimeoutMillis: 5_000,
+    query_timeout: 5_000,
+    statement_timeout: 5_000,
   });
   const database = drizzle({ client: pool, schema });
 

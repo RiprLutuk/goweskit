@@ -35,13 +35,10 @@ export function registerAuthRoutes(
     path: '/',
   };
 
-  app.post<{ Reply: SendOtpResponse }>(
-    '/api/v1/auth/otp/send',
-    (request) => {
-      const input = parseInput(sendOtpRequestSchema, request.body);
-      return otpService.sendOtp(input);
-    },
-  );
+  app.post<{ Reply: SendOtpResponse }>('/api/v1/auth/otp/send', (request) => {
+    const input = parseInput(sendOtpRequestSchema, request.body);
+    return otpService.sendOtp(input);
+  });
 
   app.post<{ Reply: AuthUserResponse }>(
     '/api/v1/auth/register',

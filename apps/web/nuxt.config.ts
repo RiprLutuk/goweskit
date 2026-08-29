@@ -30,6 +30,7 @@ export default defineNuxtConfig({
     public: {
       apiBaseUrl:
         process.env.PUBLIC_API_BASE_URL ?? 'http://localhost:4000/api/v1',
+      googleClientId: process.env.GOOGLE_CLIENT_ID ?? '',
     },
   },
   pwa: {

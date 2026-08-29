@@ -58,7 +58,7 @@ export class AuthService {
         }
         throw new AppError(
           'AUTH_GOOGLE_LINK_REQUIRED',
-          'Sign in with your password before linking this Google account.',
+          'An account already uses this email. Sign in with your password instead.',
           409,
         );
       } else {

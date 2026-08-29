@@ -153,8 +153,21 @@ export function buildApp(options: BuildAppOptions = {}): FastifyInstance {
         ? error
         : new AppError('INTERNAL_ERROR', 'Something went wrong.', 500);
 
-    if (!(error instanceof AppError)) {
-      request.log.error({ err: error }, 'Unhandled request error');
+    const routePath =
+      request.routeOptions.url ?? request.url.split('?')[0] ?? '';
+    const moduleName = routePath.split('/').filter(Boolean)[2] ?? 'root';
+    const logContext = {
+      errorCode: appError.code,
+      module: moduleName,
+      statusCode: appError.statusCode,
+    };
+    if (error instanceof AppError) {
+      request.log.warn(logContext, 'Request rejected');
+    } else {
+      request.log.error(
+        { ...logContext, err: error },
+        'Unhandled request error',
+      );
     }
 
     const response: ApiErrorResponse = {

@@ -33,6 +33,11 @@ In Google Cloud Console, configure a Web OAuth client for the real web origin.
 The frontend sends the Google Identity Services ID token to
 `POST /api/v1/auth/google`; the API verifies it against `GOOGLE_CLIENT_ID`.
 
+Deploy the web and API on same-site HTTPS domains, for example
+`app.goweskit.com` and `api.goweskit.com`. The host-only session cookie uses
+`SameSite=Lax`; unrelated platform domains such as `*.vercel.app` and
+`*.onrender.com` will not carry that cookie on cross-site API requests.
+
 ## Build and release
 
 1. Run `pnpm install --frozen-lockfile` with Node.js 22 and pnpm 10.34.5.
