@@ -54,6 +54,7 @@ const openApps: FastifyInstance[] = [];
 
 function buildLearnApp(): FastifyInstance {
   const app = Fastify({ logger: false });
+  app.decorate('authenticate', async () => {});
   app.setErrorHandler((error, request, reply) => {
     const appError =
       error instanceof AppError
@@ -87,6 +88,45 @@ describe('Learn glossary and search routes', () => {
 
     expect(response.statusCode).toBe(200);
     expect(body.terms.find(({ slug }) => slug === 'boost')).toBeDefined();
+  });
+
+  it('allows authenticated admin curation of glossary content', async () => {
+    const app = buildLearnApp();
+
+    // Create
+    const createRes = await app.inject({
+      method: 'POST',
+      url: '/api/v1/learn/glossary',
+      payload: {
+        slug: 'sram_transmission',
+        term: 'SRAM Transmission (T-Type)',
+        plainDefinition: 'Sistem drivetrain direct mount tanpa hanger RD tradisional.',
+        technicalDefinition: 'Full Mount interface attaching directly to frame dropout via UDH standard.',
+        aliases: ['T-Type', 'Transmission'],
+        relatedComponentSlugs: ['rear_derailleur', 'cassette'],
+      },
+    });
+    expect(createRes.statusCode).toBe(201);
+    expect(createRes.json()).toMatchObject({ slug: 'sram_transmission' });
+
+    // Update
+    const updateRes = await app.inject({
+      method: 'PUT',
+      url: '/api/v1/learn/glossary/sram_transmission',
+      payload: {
+        plainDefinition: 'Definisi terupdate dari admin curator.',
+      },
+    });
+    expect(updateRes.statusCode).toBe(200);
+    expect(updateRes.json().plainDefinition).toBe('Definisi terupdate dari admin curator.');
+
+    // Delete
+    const deleteRes = await app.inject({
+      method: 'DELETE',
+      url: '/api/v1/learn/glossary/sram_transmission',
+    });
+    expect(deleteRes.statusCode).toBe(200);
+    expect(deleteRes.json()).toEqual({ success: true });
   });
 
   it('returns a deterministic bounded search response', async () => {

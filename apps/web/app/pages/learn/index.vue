@@ -28,6 +28,12 @@ const searchError = ref('');
 
 // Tab Navigation: 'types' | 'components' | 'glossary'
 const activeTab = ref<'types' | 'components' | 'glossary'>('types');
+const showAdminModal = ref(false);
+
+function onTermCreated(term: GlossaryTerm): void {
+  glossaryTerms.value.unshift(term);
+  activeTab.value = 'glossary';
+}
 
 // Guided Identification Wizard state
 const showWizard = ref(false);
@@ -219,6 +225,13 @@ function resetWizard(): void {
             @click="showWizard = true"
           >
             🧭 Deteksi Tipe
+          </button>
+          <button
+            class="wizard-open-pill wizard-open-pill--admin"
+            type="button"
+            @click="showAdminModal = true"
+          >
+            ➕ Tambah Istilah
           </button>
         </div>
       </div>
@@ -536,6 +549,13 @@ function resetWizard(): void {
         </div>
       </div>
     </div>
+
+    <!-- Glossary Admin & Curation Modal -->
+    <GlossaryAdminModal
+      :is-open="showAdminModal"
+      @close="showAdminModal = false"
+      @term-created="onTermCreated"
+    />
   </div>
 </template>
 

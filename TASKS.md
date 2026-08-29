@@ -29,7 +29,7 @@ P3 = later
 - [x] LEARN-005 [P0] Anatomy hotspot UI.
 - [x] LEARN-006 [P0] Component detail.
 - [x] LEARN-007 [P1] Glossary/search.
-- [ ] LEARN-008 [P1] Admin content workflow.
+- [x] LEARN-008 [P1] Admin content workflow.
 
 ## Garage
 

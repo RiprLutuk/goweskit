@@ -3,6 +3,7 @@ import { describe, expect, it } from 'vitest';
 import {
   bicycleAnatomyResponseSchema,
   componentDetailSchema,
+  createGlossaryTermSchema,
   glossaryListResponseSchema,
   LEARN_SEARCH_MAX_RESULTS,
   learnSearchQuerySchema,
@@ -135,5 +136,18 @@ describe('Learn catalog contracts', () => {
         ),
       }).success,
     ).toBe(false);
+  });
+
+  it('validates admin glossary curation requests', () => {
+    const valid = {
+      slug: 'udist_hanger',
+      term: 'Universal Derailleur Hanger (UDH)',
+      plainDefinition: 'Standar anting RD universal dari SRAM.',
+      technicalDefinition: 'SRAM Universal Derailleur Hanger standard for frame dropout alignment.',
+      aliases: ['UDH', 'SRAM UDH'],
+      relatedComponentSlugs: ['rear_derailleur', 'frame'],
+    };
+    expect(createGlossaryTermSchema.parse(valid)).toMatchObject({ slug: 'udist_hanger' });
+    expect(createGlossaryTermSchema.safeParse({ ...valid, slug: 'Invalid Slug!' }).success).toBe(false);
   });
 });

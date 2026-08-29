@@ -1,4 +1,8 @@
-import { learnSearchQuerySchema } from '@goweskit/contracts';
+import {
+  createGlossaryTermSchema,
+  learnSearchQuerySchema,
+  updateGlossaryTermSchema,
+} from '@goweskit/contracts';
 import type {
   BicycleAnatomyResponse,
   BicycleType,
@@ -6,6 +10,7 @@ import type {
   ComponentCategoryListResponse,
   ComponentDetail,
   GlossaryListResponse,
+  GlossaryTerm,
   LearnSearchResponse,
 } from '@goweskit/contracts';
 import type { FastifyInstance } from 'fastify';
@@ -61,6 +66,36 @@ export function registerLearnRoutes(
   app.get<{ Reply: GlossaryListResponse }>('/api/v1/learn/glossary', () => ({
     terms: catalogService.listGlossary(),
   }));
+
+  app.post<{ Body: unknown; Reply: GlossaryTerm }>(
+    '/api/v1/learn/glossary',
+    { preHandler: app.authenticate },
+    async (request, reply) => {
+      const input = parseInput(createGlossaryTermSchema, request.body);
+      const created = catalogService.createGlossaryTerm(input);
+      return reply.code(201).send(created);
+    },
+  );
+
+  app.put<{ Params: unknown; Body: unknown; Reply: GlossaryTerm }>(
+    '/api/v1/learn/glossary/:slug',
+    { preHandler: app.authenticate },
+    async (request) => {
+      const { slug } = parseInput(slugParamsSchema, request.params);
+      const input = parseInput(updateGlossaryTermSchema, request.body);
+      return catalogService.updateGlossaryTerm(slug, input);
+    },
+  );
+
+  app.delete<{ Params: unknown; Reply: { success: boolean } }>(
+    '/api/v1/learn/glossary/:slug',
+    { preHandler: app.authenticate },
+    async (request) => {
+      const { slug } = parseInput(slugParamsSchema, request.params);
+      catalogService.deleteGlossaryTerm(slug);
+      return { success: true };
+    },
+  );
 
   app.get<{ Reply: LearnSearchResponse }>(
     '/api/v1/learn/search',

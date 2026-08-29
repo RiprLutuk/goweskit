@@ -86,6 +86,21 @@ export const glossaryTermSchema = z.object({
 
 export type GlossaryTerm = z.infer<typeof glossaryTermSchema>;
 
+export const createGlossaryTermSchema = z.object({
+  slug: z.string().trim().min(1).max(80).regex(/^[a-z0-9_-]+$/u, 'Slug must contain only lowercase letters, numbers, hyphens, and underscores.'),
+  term: z.string().trim().min(1).max(120),
+  plainDefinition: z.string().trim().min(1).max(800),
+  technicalDefinition: z.string().trim().min(1).max(1200),
+  aliases: z.array(z.string().trim().min(1).max(120)).max(8).default([]),
+  relatedComponentSlugs: z.array(z.string().trim().min(1).max(80)).max(8).default([]),
+});
+
+export type CreateGlossaryTermRequest = z.infer<typeof createGlossaryTermSchema>;
+
+export const updateGlossaryTermSchema = createGlossaryTermSchema.partial().omit({ slug: true });
+
+export type UpdateGlossaryTermRequest = z.infer<typeof updateGlossaryTermSchema>;
+
 export const glossaryListResponseSchema = z.object({
   terms: z.array(glossaryTermSchema).max(100),
 });
