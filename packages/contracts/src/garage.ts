@@ -3,6 +3,28 @@ import { z } from 'zod';
 
 export const bikeSpecCodeSchema = z.enum(BIKE_SPEC_CODES);
 
+export const BIKE_PHOTO_DATA_URL_MAX_LENGTH = 900_000;
+
+export const bikePhotoSourceSchema = z
+  .string()
+  .trim()
+  .max(BIKE_PHOTO_DATA_URL_MAX_LENGTH)
+  .refine(
+    (value) =>
+      /^https:\/\/[^\s]+$/u.test(value) ||
+      /^data:image\/(?:png|jpeg|webp|gif);base64,[A-Za-z0-9+/]+={0,2}$/u.test(
+        value,
+      ),
+    'Photo must be an HTTPS URL or a base64 PNG, JPEG, WebP, or GIF data URL.',
+  );
+
+export const bikeAvatarPresetSchema = z
+  .string()
+  .trim()
+  .min(1)
+  .max(80)
+  .regex(/^[a-z0-9]+(?:_[a-z0-9]+)*$/u, 'Invalid bike avatar preset key.');
+
 export const bikeSpecInputSchema = z.discriminatedUnion('knowledge', [
   z.object({
     knowledge: z.literal('known'),
@@ -41,7 +63,8 @@ const bikeDetailsInputSchema = z.object({
   brand: z.string().trim().max(100).nullable().optional(),
   model: z.string().trim().max(100).nullable().optional(),
   modelYear: z.number().int().min(1900).max(2100).nullable().optional(),
-  photoUrl: z.string().trim().max(2000).nullable().optional(),
+  photoUrl: bikePhotoSourceSchema.nullable().optional(),
+  avatarPreset: bikeAvatarPresetSchema.nullable().optional(),
   notes: z.string().trim().max(2000).nullable().optional(),
 });
 
@@ -71,7 +94,8 @@ export const bikeSchema = z.object({
   brand: z.string().nullable(),
   model: z.string().nullable(),
   modelYear: z.number().int().nullable(),
-  photoUrl: z.string().nullable().default(null),
+  photoUrl: bikePhotoSourceSchema.nullable().default(null),
+  avatarPreset: bikeAvatarPresetSchema.nullable().default(null),
   notes: z.string().nullable(),
   specs: z.array(bikeSpecSchema),
   createdAt: z.iso.datetime(),
@@ -93,3 +117,31 @@ export type BikeSpecListResponse = z.infer<typeof bikeSpecListResponseSchema>;
 
 export const bikeSpecResponseSchema = z.object({ spec: bikeSpecSchema });
 export type BikeSpecResponse = z.infer<typeof bikeSpecResponseSchema>;
+
+export const updateBikePhotoRequestSchema = z
+  .object({
+    photoUrl: bikePhotoSourceSchema.nullable().optional(),
+    avatarPreset: bikeAvatarPresetSchema.nullable().optional(),
+  })
+  .strict()
+  .refine(
+    (value) => value.photoUrl !== undefined || value.avatarPreset !== undefined,
+    'At least one bike visual field is required.',
+  );
+export type UpdateBikePhotoRequest = z.infer<
+  typeof updateBikePhotoRequestSchema
+>;
+
+export const bikeVisualSchema = z
+  .object({
+    id: z.uuid(),
+    photoUrl: bikePhotoSourceSchema.nullable(),
+    avatarPreset: bikeAvatarPresetSchema.nullable(),
+  })
+  .strict();
+export type BikeVisual = z.infer<typeof bikeVisualSchema>;
+
+export const bikeVisualResponseSchema = z
+  .object({ bike: bikeVisualSchema })
+  .strict();
+export type BikeVisualResponse = z.infer<typeof bikeVisualResponseSchema>;

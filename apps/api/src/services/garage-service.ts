@@ -8,8 +8,10 @@ import type {
   Bike,
   BikeSpec,
   BikeSpecInput,
+  BikeVisual,
   CreateBikeRequest,
   UpdateBikeRequest,
+  UpdateBikePhotoRequest,
   User,
 } from '@goweskit/contracts';
 
@@ -46,6 +48,7 @@ function mapBike(bike: StoredBike): Bike {
     model: bike.model,
     modelYear: bike.modelYear,
     photoUrl: bike.photoUrl,
+    avatarPreset: bike.avatarPreset,
     notes: bike.notes,
     specs: bike.specs.map(mapSpec),
     createdAt: bike.createdAt.toISOString(),
@@ -126,6 +129,21 @@ export class GarageService {
     const updated = await this.repository.updateBike(bikeId, input);
     if (updated === null) throw this.notFound();
     return mapBike(updated);
+  }
+
+  public async updateBikeVisual(
+    user: User,
+    bikeId: string,
+    input: UpdateBikePhotoRequest,
+  ): Promise<BikeVisual> {
+    await this.getOwnedBike(user, bikeId);
+    const updated = await this.repository.updateBike(bikeId, input);
+    if (updated === null) throw this.notFound();
+    return {
+      id: updated.id,
+      photoUrl: updated.photoUrl,
+      avatarPreset: updated.avatarPreset,
+    };
   }
 
   public async deleteBike(user: User, bikeId: string): Promise<void> {

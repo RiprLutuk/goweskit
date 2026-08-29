@@ -4,9 +4,51 @@ import {
   EXPLORE_MAX_RADIUS_KM,
   nearbyExploreRequestSchema,
   nearbyExploreResponseSchema,
+  routeElevationResponseSchema,
 } from './explore.js';
 
 describe('Explore contracts', () => {
+  it('validates an ordered and bounded route elevation profile', () => {
+    const routeId = '30000000-0000-4000-8000-000000000001';
+    expect(
+      routeElevationResponseSchema.parse({
+        routeId,
+        elevationProfile: [
+          { distanceMeters: 0, elevationMeters: 768 },
+          { distanceMeters: 1500, elevationMeters: 820 },
+          { distanceMeters: 3500, elevationMeters: 910 },
+        ],
+        maxGradientPercent: 4.5,
+        averageGradientPercent: 4.1,
+      }).routeId,
+    ).toBe(routeId);
+    expect(
+      routeElevationResponseSchema.safeParse({
+        routeId,
+        elevationProfile: [
+          { distanceMeters: 100, elevationMeters: 768 },
+          { distanceMeters: 50, elevationMeters: 820 },
+        ],
+        maxGradientPercent: 4.5,
+        averageGradientPercent: 4.1,
+      }).success,
+    ).toBe(false);
+  });
+
+  it('allows mathematically valid gradients above one hundred percent', () => {
+    expect(
+      routeElevationResponseSchema.safeParse({
+        routeId: '30000000-0000-4000-8000-000000000001',
+        elevationProfile: [
+          { distanceMeters: 0, elevationMeters: 0 },
+          { distanceMeters: 1, elevationMeters: 100 },
+        ],
+        maxGradientPercent: 10_000,
+        averageGradientPercent: 10_000,
+      }).success,
+    ).toBe(true);
+  });
+
   it('accepts explicit longitude/latitude coordinates and filters', () => {
     expect(
       nearbyExploreRequestSchema.safeParse({

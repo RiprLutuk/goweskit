@@ -23,7 +23,9 @@ import {
   type HazardType,
   type InstalledComponentStandardInput,
   type MaintenanceEventType,
+  type RouteElevationPoint,
   type RouteReportType,
+  type SavedItemKind,
 } from '@goweskit/contracts';
 import type { SafetySessionStatus } from '@goweskit/contracts/safety';
 import type { SafetyAuditAction } from '../safety/repository.js';
@@ -236,6 +238,8 @@ interface DemoBikeSeed {
   brand: string;
   model: string;
   modelYear: number;
+  photoUrl: string | null;
+  avatarPreset: string;
   notes: string;
   specs: readonly DemoBikeSpec[];
 }
@@ -248,6 +252,8 @@ export const DEMO_BIKE_SEEDS = [
     brand: 'Nusantara',
     model: 'Trail 29',
     modelYear: 2024,
+    photoUrl: null,
+    avatarPreset: 'hardtail_lime',
     notes:
       'Complete modern hardtail example. Matching candidates pass; different standards fail.',
     specs: [
@@ -321,6 +327,8 @@ export const DEMO_BIKE_SEEDS = [
     brand: 'Kota',
     model: 'Compact 20',
     modelYear: 2022,
+    photoUrl: null,
+    avatarPreset: 'folding_sky',
     notes:
       'Incomplete folding-bike example that demonstrates explicit unknown values.',
     specs: [
@@ -366,6 +374,8 @@ export const DEMO_BIKE_SEEDS = [
     brand: 'Peloton',
     model: 'Endurance',
     modelYear: 2025,
+    photoUrl: null,
+    avatarPreset: 'road_coral',
     notes:
       'Road example with an XDR freehub. An XD cassette produces a conditional spacer result.',
     specs: [
@@ -427,6 +437,8 @@ export const DEMO_BIKE_SEEDS = [
     brand: 'Lintas',
     model: 'Allroad',
     modelYear: 2023,
+    photoUrl: null,
+    avatarPreset: 'gravel_sand',
     notes: 'Mixed-surface example with complete normalized standards.',
     specs: [
       { standardCode: 'wheel_size', knowledge: 'known', value: 'iso_622' },
@@ -771,6 +783,7 @@ interface DemoRouteSeed {
   coordinates: readonly (readonly [number, number])[];
   distanceMeters: number;
   elevationGainMeters: number;
+  elevationProfile: readonly RouteElevationPoint[];
   difficulty: (typeof ROUTE_DIFFICULTIES)[number];
   surface: (typeof ROUTE_SURFACES)[number];
   bicycleTypes: readonly string[];
@@ -813,6 +826,14 @@ export const DEMO_ROUTE_SEEDS = [
     ],
     distanceMeters: 7200,
     elevationGainMeters: 310,
+    elevationProfile: [
+      { distanceMeters: 0, elevationMeters: 768 },
+      { distanceMeters: 1200, elevationMeters: 812 },
+      { distanceMeters: 2600, elevationMeters: 874 },
+      { distanceMeters: 4100, elevationMeters: 943 },
+      { distanceMeters: 5600, elevationMeters: 1012 },
+      { distanceMeters: 7200, elevationMeters: 1078 },
+    ],
     difficulty: 'hard',
     surface: 'paved',
     bicycleTypes: ['road', 'gravel'],
@@ -851,6 +872,15 @@ export const DEMO_ROUTE_SEEDS = [
     ],
     distanceMeters: 9800,
     elevationGainMeters: 240,
+    elevationProfile: [
+      { distanceMeters: 0, elevationMeters: 810 },
+      { distanceMeters: 1800, elevationMeters: 862 },
+      { distanceMeters: 3600, elevationMeters: 928 },
+      { distanceMeters: 5200, elevationMeters: 965 },
+      { distanceMeters: 7000, elevationMeters: 910 },
+      { distanceMeters: 8400, elevationMeters: 852 },
+      { distanceMeters: 9800, elevationMeters: 812 },
+    ],
     difficulty: 'moderate',
     surface: 'mixed',
     bicycleTypes: ['gravel', 'mtb_hardtail'],
@@ -887,6 +917,14 @@ export const DEMO_ROUTE_SEEDS = [
     ],
     distanceMeters: 4800,
     elevationGainMeters: 45,
+    elevationProfile: [
+      { distanceMeters: 0, elevationMeters: 713 },
+      { distanceMeters: 900, elevationMeters: 721 },
+      { distanceMeters: 1900, elevationMeters: 738 },
+      { distanceMeters: 2900, elevationMeters: 731 },
+      { distanceMeters: 3900, elevationMeters: 718 },
+      { distanceMeters: 4800, elevationMeters: 713 },
+    ],
     difficulty: 'easy',
     surface: 'paved',
     bicycleTypes: ['folding', 'road', 'gravel'],
@@ -923,6 +961,15 @@ export const DEMO_ROUTE_SEEDS = [
     ],
     distanceMeters: 6100,
     elevationGainMeters: 170,
+    elevationProfile: [
+      { distanceMeters: 0, elevationMeters: 704 },
+      { distanceMeters: 1100, elevationMeters: 758 },
+      { distanceMeters: 2200, elevationMeters: 812 },
+      { distanceMeters: 3400, elevationMeters: 776 },
+      { distanceMeters: 4500, elevationMeters: 844 },
+      { distanceMeters: 5300, elevationMeters: 790 },
+      { distanceMeters: 6100, elevationMeters: 706 },
+    ],
     difficulty: 'moderate',
     surface: 'trail',
     bicycleTypes: ['mtb_hardtail'],
@@ -931,6 +978,40 @@ export const DEMO_ROUTE_SEEDS = [
     lastConfirmedAt: '2025-11-15T00:00:00.000Z',
   },
 ] as const satisfies readonly DemoRouteSeed[];
+
+interface DemoSavedItemSeed {
+  id: string;
+  itemKind: SavedItemKind;
+  itemId: string;
+  savedAt: string;
+}
+
+export const DEMO_SAVED_ITEM_SEEDS = [
+  {
+    id: '75000000-0000-4000-8000-000000000001',
+    itemKind: 'place',
+    itemId: '20000000-0000-4000-8000-000000000001',
+    savedAt: '2026-08-25T08:00:00.000Z',
+  },
+  {
+    id: '75000000-0000-4000-8000-000000000002',
+    itemKind: 'place',
+    itemId: '20000000-0000-4000-8000-000000000003',
+    savedAt: '2026-08-26T08:00:00.000Z',
+  },
+  {
+    id: '75000000-0000-4000-8000-000000000003',
+    itemKind: 'route',
+    itemId: '30000000-0000-4000-8000-000000000001',
+    savedAt: '2026-08-27T08:00:00.000Z',
+  },
+  {
+    id: '75000000-0000-4000-8000-000000000004',
+    itemKind: 'route',
+    itemId: '30000000-0000-4000-8000-000000000003',
+    savedAt: '2026-08-28T08:00:00.000Z',
+  },
+] as const satisfies readonly DemoSavedItemSeed[];
 
 export const DEMO_COMMUNITY_USERS = [
   {
@@ -1091,6 +1172,7 @@ interface DemoRideEventSeed {
   id: string;
   communityId: string;
   title: string;
+  description: string;
   startsAt: string;
   coordinate: Coordinate;
   meetingArea: string;
@@ -1109,6 +1191,8 @@ export const DEMO_RIDE_EVENT_SEEDS = [
     id: '53000000-0000-4000-8000-000000000001',
     communityId: '51000000-0000-4000-8000-000000000001',
     title: 'Demo Sunday Beginner Loop',
+    description:
+      'Beginner-paced city loop with regular regroup points and a short bike check before departure.',
     startsAt: '2026-09-06T00:00:00.000Z',
     coordinate: { longitude: 107.6186, latitude: -6.9002 },
     meetingArea: 'Gasibu area, Bandung',
@@ -1125,6 +1209,8 @@ export const DEMO_RIDE_EVENT_SEEDS = [
     id: '53000000-0000-4000-8000-000000000002',
     communityId: '51000000-0000-4000-8000-000000000001',
     title: 'Demo Member Bike Check',
+    description:
+      'Members-only workshop for checking brakes, tire pressure, and incomplete bike specifications.',
     startsAt: '2026-09-12T01:00:00.000Z',
     coordinate: { longitude: 107.6191, latitude: -6.9175 },
     meetingArea: 'Bandung city center',
@@ -1141,6 +1227,8 @@ export const DEMO_RIDE_EVENT_SEEDS = [
     id: '53000000-0000-4000-8000-000000000003',
     communityId: '51000000-0000-4000-8000-000000000002',
     title: 'Demo Folding Bike Social Ride',
+    description:
+      'Relaxed folding-bike ride through central Bandung with a coffee regroup.',
     startsAt: '2026-09-20T00:30:00.000Z',
     coordinate: { longitude: 107.6087, latitude: -6.9218 },
     meetingArea: 'Asia Afrika area, Bandung',
@@ -1157,6 +1245,8 @@ export const DEMO_RIDE_EVENT_SEEDS = [
     id: '53000000-0000-4000-8000-000000000004',
     communityId: '51000000-0000-4000-8000-000000000003',
     title: 'Demo Trail Skills Session',
+    description:
+      'Controlled trail practice covering braking, body position, and safe cornering.',
     startsAt: '2026-09-13T00:00:00.000Z',
     coordinate: { longitude: 107.6322, latitude: -6.8566 },
     meetingArea: 'North Bandung trail area',
@@ -1173,6 +1263,8 @@ export const DEMO_RIDE_EVENT_SEEDS = [
     id: '53000000-0000-4000-8000-000000000005',
     communityId: '51000000-0000-4000-8000-000000000004',
     title: 'Demo Mixed Surface Intro',
+    description:
+      'Introductory gravel ride with paved and unpaved sections plus planned regroup points.',
     startsAt: '2026-09-27T00:00:00.000Z',
     coordinate: { longitude: 107.604, latitude: -6.8745 },
     meetingArea: 'Ciumbuleuit area, Bandung',
@@ -1189,6 +1281,8 @@ export const DEMO_RIDE_EVENT_SEEDS = [
     id: '53000000-0000-4000-8000-000000000006',
     communityId: '51000000-0000-4000-8000-000000000001',
     title: 'Demo August Morning Roll',
+    description:
+      'Completed demo ride retained for event history and contributor reputation.',
     startsAt: '2026-08-16T00:00:00.000Z',
     coordinate: { longitude: 107.6186, latitude: -6.9002 },
     meetingArea: 'Gasibu area, Bandung',

@@ -26,6 +26,7 @@ import {
   standardDefinitions,
   trustedContacts,
   userBikes,
+  userSavedItems,
   users,
 } from './schema.js';
 import {
@@ -45,6 +46,7 @@ import {
   DEMO_PLACE_REVIEW_SEEDS,
   DEMO_PLACE_SEEDS,
   DEMO_ROUTE_SEEDS,
+  DEMO_SAVED_ITEM_SEEDS,
   DEMO_RIDE_EVENT_SEEDS,
   DEMO_ROUTE_REPORT_SEEDS,
   DEMO_SAFETY_AUDIT_SEEDS,
@@ -64,6 +66,7 @@ interface SeedSummary {
   demoMaintenanceEvents: number;
   demoPlaces: number;
   demoRoutes: number;
+  demoSavedItems: number;
   demoCommunities: number;
   demoCommunityMemberships: number;
   demoRideEvents: number;
@@ -195,13 +198,16 @@ export async function seedDatabase(database: Database): Promise<SeedSummary> {
       await transaction.execute(sql`
         INSERT INTO "routes" (
           "id", "route_type", "name", "description", "geometry",
-          "distance_meters", "elevation_gain_meters", "difficulty", "surface",
+          "distance_meters", "elevation_gain_meters", "elevation_profile",
+          "difficulty", "surface",
           "bicycle_types", "beginner_friendly", "verification_status",
           "last_confirmed_at"
         ) VALUES (
           ${seed.id}, ${seed.routeType}, ${seed.name}, ${seed.description},
           ST_GeogFromText(${lineString}), ${seed.distanceMeters},
-          ${seed.elevationGainMeters}, ${seed.difficulty}, ${seed.surface},
+          ${seed.elevationGainMeters},
+          ${JSON.stringify(seed.elevationProfile)}::jsonb,
+          ${seed.difficulty}, ${seed.surface},
           ${textArraySql(seed.bicycleTypes)}, ${seed.beginnerFriendly},
           ${seed.verificationStatus}, ${new Date(seed.lastConfirmedAt)}
         )
@@ -212,6 +218,7 @@ export async function seedDatabase(database: Database): Promise<SeedSummary> {
           "geometry" = EXCLUDED."geometry",
           "distance_meters" = EXCLUDED."distance_meters",
           "elevation_gain_meters" = EXCLUDED."elevation_gain_meters",
+          "elevation_profile" = EXCLUDED."elevation_profile",
           "difficulty" = EXCLUDED."difficulty",
           "surface" = EXCLUDED."surface",
           "bicycle_types" = EXCLUDED."bicycle_types",
@@ -454,6 +461,8 @@ export async function seedDatabase(database: Database): Promise<SeedSummary> {
           brand: bikeSeed.brand,
           model: bikeSeed.model,
           modelYear: bikeSeed.modelYear,
+          photoUrl: bikeSeed.photoUrl,
+          avatarPreset: bikeSeed.avatarPreset,
           notes: bikeSeed.notes,
         })
         .onConflictDoUpdate({
@@ -465,6 +474,8 @@ export async function seedDatabase(database: Database): Promise<SeedSummary> {
             brand: bikeSeed.brand,
             model: bikeSeed.model,
             modelYear: bikeSeed.modelYear,
+            photoUrl: bikeSeed.photoUrl,
+            avatarPreset: bikeSeed.avatarPreset,
             notes: bikeSeed.notes,
             updatedAt: new Date(),
           },
@@ -492,6 +503,31 @@ export async function seedDatabase(database: Database): Promise<SeedSummary> {
           });
         specCount += 1;
       }
+    }
+
+    for (const savedItemSeed of DEMO_SAVED_ITEM_SEEDS) {
+      await transaction
+        .insert(userSavedItems)
+        .values({
+          id: savedItemSeed.id,
+          userId: demoUser.id,
+          placeId:
+            savedItemSeed.itemKind === 'place' ? savedItemSeed.itemId : null,
+          routeId:
+            savedItemSeed.itemKind === 'route' ? savedItemSeed.itemId : null,
+          savedAt: new Date(savedItemSeed.savedAt),
+        })
+        .onConflictDoUpdate({
+          target: userSavedItems.id,
+          set: {
+            userId: demoUser.id,
+            placeId:
+              savedItemSeed.itemKind === 'place' ? savedItemSeed.itemId : null,
+            routeId:
+              savedItemSeed.itemKind === 'route' ? savedItemSeed.itemId : null,
+            savedAt: new Date(savedItemSeed.savedAt),
+          },
+        });
     }
 
     for (const eventSeed of DEMO_MAINTENANCE_EVENT_SEEDS) {
@@ -619,12 +655,13 @@ export async function seedDatabase(database: Database): Promise<SeedSummary> {
       if (createdBy === undefined) throw new Error('Missing event creator.');
       await transaction.execute(sql`
         INSERT INTO ride_events (
-          id, community_id, title, starts_at, meeting_location, meeting_area,
+          id, community_id, title, description, starts_at,
+          meeting_location, meeting_area,
           route_id, difficulty, bicycle_types, capacity, requirements,
           visibility, status, created_by
         ) VALUES (
           ${eventSeed.id}, ${eventSeed.communityId}, ${eventSeed.title},
-          ${new Date(eventSeed.startsAt)},
+          ${eventSeed.description}, ${new Date(eventSeed.startsAt)},
           ST_SetSRID(ST_MakePoint(
             ${eventSeed.coordinate.longitude},
             ${eventSeed.coordinate.latitude}
@@ -636,6 +673,7 @@ export async function seedDatabase(database: Database): Promise<SeedSummary> {
         )
         ON CONFLICT (id) DO UPDATE SET
           community_id = EXCLUDED.community_id, title = EXCLUDED.title,
+          description = EXCLUDED.description,
           starts_at = EXCLUDED.starts_at,
           meeting_location = EXCLUDED.meeting_location,
           meeting_area = EXCLUDED.meeting_area, route_id = EXCLUDED.route_id,
@@ -815,6 +853,7 @@ export async function seedDatabase(database: Database): Promise<SeedSummary> {
       demoMaintenanceEvents: DEMO_MAINTENANCE_EVENT_SEEDS.length,
       demoPlaces: DEMO_PLACE_SEEDS.length,
       demoRoutes: DEMO_ROUTE_SEEDS.length,
+      demoSavedItems: DEMO_SAVED_ITEM_SEEDS.length,
       demoCommunities: DEMO_COMMUNITY_SEEDS.length,
       demoCommunityMemberships: DEMO_COMMUNITY_MEMBERSHIP_SEEDS.length,
       demoRideEvents: DEMO_RIDE_EVENT_SEEDS.length,

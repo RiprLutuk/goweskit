@@ -24,6 +24,7 @@ import { registerInstalledComponentRoutes } from './routes/installed-components.
 import { registerLearnRoutes } from './routes/learn.js';
 import { registerMaintenanceRoutes } from './routes/maintenance.js';
 import { registerSafetyRoutes } from './routes/safety.js';
+import { registerSavedItemRoutes } from './routes/saved-items.js';
 import type { SafetyService } from './safety/service.js';
 import type { AuthService } from './services/auth-service.js';
 import type { CatalogService } from './services/catalog-service.js';
@@ -33,6 +34,7 @@ import type { ExploreService } from './services/explore-service.js';
 import type { GarageService } from './services/garage-service.js';
 import type { InstalledComponentService } from './services/installed-component-service.js';
 import type { MaintenanceService } from './services/maintenance-service.js';
+import type { SavedItemService } from './services/saved-item-service.js';
 
 export interface HealthResponse {
   status: 'ok';
@@ -48,6 +50,7 @@ export interface AppServices {
   installedComponents: InstalledComponentService;
   maintenance: MaintenanceService;
   safety?: SafetyService;
+  savedItems?: SavedItemService;
   exploreContributions?: {
     service: ExploreContributionService;
     authPolicy: ExploreContributionAuthPolicy;
@@ -160,6 +163,13 @@ export function buildApp(options: BuildAppOptions = {}): FastifyInstance {
     );
     if (options.services.safety !== undefined) {
       registerSafetyRoutes(app, options.services.auth, options.services.safety);
+    }
+    if (options.services.savedItems !== undefined) {
+      registerSavedItemRoutes(
+        app,
+        options.services.auth,
+        options.services.savedItems,
+      );
     }
   }
 

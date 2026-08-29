@@ -3,6 +3,8 @@ import type {
   CommunityEventsResponse,
   CommunityModerationQueueResponse,
   ContributorReputation,
+  CreateCommunityEventRequest,
+  CreateCommunityEventResponse,
   EventDetailResponse,
   JoinCommunityResponse,
   JoinEventResponse,
@@ -114,6 +116,53 @@ export class CommunityService {
     return {
       radiusKm: input.radiusKm,
       events: await this.repository.findNearbyEvents(input),
+    };
+  }
+
+  public async createEvent(
+    communityId: string,
+    user: User,
+    input: CreateCommunityEventRequest,
+  ): Promise<CreateCommunityEventResponse> {
+    await this.getCommunity(communityId);
+    const membership = await this.repository.findMembership(
+      communityId,
+      user.id,
+    );
+    if (membership?.status !== 'active') {
+      throw new AppError(
+        'COMMUNITY_MEMBERSHIP_REQUIRED',
+        'Active community membership is required to create an event.',
+        403,
+      );
+    }
+
+    const startsAt = new Date(input.startsAt);
+    if (startsAt <= this.now()) {
+      throw new AppError(
+        'RIDE_EVENT_START_INVALID',
+        'Ride event start time must be in the future.',
+        400,
+      );
+    }
+    if (
+      input.routeId !== undefined &&
+      input.routeId !== null &&
+      !(await this.repository.routeExists(input.routeId))
+    ) {
+      throw new AppError('ROUTE_NOT_FOUND', 'Route not found.', 404);
+    }
+    if (!(await this.repository.bicycleTypesExist(input.bicycleTypes))) {
+      throw new AppError(
+        'INVALID_BICYCLE_TYPES',
+        'One or more bicycle types are not recognized.',
+        400,
+        { bicycleTypes: input.bicycleTypes },
+      );
+    }
+
+    return {
+      event: await this.repository.createEvent(communityId, user.id, input),
     };
   }
 

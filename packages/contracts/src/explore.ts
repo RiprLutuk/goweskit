@@ -2,6 +2,7 @@ import { z } from 'zod';
 
 export const EXPLORE_MAX_RADIUS_KM = 50;
 export const EXPLORE_MAX_RESULTS_PER_KIND = 100;
+export const ROUTE_ELEVATION_MAX_POINTS = 10_000;
 
 export const PLACE_TYPES = [
   'workshop',
@@ -91,3 +92,38 @@ export const nearbyExploreResponseSchema = z.object({
   routes: z.array(nearbyRouteSchema).max(EXPLORE_MAX_RESULTS_PER_KIND),
 });
 export type NearbyExploreResponse = z.infer<typeof nearbyExploreResponseSchema>;
+
+export const routeElevationPointSchema = z
+  .object({
+    distanceMeters: z.number().nonnegative(),
+    elevationMeters: z.number().min(-500).max(9000),
+  })
+  .strict();
+export type RouteElevationPoint = z.infer<typeof routeElevationPointSchema>;
+
+export const routeElevationProfileSchema = z
+  .array(routeElevationPointSchema)
+  .min(2)
+  .max(ROUTE_ELEVATION_MAX_POINTS)
+  .refine(
+    (points) =>
+      points[0]?.distanceMeters === 0 &&
+      points.every(
+        (point, index) =>
+          index === 0 ||
+          point.distanceMeters > (points[index - 1]?.distanceMeters ?? 0),
+      ),
+    'Elevation points must start at zero and increase by distance.',
+  );
+
+export const routeElevationResponseSchema = z
+  .object({
+    routeId: z.uuid(),
+    elevationProfile: routeElevationProfileSchema,
+    maxGradientPercent: z.number().nonnegative(),
+    averageGradientPercent: z.number(),
+  })
+  .strict();
+export type RouteElevationResponse = z.infer<
+  typeof routeElevationResponseSchema
+>;

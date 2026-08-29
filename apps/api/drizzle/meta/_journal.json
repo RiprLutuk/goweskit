@@ -57,6 +57,20 @@
       "when": 1787935100330,
       "tag": "0007_perpetual_giant_man",
       "breakpoints": true
+    },
+    {
+      "idx": 8,
+      "version": "7",
+      "when": 1787971462392,
+      "tag": "0008_unknown_blindfold",
+      "breakpoints": true
+    },
+    {
+      "idx": 9,
+      "version": "7",
+      "when": 1787972418781,
+      "tag": "0009_special_mole_man",
+      "breakpoints": true
     }
   ]
 }

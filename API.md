@@ -35,6 +35,7 @@ GET    /bikes
 POST   /bikes
 GET    /bikes/:bikeId
 PATCH  /bikes/:bikeId
+PUT    /bikes/:bikeId/photo
 DELETE /bikes/:bikeId
 
 GET /bikes/:bikeId/specs
@@ -45,6 +46,20 @@ POST   /bikes/:bikeId/components
 PATCH  /bikes/:bikeId/components/:installId
 DELETE /bikes/:bikeId/components/:installId
 ```
+
+`PUT /bikes/:bikeId/photo` is authenticated and ownership-scoped. Send at
+least one visual field; either may be omitted or set to `null`:
+
+```json
+{
+  "photoUrl": "https://images.example.test/my-bike.webp",
+  "avatarPreset": null
+}
+```
+
+Photo sources accept HTTPS URLs or bounded PNG/JPEG/WebP/GIF data URLs. SVG,
+plain HTTP, and script URLs are rejected. The response is
+`{ "bike": { "id", "photoUrl", "avatarPreset" } }`.
 
 ## Compatibility
 
@@ -101,6 +116,8 @@ if added later, may paraphrase this result but cannot change it.
 
 ```text
 POST /explore/nearby
+GET  /explore/routes/:routeId/elevation
+POST /user/saved-items
 ```
 
 The request center is sent in the body so an exact user coordinate is not
@@ -128,17 +145,40 @@ longitude/latitude naming. The response contains separately ranked `places`
 and `routes`, their distance from the request center, verification status, and
 freshness. Invalid coordinates, filters, or radius return `INVALID_REQUEST`.
 
+Route elevation returns a curated, distance-ordered profile and deterministic
+maximum/average gradient percentages. A route without curated profile data
+returns `ROUTE_ELEVATION_NOT_AVAILABLE`; the API never invents missing points.
+
+`POST /user/saved-items` is authenticated and idempotent:
+
+```json
+{
+  "itemKind": "place",
+  "itemId": "20000000-0000-4000-8000-000000000001"
+}
+```
+
+Supported kinds are `place` and `route`. Repeating the same save returns the
+original `{ "saved": true, "savedAt": "..." }` result.
+
 ## Community
 
 ```text
 GET  /communities/nearby
 GET  /communities/:communityId
 POST /communities/:communityId/join
+GET  /communities/:communityId/events
+POST /communities/:communityId/events
 
 GET  /events/nearby
 GET  /events/:eventId
 POST /events/:eventId/join
 ```
+
+Creating an event requires authentication plus active community membership.
+The start time must be in the future, route IDs and bicycle type slugs must
+exist, and the creator is joined atomically as participant one. The successful
+response is `201 Created` and includes the created event.
 
 ## Safety
 

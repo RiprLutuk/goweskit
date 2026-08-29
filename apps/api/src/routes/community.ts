@@ -1,4 +1,5 @@
 import {
+  createCommunityEventRequestSchema,
   joinCommunityRequestSchema,
   joinEventRequestSchema,
   moderateCommunityMembershipRequestSchema,
@@ -8,6 +9,7 @@ import {
   type CommunityEventsResponse,
   type CommunityModerationQueueResponse,
   type ContributorReputationResponse,
+  type CreateCommunityEventResponse,
   type EventDetailResponse,
   type JoinCommunityResponse,
   type JoinEventResponse,
@@ -92,6 +94,18 @@ export function registerCommunityRoutes(
         communityId,
         await optionalViewer(request, authService),
       );
+    },
+  );
+
+  app.post<{ Reply: CreateCommunityEventResponse }>(
+    '/api/v1/communities/:communityId/events',
+    async (request, reply) => {
+      const { communityId } = parseInput(communityParamsSchema, request.params);
+      const input = parseInput(createCommunityEventRequestSchema, request.body);
+      const user = await authenticate(request, authService);
+      const response = await service.createEvent(communityId, user, input);
+      reply.status(201);
+      return response;
     },
   );
 

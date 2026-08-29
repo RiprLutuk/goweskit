@@ -204,6 +204,7 @@ export const publicEventSchema = z
       verificationStatus: true,
     }),
     title: z.string().trim().min(1).max(180),
+    description: z.string().max(4000),
     startsAt: z.iso.datetime(),
     meetingArea: z.string().trim().min(1).max(200),
     routeId: z.uuid().nullable(),
@@ -214,6 +215,7 @@ export const publicEventSchema = z
     requirements: z.string().max(4000),
     visibility: eventVisibilitySchema,
     status: eventStatusSchema,
+    createdAt: z.iso.datetime(),
   })
   .strict()
   .refine(
@@ -226,6 +228,58 @@ export const publicEventSchema = z
   );
 
 export type PublicEvent = z.infer<typeof publicEventSchema>;
+
+export const createCommunityEventRequestSchema = z
+  .object({
+    title: z.string().trim().min(1).max(180),
+    description: z.string().trim().min(1).max(4000),
+    startsAt: z.iso.datetime(),
+    meetingArea: z.string().trim().min(1).max(200),
+    meetingCoordinate: coordinateSchema,
+    routeId: z.uuid().nullable().optional(),
+    difficulty: eventDifficultySchema,
+    bicycleTypes: z
+      .array(bicycleTypeSlugSchema)
+      .min(1)
+      .max(12)
+      .refine((values) => new Set(values).size === values.length, {
+        message: 'Bicycle types must be unique.',
+      }),
+    visibility: eventVisibilitySchema,
+    capacity: z.number().int().positive().max(10_000).nullable().optional(),
+    requirements: z.string().trim().min(1).max(4000),
+  })
+  .strict();
+export type CreateCommunityEventRequest = z.infer<
+  typeof createCommunityEventRequestSchema
+>;
+
+export const createdCommunityEventSchema = z
+  .object({
+    id: z.uuid(),
+    communityId: z.uuid(),
+    title: z.string().trim().min(1).max(180),
+    description: z.string().max(4000),
+    status: z.literal('scheduled'),
+    participantCount: z.literal(1),
+    startsAt: z.iso.datetime(),
+    meetingArea: z.string().trim().min(1).max(200),
+    difficulty: eventDifficultySchema,
+    bicycleTypes: z.array(bicycleTypeSlugSchema).min(1).max(12),
+    visibility: eventVisibilitySchema,
+    capacity: z.number().int().positive().max(10_000).nullable(),
+    requirements: z.string().max(4000),
+    createdAt: z.iso.datetime(),
+  })
+  .strict();
+export type CreatedCommunityEvent = z.infer<typeof createdCommunityEventSchema>;
+
+export const createCommunityEventResponseSchema = z
+  .object({ event: createdCommunityEventSchema })
+  .strict();
+export type CreateCommunityEventResponse = z.infer<
+  typeof createCommunityEventResponseSchema
+>;
 
 export const nearbyEventSchema = publicEventSchema
   .safeExtend({

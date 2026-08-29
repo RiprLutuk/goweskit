@@ -8,3 +8,4 @@ export * from './explore-contributions.js';
 export * from './garage.js';
 export * from './installed-components.js';
 export * from './maintenance.js';
+export * from './saved-items.js';

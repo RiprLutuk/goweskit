@@ -15,6 +15,7 @@ import type {
   InstalledComponentStandardInput,
   MaintenanceEventType,
   RouteReportType,
+  RouteElevationPoint,
 } from '@goweskit/contracts';
 import type { SafetySessionStatus } from '@goweskit/contracts/safety';
 import { sql } from 'drizzle-orm';
@@ -150,6 +151,7 @@ export const routes = pgTable(
     geometry: geographyLineString('geometry').notNull(),
     distanceMeters: integer('distance_meters').notNull(),
     elevationGainMeters: integer('elevation_gain_meters').notNull(),
+    elevationProfile: jsonb('elevation_profile').$type<RouteElevationPoint[]>(),
     difficulty: varchar('difficulty', { length: 30 }).notNull(),
     surface: varchar('surface', { length: 30 }).notNull(),
     bicycleTypes: text('bicycle_types').array().notNull(),
@@ -172,6 +174,38 @@ export const routes = pgTable(
       table.surface,
       table.verificationStatus,
       table.lastConfirmedAt,
+    ),
+  ],
+);
+
+export const userSavedItems = pgTable(
+  'user_saved_items',
+  {
+    id: uuid('id').primaryKey().defaultRandom(),
+    userId: uuid('user_id')
+      .notNull()
+      .references(() => users.id, { onDelete: 'cascade' }),
+    placeId: uuid('place_id').references(() => places.id, {
+      onDelete: 'cascade',
+    }),
+    routeId: uuid('route_id').references(() => routes.id, {
+      onDelete: 'cascade',
+    }),
+    savedAt: timestamp('saved_at', { withTimezone: true })
+      .notNull()
+      .defaultNow(),
+  },
+  (table) => [
+    uniqueIndex('user_saved_items_user_place_unique')
+      .on(table.userId, table.placeId)
+      .where(sql`${table.placeId} IS NOT NULL`),
+    uniqueIndex('user_saved_items_user_route_unique')
+      .on(table.userId, table.routeId)
+      .where(sql`${table.routeId} IS NOT NULL`),
+    index('user_saved_items_user_saved_idx').on(table.userId, table.savedAt),
+    check(
+      'user_saved_items_exactly_one_target_check',
+      sql`num_nonnulls(${table.placeId}, ${table.routeId}) = 1`,
     ),
   ],
 );
@@ -375,6 +409,7 @@ export const userBikes = pgTable(
     model: varchar('model', { length: 100 }),
     modelYear: integer('model_year'),
     photoUrl: text('photo_url'),
+    avatarPreset: varchar('avatar_preset', { length: 80 }),
     notes: text('notes'),
     createdAt: timestamp('created_at', { withTimezone: true })
       .notNull()
@@ -579,6 +614,7 @@ export const rideEvents = pgTable(
       .notNull()
       .references(() => communities.id, { onDelete: 'cascade' }),
     title: varchar('title', { length: 180 }).notNull(),
+    description: text('description').notNull(),
     startsAt: timestamp('starts_at', { withTimezone: true }).notNull(),
     meetingLocation: geographyPoint('meeting_location').notNull(),
     meetingArea: varchar('meeting_area', { length: 200 }).notNull(),

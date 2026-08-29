@@ -2,11 +2,13 @@ import {
   EXPLORE_MAX_RESULTS_PER_KIND,
   nearbyPlaceSchema,
   nearbyRouteSchema,
+  routeElevationProfileSchema,
   type NearbyExploreRequest,
   type NearbyPlace,
   type NearbyRoute,
+  type RouteElevationPoint,
 } from '@goweskit/contracts';
-import { sql, type SQL } from 'drizzle-orm';
+import { eq, sql, type SQL } from 'drizzle-orm';
 
 import type { Database } from '../db/client.js';
 import { places, routes } from '../db/schema.js';
@@ -48,6 +50,25 @@ interface RouteQueryRow {
 export interface ExploreRepository {
   findNearbyPlaces(input: NearbyExploreRequest): Promise<NearbyPlace[]>;
   findNearbyRoutes(input: NearbyExploreRequest): Promise<NearbyRoute[]>;
+  findRouteElevationProfile(
+    routeId: string,
+  ): Promise<StoredRouteElevationProfile | null>;
+}
+
+export interface StoredRouteElevationProfile {
+  routeId: string;
+  elevationProfile: RouteElevationPoint[] | null;
+}
+
+export function validateRouteElevationProfile(
+  value: unknown,
+  routeDistanceMeters: number,
+): RouteElevationPoint[] {
+  const profile = routeElevationProfileSchema.parse(value);
+  if (profile.at(-1)?.distanceMeters !== routeDistanceMeters) {
+    throw new Error('Elevation profile must end at the route distance.');
+  }
+  return profile;
 }
 
 function optionalTextArrayMatch(
@@ -247,5 +268,31 @@ export class DrizzleExploreRepository implements ExploreRepository {
         distanceFromUserMeters: row.distance_from_user_meters,
       }),
     );
+  }
+
+  public async findRouteElevationProfile(
+    routeId: string,
+  ): Promise<StoredRouteElevationProfile | null> {
+    const [route] = await this.database
+      .select({
+        routeId: routes.id,
+        distanceMeters: routes.distanceMeters,
+        elevationProfile: routes.elevationProfile,
+      })
+      .from(routes)
+      .where(eq(routes.id, routeId))
+      .limit(1);
+    if (route === undefined) return null;
+    const elevationProfile =
+      route.elevationProfile === null
+        ? null
+        : validateRouteElevationProfile(
+            route.elevationProfile,
+            route.distanceMeters,
+          );
+    return {
+      routeId: route.routeId,
+      elevationProfile,
+    };
   }
 }

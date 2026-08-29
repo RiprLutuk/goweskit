@@ -1,5 +1,6 @@
 import {
   COMMUNITY_NEARBY_MAX_RESULTS,
+  createdCommunityEventSchema,
   nearbyCommunitySchema,
   nearbyEventSchema,
   publicCommunitySchema,
@@ -7,6 +8,8 @@ import {
   type CommunityMembershipStatus,
   type CommunityModerationDecision,
   type CommunityRole,
+  type CreateCommunityEventRequest,
+  type CreatedCommunityEvent,
   type NearbyCommunitiesRequest,
   type NearbyCommunity,
   type NearbyEvent,
@@ -14,13 +17,15 @@ import {
   type PublicCommunity,
   type PublicEvent,
 } from '@goweskit/contracts';
-import { and, eq, sql, type SQL } from 'drizzle-orm';
+import { and, eq, inArray, sql, type SQL } from 'drizzle-orm';
 
 import type { Database } from '../db/client.js';
 import {
+  bicycleTypes,
   communityMemberships,
   communityModerationAudits,
   rideEventParticipations,
+  routes,
   users,
 } from '../db/schema.js';
 
@@ -45,6 +50,7 @@ interface EventRow {
   community_name: string;
   community_verification_status: string;
   title: string;
+  description: string;
   starts_at: Date | string;
   meeting_area: string;
   route_id: string | null;
@@ -56,6 +62,7 @@ interface EventRow {
   visibility: string;
   status: string;
   created_by: string;
+  created_at: Date | string;
   distance_meters?: number;
 }
 
@@ -128,6 +135,13 @@ export interface CommunityRepository {
     userId: string,
     capacity: number | null,
   ): Promise<StoredEventParticipation | null>;
+  createEvent(
+    communityId: string,
+    createdByUserId: string,
+    input: CreateCommunityEventRequest,
+  ): Promise<CreatedCommunityEvent>;
+  routeExists(routeId: string): Promise<boolean>;
+  bicycleTypesExist(slugs: string[]): Promise<boolean>;
   listPendingMemberships(communityId: string): Promise<PendingMembershipRow[]>;
   moderateMembership(
     communityId: string,
@@ -146,6 +160,13 @@ function bikeTypesMatch(column: SQL, values: string[] | undefined): SQL {
         values.map((value) => sql`${value}`),
         sql`, `,
       )}]::text[]`;
+}
+
+export function textArraySql(values: readonly string[]): SQL {
+  return sql`ARRAY[${sql.join(
+    values.map((value) => sql`${value}`),
+    sql`, `,
+  )}]::text[]`;
 }
 
 function mapCommunity(row: CommunityRow): PublicCommunity {
@@ -173,6 +194,7 @@ function mapEvent(row: EventRow): PublicEvent {
       verificationStatus: row.community_verification_status,
     },
     title: row.title,
+    description: row.description,
     startsAt: new Date(row.starts_at).toISOString(),
     meetingArea: row.meeting_area,
     routeId: row.route_id,
@@ -183,6 +205,7 @@ function mapEvent(row: EventRow): PublicEvent {
     requirements: row.requirements,
     visibility: row.visibility,
     status: row.status,
+    createdAt: new Date(row.created_at).toISOString(),
   });
 }
 
@@ -195,9 +218,9 @@ const communityColumns = sql`
 const eventColumns = sql`
   e.id, e.community_id, c.slug AS community_slug, c.name AS community_name,
   c.verification_status AS community_verification_status,
-  e.title, e.starts_at, e.meeting_area, e.route_id, e.difficulty,
+  e.title, e.description, e.starts_at, e.meeting_area, e.route_id, e.difficulty,
   e.bicycle_types, e.capacity, e.requirements, e.visibility, e.status,
-  e.created_by,
+  e.created_by, e.created_at,
   COUNT(ep.id) FILTER (WHERE ep.status = 'joined')::integer AS participant_count
 `;
 
@@ -431,6 +454,94 @@ export class DrizzleCommunityRepository implements CommunityRepository {
         throw new Error('Event participation write returned no row.');
       return participation;
     });
+  }
+
+  public async createEvent(
+    communityId: string,
+    createdByUserId: string,
+    input: CreateCommunityEventRequest,
+  ): Promise<CreatedCommunityEvent> {
+    return this.database.transaction(async (transaction) => {
+      const result = await transaction.execute(sql`
+        INSERT INTO ride_events (
+          community_id, title, description, starts_at, meeting_location,
+          meeting_area, route_id, difficulty, bicycle_types, capacity,
+          requirements, visibility, status, created_by
+        ) VALUES (
+          ${communityId}, ${input.title}, ${input.description},
+          ${new Date(input.startsAt)},
+          ST_SetSRID(ST_MakePoint(
+            ${input.meetingCoordinate.longitude},
+            ${input.meetingCoordinate.latitude}
+          ), 4326)::geography,
+          ${input.meetingArea}, ${input.routeId ?? null}, ${input.difficulty},
+          ${textArraySql(input.bicycleTypes)}, ${input.capacity ?? null},
+          ${input.requirements}, ${input.visibility}, 'scheduled',
+          ${createdByUserId}
+        )
+        RETURNING
+          id, community_id, title, description, starts_at, meeting_area,
+          difficulty, bicycle_types, visibility, capacity, requirements,
+          created_at
+      `);
+      const row = result.rows[0] as
+        | {
+            id: string;
+            community_id: string;
+            title: string;
+            description: string;
+            starts_at: Date | string;
+            meeting_area: string;
+            difficulty: string;
+            bicycle_types: string[];
+            visibility: string;
+            capacity: number | null;
+            requirements: string;
+            created_at: Date | string;
+          }
+        | undefined;
+      if (row === undefined) throw new Error('Event insert returned no row.');
+
+      await transaction.insert(rideEventParticipations).values({
+        eventId: row.id,
+        userId: createdByUserId,
+        status: 'joined',
+      });
+
+      return createdCommunityEventSchema.parse({
+        id: row.id,
+        communityId: row.community_id,
+        title: row.title,
+        description: row.description,
+        status: 'scheduled',
+        participantCount: 1,
+        startsAt: new Date(row.starts_at).toISOString(),
+        meetingArea: row.meeting_area,
+        difficulty: row.difficulty,
+        bicycleTypes: row.bicycle_types,
+        visibility: row.visibility,
+        capacity: row.capacity,
+        requirements: row.requirements,
+        createdAt: new Date(row.created_at).toISOString(),
+      });
+    });
+  }
+
+  public async routeExists(routeId: string): Promise<boolean> {
+    const [route] = await this.database
+      .select({ id: routes.id })
+      .from(routes)
+      .where(eq(routes.id, routeId))
+      .limit(1);
+    return route !== undefined;
+  }
+
+  public async bicycleTypesExist(slugs: string[]): Promise<boolean> {
+    const rows = await this.database
+      .select({ slug: bicycleTypes.slug })
+      .from(bicycleTypes)
+      .where(inArray(bicycleTypes.slug, slugs));
+    return rows.length === slugs.length;
   }
 
   public async listPendingMemberships(

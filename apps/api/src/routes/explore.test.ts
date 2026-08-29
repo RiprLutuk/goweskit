@@ -3,7 +3,10 @@ import { apiErrorResponseSchema } from '@goweskit/contracts';
 import { afterEach, describe, expect, it } from 'vitest';
 
 import { buildApp, type AppServices } from '../app.js';
-import type { ExploreRepository } from '../repositories/explore-repository.js';
+import type {
+  ExploreRepository,
+  StoredRouteElevationProfile,
+} from '../repositories/explore-repository.js';
 import { ExploreService } from '../services/explore-service.js';
 
 class EmptyExploreRepository implements ExploreRepository {
@@ -13,6 +16,19 @@ class EmptyExploreRepository implements ExploreRepository {
 
   public findNearbyRoutes(): Promise<NearbyRoute[]> {
     return Promise.resolve([]);
+  }
+
+  public findRouteElevationProfile(
+    routeId: string,
+  ): Promise<StoredRouteElevationProfile> {
+    return Promise.resolve({
+      routeId,
+      elevationProfile: [
+        { distanceMeters: 0, elevationMeters: 768 },
+        { distanceMeters: 1500, elevationMeters: 820 },
+        { distanceMeters: 3500, elevationMeters: 910 },
+      ],
+    });
   }
 }
 
@@ -74,5 +90,33 @@ describe('POST /api/v1/explore/nearby', () => {
     expect(response.statusCode).toBe(400);
     expect(body.error.code).toBe('INVALID_REQUEST');
     expect(body.requestId).toEqual(expect.any(String));
+  });
+});
+
+describe('GET /api/v1/explore/routes/:routeId/elevation', () => {
+  it('returns a public deterministic elevation profile', async () => {
+    const routeId = '30000000-0000-4000-8000-000000000001';
+    const response = await buildExploreApp().inject({
+      method: 'GET',
+      url: `/api/v1/explore/routes/${routeId}/elevation`,
+    });
+
+    expect(response.statusCode).toBe(200);
+    expect(response.json()).toMatchObject({
+      routeId,
+      maxGradientPercent: 4.5,
+      averageGradientPercent: 4.1,
+    });
+  });
+
+  it('validates the route id before calling the service', async () => {
+    const response = await buildExploreApp().inject({
+      method: 'GET',
+      url: '/api/v1/explore/routes/not-a-uuid/elevation',
+    });
+    expect(response.statusCode).toBe(400);
+    expect(response.json()).toMatchObject({
+      error: { code: 'INVALID_REQUEST' },
+    });
   });
 });

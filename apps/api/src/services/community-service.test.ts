@@ -1,4 +1,6 @@
 import type {
+  CreateCommunityEventRequest,
+  CreatedCommunityEvent,
   NearbyCommunity,
   NearbyEvent,
   PublicCommunity,
@@ -48,6 +50,7 @@ const event: PublicEvent = {
     verificationStatus: community.verificationStatus,
   },
   title: 'Sunday loop',
+  description: 'A relaxed Sunday loop.',
   startsAt: '2026-09-06T00:00:00.000Z',
   meetingArea: 'Dago, Bandung',
   routeId: null,
@@ -58,12 +61,15 @@ const event: PublicEvent = {
   requirements: 'Helmet and water.',
   visibility: 'members_only',
   status: 'scheduled',
+  createdAt: '2026-08-28T00:00:00.000Z',
 };
 
 class MemoryCommunityRepository implements CommunityRepository {
   public membership: StoredCommunityMembership | null = null;
   public participation: StoredEventParticipation | null = null;
   public atomicJoinReturnsNull = false;
+  public knownRoute = true;
+  public knownBicycleTypes = true;
   public pending: PendingMembershipRow[] = [];
   public counts: CommunityReputationCounts = {
     hostedEvents: 3,
@@ -106,6 +112,37 @@ class MemoryCommunityRepository implements CommunityRepository {
     return Promise.resolve([
       { ...event, visibility: 'public', distanceMeters: 500 },
     ]);
+  }
+
+  public routeExists(): Promise<boolean> {
+    return Promise.resolve(this.knownRoute);
+  }
+
+  public bicycleTypesExist(): Promise<boolean> {
+    return Promise.resolve(this.knownBicycleTypes);
+  }
+
+  public createEvent(
+    savedCommunityId: string,
+    _createdByUserId: string,
+    input: CreateCommunityEventRequest,
+  ): Promise<CreatedCommunityEvent> {
+    return Promise.resolve({
+      id: eventId,
+      communityId: savedCommunityId,
+      title: input.title,
+      description: input.description,
+      status: 'scheduled',
+      participantCount: 1,
+      startsAt: input.startsAt,
+      meetingArea: input.meetingArea,
+      difficulty: input.difficulty,
+      bicycleTypes: input.bicycleTypes,
+      visibility: input.visibility,
+      capacity: input.capacity ?? null,
+      requirements: input.requirements,
+      createdAt: '2026-08-28T00:00:00.000Z',
+    });
   }
 
   public listCommunityEvents(): Promise<PublicEvent[]> {
@@ -156,6 +193,71 @@ class MemoryCommunityRepository implements CommunityRepository {
 }
 
 describe('CommunityService', () => {
+  const createEventInput: CreateCommunityEventRequest = {
+    title: 'Sabtu Pagi Dago Ride',
+    description: 'Santai rolling ke arah atas.',
+    startsAt: '2026-09-05T06:30:00.000Z',
+    meetingArea: 'Taman Cikapayang Dago',
+    meetingCoordinate: { longitude: 107.6134, latitude: -6.8992 },
+    routeId: '30000000-0000-4000-8000-000000000001',
+    difficulty: 'moderate',
+    bicycleTypes: ['road', 'gravel'],
+    visibility: 'public',
+    capacity: 20,
+    requirements: 'Helm wajib.',
+  };
+
+  it('lets an active member create a future event with the creator joined', async () => {
+    const repository = new MemoryCommunityRepository();
+    repository.membership = {
+      id: '10000000-0000-4000-8000-000000000040',
+      communityId,
+      userId: user.id,
+      role: 'member',
+      status: 'active',
+      createdAt: new Date('2026-08-20T00:00:00.000Z'),
+      updatedAt: new Date('2026-08-20T00:00:00.000Z'),
+    };
+    const response = await new CommunityService(
+      repository,
+      () => new Date('2026-08-28T00:00:00.000Z'),
+    ).createEvent(communityId, user, createEventInput);
+
+    expect(response.event).toMatchObject({
+      communityId,
+      participantCount: 1,
+      status: 'scheduled',
+    });
+  });
+
+  it('rejects event creation by a non-member and invalid references', async () => {
+    const repository = new MemoryCommunityRepository();
+    const service = new CommunityService(
+      repository,
+      () => new Date('2026-08-28T00:00:00.000Z'),
+    );
+    await expect(
+      service.createEvent(communityId, user, createEventInput),
+    ).rejects.toMatchObject({
+      code: 'COMMUNITY_MEMBERSHIP_REQUIRED',
+      statusCode: 403,
+    });
+
+    repository.membership = {
+      id: '10000000-0000-4000-8000-000000000040',
+      communityId,
+      userId: user.id,
+      role: 'member',
+      status: 'active',
+      createdAt: new Date('2026-08-20T00:00:00.000Z'),
+      updatedAt: new Date('2026-08-20T00:00:00.000Z'),
+    };
+    repository.knownRoute = false;
+    await expect(
+      service.createEvent(communityId, user, createEventInput),
+    ).rejects.toMatchObject({ code: 'ROUTE_NOT_FOUND', statusCode: 404 });
+  });
+
   it('returns a request outcome for a private community and stays idempotent', async () => {
     const repository = new MemoryCommunityRepository();
     const service = new CommunityService(repository);
@@ -226,6 +328,63 @@ describe('CommunityService', () => {
       hostedEvents: 3,
       completedEvents: 2,
       moderationDecisions: 1,
+    });
+  });
+
+  it('creates a community event when user is an active member', async () => {
+    const repository = new MemoryCommunityRepository();
+    repository.membership = {
+      id: '10000000-0000-4000-8000-000000000040',
+      communityId,
+      userId: user.id,
+      role: 'member',
+      status: 'active',
+      createdAt: new Date('2026-08-20T00:00:00.000Z'),
+      updatedAt: new Date('2026-08-20T00:00:00.000Z'),
+    };
+    const service = new CommunityService(
+      repository,
+      () => new Date('2026-08-28T00:00:00.000Z'),
+    );
+
+    const result = await service.createEvent(communityId, user, {
+      title: 'Dago Night Ride',
+      description: 'Gowes santai malam Jumat keliling Dago.',
+      startsAt: '2026-09-10T12:00:00.000Z',
+      meetingArea: 'Simpang Dago',
+      difficulty: 'easy',
+      bicycleTypes: ['folding'],
+      visibility: 'public',
+      capacity: 15,
+      requirements: 'Lampu depan belakang wajib.',
+      meetingCoordinate: { longitude: 107.6191, latitude: -6.9175 },
+    });
+
+    expect(result.event.title).toBe('Dago Night Ride');
+    expect(result.event.status).toBe('scheduled');
+    expect(result.event.participantCount).toBe(1);
+  });
+
+  it('rejects event creation when user is not an active member', async () => {
+    const repository = new MemoryCommunityRepository();
+    repository.membership = null;
+    const service = new CommunityService(repository);
+
+    await expect(
+      service.createEvent(communityId, user, {
+        title: 'Unauthorized Ride',
+        description: 'Should fail.',
+        startsAt: '2026-09-10T12:00:00.000Z',
+        meetingArea: 'Simpang Dago',
+        difficulty: 'easy',
+        bicycleTypes: ['folding'],
+        visibility: 'public',
+        requirements: '',
+        meetingCoordinate: { longitude: 107.6191, latitude: -6.9175 },
+      }),
+    ).rejects.toMatchObject({
+      code: 'COMMUNITY_MEMBERSHIP_REQUIRED',
+      statusCode: 403,
     });
   });
 });

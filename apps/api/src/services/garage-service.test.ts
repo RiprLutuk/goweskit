@@ -1,4 +1,8 @@
-import type { CreateBikeRequest, User } from '@goweskit/contracts';
+import type {
+  CreateBikeRequest,
+  UpdateBikeRequest,
+  User,
+} from '@goweskit/contracts';
 import { describe, expect, it } from 'vitest';
 
 import type {
@@ -47,6 +51,7 @@ class MemoryGarageRepository implements GarageRepository {
       model: input.model ?? null,
       modelYear: input.modelYear ?? null,
       photoUrl: input.photoUrl ?? null,
+      avatarPreset: input.avatarPreset ?? null,
       notes: input.notes ?? null,
       specs: specs.map((spec) => ({ ...spec, updatedAt: now })),
       createdAt: now,
@@ -63,7 +68,14 @@ class MemoryGarageRepository implements GarageRepository {
     return Promise.resolve(this.bike?.id === id ? this.bike : null);
   }
 
-  public updateBike(): Promise<StoredBike | null> {
+  public updateBike(
+    id: string,
+    input: UpdateBikeRequest,
+  ): Promise<StoredBike | null> {
+    if (this.bike?.id !== id) return Promise.resolve(null);
+    if (input.photoUrl !== undefined) this.bike.photoUrl = input.photoUrl;
+    if (input.avatarPreset !== undefined)
+      this.bike.avatarPreset = input.avatarPreset;
     return Promise.resolve(this.bike);
   }
 
@@ -158,5 +170,36 @@ describe('GarageService', () => {
         BIKE_ID,
       ),
     ).rejects.toMatchObject({ code: 'BIKE_NOT_FOUND' });
+  });
+
+  it('updates only an owned bike visual and supports clearing it', async () => {
+    const repository = new MemoryGarageRepository();
+    const service = new GarageService(repository);
+    await service.createBike(owner, {
+      nickname: 'Private Bike',
+      bicycleTypeId: BICYCLE_TYPE_ID,
+    });
+
+    await expect(
+      service.updateBikeVisual(
+        { ...owner, id: '019c9c80-2896-7593-bd02-509894b90004' },
+        BIKE_ID,
+        { avatarPreset: 'hardtail_lime' },
+      ),
+    ).rejects.toMatchObject({ code: 'BIKE_NOT_FOUND', statusCode: 404 });
+
+    expect(
+      await service.updateBikeVisual(owner, BIKE_ID, {
+        photoUrl: 'https://cdn.example.com/bike.webp',
+        avatarPreset: 'hardtail_lime',
+      }),
+    ).toEqual({
+      id: BIKE_ID,
+      photoUrl: 'https://cdn.example.com/bike.webp',
+      avatarPreset: 'hardtail_lime',
+    });
+    expect(
+      await service.updateBikeVisual(owner, BIKE_ID, { photoUrl: null }),
+    ).toMatchObject({ photoUrl: null, avatarPreset: 'hardtail_lime' });
   });
 });

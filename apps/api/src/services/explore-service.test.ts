@@ -5,7 +5,10 @@ import type {
 } from '@goweskit/contracts';
 import { describe, expect, it } from 'vitest';
 
-import type { ExploreRepository } from '../repositories/explore-repository.js';
+import type {
+  ExploreRepository,
+  StoredRouteElevationProfile,
+} from '../repositories/explore-repository.js';
 import { ExploreService } from './explore-service.js';
 
 const place: NearbyPlace = {
@@ -51,6 +54,14 @@ const route: NearbyRoute = {
 
 class RecordingExploreRepository implements ExploreRepository {
   public inputs: NearbyExploreRequest[] = [];
+  public elevation: StoredRouteElevationProfile | null = {
+    routeId: route.id,
+    elevationProfile: [
+      { distanceMeters: 0, elevationMeters: 768 },
+      { distanceMeters: 1500, elevationMeters: 820 },
+      { distanceMeters: 3500, elevationMeters: 910 },
+    ],
+  };
 
   public findNearbyPlaces(input: NearbyExploreRequest): Promise<NearbyPlace[]> {
     this.inputs.push(input);
@@ -60,6 +71,10 @@ class RecordingExploreRepository implements ExploreRepository {
   public findNearbyRoutes(input: NearbyExploreRequest): Promise<NearbyRoute[]> {
     this.inputs.push(input);
     return Promise.resolve([route]);
+  }
+
+  public findRouteElevationProfile(): Promise<StoredRouteElevationProfile | null> {
+    return Promise.resolve(this.elevation);
   }
 }
 
@@ -83,6 +98,36 @@ describe('ExploreService', () => {
       radiusKm: 10,
       places: [place],
       routes: [route],
+    });
+  });
+
+  it('computes deterministic segment and average gradients', async () => {
+    const repository = new RecordingExploreRepository();
+    const response = await new ExploreService(repository).getRouteElevation(
+      route.id,
+    );
+
+    expect(response).toEqual({
+      routeId: route.id,
+      elevationProfile: repository.elevation?.elevationProfile,
+      maxGradientPercent: 4.5,
+      averageGradientPercent: 4.1,
+    });
+  });
+
+  it('distinguishes a missing route from an unavailable profile', async () => {
+    const repository = new RecordingExploreRepository();
+    repository.elevation = null;
+    const service = new ExploreService(repository);
+    await expect(service.getRouteElevation(route.id)).rejects.toMatchObject({
+      code: 'ROUTE_NOT_FOUND',
+      statusCode: 404,
+    });
+
+    repository.elevation = { routeId: route.id, elevationProfile: null };
+    await expect(service.getRouteElevation(route.id)).rejects.toMatchObject({
+      code: 'ROUTE_ELEVATION_NOT_AVAILABLE',
+      statusCode: 404,
     });
   });
 });

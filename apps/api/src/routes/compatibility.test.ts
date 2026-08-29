@@ -30,6 +30,7 @@ const bike: Bike = {
   model: null,
   modelYear: null,
   photoUrl: null,
+  avatarPreset: null,
   notes: null,
   specs: [
     {

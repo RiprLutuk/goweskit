@@ -2,11 +2,13 @@ import {
   bikeSpecCodeSchema,
   bikeSpecInputSchema,
   createBikeRequestSchema,
+  updateBikePhotoRequestSchema,
   updateBikeRequestSchema,
   type BikeListResponse,
   type BikeResponse,
   type BikeSpecListResponse,
   type BikeSpecResponse,
+  type BikeVisualResponse,
   type SuccessResponse,
 } from '@goweskit/contracts';
 import type { FastifyInstance, FastifyRequest } from 'fastify';
@@ -64,6 +66,21 @@ export function registerGarageRoutes(
       const input = parseInput(updateBikeRequestSchema, request.body);
       return {
         bike: await garageService.updateBike(
+          await authenticate(request, authService),
+          bikeId,
+          input,
+        ),
+      };
+    },
+  );
+
+  app.put<{ Reply: BikeVisualResponse }>(
+    '/api/v1/bikes/:bikeId/photo',
+    async (request) => {
+      const { bikeId } = parseInput(bikeParamsSchema, request.params);
+      const input = parseInput(updateBikePhotoRequestSchema, request.body);
+      return {
+        bike: await garageService.updateBikeVisual(
           await authenticate(request, authService),
           bikeId,
           input,

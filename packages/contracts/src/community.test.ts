@@ -2,6 +2,8 @@ import { describe, expect, it } from 'vitest';
 
 import {
   COMMUNITY_NEARBY_MAX_RADIUS_KM,
+  createCommunityEventRequestSchema,
+  createCommunityEventResponseSchema,
   communityDetailResponseSchema,
   communityModerationQueueResponseSchema,
   contributorReputationResponseSchema,
@@ -35,6 +37,7 @@ const event = {
     verificationStatus: community.verificationStatus,
   },
   title: 'Sunday beginner loop',
+  description: 'A relaxed beginner loop with regular regroup points.',
   startsAt: '2026-09-06T00:00:00.000Z',
   meetingArea: 'Dago, Bandung',
   routeId: null,
@@ -45,6 +48,7 @@ const event = {
   requirements: 'Helmet, water, and a roadworthy bicycle.',
   visibility: 'public' as const,
   status: 'scheduled' as const,
+  createdAt: '2026-08-28T00:00:00.000Z',
 };
 
 describe('Community contracts', () => {
@@ -127,6 +131,50 @@ describe('Community contracts', () => {
 });
 
 describe('Community ride event contracts', () => {
+  it('validates a bounded event creation payload and response', () => {
+    const request = createCommunityEventRequestSchema.parse({
+      title: 'Sabtu Pagi Dago Ride',
+      description: 'Santai rolling ke arah atas.',
+      startsAt: '2026-09-05T06:30:00.000Z',
+      meetingArea: 'Taman Cikapayang Dago',
+      meetingCoordinate: { longitude: 107.6134, latitude: -6.8992 },
+      routeId: '30000000-0000-4000-8000-000000000001',
+      difficulty: 'moderate',
+      bicycleTypes: ['road', 'gravel'],
+      visibility: 'public',
+      capacity: 20,
+      requirements: 'Helm wajib.',
+    });
+
+    expect(request.bicycleTypes).toEqual(['road', 'gravel']);
+    expect(
+      createCommunityEventRequestSchema.safeParse({
+        ...request,
+        bicycleTypes: ['road', 'road'],
+      }).success,
+    ).toBe(false);
+    expect(
+      createCommunityEventResponseSchema.parse({
+        event: {
+          id: event.id,
+          communityId: community.id,
+          title: request.title,
+          description: request.description,
+          status: 'scheduled',
+          participantCount: 1,
+          startsAt: request.startsAt,
+          meetingArea: request.meetingArea,
+          difficulty: request.difficulty,
+          bicycleTypes: request.bicycleTypes,
+          visibility: request.visibility,
+          capacity: request.capacity,
+          requirements: request.requirements,
+          createdAt: '2026-08-28T21:40:00.000Z',
+        },
+      }).event.participantCount,
+    ).toBe(1);
+  });
+
   it('bounds nearby event filters and validates their time window', () => {
     expect(
       nearbyEventsRequestSchema.parse({

@@ -18,6 +18,7 @@ import { ExploreContributionService } from './explore-contributions/service.js';
 import { DrizzleGarageRepository } from './repositories/garage-repository.js';
 import { DrizzleInstalledComponentRepository } from './repositories/installed-component-repository.js';
 import { DrizzleMaintenanceRepository } from './repositories/maintenance-repository.js';
+import { DrizzleSavedItemRepository } from './repositories/saved-item-repository.js';
 import { DrizzleSafetyRepository } from './safety/drizzle-repository.js';
 import { SafetyPublicRateLimiter } from './safety/rate-limiter.js';
 import { SafetyService } from './safety/service.js';
@@ -33,6 +34,7 @@ import { ExploreService } from './services/explore-service.js';
 import { GarageService } from './services/garage-service.js';
 import { InstalledComponentService } from './services/installed-component-service.js';
 import { MaintenanceService } from './services/maintenance-service.js';
+import { SavedItemService } from './services/saved-item-service.js';
 
 const config = readConfig();
 const databaseClient = createDatabase(config.databaseUrl);
@@ -85,6 +87,9 @@ const app = buildApp({
       garageService,
     ),
     safety: safetyService,
+    savedItems: new SavedItemService(
+      new DrizzleSavedItemRepository(databaseClient.database),
+    ),
   },
 });
 

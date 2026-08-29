@@ -36,6 +36,29 @@ function buildCommunityApp() {
     joinCommunity: () =>
       Promise.resolve({ outcome: 'joined', membership: null }),
     listCommunityEvents: () => Promise.resolve({ events: [] }),
+    createEvent: (
+      _communityId: string,
+      _user: User,
+      input: { title: string },
+    ) =>
+      Promise.resolve({
+        event: {
+          id: '10000000-0000-4000-8000-000000000030',
+          communityId,
+          title: input.title,
+          description: 'Santai rolling ke arah atas.',
+          status: 'scheduled',
+          participantCount: 1,
+          startsAt: '2026-09-05T06:30:00.000Z',
+          meetingArea: 'Taman Cikapayang Dago',
+          difficulty: 'moderate',
+          bicycleTypes: ['road', 'gravel'],
+          visibility: 'public',
+          capacity: 20,
+          requirements: 'Helm wajib.',
+          createdAt: '2026-08-28T21:40:00.000Z',
+        },
+      }),
     findNearbyEvents: (input: { radiusKm: number }) =>
       Promise.resolve({ radiusKm: input.radiusKm, events: [] }),
     getEventDetail: () =>
@@ -94,6 +117,31 @@ afterEach(async () => {
 });
 
 describe('Community routes', () => {
+  it('creates a validated ride event for an authenticated member', async () => {
+    const response = await buildCommunityApp().inject({
+      method: 'POST',
+      url: `/api/v1/communities/${communityId}/events`,
+      payload: {
+        title: 'Sabtu Pagi Dago Ride',
+        description: 'Santai rolling ke arah atas.',
+        startsAt: '2026-09-05T06:30:00.000Z',
+        meetingArea: 'Taman Cikapayang Dago',
+        meetingCoordinate: { longitude: 107.6134, latitude: -6.8992 },
+        routeId: '30000000-0000-4000-8000-000000000001',
+        difficulty: 'moderate',
+        bicycleTypes: ['road', 'gravel'],
+        visibility: 'public',
+        capacity: 20,
+        requirements: 'Helm wajib.',
+      },
+    });
+
+    expect(response.statusCode).toBe(201);
+    expect(response.json()).toMatchObject({
+      event: { communityId, participantCount: 1, status: 'scheduled' },
+    });
+  });
+
   it('keeps exact nearby coordinates in a validated POST body and out of the response', async () => {
     const response = await buildCommunityApp().inject({
       method: 'POST',

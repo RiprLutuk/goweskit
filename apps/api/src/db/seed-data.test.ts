@@ -24,6 +24,7 @@ import {
   DEMO_ROUTE_SEEDS,
   DEMO_ROUTE_REPORT_SEEDS,
   DEMO_RIDE_EVENT_SEEDS,
+  DEMO_SAVED_ITEM_SEEDS,
   DEMO_SAFETY_AUDIT_SEEDS,
   DEMO_SAFETY_LOCATION_SEEDS,
   DEMO_SAFETY_SESSION_SEEDS,
@@ -183,6 +184,7 @@ describe('demo Garage seed', () => {
     );
 
     for (const bike of DEMO_BIKE_SEEDS) {
+      expect(bike.avatarPreset).toMatch(/^[a-z0-9]+(?:_[a-z0-9]+)*$/u);
       expect(bike.specs.map(({ standardCode }) => standardCode).sort()).toEqual(
         [...BIKE_SPEC_CODES].sort(),
       );
@@ -275,6 +277,15 @@ describe('demo Explore seed', () => {
 
     for (const route of DEMO_ROUTE_SEEDS) {
       expect(route.coordinates.length).toBeGreaterThanOrEqual(2);
+      expect(route.elevationProfile[0].distanceMeters).toBe(0);
+      expect(route.elevationProfile.at(-1)?.distanceMeters).toBe(
+        route.distanceMeters,
+      );
+      let previousDistance = -1;
+      for (const point of route.elevationProfile) {
+        expect(point.distanceMeters).toBeGreaterThan(previousDistance);
+        previousDistance = point.distanceMeters;
+      }
       expect(route.name).toContain('Demo');
       for (const [longitude, latitude] of route.coordinates) {
         expect(longitude).toBeGreaterThanOrEqual(-180);
@@ -282,6 +293,19 @@ describe('demo Explore seed', () => {
         expect(latitude).toBeGreaterThanOrEqual(-90);
         expect(latitude).toBeLessThanOrEqual(90);
       }
+    }
+  });
+
+  it('provides coherent saved place and route examples', () => {
+    expect(DEMO_SAVED_ITEM_SEEDS).toHaveLength(4);
+    const placeIds = new Set(DEMO_PLACE_SEEDS.map(({ id }) => id));
+    const routeIds = new Set(DEMO_ROUTE_SEEDS.map(({ id }) => id));
+    for (const saved of DEMO_SAVED_ITEM_SEEDS) {
+      expect(
+        saved.itemKind === 'place'
+          ? placeIds.has(saved.itemId)
+          : routeIds.has(saved.itemId),
+      ).toBe(true);
     }
   });
 
