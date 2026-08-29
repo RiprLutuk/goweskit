@@ -209,13 +209,18 @@ function resetWizard(): void {
     <header class="native-page-header">
       <div class="header-topline">
         <span class="native-eyebrow">Pusat Pengetahuan Gowes</span>
-        <button
-          class="wizard-open-pill"
-          type="button"
-          @click="showWizard = true"
-        >
-          🧭 Deteksi Tipe Sepeda
-        </button>
+        <div class="header-pills-group">
+          <NuxtLink to="/learn/diagnostics" class="wizard-open-pill wizard-open-pill--alert">
+            🔧 Diagnostik Masalah
+          </NuxtLink>
+          <button
+            class="wizard-open-pill"
+            type="button"
+            @click="showWizard = true"
+          >
+            🧭 Deteksi Tipe
+          </button>
+        </div>
       </div>
       <h1 class="native-title">Anatomi &amp; Standar Sepeda</h1>
       <p class="native-sub">
@@ -562,6 +567,13 @@ function resetWizard(): void {
   letter-spacing: 0.05em;
 }
 
+.header-pills-group {
+  display: flex;
+  align-items: center;
+  gap: 0.4rem;
+  flex-wrap: wrap;
+}
+
 .wizard-open-pill {
   border: 1px solid var(--color-ink);
   background: var(--color-chain-lime);
@@ -573,6 +585,14 @@ function resetWizard(): void {
   cursor: pointer;
   box-shadow: 0 2px 0 var(--color-ink);
   transition: transform 90ms ease;
+  text-decoration: none;
+  display: inline-flex;
+  align-items: center;
+}
+
+.wizard-open-pill--alert {
+  background: #FEF3C7;
+  color: #92400E;
 }
 
 .wizard-open-pill:active {

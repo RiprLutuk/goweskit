@@ -112,11 +112,11 @@ P3 = later
 
 - [x] QA-001 [P0] API contract tests.
 - [x] QA-002 [P0] Compatibility golden tests.
-- [ ] QA-003 [P1] Mobile viewport tests.
-- [ ] QA-004 [P1] Accessibility pass.
-- [ ] QA-005 [P1] Geo query performance.
-- [ ] QA-006 [P1] Safety abuse tests.
-- [ ] QA-007 [P1] Closed beta checklist.
+- [x] QA-003 [P1] Mobile viewport tests.
+- [x] QA-004 [P1] Accessibility pass.
+- [x] QA-005 [P1] Geo query performance.
+- [x] QA-006 [P1] Safety abuse tests.
+- [x] QA-007 [P1] Closed beta checklist.
 
 ## Build slices
 

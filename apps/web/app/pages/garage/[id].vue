@@ -24,6 +24,7 @@ const activeTab = ref<'specs' | 'components' | 'maintenance'>('specs');
 const specGroupFilter = ref('all');
 const selections = reactive<Record<string, string>>({});
 const showPhotoModal = ref(false);
+const showPassportModal = ref(false);
 const photoInputUrl = ref('');
 
 const bikeId = computed(() => String(route.params.id));
@@ -228,6 +229,13 @@ function specStatus(code: string): 'known' | 'unknown' | 'missing' {
             </p>
           </div>
           <div class="bike-hero-rich__actions">
+            <button
+              class="button button--secondary"
+              type="button"
+              @click="showPassportModal = true"
+            >
+              🪪 Paspor Sepeda
+            </button>
             <NuxtLink
               class="button button--primary"
               :to="`/upgrade-lab?bike=${bike.id}`"
@@ -403,6 +411,7 @@ function specStatus(code: string): 'known' | 'unknown' | 'missing' {
 
       <!-- TAB 3: MAINTENANCE NOTEBOOK -->
       <section v-else-if="activeTab === 'maintenance'" class="tab-section">
+        <MaintenanceReminderBanner :bike="bike" style="margin-bottom: 1.25rem;" />
         <MaintenanceLog :bike-id="bike.id" />
       </section>
     </template>
@@ -440,6 +449,14 @@ function specStatus(code: string): 'known' | 'unknown' | 'missing' {
         </form>
       </div>
     </div>
+
+    <!-- Bike Passport Modal -->
+    <BikePassportCard
+      v-if="bike"
+      :bike="bike"
+      :is-open="showPassportModal"
+      @close="showPassportModal = false"
+    />
   </div>
 </template>
 

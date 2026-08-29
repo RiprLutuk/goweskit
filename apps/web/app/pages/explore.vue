@@ -250,11 +250,37 @@ function useMyLocation(): void {
 }
 
 const { user } = useAuth();
+const {
+  savedRoutes: offlineRoutes,
+  saveRouteOffline,
+  isRouteSavedOffline,
+  removeOfflineRoute,
+} = useOfflineNavigator();
+const showOfflineModal = ref(false);
+
 const elevationData = ref<RouteElevationResponse | null>(null);
 const loadingElevation = ref(false);
 const savedItems = ref<Set<string>>(new Set());
 const savingItem = ref(false);
 const saveToast = ref('');
+
+function toggleOfflineRoute(item: ExploreItem): void {
+  if (item.kind !== 'route') return;
+  if (isRouteSavedOffline(item.id)) {
+    removeOfflineRoute(item.id);
+  } else {
+    saveRouteOffline({
+      id: item.id,
+      title: item.name,
+      description: item.description,
+      distanceKm: item.distanceMeters / 1000,
+      elevationGainMeters: item.elevationGainMeters,
+      difficulty: item.difficulty,
+      coordinates: item.geometry.coordinates as [number, number][],
+      elevationProfile: elevationData.value?.elevationProfile ?? undefined,
+    });
+  }
+}
 
 async function selectItem(selection: { kind: 'place' | 'route'; id: string }): Promise<void> {
   selectedId.value = selection.id;
@@ -555,6 +581,15 @@ onBeforeUnmount(() => {
               Mulai Gowes 🚴
             </NuxtLink>
             <button
+              v-if="selectedItem.kind === 'route'"
+              class="action-btn action-btn--secondary"
+              :class="{ 'action-btn--saved': isRouteSavedOffline(selectedItem.id) }"
+              type="button"
+              @click="toggleOfflineRoute(selectedItem)"
+            >
+              {{ isRouteSavedOffline(selectedItem.id) ? '💾 Offline ✓' : '💾 Simpan Offline' }}
+            </button>
+            <button
               class="action-btn action-btn--bookmark"
               :class="{ 'action-btn--saved': savedItems.has(selectedItem.id) }"
               type="button"
@@ -630,6 +665,14 @@ onBeforeUnmount(() => {
           @click="useMyLocation"
         >
           {{ locating ? '…' : '⌖' }}
+        </button>
+        <button
+          class="overlay-icon-btn"
+          type="button"
+          title="Rute Offline"
+          @click="showOfflineModal = true"
+        >
+          💾
         </button>
         <button
           class="overlay-icon-btn"
@@ -769,6 +812,15 @@ onBeforeUnmount(() => {
             Mulai Gowes 🚴
           </NuxtLink>
           <button
+            v-if="selectedItem.kind === 'route'"
+            class="action-btn action-btn--secondary"
+            :class="{ 'action-btn--saved': isRouteSavedOffline(selectedItem.id) }"
+            type="button"
+            @click="toggleOfflineRoute(selectedItem)"
+          >
+            {{ isRouteSavedOffline(selectedItem.id) ? '💾 Offline ✓' : '💾 Simpan Offline' }}
+          </button>
+          <button
             class="action-btn action-btn--bookmark"
             :class="{ 'action-btn--saved': savedItems.has(selectedItem.id) }"
             type="button"
@@ -879,6 +931,12 @@ onBeforeUnmount(() => {
         </div>
       </div>
     </div>
+
+    <!-- Offline Routes Modal -->
+    <OfflineRoutesModal
+      :is-open="showOfflineModal"
+      @close="showOfflineModal = false"
+    />
   </div>
 </template>
 
