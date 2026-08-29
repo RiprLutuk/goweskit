@@ -10,6 +10,10 @@ const savedItemFkMigrationUrl = new URL(
   '../../drizzle/0009_special_mole_man.sql',
   import.meta.url,
 );
+const bikePhotoStorageMigrationUrl = new URL(
+  '../../drizzle/0010_dazzling_triathlon.sql',
+  import.meta.url,
+);
 
 describe('Backend CR persistence migration', () => {
   it('adds event descriptions safely for existing rows', async () => {
@@ -57,6 +61,14 @@ describe('Backend CR persistence migration', () => {
     );
     expect(migration).toContain(
       'CONSTRAINT "user_saved_items_exactly_one_target_check"',
+    );
+  });
+
+  it('adds a private object-storage key without rewriting bike rows', async () => {
+    const migration = await readFile(bikePhotoStorageMigrationUrl, 'utf8');
+
+    expect(migration.trim()).toBe(
+      'ALTER TABLE "user_bikes" ADD COLUMN "photo_storage_key" text;',
     );
   });
 });

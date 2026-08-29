@@ -126,6 +126,7 @@ frame_size
 frame_material
 wheel_size
 photo_url
+photo_storage_key
 notes
 created_at
 updated_at

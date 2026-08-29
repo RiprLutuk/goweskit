@@ -71,6 +71,13 @@
       "when": 1787972418781,
       "tag": "0009_special_mole_man",
       "breakpoints": true
+    },
+    {
+      "idx": 10,
+      "version": "7",
+      "when": 1787975458172,
+      "tag": "0010_dazzling_triathlon",
+      "breakpoints": true
     }
   ]
 }

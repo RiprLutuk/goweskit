@@ -11,6 +11,11 @@ import type {
   StoredBikeSpec,
   StoredSpecInput,
 } from '../repositories/garage-repository.js';
+import type {
+  BikePhotoStorage,
+  DecodedBikePhoto,
+  StoredBikePhoto,
+} from '../storage/bike-photo-storage.js';
 import { GarageService } from './garage-service.js';
 
 const BICYCLE_TYPE_ID = '019c9c80-2896-7593-bd02-509894b90001';
@@ -35,6 +40,7 @@ class MemoryGarageRepository implements GarageRepository {
     userId: string,
     input: CreateBikeRequest,
     specs: StoredSpecInput[],
+    photoStorageKey: string | null,
   ): Promise<StoredBike> {
     this.capturedSpecs = specs;
     const now = new Date('2026-08-27T00:00:00.000Z');
@@ -51,6 +57,7 @@ class MemoryGarageRepository implements GarageRepository {
       model: input.model ?? null,
       modelYear: input.modelYear ?? null,
       photoUrl: input.photoUrl ?? null,
+      photoStorageKey,
       avatarPreset: input.avatarPreset ?? null,
       notes: input.notes ?? null,
       specs: specs.map((spec) => ({ ...spec, updatedAt: now })),
@@ -70,10 +77,12 @@ class MemoryGarageRepository implements GarageRepository {
 
   public updateBike(
     id: string,
-    input: UpdateBikeRequest,
+    input: UpdateBikeRequest & { photoStorageKey?: string | null },
   ): Promise<StoredBike | null> {
     if (this.bike?.id !== id) return Promise.resolve(null);
     if (input.photoUrl !== undefined) this.bike.photoUrl = input.photoUrl;
+    if (input.photoStorageKey !== undefined)
+      this.bike.photoStorageKey = input.photoStorageKey;
     if (input.avatarPreset !== undefined)
       this.bike.avatarPreset = input.avatarPreset;
     return Promise.resolve(this.bike);
@@ -97,6 +106,27 @@ class MemoryGarageRepository implements GarageRepository {
       stored,
     ];
     return Promise.resolve(stored);
+  }
+}
+
+class MemoryBikePhotoStorage implements BikePhotoStorage {
+  public uploads: { photo: DecodedBikePhoto; storageKey: string }[] = [];
+  public deletes: string[] = [];
+
+  public upload(
+    photo: DecodedBikePhoto,
+    storageKey: string,
+  ): Promise<StoredBikePhoto> {
+    this.uploads.push({ photo, storageKey });
+    return Promise.resolve({
+      storageKey,
+      url: `https://pub.example.r2.dev/${storageKey}?v=test`,
+    });
+  }
+
+  public delete(storageKey: string): Promise<void> {
+    this.deletes.push(storageKey);
+    return Promise.resolve();
   }
 }
 
@@ -201,5 +231,37 @@ describe('GarageService', () => {
     expect(
       await service.updateBikeVisual(owner, BIKE_ID, { photoUrl: null }),
     ).toMatchObject({ photoUrl: null, avatarPreset: 'hardtail_lime' });
+  });
+
+  it('uploads base64 image bytes to managed storage and deletes on clear', async () => {
+    const repository = new MemoryGarageRepository();
+    const storage = new MemoryBikePhotoStorage();
+    const service = new GarageService(repository, storage, 'test/bikes');
+    await service.createBike(owner, {
+      nickname: 'R2 Bike',
+      bicycleTypeId: BICYCLE_TYPE_ID,
+    });
+
+    const visual = await service.updateBikeVisual(owner, BIKE_ID, {
+      photoUrl: 'data:image/png;base64,iVBORw0KGgo=',
+    });
+
+    expect(visual.photoUrl).toMatch(
+      /^https:\/\/pub\.example\.r2\.dev\/test\/bikes\//u,
+    );
+    expect(repository.bike?.photoStorageKey).toMatch(
+      /^test\/bikes\/019c9c80-2896-7593-bd02-509894b90003\//u,
+    );
+    expect(storage.uploads[0]?.photo).toMatchObject({
+      contentType: 'image/png',
+      extension: 'png',
+    });
+
+    await service.updateBikeVisual(owner, BIKE_ID, { photoUrl: null });
+    expect(storage.deletes).toEqual([storage.uploads[0]?.storageKey]);
+    expect(repository.bike).toMatchObject({
+      photoUrl: null,
+      photoStorageKey: null,
+    });
   });
 });

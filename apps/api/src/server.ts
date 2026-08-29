@@ -35,6 +35,7 @@ import { GarageService } from './services/garage-service.js';
 import { InstalledComponentService } from './services/installed-component-service.js';
 import { MaintenanceService } from './services/maintenance-service.js';
 import { SavedItemService } from './services/saved-item-service.js';
+import { R2BikePhotoStorage } from './storage/bike-photo-storage.js';
 
 const config = readConfig();
 const databaseClient = createDatabase(config.databaseUrl);
@@ -43,6 +44,8 @@ const authService = new AuthService(
 );
 const garageService = new GarageService(
   new DrizzleGarageRepository(databaseClient.database),
+  new R2BikePhotoStorage(config.r2),
+  config.r2.keyPrefix,
 );
 const exploreContributionRepository = new DrizzleExploreContributionRepository(
   databaseClient.database,

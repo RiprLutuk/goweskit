@@ -409,6 +409,7 @@ export const userBikes = pgTable(
     model: varchar('model', { length: 100 }),
     modelYear: integer('model_year'),
     photoUrl: text('photo_url'),
+    photoStorageKey: text('photo_storage_key'),
     avatarPreset: varchar('avatar_preset', { length: 80 }),
     notes: text('notes'),
     createdAt: timestamp('created_at', { withTimezone: true })

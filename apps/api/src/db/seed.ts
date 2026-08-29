@@ -462,6 +462,7 @@ export async function seedDatabase(database: Database): Promise<SeedSummary> {
           model: bikeSeed.model,
           modelYear: bikeSeed.modelYear,
           photoUrl: bikeSeed.photoUrl,
+          photoStorageKey: null,
           avatarPreset: bikeSeed.avatarPreset,
           notes: bikeSeed.notes,
         })
@@ -475,6 +476,7 @@ export async function seedDatabase(database: Database): Promise<SeedSummary> {
             model: bikeSeed.model,
             modelYear: bikeSeed.modelYear,
             photoUrl: bikeSeed.photoUrl,
+            photoStorageKey: null,
             avatarPreset: bikeSeed.avatarPreset,
             notes: bikeSeed.notes,
             updatedAt: new Date(),

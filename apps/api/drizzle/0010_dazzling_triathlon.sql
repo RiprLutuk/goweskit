@@ -1,0 +1,1 @@
+ALTER TABLE "user_bikes" ADD COLUMN "photo_storage_key" text;

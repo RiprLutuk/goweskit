@@ -1,3 +1,5 @@
+import { randomUUID } from 'node:crypto';
+
 import {
   getBikeSpecDefinition,
   getStandardValueLabel,
@@ -22,6 +24,12 @@ import type {
   StoredBikeSpec,
   StoredSpecInput,
 } from '../repositories/garage-repository.js';
+import {
+  bikePhotoStorageKey,
+  decodeBikePhotoDataUrl,
+  type BikePhotoStorage,
+  type StoredBikePhoto,
+} from '../storage/bike-photo-storage.js';
 
 function mapSpec(spec: StoredBikeSpec): BikeSpec {
   const definition = getBikeSpecDefinition(spec.standardCode);
@@ -86,7 +94,11 @@ function normalizeSpec(
 }
 
 export class GarageService {
-  public constructor(private readonly repository: GarageRepository) {}
+  public constructor(
+    private readonly repository: GarageRepository,
+    private readonly photoStorage?: BikePhotoStorage,
+    private readonly photoKeyPrefix = 'goweskit/bike-photos',
+  ) {}
 
   public async createBike(user: User, input: CreateBikeRequest): Promise<Bike> {
     await this.assertBicycleType(input.bicycleTypeId);
@@ -107,7 +119,30 @@ export class GarageService {
         return normalizeSpec(standardCode, specInput, 'garage_onboarding');
       },
     );
-    return mapBike(await this.repository.createBike(user.id, input, specs));
+    const storedPhoto = await this.uploadPhotoIfManaged(
+      user.id,
+      randomUUID(),
+      input.photoUrl,
+    );
+    const createInput =
+      storedPhoto === null ? input : { ...input, photoUrl: storedPhoto.url };
+    try {
+      return mapBike(
+        await this.repository.createBike(
+          user.id,
+          createInput,
+          specs,
+          storedPhoto?.storageKey ?? null,
+        ),
+      );
+    } catch (error: unknown) {
+      if (storedPhoto !== null) {
+        await this.photoStorage
+          ?.delete(storedPhoto.storageKey)
+          .catch(() => undefined);
+      }
+      throw error;
+    }
   }
 
   public async listBikes(user: User): Promise<Bike[]> {
@@ -123,12 +158,10 @@ export class GarageService {
     bikeId: string,
     input: UpdateBikeRequest,
   ): Promise<Bike> {
-    await this.getOwnedBike(user, bikeId);
+    const bike = await this.getOwnedBike(user, bikeId);
     if (input.bicycleTypeId !== undefined)
       await this.assertBicycleType(input.bicycleTypeId);
-    const updated = await this.repository.updateBike(bikeId, input);
-    if (updated === null) throw this.notFound();
-    return mapBike(updated);
+    return mapBike(await this.updateOwnedBike(user, bike, input));
   }
 
   public async updateBikeVisual(
@@ -136,9 +169,8 @@ export class GarageService {
     bikeId: string,
     input: UpdateBikePhotoRequest,
   ): Promise<BikeVisual> {
-    await this.getOwnedBike(user, bikeId);
-    const updated = await this.repository.updateBike(bikeId, input);
-    if (updated === null) throw this.notFound();
+    const bike = await this.getOwnedBike(user, bikeId);
+    const updated = await this.updateOwnedBike(user, bike, input);
     return {
       id: updated.id,
       photoUrl: updated.photoUrl,
@@ -147,7 +179,10 @@ export class GarageService {
   }
 
   public async deleteBike(user: User, bikeId: string): Promise<void> {
-    await this.getOwnedBike(user, bikeId);
+    const bike = await this.getOwnedBike(user, bikeId);
+    if (bike.photoStorageKey !== null) {
+      await this.deleteManagedPhoto(bike.photoStorageKey);
+    }
     await this.repository.deleteBike(bikeId);
   }
 
@@ -169,6 +204,118 @@ export class GarageService {
   private async getOwnedBike(user: User, bikeId: string): Promise<StoredBike> {
     const bike = await this.repository.findBikeById(bikeId);
     if (bike?.userId !== user.id) throw this.notFound();
+    return bike;
+  }
+
+  private async updateOwnedBike(
+    user: User,
+    bike: StoredBike,
+    input: UpdateBikeRequest | UpdateBikePhotoRequest,
+  ): Promise<StoredBike> {
+    if (input.photoUrl === undefined || input.photoUrl === bike.photoUrl) {
+      return this.requireUpdatedBike(
+        await this.repository.updateBike(bike.id, input),
+      );
+    }
+
+    const storedPhoto = await this.uploadPhotoIfManaged(
+      user.id,
+      bike.id,
+      input.photoUrl,
+      bike.photoStorageKey,
+    );
+    if (storedPhoto !== null) {
+      try {
+        return this.requireUpdatedBike(
+          await this.repository.updateBike(bike.id, {
+            ...input,
+            photoUrl: storedPhoto.url,
+            photoStorageKey: storedPhoto.storageKey,
+          }),
+        );
+      } catch (error: unknown) {
+        if (bike.photoStorageKey === null) {
+          await this.photoStorage
+            ?.delete(storedPhoto.storageKey)
+            .catch(() => undefined);
+        }
+        throw error;
+      }
+    }
+
+    const updated = this.requireUpdatedBike(
+      await this.repository.updateBike(bike.id, input),
+    );
+    if (bike.photoStorageKey === null) return updated;
+
+    await this.deleteManagedPhoto(bike.photoStorageKey);
+    return this.requireUpdatedBike(
+      await this.repository.updateBike(bike.id, { photoStorageKey: null }),
+    );
+  }
+
+  private async uploadPhotoIfManaged(
+    userId: string,
+    bikeId: string,
+    photoUrl: string | null | undefined,
+    existingStorageKey?: string | null,
+  ): Promise<StoredBikePhoto | null> {
+    if (!photoUrl?.startsWith('data:')) {
+      return null;
+    }
+
+    let photo;
+    try {
+      photo = decodeBikePhotoDataUrl(photoUrl);
+    } catch {
+      throw new AppError(
+        'BIKE_PHOTO_UPLOAD_FAILED',
+        'Bike photo data is invalid.',
+        400,
+      );
+    }
+
+    const storage = this.requirePhotoStorage();
+    const storageKey =
+      existingStorageKey ??
+      bikePhotoStorageKey(this.photoKeyPrefix, userId, bikeId);
+    try {
+      return await storage.upload(photo, storageKey);
+    } catch {
+      throw new AppError(
+        'BIKE_PHOTO_UPLOAD_FAILED',
+        'Bike photo could not be uploaded.',
+        502,
+      );
+    }
+  }
+
+  private async deleteManagedPhoto(storageKey: string): Promise<void> {
+    try {
+      await this.requirePhotoStorage().delete(storageKey);
+    } catch (error: unknown) {
+      if (error instanceof AppError) throw error;
+      throw new AppError(
+        'BIKE_PHOTO_DELETE_FAILED',
+        'Bike photo could not be deleted.',
+        502,
+      );
+    }
+  }
+
+  private requirePhotoStorage(): BikePhotoStorage {
+    if (this.photoStorage === undefined) {
+      throw new AppError(
+        'BIKE_PHOTO_STORAGE_UNAVAILABLE',
+        'Bike photo storage is unavailable.',
+        503,
+      );
+    }
+    return this.photoStorage;
+  }
+
+  private requireUpdatedBike(bike: StoredBike | null): StoredBike {
+    if (bike === null) throw this.notFound();
     return bike;
   }
 

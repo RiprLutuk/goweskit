@@ -27,6 +27,7 @@ export interface StoredBike {
   model: string | null;
   modelYear: number | null;
   photoUrl: string | null;
+  photoStorageKey: string | null;
   avatarPreset: string | null;
   notes: string | null;
   specs: StoredBikeSpec[];
@@ -47,10 +48,14 @@ export interface GarageRepository {
     userId: string,
     input: CreateBikeRequest,
     specs: StoredSpecInput[],
+    photoStorageKey: string | null,
   ): Promise<StoredBike>;
   listBikes(userId: string): Promise<StoredBike[]>;
   findBikeById(id: string): Promise<StoredBike | null>;
-  updateBike(id: string, input: UpdateBikeRequest): Promise<StoredBike | null>;
+  updateBike(
+    id: string,
+    input: UpdateBikeRequest & { photoStorageKey?: string | null },
+  ): Promise<StoredBike | null>;
   deleteBike(id: string): Promise<void>;
   upsertSpec(bikeId: string, spec: StoredSpecInput): Promise<StoredBikeSpec>;
 }
@@ -76,6 +81,7 @@ export class DrizzleGarageRepository implements GarageRepository {
     userId: string,
     input: CreateBikeRequest,
     specs: StoredSpecInput[],
+    photoStorageKey: string | null,
   ): Promise<StoredBike> {
     const bikeId = await this.database.transaction(async (transaction) => {
       const [created] = await transaction
@@ -88,6 +94,7 @@ export class DrizzleGarageRepository implements GarageRepository {
           model: input.model ?? null,
           modelYear: input.modelYear ?? null,
           photoUrl: input.photoUrl ?? null,
+          photoStorageKey,
           avatarPreset: input.avatarPreset ?? null,
           notes: input.notes ?? null,
         })
@@ -126,7 +133,7 @@ export class DrizzleGarageRepository implements GarageRepository {
 
   public async updateBike(
     id: string,
-    input: UpdateBikeRequest,
+    input: UpdateBikeRequest & { photoStorageKey?: string | null },
   ): Promise<StoredBike | null> {
     const patch: Partial<typeof userBikes.$inferInsert> = {
       updatedAt: new Date(),
@@ -138,6 +145,8 @@ export class DrizzleGarageRepository implements GarageRepository {
     if (input.model !== undefined) patch.model = input.model;
     if (input.modelYear !== undefined) patch.modelYear = input.modelYear;
     if (input.photoUrl !== undefined) patch.photoUrl = input.photoUrl;
+    if (input.photoStorageKey !== undefined)
+      patch.photoStorageKey = input.photoStorageKey;
     if (input.avatarPreset !== undefined)
       patch.avatarPreset = input.avatarPreset;
     if (input.notes !== undefined) patch.notes = input.notes;

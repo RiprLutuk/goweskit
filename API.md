@@ -61,6 +61,13 @@ Photo sources accept HTTPS URLs or bounded PNG/JPEG/WebP/GIF data URLs. SVG,
 plain HTTP, and script URLs are rejected. The response is
 `{ "bike": { "id", "photoUrl", "avatarPreset" } }`.
 
+Base64 image data is validated by file signature, decoded to at most 700 KB,
+and uploaded to Cloudflare R2. PostgreSQL stores only the R2 object key and
+cache-busted public URL; base64 data is never persisted. Existing HTTPS image
+URLs remain supported as externally managed photos. Replacing or clearing a
+managed photo updates or deletes the corresponding R2 object. Storage failures
+use stable `BIKE_PHOTO_*` error codes without exposing provider errors.
+
 ## Compatibility
 
 ```text
