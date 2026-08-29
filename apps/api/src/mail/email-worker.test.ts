@@ -1,4 +1,4 @@
-import { describe, expect, it, vi } from 'vitest';
+import { describe, expect, it } from 'vitest';
 
 import { EmailWorker } from './email-worker.js';
 
@@ -10,9 +10,17 @@ const options = {
 
 describe('EmailWorker', () => {
   it('waits for Brevo acceptance before reporting delivery', async () => {
-    const fetchFn = vi.fn(() =>
-      Promise.resolve(new Response('{"messageId":"message-1"}', { status: 201 })),
-    );
+    let requestedUrl: string | URL | Request | undefined;
+    let requestedOptions: RequestInit | undefined;
+    let requestCount = 0;
+    const fetchFn: typeof fetch = (input, init) => {
+      requestCount += 1;
+      requestedUrl = input;
+      requestedOptions = init;
+      return Promise.resolve(
+        new Response('{"messageId":"message-1"}', { status: 201 }),
+      );
+    };
     const worker = new EmailWorker({ ...options, fetchFn });
 
     await worker.send({
@@ -22,14 +30,18 @@ describe('EmailWorker', () => {
       text: '482915',
     });
 
-    expect(fetchFn).toHaveBeenCalledOnce();
-    const [url, request] = fetchFn.mock.calls[0] ?? [];
-    expect(url).toBe('https://api.brevo.com/v3/smtp/email');
-    expect(request).toMatchObject({
-      method: 'POST',
-      headers: expect.objectContaining({ 'api-key': options.apiKey }),
-    });
-    expect(JSON.parse(String(request?.body))).toMatchObject({
+    expect(requestCount).toBe(1);
+    expect(requestedUrl).toBe('https://api.brevo.com/v3/smtp/email');
+    expect(requestedOptions?.method).toBe('POST');
+    expect(new Headers(requestedOptions?.headers).get('api-key')).toBe(
+      options.apiKey,
+    );
+    const requestBody = requestedOptions?.body;
+    if (typeof requestBody !== 'string') {
+      throw new Error('Expected a JSON string request body.');
+    }
+    const parsedBody: unknown = JSON.parse(requestBody);
+    expect(parsedBody).toMatchObject({
       sender: {
         email: options.senderEmail,
         name: options.senderName,
@@ -42,13 +54,12 @@ describe('EmailWorker', () => {
   it('rejects provider failures without exposing the provider response body', async () => {
     const worker = new EmailWorker({
       ...options,
-      fetchFn: vi.fn(() =>
+      fetchFn: () =>
         Promise.resolve(
           new Response('{"message":"sensitive provider detail"}', {
             status: 401,
           }),
         ),
-      ),
     });
 
     await expect(

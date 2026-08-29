@@ -1,34 +1,35 @@
-import { describe, expect, it, vi } from 'vitest';
+import { describe, expect, it } from 'vitest';
 
 import { AppError } from '../errors.js';
+import { EmailWorker } from '../mail/email-worker.js';
 import { OtpService } from './otp-service.js';
 
+const workerConfig = {
+  apiKey: 'brevo-secret',
+  senderEmail: 'noreply@goweskit.test',
+  senderName: 'GowesKit',
+};
+
 describe('OtpService', () => {
-  it('generates a 6-digit numeric OTP and verifies it successfully', () => {
+  it('generates a single-use 6-digit OTP in explicit demo mode', async () => {
     const service = new OtpService();
-    const result = service.sendOtp({
+    const result = await service.sendOtp({
       email: 'rider@example.com',
       purpose: 'register',
     });
 
     expect(result.success).toBe(true);
-    expect(result.demoOtp).toBeDefined();
     expect(result.demoOtp).toMatch(/^\d{6}$/u);
     const generatedCode = result.demoOtp ?? '';
-
-    // Verify using the generated OTP code
-    const isValid = service.verifyOtp('rider@example.com', generatedCode);
-    expect(isValid).toBe(true);
-
-    // Reusing the same OTP should fail (single-use consumption)
+    expect(service.verifyOtp('rider@example.com', generatedCode)).toBe(true);
     expect(() => service.verifyOtp('rider@example.com', generatedCode)).toThrow(
       AppError,
     );
   });
 
-  it('rejects invalid OTP codes and tracks remaining attempts', () => {
+  it('rejects invalid OTP codes and tracks remaining attempts', async () => {
     const service = new OtpService();
-    service.sendOtp({
+    await service.sendOtp({
       email: 'test@example.com',
       purpose: 'register',
     });
@@ -38,42 +39,73 @@ describe('OtpService', () => {
     );
   });
 
-  it('allows universal test code 123456 in test environments', () => {
+  it('allows the universal code only in explicit demo mode', () => {
     const service = new OtpService();
     expect(service.verifyOtp('any@example.com', '123456')).toBe(true);
   });
 
-  it('disables demo OTP completely for production wiring', () => {
+  it('waits for email acceptance and never returns the provider OTP', async () => {
+    let requestBody = '';
+    const fetchFn: typeof fetch = (_input, init) => {
+      if (typeof init?.body === 'string') requestBody = init.body;
+      return Promise.resolve(
+        new Response('{"messageId":"message-1"}', { status: 201 }),
+      );
+    };
+    const service = new OtpService({
+      allowTestCode: false,
+      emailWorker: new EmailWorker({ ...workerConfig, fetchFn }),
+      enabled: true,
+      exposeCode: false,
+    });
+
+    const result = await service.sendOtp({
+      email: 'worker-test@example.com',
+      purpose: 'register',
+    });
+
+    expect(result.demoOtp).toBeUndefined();
+    const payload = JSON.parse(requestBody) as {
+      textContent: string;
+    };
+    const deliveredCode = /\b\d{6}\b/u.exec(payload.textContent)?.[0] ?? '';
+    expect(deliveredCode).toMatch(/^\d{6}$/u);
+    expect(service.verifyOtp('worker-test@example.com', deliveredCode)).toBe(
+      true,
+    );
+  });
+
+  it('fails closed and discards the code when email delivery fails', async () => {
+    const service = new OtpService({
+      allowTestCode: false,
+      emailWorker: new EmailWorker({
+        ...workerConfig,
+        fetchFn: () => Promise.resolve(new Response(null, { status: 500 })),
+      }),
+      enabled: true,
+      exposeCode: false,
+    });
+
+    await expect(
+      service.sendOtp({ email: 'rider@example.com', purpose: 'register' }),
+    ).rejects.toMatchObject({ code: 'OTP_DELIVERY_FAILED', statusCode: 503 });
+    expect(() => service.verifyOtp('rider@example.com', '123456')).toThrow(
+      expect.objectContaining({ code: 'OTP_NOT_FOUND' }),
+    );
+  });
+
+  it('disables OTP when neither provider nor demo mode is configured', async () => {
     const service = new OtpService({
       allowTestCode: false,
       enabled: false,
       exposeCode: false,
     });
 
-    expect(() =>
+    await expect(
       service.sendOtp({ email: 'rider@example.com', purpose: 'register' }),
-    ).toThrow(expect.objectContaining({ code: 'OTP_UNAVAILABLE' }));
+    ).rejects.toMatchObject({ code: 'OTP_UNAVAILABLE' });
     expect(() => service.verifyOtp('rider@example.com', '123456')).toThrow(
       expect.objectContaining({ code: 'OTP_UNAVAILABLE' }),
     );
-  });
-
-  it('enqueues OTP email to background emailWorker', async () => {
-    const enqueueMock = vi.fn();
-    const service = new OtpService({
-      emailWorker: { enqueue: enqueueMock } as any,
-    });
-
-    const res = service.sendOtp({
-      email: 'worker-test@example.com',
-      purpose: 'register',
-    });
-
-    expect(res.success).toBe(true);
-    expect(enqueueMock).toHaveBeenCalledTimes(1);
-    const job = enqueueMock.mock.calls[0][0];
-    expect(job.to).toBe('worker-test@example.com');
-    expect(job.subject).toContain(res.demoOtp);
-    expect(job.html).toContain(res.demoOtp);
   });
 });

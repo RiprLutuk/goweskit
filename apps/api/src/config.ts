@@ -5,6 +5,15 @@ const optionalSecret = z.preprocess(
     typeof value === 'string' && value.trim().length === 0 ? undefined : value,
   z.string().trim().min(1).optional(),
 );
+const optionalEmail = z.preprocess(
+  (value) =>
+    typeof value === 'string'
+      ? value.trim().length === 0
+        ? undefined
+        : value.trim()
+      : value,
+  z.email().toLowerCase().optional(),
+);
 
 const environmentSchema = z.object({
   NODE_ENV: z
@@ -12,11 +21,8 @@ const environmentSchema = z.object({
     .default('development'),
   API_PORT: z.coerce.number().int().min(1).max(65_535).default(4000),
   BREVO_API_KEY: optionalSecret,
-  BREVO_SENDER_NAME: z.string().trim().default('GowesKit'),
-  BREVO_SENDER_EMAIL: z
-    .string()
-    .email()
-    .default('no-reply@goweskit.demo.pandanteknik.com'),
+  BREVO_SENDER_NAME: optionalSecret,
+  BREVO_SENDER_EMAIL: optionalEmail,
   DATABASE_URL: z.url().default('postgresql://lutuk@localhost:1921/goweskit'),
   GOOGLE_CLIENT_ID: optionalSecret,
   OTP_DEMO_ENABLED: z.enum(['true', 'false']).optional(),
@@ -47,8 +53,8 @@ const environmentSchema = z.object({
 export interface AppConfig {
   apiPort: number;
   databaseUrl: string;
-  email: {
-    apiKey?: string;
+  email: null | {
+    apiKey: string;
     senderName: string;
     senderEmail: string;
   };
@@ -72,6 +78,18 @@ export function readConfig(
   environment: NodeJS.ProcessEnv = process.env,
 ): AppConfig {
   const parsed = environmentSchema.parse(environment);
+  const emailConfigured =
+    parsed.BREVO_API_KEY !== undefined ||
+    parsed.BREVO_SENDER_EMAIL !== undefined;
+  if (
+    emailConfigured &&
+    (parsed.BREVO_API_KEY === undefined ||
+      parsed.BREVO_SENDER_EMAIL === undefined)
+  ) {
+    throw new Error(
+      'BREVO_API_KEY and BREVO_SENDER_EMAIL must be configured together.',
+    );
+  }
 
   if (parsed.NODE_ENV === 'production') {
     if (!parsed.SESSION_COOKIE_SECURE) {
@@ -94,11 +112,15 @@ export function readConfig(
   return {
     apiPort: parsed.API_PORT,
     databaseUrl: parsed.DATABASE_URL,
-    email: {
-      apiKey: parsed.BREVO_API_KEY,
-      senderName: parsed.BREVO_SENDER_NAME,
-      senderEmail: parsed.BREVO_SENDER_EMAIL,
-    },
+    email:
+      parsed.BREVO_API_KEY === undefined ||
+      parsed.BREVO_SENDER_EMAIL === undefined
+        ? null
+        : {
+            apiKey: parsed.BREVO_API_KEY,
+            senderName: parsed.BREVO_SENDER_NAME ?? 'GowesKit',
+            senderEmail: parsed.BREVO_SENDER_EMAIL,
+          },
     environment: parsed.NODE_ENV,
     googleClientId: parsed.GOOGLE_CLIENT_ID ?? null,
     otpDemoEnabled:

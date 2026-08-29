@@ -17,6 +17,9 @@ SESSION_COOKIE_SECURE=true
 TRUST_PROXY_HOPS=1
 GOOGLE_CLIENT_ID=<Google Web OAuth client ID>
 OTP_DEMO_ENABLED=false
+BREVO_API_KEY=<Brevo REST API key>
+BREVO_SENDER_NAME=GowesKit
+BREVO_SENDER_EMAIL=<active verified Brevo sender>
 R2_ACCOUNT_ID=<Cloudflare account ID>
 R2_ACCESS_KEY_ID=<R2 S3 access key>
 R2_SECRET_ACCESS_KEY=<R2 S3 secret>
@@ -83,7 +86,8 @@ data restore is genuinely required, stop writes first and restore the reviewed
 
 ## Current provider boundary
 
-Email OTP is a local demo only and is disabled in production. Google Sign-In
-and password authentication remain available. Enabling production OTP requires
-an email delivery provider and a persistent one-time-code store; never expose
-the OTP in an API response.
+Email OTP uses Brevo's transactional REST API and is enabled only when both the
+API key and verified sender email are configured. The API never returns the OTP
+when Brevo is active. OTP state remains process-local in v0.1, so keep a single
+API instance; moving to multiple API instances requires a shared bounded
+one-time-code store first.

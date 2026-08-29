@@ -28,9 +28,11 @@ verified Google `sub` claim. It never trusts a browser-supplied email or display
 name as proof of identity. Production refuses to start without a Google client
 ID.
 
-Email OTP is demo-only until a delivery provider and persistent code store are
-configured. Set `OTP_DEMO_ENABLED=true` only for local development; it is
-rejected in production.
+Email OTP is delivered through Brevo when `BREVO_API_KEY` and a verified
+`BREVO_SENDER_EMAIL` are configured. The API waits for Brevo to accept the
+message before returning success, never returns the provider OTP, and discards
+the OTP if delivery fails. `OTP_DEMO_ENABLED=true` is local-only and is rejected
+in production.
 
 ## Learn
 

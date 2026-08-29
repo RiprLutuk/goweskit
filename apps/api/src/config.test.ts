@@ -14,6 +14,7 @@ const environment = {
 describe('API configuration', () => {
   it('reads and normalizes required R2 configuration', () => {
     expect(readConfig(environment)).toMatchObject({
+      email: null,
       environment: 'development',
       googleClientId: null,
       otpDemoEnabled: true,
@@ -32,6 +33,32 @@ describe('API configuration', () => {
   it('fails fast when an R2 credential is missing', () => {
     const missingSecret = { ...environment, R2_SECRET_ACCESS_KEY: '' };
     expect(() => readConfig(missingSecret)).toThrow();
+  });
+
+  it('requires a complete Brevo sender configuration', () => {
+    expect(
+      readConfig({
+        ...environment,
+        BREVO_API_KEY: 'brevo-secret',
+        BREVO_SENDER_EMAIL: ' Rider@Example.com ',
+      }),
+    ).toMatchObject({
+      email: {
+        apiKey: 'brevo-secret',
+        senderEmail: 'rider@example.com',
+        senderName: 'GowesKit',
+      },
+    });
+
+    expect(() =>
+      readConfig({ ...environment, BREVO_API_KEY: 'brevo-secret' }),
+    ).toThrow(/configured together/u);
+    expect(() =>
+      readConfig({
+        ...environment,
+        BREVO_SENDER_EMAIL: 'sender@example.com',
+      }),
+    ).toThrow(/configured together/u);
   });
 
   it('requires secure HTTPS and trusted proxy configuration in production', () => {

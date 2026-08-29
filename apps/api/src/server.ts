@@ -1,6 +1,5 @@
 import { existsSync } from 'node:fs';
 import { resolve } from 'node:path';
-
 const rootEnvPath = resolve(import.meta.dirname, '../../../.env');
 if (existsSync(rootEnvPath)) process.loadEnvFile(rootEnvPath);
 
@@ -49,11 +48,9 @@ const googleIdentityVerifier =
     ? undefined
     : new GoogleIdentityVerifier(config.googleClientId);
 
-const emailWorker = new EmailWorker({
-  apiKey: config.email.apiKey,
-  senderName: config.email.senderName,
-  senderEmail: config.email.senderEmail,
-});
+const emailWorker =
+  config.email === null ? undefined : new EmailWorker(config.email);
+const otpDemoEnabled = config.otpDemoEnabled && emailWorker === undefined;
 
 const authService = new AuthService(
   new DrizzleAuthRepository(databaseClient.database),
@@ -76,10 +73,10 @@ const safetyService = new SafetyService(
 const app = buildApp({
   authRateLimiter: new AuthRateLimiter(),
   otpService: new OtpService({
-    allowTestCode: config.otpDemoEnabled,
-    emailWorker,
-    enabled: config.otpDemoEnabled,
-    exposeCode: config.otpDemoEnabled,
+    allowTestCode: otpDemoEnabled,
+    ...(emailWorker === undefined ? {} : { emailWorker }),
+    enabled: emailWorker !== undefined || otpDemoEnabled,
+    exposeCode: otpDemoEnabled,
   }),
   webOrigin: config.webOrigin,
   cookieSecure: config.sessionCookieSecure,

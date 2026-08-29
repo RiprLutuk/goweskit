@@ -26,7 +26,7 @@ export interface OtpServiceOptions {
 export class OtpService {
   private readonly store = new Map<string, OtpRecord>();
   private readonly allowTestCode: boolean;
-  private readonly emailWorker?: EmailWorker;
+  private readonly emailWorker: EmailWorker | undefined;
   private readonly enabled: boolean;
   private readonly exposeCode: boolean;
 
@@ -38,9 +38,9 @@ export class OtpService {
   }
 
   /**
-   * Generates, stores, and asynchronously dispatches a 6-digit OTP code email via background worker.
+   * Generates, stores, and delivers a 6-digit OTP code before confirming success.
    */
-  public sendOtp(input: SendOtpRequest): SendOtpResponse {
+  public async sendOtp(input: SendOtpRequest): Promise<SendOtpResponse> {
     this.assertEnabled();
     const normalizedEmail = input.email.trim().toLowerCase();
     const now = Date.now();
@@ -71,20 +71,31 @@ export class OtpService {
       lastSentAt: now,
     });
 
-    // Enqueue non-blocking email delivery job to background EmailWorker
-    if (this.emailWorker) {
-      const { html, text } = buildOtpEmailHtml(normalizedEmail, code);
-      this.emailWorker.enqueue({
-        to: normalizedEmail,
-        subject: `[GowesKit] ${code} adalah Kode Verifikasi OTP Anda`,
-        html,
-        text,
-      });
+    if (this.emailWorker !== undefined) {
+      const { html, text } = buildOtpEmailHtml(code, input.purpose);
+      try {
+        await this.emailWorker.send({
+          to: normalizedEmail,
+          subject: '[GowesKit] Kode Verifikasi OTP Anda',
+          html,
+          text,
+        });
+      } catch {
+        this.store.delete(normalizedEmail);
+        throw new AppError(
+          'OTP_DELIVERY_FAILED',
+          'Kode OTP tidak dapat dikirim. Silakan coba lagi nanti.',
+          503,
+        );
+      }
     }
 
     return {
       success: true,
-      message: `Kode verifikasi OTP 6-digit telah dikirimkan ke ${normalizedEmail}.`,
+      message:
+        this.emailWorker === undefined
+          ? `Kode verifikasi OTP 6-digit tersedia untuk ${normalizedEmail}.`
+          : `Kode verifikasi OTP 6-digit telah dikirim ke ${normalizedEmail}.`,
       expiresInSeconds: OTP_EXPIRATION_SECONDS,
       ...(this.exposeCode ? { demoOtp: code } : {}),
     };
