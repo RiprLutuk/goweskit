@@ -8,10 +8,10 @@ This document tracks all backend API Change Requests (CR), endpoint proposals, a
 
 | CR ID | Module | Endpoint | Method | Priority | Status | Description |
 |---|---|---|---|---|---|---|
-| **CR-001** | Community | `/api/v1/communities/:id/events` | `POST` | P1 | Proposed | Create new ride event for a community by active member/manager |
-| **CR-002** | Garage | `/api/v1/bikes/:id/photo` | `PUT` | P2 | Proposed | Upload or update bike photo URL / avatar key |
-| **CR-003** | Explore | `/api/v1/explore/places/:id/bookmark` | `POST` | P2 | Proposed | Bookmark/save favorite places or routes to user profile |
-| **CR-004** | Explore | `/api/v1/explore/routes/:id/elevation` | `GET` | P2 | Proposed | Get detailed elevation profile coordinates and waypoint gradient data |
+| **CR-001** | Community | `/api/v1/communities/:id/events` | `POST` | P1 | **Implemented & Integrated ✅** | Create new ride event for a community by active member/admin |
+| **CR-002** | Garage | `PATCH /api/v1/bikes/:id` | `PATCH` | P2 | **Implemented & Integrated ✅** | Added `photoUrl` (max 900 KB base64) to DB, contracts, repository, & UI modal |
+| **CR-003** | User/Explore | `/api/v1/user/saved-items` | `POST` | P2 | **Implemented & Integrated ✅** | Bookmark/save favorite places or routes in Explore (`POST /api/v1/user/saved-items`) |
+| **CR-004** | Explore | `/api/v1/explore/routes/:id/elevation` | `GET` | P2 | **Implemented & Integrated ✅** | Dynamic elevation profile coordinates & live SVG climb chart in Explore |
 
 ---
 
@@ -119,3 +119,21 @@ This document tracks all backend API Change Requests (CR), endpoint proposals, a
   "averageGradientPercent": 4.3
 }
 ```
+
+---
+
+## Cloudflare R2 Object Storage Integration
+- **Provider**: Cloudflare R2 (S3-Compatible API via `@aws-sdk/client-s3`).
+- **Storage Target**: Bike photos in Garage (`photoUrl` & `photoStorageKey`).
+- **File Limits**: Max 700 KB (`BIKE_PHOTO_MAX_BYTES = 700_000`), image types: JPEG, PNG, WebP, GIF with magic byte validation.
+- **Environment Variables**:
+  - `R2_ACCOUNT_ID`: Cloudflare account ID.
+  - `R2_ACCESS_KEY_ID`: R2 S3 access key ID.
+  - `R2_SECRET_ACCESS_KEY`: R2 S3 secret access key.
+  - `R2_BUCKET_NAME`: R2 bucket name.
+  - `R2_PUBLIC_BASE_URL`: Public CDN base URL (e.g. `https://pub-<hash>.r2.dev` or custom domain).
+  - `R2_KEY_PREFIX`: Bucket key prefix (default: `goweskit/bike-photos`).
+- **Lifecycle**: Uploads with immutable cache-control, auto-deletes old objects from R2 when photo is replaced or removed.
+- **Elevation Sample Density**: Titik koordinat elevasi rute saat ini dihitung secara deterministik berbasis titik GPX rute terverifikasi.
+
+

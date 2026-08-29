@@ -14,7 +14,7 @@ function handleTabClick(): void {
 </script>
 
 <template>
-  <nav class="app-navigation" aria-label="Mobile navigation">
+  <nav class="app-navigation" aria-label="Navigasi aplikasi">
     <div class="app-navigation__inner">
       <ul class="app-navigation__list">
         <li v-for="item in NAVIGATION_ITEMS" :key="item.path" class="app-navigation__li">
@@ -26,47 +26,124 @@ function handleTabClick(): void {
             :aria-current="isActive(item.path) ? 'page' : undefined"
             @click="handleTabClick"
           >
-            <!-- Native Micro-Animated Icon Container -->
-            <span class="app-navigation__icon-box" aria-hidden="true">
-              <!-- Home Icon -->
-              <svg v-if="item.path === '/'" class="tab-icon" viewBox="0 0 24 24" width="21" height="21" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round">
-                <path d="m3 9 9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z" />
-                <polyline points="9 22 9 12 15 12 15 22" />
+            <!-- Clean Minimalist Cycling Icon -->
+            <div class="app-navigation__icon-box" aria-hidden="true">
+              <!-- 1. Home / Ride: Clean Minimalist Road Bike -->
+              <svg
+                v-if="item.path === '/'"
+                class="tab-icon"
+                viewBox="0 0 24 24"
+                width="22"
+                height="22"
+                fill="none"
+                stroke="currentColor"
+                stroke-width="1.8"
+                stroke-linecap="round"
+                stroke-linejoin="round"
+              >
+                <circle cx="5.5" cy="16.5" r="3.5" />
+                <circle cx="18.5" cy="16.5" r="3.5" />
+                <circle cx="11.5" cy="16.5" r="1.5" />
+                <path d="M5.5 16.5L10 9h4.5l4 7.5" />
+                <path d="M10 9l1.5 7.5h7" />
+                <path d="M10 9L8.5 6.5h2.5" />
+                <path d="M14.5 9l1-2.5h2.2" />
               </svg>
-              <!-- Learn Icon -->
-              <svg v-else-if="item.path === '/learn'" class="tab-icon" viewBox="0 0 24 24" width="21" height="21" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round">
-                <path d="M4 19.5A2.5 2.5 0 0 1 6.5 17H20" />
-                <path d="M6.5 2H20v20H6.5A2.5 2.5 0 0 1 4 19.5v-15A2.5 2.5 0 0 1 6.5 2z" />
-              </svg>
-              <!-- Garage Icon -->
-              <svg v-else-if="item.path === '/garage'" class="tab-icon" viewBox="0 0 24 24" width="21" height="21" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round">
-                <circle cx="5.5" cy="17.5" r="3.5" />
-                <circle cx="18.5" cy="17.5" r="3.5" />
-                <path d="M15 6a1 1 0 1 0 0-2 1 1 0 0 0 0 2zm-3 11.5L9 9l3-3h3l2 4" />
-                <path d="M9 9 5.5 17.5" />
-              </svg>
-              <!-- Explore Icon -->
-              <svg v-else-if="item.path === '/explore'" class="tab-icon" viewBox="0 0 24 24" width="21" height="21" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round">
-                <circle cx="12" cy="12" r="10" />
-                <polygon points="16.24 7.76 14.12 14.12 7.76 16.24 9.88 9.88 16.24 7.76" />
-              </svg>
-              <!-- Me Icon -->
-              <svg v-else-if="item.path === '/me'" class="tab-icon" viewBox="0 0 24 24" width="21" height="21" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round">
-                <path d="M19 21v-2a4 4 0 0 0-4-4H9a4 4 0 0 0-4 4v2" />
-                <circle cx="12" cy="7" r="4" />
-              </svg>
-            </span>
 
+              <!-- 2. Learn: Clean Handbook / Spec Guide -->
+              <svg
+                v-else-if="item.path === '/learn'"
+                class="tab-icon"
+                viewBox="0 0 24 24"
+                width="22"
+                height="22"
+                fill="none"
+                stroke="currentColor"
+                stroke-width="1.8"
+                stroke-linecap="round"
+                stroke-linejoin="round"
+              >
+                <path d="M4 19.5v-15A2.5 2.5 0 0 1 6.5 2H20v20H6.5a2.5 2.5 0 0 1-2.5-2.5Z" />
+                <path d="M6 6h10" />
+                <path d="M6 10h10" />
+                <path d="M6 14h6" />
+              </svg>
+
+              <!-- 3. Garage: Clean Bike Workshop Stand / Frame -->
+              <svg
+                v-else-if="item.path === '/garage'"
+                class="tab-icon"
+                viewBox="0 0 24 24"
+                width="22"
+                height="22"
+                fill="none"
+                stroke="currentColor"
+                stroke-width="1.8"
+                stroke-linecap="round"
+                stroke-linejoin="round"
+              >
+                <!-- Double Wheels -->
+                <circle cx="6" cy="16" r="3.5" />
+                <circle cx="18" cy="16" r="3.5" />
+                <!-- Frame & Seat -->
+                <path d="M6 16l4-7h4l4 7" />
+                <path d="M10 9l2 7h6" />
+                <path d="M10 9L8.5 6h3" />
+                <path d="M14 9l1-2.5h2" />
+                <!-- Tool/Service Accent -->
+                <path d="M12 2v3" />
+              </svg>
+
+              <!-- 4. Explore: Clean Compass & Route Waypoint -->
+              <svg
+                v-else-if="item.path === '/explore'"
+                class="tab-icon"
+                viewBox="0 0 24 24"
+                width="22"
+                height="22"
+                fill="none"
+                stroke="currentColor"
+                stroke-width="1.8"
+                stroke-linecap="round"
+                stroke-linejoin="round"
+              >
+                <circle cx="12" cy="12" r="9" />
+                <polygon points="16 8 13.5 13.5 8 16 10.5 10.5 16 8" />
+              </svg>
+
+              <!-- 5. Me: Clean Rider Profile with Helmet -->
+              <svg
+                v-else-if="item.path === '/me'"
+                class="tab-icon"
+                viewBox="0 0 24 24"
+                width="22"
+                height="22"
+                fill="none"
+                stroke="currentColor"
+                stroke-width="1.8"
+                stroke-linecap="round"
+                stroke-linejoin="round"
+              >
+                <path d="M19 21v-1a5 5 0 0 0-5-5h-4a5 5 0 0 0-5 5v1" />
+                <!-- Helmet & Visor -->
+                <circle cx="12" cy="8" r="4" />
+                <path d="M8 8.5c0-2.2 1.8-4 4-4s4 1.8 4 4" />
+              </svg>
+            </div>
+
+            <!-- Clean Titlecase Label -->
             <span class="app-navigation__label">{{ item.label }}</span>
-            <span class="app-navigation__marker" aria-hidden="true" />
+
+            <!-- Minimalist Active Accent Bar -->
+            <span class="app-navigation__active-bar" aria-hidden="true" />
           </NuxtLink>
 
           <span
             v-else
             class="app-navigation__item app-navigation__item--unavailable"
-            :aria-label="`${item.label}, coming soon`"
+            :aria-label="`${item.label}, segera hadir`"
           >
-            <span class="app-navigation__icon-box" aria-hidden="true">🔒</span>
+            <div class="app-navigation__icon-box" aria-hidden="true">🔒</div>
             <span class="app-navigation__label">{{ item.label }}</span>
           </span>
         </li>
@@ -76,6 +153,9 @@ function handleTabClick(): void {
 </template>
 
 <style scoped>
+/* ═══════════════════════════════════════════════════════════════
+   CLEAN, FRESH, ELEGANT CYCLING TAB BAR (APPLE & STRAVA NATIVE)
+   ═══════════════════════════════════════════════════════════════ */
 .app-navigation {
   position: fixed;
   z-index: 50;
@@ -84,15 +164,15 @@ function handleTabClick(): void {
   right: 0;
   width: 100%;
   box-sizing: border-box;
-  background: rgb(255 253 247 / 96%);
-  border-top: 1px solid rgb(23 32 42 / 12%);
-  box-shadow: 0 -4px 25px rgb(23 32 42 / 8%);
-  backdrop-filter: blur(24px);
-  -webkit-backdrop-filter: blur(24px);
+  background: rgb(255 253 247 / 94%);
+  backdrop-filter: blur(20px);
+  -webkit-backdrop-filter: blur(20px);
+  border-top: 1px solid rgb(23 32 42 / 8%);
+  box-shadow: 0 -2px 16px rgb(23 32 42 / 4%);
   user-select: none;
   -webkit-user-select: none;
-  /* Baseline 0.75rem (12px) padding on bottom + safe-area insets on notch iPhones */
-  padding: 0.5rem 0.5rem max(0.85rem, calc(0.5rem + var(--safe-bottom)));
+  /* Safe-area insets for notched iPhones / Android gesture bars */
+  padding: 0.35rem 0.5rem max(0.55rem, calc(0.35rem + var(--safe-bottom)));
 }
 
 @media (min-width: 48rem) {
@@ -104,6 +184,7 @@ function handleTabClick(): void {
 .app-navigation__inner {
   max-width: 32rem;
   margin: 0 auto;
+  width: 100%;
 }
 
 .app-navigation__list {
@@ -127,13 +208,13 @@ function handleTabClick(): void {
   align-items: center;
   justify-content: center;
   width: 100%;
-  padding: 0.15rem 0;
-  gap: 0.2rem;
-  border-radius: 0.65rem;
+  padding: 0.2rem 0;
+  gap: 0.15rem;
   color: var(--color-asphalt);
   text-decoration: none;
   touch-action: manipulation;
   transition: transform 90ms ease, color 120ms ease;
+  position: relative;
 }
 
 .app-navigation__item:active {
@@ -143,15 +224,38 @@ function handleTabClick(): void {
 .app-navigation__icon-box {
   display: grid;
   place-items: center;
-  width: 1.5rem;
+  width: 1.75rem;
   height: 1.5rem;
   transition: transform 120ms ease;
 }
 
 .tab-icon {
-  transition: stroke-width 120ms ease;
+  transition: stroke-width 120ms ease, transform 120ms ease;
 }
 
+.app-navigation__label {
+  font-family: var(--font-ui);
+  font-size: 0.68rem;
+  font-weight: 650;
+  line-height: 1.1;
+  text-align: center;
+  color: var(--color-asphalt);
+  transition: color 120ms ease, font-weight 120ms ease;
+}
+
+/* Minimalist Clean Active Bar Indicator */
+.app-navigation__active-bar {
+  width: 0;
+  height: 3px;
+  border-radius: 9999px;
+  background: transparent;
+  transition: width 150ms ease, background-color 150ms ease;
+  margin-top: 1px;
+}
+
+/* ═══════════════════════════════════════════════════════════════
+   CLEAN ACTIVE STATE (INK COLOR + ACCENT BAR)
+   ═══════════════════════════════════════════════════════════════ */
 .app-navigation__item--active {
   color: var(--color-ink);
 }
@@ -161,29 +265,22 @@ function handleTabClick(): void {
 }
 
 .app-navigation__item--active .tab-icon {
-  stroke-width: 2.7;
+  stroke: var(--color-ink);
+  stroke-width: 2.3;
 }
 
-.app-navigation__label {
-  font-size: 0.68rem;
-  font-weight: 800;
-  letter-spacing: -0.01em;
-  line-height: 1;
+.app-navigation__item--active .app-navigation__label {
+  font-weight: 850;
+  color: var(--color-ink);
 }
 
-.app-navigation__marker {
-  width: 0.25rem;
-  height: 0.2rem;
-  border-radius: 50%;
-  background: transparent;
-  transition: background-color 150ms ease, width 150ms ease;
-}
-
-.app-navigation__item--active .app-navigation__marker {
-  width: 0.85rem;
-  height: 0.2rem;
-  border-radius: 1rem;
+.app-navigation__item--active .app-navigation__active-bar {
+  width: 1.1rem;
   background: var(--color-chain-lime);
   border: 1px solid var(--color-ink);
+}
+
+.app-navigation__item--unavailable {
+  opacity: 0.35;
 }
 </style>

@@ -10,6 +10,8 @@ import {
   type NearbyExploreResponse,
   type NearbyPlace,
   type NearbyRoute,
+  type RouteElevationResponse,
+  type SaveItemResponse,
 } from '@goweskit/contracts';
 
 type ExploreItem = NearbyPlace | NearbyRoute;
@@ -250,10 +252,85 @@ function useMyLocation(): void {
   );
 }
 
-function selectItem(selection: { kind: 'place' | 'route'; id: string }): void {
+const { user } = useAuth();
+const elevationData = ref<RouteElevationResponse | null>(null);
+const loadingElevation = ref(false);
+const savedItems = ref<Set<string>>(new Set());
+const savingItem = ref(false);
+const saveToast = ref('');
+
+async function selectItem(selection: { kind: 'place' | 'route'; id: string }): Promise<void> {
   selectedId.value = selection.id;
   sheetPosition.value = 'half';
+  elevationData.value = null;
+
+  if (selection.kind === 'route') {
+    loadingElevation.value = true;
+    try {
+      elevationData.value = await api<RouteElevationResponse>(
+        `/explore/routes/${selection.id}/elevation`,
+      );
+    } catch {
+      elevationData.value = null;
+    } finally {
+      loadingElevation.value = false;
+    }
+  }
 }
+
+async function saveSelectedItem(item: ExploreItem): Promise<void> {
+  if (!user.value) {
+    await navigateTo(`/login?redirect=/explore`);
+    return;
+  }
+  savingItem.value = true;
+  saveToast.value = '';
+  try {
+    await api<SaveItemResponse>('/user/saved-items', {
+      method: 'POST',
+      body: {
+        itemKind: item.kind,
+        itemId: item.id,
+      },
+    });
+    savedItems.value.add(item.id);
+    saveToast.value = '✓ Disimpan ke Profil!';
+    setTimeout(() => {
+      saveToast.value = '';
+    }, 2500);
+  } catch (error: unknown) {
+    saveToast.value = getApiErrorMessage(error);
+  } finally {
+    savingItem.value = false;
+  }
+}
+
+const elevationSvgPath = computed(() => {
+  if (!elevationData.value || elevationData.value.elevationProfile.length < 2) return '';
+  const pts = elevationData.value.elevationProfile;
+  const lastPt = pts[pts.length - 1];
+  const maxDist = (lastPt ? lastPt.distanceMeters : 1) || 1;
+  const minElev = Math.min(...pts.map(p => p.elevationMeters));
+  const maxElev = Math.max(...pts.map(p => p.elevationMeters));
+  const elevRange = maxElev - minElev || 1;
+
+  const w = 300;
+  const h = 45;
+  const padding = 5;
+
+  const coords = pts.map(p => {
+    const x = Math.round((p.distanceMeters / maxDist) * w);
+    const y = Math.round(h - padding - ((p.elevationMeters - minElev) / elevRange) * (h - padding * 2));
+    return `${x},${y}`;
+  });
+
+  return `M ${coords.join(' L ')}`;
+});
+
+const elevationFillPath = computed(() => {
+  if (!elevationSvgPath.value) return '';
+  return `${elevationSvgPath.value} L 300 45 L 0 45 Z`;
+});
 
 function formatDistance(meters: number): string {
   return meters < 1000
@@ -457,15 +534,18 @@ onBeforeUnmount(() => {
           <div v-if="selectedItem.kind === 'route'" class="route-spark-box">
             <div class="spark-labels">
               <span>+{{ selectedItem.elevationGainMeters }}m Elevasi</span>
-              <span class="spark-difficulty">{{ selectedItem.difficulty }} · {{ selectedItem.surface }}</span>
+              <span v-if="elevationData" class="spark-gradient">
+                Avg {{ elevationData.averageGradientPercent }}% · Max {{ elevationData.maxGradientPercent }}%
+              </span>
+              <span v-else class="spark-difficulty">{{ selectedItem.difficulty }} · {{ selectedItem.surface }}</span>
             </div>
             <svg viewBox="0 0 300 45" class="spark-svg" aria-hidden="true">
               <path
-                d="M0 40 Q 60 30, 120 22 T 240 10 L 300 6 L 300 45 L 0 45 Z"
+                :d="elevationFillPath || 'M0 40 Q 60 30, 120 22 T 240 10 L 300 6 L 300 45 L 0 45 Z'"
                 fill="rgba(56, 189, 248, 0.25)"
               />
               <path
-                d="M0 40 Q 60 30, 120 22 T 240 10 L 300 6"
+                :d="elevationSvgPath || 'M0 40 Q 60 30, 120 22 T 240 10 L 300 6'"
                 fill="none"
                 stroke="#0284c7"
                 stroke-width="2.5"
@@ -474,12 +554,23 @@ onBeforeUnmount(() => {
             </svg>
           </div>
 
+          <p v-if="saveToast" class="save-toast-chip" role="status">{{ saveToast }}</p>
+
           <div class="card-bottom-actions">
             <NuxtLink class="action-btn action-btn--primary" to="/safety">
               Mulai Gowes 🚴
             </NuxtLink>
+            <button
+              class="action-btn action-btn--bookmark"
+              :class="{ 'action-btn--saved': savedItems.has(selectedItem.id) }"
+              type="button"
+              :disabled="savingItem"
+              @click="saveSelectedItem(selectedItem)"
+            >
+              {{ savedItems.has(selectedItem.id) ? '⭐ Tersimpan' : '☆ Simpan' }}
+            </button>
             <button class="action-btn action-btn--secondary" type="button" @click="showContributionsModal = true">
-              Ulasan &amp; Laporan
+              Ulasan
             </button>
           </div>
         </article>
@@ -656,16 +747,19 @@ onBeforeUnmount(() => {
 
         <div v-if="selectedItem.kind === 'route'" class="route-spark-box">
           <div class="spark-labels">
-            <span>+{{ selectedItem.elevationGainMeters }}m Climb</span>
-            <span class="spark-difficulty">{{ selectedItem.difficulty }} · {{ selectedItem.surface }}</span>
+            <span>+{{ selectedItem.elevationGainMeters }}m Elevasi</span>
+            <span v-if="elevationData" class="spark-gradient">
+              Avg {{ elevationData.averageGradientPercent }}% · Max {{ elevationData.maxGradientPercent }}%
+            </span>
+            <span v-else class="spark-difficulty">{{ selectedItem.difficulty }} · {{ selectedItem.surface }}</span>
           </div>
           <svg viewBox="0 0 300 45" class="spark-svg" aria-hidden="true">
             <path
-              d="M0 40 Q 60 30, 120 22 T 240 10 L 300 6 L 300 45 L 0 45 Z"
+              :d="elevationFillPath || 'M0 40 Q 60 30, 120 22 T 240 10 L 300 6 L 300 45 L 0 45 Z'"
               fill="rgba(56, 189, 248, 0.2)"
             />
             <path
-              d="M0 40 Q 60 30, 120 22 T 240 10 L 300 6"
+              :d="elevationSvgPath || 'M0 40 Q 60 30, 120 22 T 240 10 L 300 6'"
               fill="none"
               stroke="#0284c7"
               stroke-width="2.5"
@@ -674,12 +768,23 @@ onBeforeUnmount(() => {
           </svg>
         </div>
 
+        <p v-if="saveToast" class="save-toast-chip" role="status">{{ saveToast }}</p>
+
         <div class="card-bottom-actions">
           <NuxtLink class="action-btn action-btn--primary" to="/safety">
             Mulai Gowes 🚴
           </NuxtLink>
+          <button
+            class="action-btn action-btn--bookmark"
+            :class="{ 'action-btn--saved': savedItems.has(selectedItem.id) }"
+            type="button"
+            :disabled="savingItem"
+            @click="saveSelectedItem(selectedItem)"
+          >
+            {{ savedItems.has(selectedItem.id) ? '⭐ Tersimpan' : '☆ Simpan' }}
+          </button>
           <button class="action-btn action-btn--secondary" type="button" @click="showContributionsModal = true">
-            Ulasan &amp; Laporan
+            Ulasan
           </button>
         </div>
       </article>
@@ -1198,33 +1303,42 @@ onBeforeUnmount(() => {
   color: var(--color-ink);
 }
 
-.spark-difficulty {
-  color: var(--color-asphalt);
-  text-transform: capitalize;
+.spark-gradient {
+  font-family: var(--font-mono);
+  color: #0284c7;
+  font-weight: 850;
 }
 
-.spark-svg {
-  width: 100%;
-  height: 2.2rem;
+.save-toast-chip {
+  margin: 0;
+  padding: 0.25rem 0.5rem;
+  border-radius: 0.5rem;
+  background: #f0fdf4;
+  color: #166534;
+  font-size: 0.72rem;
+  font-weight: 850;
+  text-align: center;
+  border: 1px solid #bbf7d0;
 }
 
 .card-bottom-actions {
   display: grid;
-  grid-template-columns: 1.2fr 1fr;
-  gap: 0.45rem;
+  grid-template-columns: 1fr 1fr 1fr;
+  gap: 0.4rem;
   margin-top: 0.2rem;
 }
 
 .action-btn {
   display: grid;
   place-items: center;
-  padding: 0.5rem 0.75rem;
+  padding: 0.5rem 0.5rem;
   border-radius: 0.75rem;
-  font-size: 0.78rem;
+  font-size: 0.74rem;
   font-weight: 850;
   text-decoration: none;
   cursor: pointer;
-  transition: transform 90ms ease;
+  transition: transform 90ms ease, background 120ms ease;
+  white-space: nowrap;
 }
 
 .action-btn:active {
@@ -1235,6 +1349,18 @@ onBeforeUnmount(() => {
   background: var(--color-ink);
   color: var(--color-white);
   border: none;
+}
+
+.action-btn--bookmark {
+  background: var(--color-sand);
+  color: var(--color-ink);
+  border: 1px solid rgb(23 32 42 / 15%);
+}
+
+.action-btn--saved {
+  background: #fef08a;
+  border-color: #eab308;
+  color: #854d0e;
 }
 
 .action-btn--secondary {

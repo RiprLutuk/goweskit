@@ -23,6 +23,38 @@ const isJoined = computed(
   () => detail.value?.viewerParticipation?.status === 'joined',
 );
 
+const startDate = computed(() =>
+  detail.value?.event.startsAt ? new Date(detail.value.event.startsAt) : null,
+);
+
+const monthLabel = computed(() =>
+  startDate.value
+    ? startDate.value.toLocaleString('id-ID', { month: 'short' }).toUpperCase()
+    : '',
+);
+
+const dayNumber = computed(() => {
+  if (!startDate.value) return '';
+  const d = startDate.value.getDate();
+  return d < 10 ? `0${d}` : String(d);
+});
+
+const dayName = computed(() =>
+  startDate.value
+    ? startDate.value.toLocaleString('id-ID', { weekday: 'long' })
+    : '',
+);
+
+const timeLabel = computed(() =>
+  startDate.value
+    ? startDate.value.toLocaleTimeString('id-ID', {
+        hour: '2-digit',
+        minute: '2-digit',
+        hour12: false,
+      })
+    : '',
+);
+
 async function loadEvent(): Promise<void> {
   loading.value = true;
   errorMessage.value = '';
@@ -64,9 +96,10 @@ onMounted(loadEvent);
 </script>
 
 <template>
-  <div class="page-stack event-detail-page">
-    <NuxtLink class="back-link" to="/community">← Community directory</NuxtLink>
-    <p v-if="loading" class="state-card" role="status">Loading ride details…</p>
+  <div class="native-container event-detail-page">
+    <NuxtLink class="back-link" to="/community">← Direktori Komunitas</NuxtLink>
+
+    <p v-if="loading" class="state-card" role="status">Memuat jadwal gowes…</p>
     <div
       v-else-if="errorMessage"
       class="state-card state-card--error"
@@ -74,101 +107,117 @@ onMounted(loadEvent);
     >
       <p>{{ errorMessage }}</p>
       <button class="button button--secondary" type="button" @click="loadEvent">
-        Try again
+        Coba Lagi
       </button>
     </div>
+
     <template v-else-if="detail">
-      <header class="event-hero">
-        <div class="event-hero__copy">
-          <span class="status-chip status-chip--coral">{{
-            detail.event.status
-          }}</span>
-          <p class="event-hero__community">
-            Hosted by
-            <NuxtLink :to="`/community/${detail.event.community.id}`">{{
-              detail.event.community.name
-            }}</NuxtLink>
-          </p>
-          <h1>{{ detail.event.title }}</h1>
-          <p>{{ formatCommunityDate(detail.event.startsAt) }}</p>
-        </div>
-        <div class="event-join-card">
-          <span class="event-join-card__count"
-            >{{ detail.event.participantCount
-            }}{{
-              detail.event.capacity ? ` / ${detail.event.capacity}` : ''
-            }}</span
+      <!-- 1. Hero Event Card -->
+      <header class="native-event-hero">
+        <div class="hero-top-bar">
+          <NuxtLink
+            class="host-community-badge"
+            :to="`/community/${detail.event.community.id}`"
           >
-          <strong>riders joined</strong>
+            🚲 {{ detail.event.community.name }}
+          </NuxtLink>
+          <span class="status-badge" :class="`status-badge--${detail.event.status}`">
+            {{ detail.event.status === 'scheduled' ? 'Terjadwal' : detail.event.status }}
+          </span>
+        </div>
+
+        <div class="hero-content-row">
+          <!-- Calendar Stamp -->
+          <div class="calendar-hero-stamp" aria-hidden="true">
+            <div class="stamp-month">{{ monthLabel }}</div>
+            <div class="stamp-day">{{ dayNumber }}</div>
+          </div>
+
+          <div class="hero-text-block">
+            <h1 class="event-title">{{ detail.event.title }}</h1>
+            <p class="event-schedule">
+              📅 {{ dayName }}, {{ formatCommunityDate(detail.event.startsAt) }} · ⏰ {{ timeLabel }} WIB
+            </p>
+          </div>
+        </div>
+
+        <!-- Join Action Box -->
+        <div class="event-join-box">
+          <div class="join-counter">
+            <strong class="counter-num">
+              {{ detail.event.participantCount }}
+              <span v-if="detail.event.capacity">/ {{ detail.event.capacity }}</span>
+            </strong>
+            <span class="counter-lbl">Riders Terdaftar</span>
+          </div>
+
           <button
-            class="button button--primary"
+            class="button button--primary join-btn"
             type="button"
             :disabled="joining || isJoined"
             @click="joinEvent"
           >
             {{
               joining
-                ? 'Saving your place…'
+                ? 'Mendaftarkan…'
                 : isJoined
-                  ? 'You joined this ride'
-                  : 'Join this ride'
+                  ? '✓ Anda Terdaftar di Mabar Ini'
+                  : '🚴 Gabung Gowes Bareng'
             }}
           </button>
-          <p v-if="!user">Sign in is required before joining.</p>
-          <p v-if="joinMessage" class="join-message" role="status">
-            {{ joinMessage }}
-          </p>
         </div>
+
+        <p v-if="!user" class="permission-note">
+          Masuk ke akun Anda untuk ikut bergabung dalam jadwal mabar ini.
+        </p>
+        <p v-if="joinMessage" class="join-message" role="status">
+          {{ joinMessage }}
+        </p>
       </header>
 
-      <section class="event-specs" aria-labelledby="ride-plan-title">
-        <div>
-          <p class="section-heading__eyebrow">Ride plan</p>
-          <h2 id="ride-plan-title">Know before you go</h2>
+      <!-- 2. Details & Specs -->
+      <section class="native-section" aria-labelledby="ride-plan-title">
+        <h3 id="ride-plan-title" class="section-title">Informasi &amp; Rencana Gowes</h3>
+
+        <div class="specs-grid">
+          <div class="spec-tile">
+            <span class="tile-lbl">Titik Kumpul</span>
+            <strong class="tile-val">📌 {{ detail.event.meetingArea }}</strong>
+          </div>
+
+          <div class="spec-tile">
+            <span class="tile-lbl">Tingkat Kesulitan</span>
+            <strong class="tile-val capitalize">
+              {{ detail.event.difficulty === 'easy' ? '🟢 Santai (Easy)' : detail.event.difficulty === 'moderate' ? '🟡 Sedang (Moderate)' : '🔴 Nanjak (Hard)' }}
+            </strong>
+          </div>
+
+          <div class="spec-tile">
+            <span class="tile-lbl">Tipe Sepeda</span>
+            <strong class="tile-val capitalize">
+              {{ detail.event.bicycleTypes.map((v) => v.replaceAll('_', ' ')).join(', ') }}
+            </strong>
+          </div>
+
+          <div class="spec-tile">
+            <span class="tile-lbl">Visibilitas</span>
+            <strong class="tile-val capitalize">
+              {{ detail.event.visibility === 'public' ? '🌐 Terbuka Umum' : '🔒 Khusus Member' }}
+            </strong>
+          </div>
         </div>
-        <dl>
-          <div>
-            <dt>Meeting area</dt>
-            <dd>{{ detail.event.meetingArea }}</dd>
-          </div>
-          <div>
-            <dt>Difficulty</dt>
-            <dd>{{ detail.event.difficulty }}</dd>
-          </div>
-          <div>
-            <dt>Bicycles</dt>
-            <dd>
-              {{
-                detail.event.bicycleTypes
-                  .map((value) => value.replaceAll('_', ' '))
-                  .join(', ')
-              }}
-            </dd>
-          </div>
-          <div>
-            <dt>Visibility</dt>
-            <dd>{{ detail.event.visibility.replace('_', ' ') }}</dd>
-          </div>
-          <div>
-            <dt>Requirements</dt>
-            <dd>
-              {{
-                detail.event.requirements ||
-                'No additional requirements were provided.'
-              }}
-            </dd>
-          </div>
-        </dl>
+
+        <div v-if="detail.event.requirements" class="requirements-box">
+          <span class="req-title">⚠️ Perlengkapan &amp; Syarat Wajib:</span>
+          <p class="req-content">{{ detail.event.requirements }}</p>
+        </div>
       </section>
 
-      <aside class="ride-safety-note">
-        <strong
-          >This is a community listing, not navigation or emergency
-          support.</strong
-        >
+      <!-- Safety Disclaimer -->
+      <aside class="native-safety-disclaimer">
+        <strong>🛡️ Komunitas Mandiri:</strong>
         <p>
-          Confirm the route, weather, equipment, and organizer instructions
-          before leaving.
+          Kegiatan gowes diselenggarakan secara sukarela oleh komunitas. GowesKit bukan penyedia layanan darurat jalan raya. Pastikan kondisi rem, ban, helm, dan penerangan siap sebelum berangkat.
         </p>
       </aside>
     </template>
@@ -176,116 +225,251 @@ onMounted(loadEvent);
 </template>
 
 <style scoped>
+.event-detail-page {
+  display: grid;
+  gap: 1.25rem;
+  padding-bottom: 2.5rem;
+}
+
 .back-link {
-  width: fit-content;
+  font-size: 0.78rem;
+  font-weight: 850;
+  text-decoration: none;
   color: var(--color-asphalt);
-  font-size: 0.85rem;
-  font-weight: 800;
 }
-.status-chip--coral {
-  background: var(--color-coral);
-  text-transform: capitalize;
-}
-.event-hero {
+
+.native-event-hero {
   display: grid;
-  padding: clamp(1.25rem, 5vw, 2.2rem);
-  border: 1px solid rgb(64 80 95 / 14%);
-  border-radius: var(--radius-card);
+  gap: 1rem;
+  padding: 1.25rem;
+  border-radius: 1.35rem;
   background: var(--color-white);
-  box-shadow: var(--shadow-card);
-  gap: 1.5rem;
+  border: 1px solid var(--color-sand);
+  box-shadow: 0 4px 20px rgb(23 32 42 / 5%);
 }
-.event-hero__community {
-  margin: 1rem 0 0;
-  color: var(--color-asphalt);
-  font-size: 0.8rem;
-  font-weight: 750;
-}
-.event-hero h1 {
-  margin: 0.5rem 0 0.75rem;
-  font-size: clamp(2.2rem, 10vw, 4.3rem);
-  line-height: 0.98;
-  letter-spacing: -0.055em;
-}
-.event-hero__copy > p:last-child {
-  margin: 0;
-  color: var(--color-asphalt);
-}
-.event-join-card {
-  display: grid;
-  align-content: start;
-  padding: 1.15rem;
-  border-radius: 1rem;
-  background: rgb(255 140 117 / 17%);
+
+.hero-top-bar {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
   gap: 0.5rem;
 }
-.event-join-card__count {
-  font-family: ui-monospace, SFMono-Regular, Menlo, monospace;
-  font-size: 2.2rem;
+
+.host-community-badge {
+  font-size: 0.76rem;
+  font-weight: 850;
+  color: var(--color-ink);
+  text-decoration: none;
+  background: var(--color-sand);
+  padding: 0.2rem 0.6rem;
+  border-radius: 9999px;
+}
+
+.status-badge {
+  font-family: var(--font-mono);
+  font-size: 0.66rem;
   font-weight: 900;
-  line-height: 1;
+  text-transform: uppercase;
+  padding: 0.15rem 0.5rem;
+  border-radius: 9999px;
+  background: #dcfce7;
+  color: #15803d;
 }
-.event-join-card p {
-  margin: 0;
-  color: var(--color-asphalt);
-  font-size: 0.78rem;
-  line-height: 1.45;
+
+.status-badge--cancelled {
+  background: #fee2e2;
+  color: #b91c1c;
 }
-.event-join-card .join-message {
-  padding: 0.65rem;
-  border-radius: 0.65rem;
-  background: var(--color-white);
+
+.hero-content-row {
+  display: flex;
+  align-items: center;
+  gap: 1rem;
+}
+
+.calendar-hero-stamp {
+  flex: 0 0 3.8rem;
+  height: 4.2rem;
+  border-radius: 1rem;
+  background: var(--color-canvas);
+  border: 1px solid var(--color-sand);
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  overflow: hidden;
+  box-shadow: 0 2px 8px rgb(0 0 0 / 5%);
+}
+
+.stamp-month {
+  width: 100%;
+  padding: 0.15rem 0;
+  background: var(--color-coral);
+  color: var(--color-white);
+  font-family: var(--font-mono);
+  font-size: 0.65rem;
+  font-weight: 900;
+  text-align: center;
+}
+
+.stamp-day {
+  flex: 1;
+  display: grid;
+  place-items: center;
+  font-size: 1.5rem;
+  font-weight: 900;
   color: var(--color-ink);
 }
-.event-specs {
-  padding: 1.25rem;
-  border: 1px solid var(--color-sand);
-  border-radius: var(--radius-card);
-  background: var(--color-white);
-}
-.event-specs h2 {
-  margin: 0.25rem 0 0;
-}
-.event-specs dl {
+
+.hero-text-block {
   display: grid;
-  margin: 1rem 0 0;
-  gap: 0.8rem;
+  gap: 0.25rem;
+  min-width: 0;
 }
-.event-specs dl div {
-  padding-top: 0.8rem;
-  border-top: 1px solid var(--color-sand);
-}
-.event-specs dt {
-  font-size: 0.72rem;
+
+.event-title {
+  margin: 0;
+  font-size: 1.45rem;
   font-weight: 850;
+  letter-spacing: -0.02em;
+  color: var(--color-ink);
+  line-height: 1.2;
+}
+
+.event-schedule {
+  margin: 0;
+  font-size: 0.8rem;
+  color: var(--color-asphalt);
+  font-weight: 600;
+}
+
+/* Join Box */
+.event-join-box {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 0.75rem;
+  padding: 0.85rem 1.1rem;
+  border-radius: 1rem;
+  background: var(--color-canvas);
+  border: 1px solid var(--color-sand);
+  flex-wrap: wrap;
+}
+
+.join-counter {
+  display: grid;
+  gap: 0.1rem;
+}
+
+.counter-num {
+  font-family: var(--font-mono);
+  font-size: 1.15rem;
+  color: var(--color-ink);
+}
+
+.counter-lbl {
+  font-size: 0.7rem;
+  color: var(--color-asphalt);
+}
+
+.join-btn {
+  padding: 0.55rem 1.15rem;
+  font-size: 0.82rem;
+  font-weight: 850;
+}
+
+.permission-note {
+  margin: 0;
+  font-size: 0.74rem;
+  color: var(--color-asphalt);
+}
+
+.join-message {
+  margin: 0;
+  font-size: 0.78rem;
+  font-weight: 800;
+  color: #166534;
+}
+
+/* Specs */
+.native-section {
+  display: grid;
+  gap: 0.75rem;
+}
+
+.section-title {
+  margin: 0;
+  font-size: 1.05rem;
+  font-weight: 850;
+}
+
+.specs-grid {
+  display: grid;
+  grid-template-columns: repeat(2, 1fr);
+  gap: 0.5rem;
+}
+
+@media (max-width: 32rem) {
+  .specs-grid {
+    grid-template-columns: 1fr;
+  }
+}
+
+.spec-tile {
+  padding: 0.8rem;
+  border-radius: 0.85rem;
+  background: var(--color-white);
+  border: 1px solid var(--color-sand);
+  display: grid;
+  gap: 0.2rem;
+}
+
+.tile-lbl {
+  font-size: 0.68rem;
+  font-weight: 800;
+  color: var(--color-asphalt);
   text-transform: uppercase;
 }
-.event-specs dd {
-  margin: 0.25rem 0 0;
+
+.tile-val {
+  font-size: 0.82rem;
+  color: var(--color-ink);
+}
+
+.requirements-box {
+  padding: 0.85rem;
+  border-radius: 0.85rem;
+  background: #fefce8;
+  border: 1px solid #fef08a;
+  display: grid;
+  gap: 0.25rem;
+}
+
+.req-title {
+  font-size: 0.72rem;
+  font-weight: 850;
+  color: #854d0e;
+}
+
+.req-content {
+  margin: 0;
+  font-size: 0.8rem;
+  color: #713f12;
+  line-height: 1.4;
+}
+
+.native-safety-disclaimer {
+  padding: 0.85rem 1rem;
+  border-radius: 0.95rem;
+  background: var(--color-canvas);
+  border: 1px dashed rgb(23 32 42 / 20%);
+  display: grid;
+  gap: 0.2rem;
+  font-size: 0.72rem;
   color: var(--color-asphalt);
-  line-height: 1.55;
-  text-transform: capitalize;
+  line-height: 1.4;
 }
-.ride-safety-note {
-  padding: 1rem;
-  border-left: 0.35rem solid var(--color-sky);
-  border-radius: 0 1rem 1rem 0;
-  background: rgb(142 221 244 / 17%);
-}
-.ride-safety-note p {
-  margin: 0.35rem 0 0;
-  color: var(--color-asphalt);
-  line-height: 1.5;
-}
-.state-card--error p {
-  margin-top: 0;
-}
-@media (min-width: 48rem) {
-  .event-hero {
-    grid-template-columns: minmax(0, 1fr) minmax(14rem, 18rem);
-  }
-  .event-specs dl {
-    grid-template-columns: repeat(2, minmax(0, 1fr));
-  }
+
+.native-safety-disclaimer strong {
+  color: var(--color-ink);
 }
 </style>

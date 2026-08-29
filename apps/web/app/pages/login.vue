@@ -3,6 +3,7 @@ const { login } = useAuth();
 const email = ref('');
 const password = ref('');
 const submitting = ref(false);
+const demoLoggingIn = ref(false);
 const errorMessage = ref('');
 
 async function submit(): Promise<void> {
@@ -17,50 +18,180 @@ async function submit(): Promise<void> {
     submitting.value = false;
   }
 }
+
+async function quickDemoLogin(): Promise<void> {
+  demoLoggingIn.value = true;
+  errorMessage.value = '';
+  try {
+    await login({
+      email: 'demo@goweskit.local',
+      password: 'GowesKitDemo123!',
+    });
+    await navigateTo('/me');
+  } catch (error: unknown) {
+    errorMessage.value = getApiErrorMessage(error);
+  } finally {
+    demoLoggingIn.value = false;
+  }
+}
 </script>
 
 <template>
-  <section class="form-card" aria-labelledby="login-title">
-    <p class="welcome-card__eyebrow">Welcome back</p>
-    <h1 id="login-title">Sign in to your Garage.</h1>
-    <form class="form-stack" @submit.prevent="submit">
-      <label>
-        <span>Email</span>
-        <input
-          v-model="email"
-          type="email"
-          autocomplete="email"
-          required
-          maxlength="320"
-        />
-      </label>
-      <label>
-        <span>Password</span>
-        <input
-          v-model="password"
-          type="password"
-          autocomplete="current-password"
-          required
-          maxlength="128"
-        />
-      </label>
-      <p
-        v-if="errorMessage"
-        class="form-message form-message--error"
-        role="alert"
-      >
-        {{ errorMessage }}
-      </p>
-      <button
-        class="button button--primary"
-        type="submit"
-        :disabled="submitting"
-      >
-        {{ submitting ? 'Signing in…' : 'Sign in' }}
-      </button>
-    </form>
-    <p class="form-footer">
-      New here? <NuxtLink to="/register">Create an account</NuxtLink>.
-    </p>
-  </section>
+  <div class="native-container auth-container">
+    <section class="native-auth-card" aria-labelledby="login-title">
+      <div class="auth-header">
+        <span class="auth-icon">🚲</span>
+        <span class="auth-eyebrow">Selamat Datang Kembali</span>
+        <h1 id="login-title" class="auth-title">Masuk ke Akun</h1>
+        <p class="auth-sub">Kelola garasi, catatan servis, dan kontak darurat solo-ride Anda.</p>
+      </div>
+
+      <form class="auth-form" @submit.prevent="submit">
+        <label>
+          <span>Alamat Email</span>
+          <input
+            v-model="email"
+            type="email"
+            autocomplete="email"
+            required
+            maxlength="320"
+            placeholder="nama@email.com"
+          />
+        </label>
+        <label>
+          <span>Kata Sandi</span>
+          <input
+            v-model="password"
+            type="password"
+            autocomplete="current-password"
+            required
+            maxlength="128"
+            placeholder="••••••••"
+          />
+        </label>
+
+        <p
+          v-if="errorMessage"
+          class="state-card state-card--error"
+          role="alert"
+        >
+          {{ errorMessage }}
+        </p>
+
+        <button
+          class="button button--primary button--full"
+          type="submit"
+          :disabled="submitting"
+        >
+          {{ submitting ? 'Memproses Masuk…' : 'Masuk ke Akun' }}
+        </button>
+
+        <button
+          class="button button--sand button--full"
+          type="button"
+          :disabled="demoLoggingIn"
+          @click="quickDemoLogin"
+        >
+          {{ demoLoggingIn ? 'Memuat Demo…' : '⚡ Masuk Akun Demo (1-Klik)' }}
+        </button>
+      </form>
+
+      <div class="auth-footer">
+        <span>Belum punya akun? <NuxtLink to="/register">Daftar Akun Baru</NuxtLink></span>
+      </div>
+    </section>
+  </div>
 </template>
+
+<style scoped>
+.auth-container {
+  display: grid;
+  place-items: center;
+  min-height: calc(80vh - var(--header-height));
+  padding-bottom: 2.5rem;
+}
+
+.native-auth-card {
+  width: 100%;
+  max-width: 26rem;
+  padding: 1.5rem;
+  border-radius: 1.35rem;
+  background: var(--color-white);
+  border: 1px solid var(--color-sand);
+  box-shadow: 0 6px 24px rgb(23 32 42 / 6%);
+  display: grid;
+  gap: 1.25rem;
+}
+
+.auth-header {
+  text-align: center;
+  display: grid;
+  gap: 0.25rem;
+}
+
+.auth-icon {
+  font-size: 2.5rem;
+  margin-bottom: 0.25rem;
+}
+
+.auth-eyebrow {
+  font-family: var(--font-mono);
+  font-size: 0.72rem;
+  font-weight: 850;
+  text-transform: uppercase;
+  color: var(--color-asphalt);
+  letter-spacing: 0.04em;
+}
+
+.auth-title {
+  margin: 0;
+  font-size: 1.5rem;
+  font-weight: 850;
+  letter-spacing: -0.03em;
+  color: var(--color-ink);
+}
+
+.auth-sub {
+  margin: 0;
+  font-size: 0.8rem;
+  color: var(--color-asphalt);
+  line-height: 1.35;
+}
+
+.auth-form {
+  display: grid;
+  gap: 0.85rem;
+}
+
+.auth-form label {
+  display: grid;
+  gap: 0.25rem;
+  font-size: 0.76rem;
+  font-weight: 800;
+  color: var(--color-asphalt);
+}
+
+.auth-form input {
+  padding: 0.6rem 0.75rem;
+  border-radius: 0.75rem;
+  border: 1px solid var(--color-sand);
+  background: var(--color-canvas);
+  font-size: 0.84rem;
+  font-weight: 750;
+  color: var(--color-ink);
+  outline: none;
+}
+
+.auth-footer {
+  text-align: center;
+  font-size: 0.78rem;
+  color: var(--color-asphalt);
+  padding-top: 0.5rem;
+  border-top: 1px solid rgb(23 32 42 / 6%);
+}
+
+.auth-footer a {
+  color: var(--color-ink);
+  font-weight: 850;
+}
+</style>

@@ -128,57 +128,58 @@ async function evaluate(): Promise<void> {
 </script>
 
 <template>
-  <div class="page-stack upgrade-page">
-    <header class="page-heading">
-      <span class="status-chip status-chip--lime">Upgrade Lab v1</span>
-      <h1>Check standards before buying a part.</h1>
-      <p>
-        GowesKit compares normalized technical values with 100% deterministic rules.
-        It never uses brand as compatibility truth, and will explicitly say when information is missing.
+  <div class="native-container upgrade-container">
+    <!-- Header -->
+    <header class="native-page-header">
+      <div class="header-topline">
+        <span class="native-eyebrow">Laboratorium Kompatibilitas</span>
+        <span class="rule-ver-chip">Engine v1.0 Deterministic</span>
+      </div>
+      <h1 class="native-title">Upgrade Lab</h1>
+      <p class="native-sub">
+        Uji kecocokan komponen baru pada sepeda Anda berdasarkan standar dimensi teknis nyata, bukan tebak-tebakan merek.
       </p>
     </header>
 
-    <p v-if="loading" class="state-card" role="status">
-      Preparing the workbench…
-    </p>
+    <p v-if="loading" class="state-card" role="status">Menyiapkan meja kerja laboratorium…</p>
 
-    <!-- Signed out state -->
-    <div v-else-if="!user" class="state-card guest-upgrade-box">
-      <div class="guest-upgrade-content">
-        <span class="guest-upgrade-icon">⚡</span>
-        <div>
-          <h2>Check Upgrades on Your Bike</h2>
-          <p>
-            Sign in to select any bicycle from your personal Garage and verify candidate component standards.
-          </p>
-        </div>
-      </div>
-      <div class="action-row">
-        <NuxtLink class="button button--primary" to="/login">Sign In</NuxtLink>
-        <NuxtLink class="button button--secondary" to="/register">Create Account</NuxtLink>
+    <!-- Signed-out state -->
+    <div v-else-if="!user" class="native-guest-box">
+      <div class="guest-icon">⚡</div>
+      <h2>Uji Kompatibilitas Komponen</h2>
+      <p>Masuk ke akun GowesKit Anda untuk memilih sepeda dari garasi dan menguji sparepart baru.</p>
+      <div class="guest-actions">
+        <NuxtLink class="button button--primary button--full" to="/login">Masuk ke Akun</NuxtLink>
+        <NuxtLink class="button button--secondary button--full" to="/register">Daftar Akun Baru</NuxtLink>
+        <button
+          class="button button--sand button--full"
+          type="button"
+          :disabled="demoLoggingIn"
+          @click="quickDemoLogin"
+        >
+          {{ demoLoggingIn ? 'Memuat Demo…' : '⚡ Buka Contoh Lab Demo (1-Klik)' }}
+        </button>
       </div>
     </div>
 
-    <div v-else-if="bikes.length === 0" class="state-card signed-out-state">
-      <strong>Add a bike before checking an upgrade.</strong>
-      <p>Only a nickname and bicycle type are required to begin.</p>
-      <NuxtLink class="button button--primary" to="/garage/new">
-        Add a bike
-      </NuxtLink>
+    <div v-else-if="bikes.length === 0" class="native-empty-box">
+      <div class="empty-icon">🚲</div>
+      <h2>Daftarkan Sepeda Terlebih Dahulu</h2>
+      <p>Anda memerlukan minimal 1 sepeda terdaftar di garasi untuk menguji suku cadang.</p>
+      <NuxtLink class="button button--primary" to="/garage/new">＋ Tambah Sepeda ke Garasi</NuxtLink>
     </div>
 
     <template v-else>
-      <!-- Quick Candidate Upgrade Presets -->
-      <section class="upgrade-presets-section" aria-labelledby="presets-title">
-        <p class="technical-label">Quick Test Scenarios</p>
-        <h2 id="presets-title" class="visually-hidden">Candidate Part Presets</h2>
-        <div class="preset-chips-bar">
+      <!-- Quick Test Scenario Presets -->
+      <section class="preset-section">
+        <span class="preset-label">⚡ Skenario Cepat Uji Suku Cadang</span>
+        <div class="preset-scroll-bar">
           <button
             class="preset-chip"
             type="button"
             @click="applyPreset('rear_axle', '12x148')"
           >
-            🏁 Rear Axle: 12×148 Boost
+            🏁 As Roda: 12×148 Boost
           </button>
           <button
             class="preset-chip"
@@ -199,347 +200,465 @@ async function evaluate(): Promise<void> {
             type="button"
             @click="applyPreset('fork_steerer', 'tapered_1_1_8_to_1_1_2')"
           >
-            🍴 Fork: Tapered 1⅛ to 1½
+            🍴 Fork: Tapered 1⅛–1½"
           </button>
           <button
             class="preset-chip"
             type="button"
             @click="applyPreset('wheel_size', 'iso_622')"
           >
-            ⭕ Wheel: ISO 622 (29" / 700c)
-          </button>
-          <button
-            class="preset-chip"
-            type="button"
-            @click="applyPreset('freehub_cassette', '', 'unknown')"
-          >
-            ❓ Freehub: Unknown Candidate
+            ⭕ Roda: ISO 622 (29" / 700c)
           </button>
         </div>
       </section>
 
-      <form
-        class="form-card form-card--wide upgrade-form"
-        @submit.prevent="evaluate"
-      >
-        <div class="form-stack">
-          <label for="upgrade-bike">
-            <span>Choose Bike from Your Garage</span>
-            <select id="upgrade-bike" v-model="selectedBikeId" required>
+      <!-- Evaluation Workbench Card -->
+      <form class="native-form-card" @submit.prevent="evaluate">
+        <div class="form-field-group">
+          <label>
+            <span class="field-label">Pilih Sepeda di Garasi Saya</span>
+            <select v-model="selectedBikeId" required class="native-select">
               <option v-for="bike in bikes" :key="bike.id" :value="bike.id">
                 {{ bike.nickname }} · {{ bike.bicycleType.name }}
               </option>
             </select>
           </label>
 
-          <label for="upgrade-rule">
-            <span>Standard to evaluate</span>
-            <select id="upgrade-rule" v-model="selectedRuleCode" required>
+          <label>
+            <span class="field-label">Standar Komponen yang Diuji</span>
+            <select v-model="selectedRuleCode" required class="native-select">
               <option v-for="rule in rules" :key="rule.code" :value="rule.code">
                 {{ rule.label }}
               </option>
             </select>
           </label>
 
-          <fieldset class="spec-fieldset">
-            <legend>Candidate Component Details</legend>
-            <label for="candidate-knowledge">
-              <span>Do you know the candidate part's specification?</span>
-              <select id="candidate-knowledge" v-model="candidateKnowledge">
-                <option value="known">I know the candidate standard</option>
-                <option value="unknown">I don’t know yet</option>
-              </select>
-            </label>
-            <label v-if="candidateKnowledge === 'known'" for="candidate-value">
-              <span>{{ activeRule?.candidateLabel ?? 'Candidate standard' }}</span>
-              <select id="candidate-value" v-model="candidateValue" required>
-                <option
-                  v-for="option in activeRule?.values ?? []"
-                  :key="option.code"
-                  :value="option.code"
-                >
-                  {{ option.label }}
-                </option>
-              </select>
-            </label>
-            <p v-else class="unknown-note">
-              <strong>Unknown is valid:</strong> The evaluator will pinpoint exactly which
-              detail you need to ask the seller or mechanic before buying.
-            </p>
-          </fieldset>
+          <!-- Candidate Specification Detail -->
+          <div class="candidate-spec-card">
+            <span class="spec-card-title">📦 Spesifikasi Suku Cadang Baru (Kandidat)</span>
+            <div class="knowledge-segmented">
+              <button
+                class="seg-btn"
+                :class="{ 'seg-btn--active': candidateKnowledge === 'known' }"
+                type="button"
+                @click="candidateKnowledge = 'known'"
+              >
+                Saya Tahu Standarnya
+              </button>
+              <button
+                class="seg-btn"
+                :class="{ 'seg-btn--active': candidateKnowledge === 'unknown' }"
+                type="button"
+                @click="candidateKnowledge = 'unknown'"
+              >
+                Belum Tahu / Tidak Ada Label
+              </button>
+            </div>
+
+            <div v-if="candidateKnowledge === 'known' && activeRule" class="candidate-val-picker">
+              <label>
+                <span class="field-label">Nilai / Ukuran Standar Kandidat</span>
+                <select v-model="candidateValue" class="native-select">
+                  <option v-for="val in activeRule.values" :key="val.code" :value="val.code">
+                    {{ val.label }}
+                  </option>
+                </select>
+              </label>
+            </div>
+
+            <div v-else class="unknown-guidance-pill">
+              <span>❓ GowesKit akan memandu Anda mencari info yang hilang tanpa membuat asumsi salah.</span>
+            </div>
+          </div>
 
           <button
-            class="button button--primary"
+            class="button button--primary button--full"
             type="submit"
             :disabled="evaluating"
           >
-            {{ evaluating ? 'Evaluating…' : '⚡ Evaluate Compatibility' }}
+            {{ evaluating ? 'Menganalisis Standar…' : '⚡ Evaluasi Kecocokan Sekarang' }}
           </button>
         </div>
       </form>
 
-      <p v-if="errorMessage" class="state-card state-card--error" role="alert">
-        {{ errorMessage }}
-      </p>
+      <p v-if="errorMessage" class="state-card state-card--error" role="alert">{{ errorMessage }}</p>
 
-      <!-- Evaluator Result Presentation -->
+      <!-- Evaluation Result Card -->
       <section
         v-if="result && presentation"
-        class="compatibility-result"
-        :class="`compatibility-result--${presentation.tone}`"
-        aria-labelledby="result-title"
-        aria-live="polite"
+        class="native-result-card"
+        :class="`result-card--${result.status}`"
       >
-        <header class="compatibility-result__header">
-          <span class="compatibility-result__symbol" aria-hidden="true">
-            {{ presentation.symbol }}
+        <div class="result-top-banner">
+          <span class="result-status-badge">{{ presentation.symbol }} {{ presentation.label }}</span>
+          <span v-if="result.ruleProvenance[0]" class="rule-ver-tag">
+            Aturan v{{ result.ruleProvenance[0].ruleVersion }}
           </span>
-          <div>
-            <p class="technical-label">100% Deterministic Result</p>
-            <h2 id="result-title">{{ presentation.label }}</h2>
-            <p class="result-summary">{{ result.humanExplanation }}</p>
+        </div>
+
+        <h2 class="result-headline">{{ result.humanExplanation }}</h2>
+        <p class="result-summary">{{ result.technicalExplanation }}</p>
+
+        <!-- Checks Performed Details -->
+        <div v-for="chk in result.checksPerformed" :key="chk.ruleCode" class="tech-compare-table">
+          <div class="compare-row">
+            <span class="compare-lbl">Spek Sepeda ({{ chk.label }})</span>
+            <strong class="compare-val">{{ chk.bikeValue || 'Belum Terdata (Unknown)' }}</strong>
           </div>
-        </header>
-
-        <!-- Checks Performed -->
-        <article
-          v-for="check in result.checksPerformed"
-          :key="check.ruleCode"
-          class="compatibility-check"
-        >
-          <div class="compatibility-check__heading">
-            <h3>{{ check.label }}</h3>
-            <span class="check-status" :class="`check-status--${check.status}`">
-              {{ check.status }}
-            </span>
+          <div class="compare-row">
+            <span class="compare-lbl">Spek Suku Cadang Baru</span>
+            <strong class="compare-val">{{ chk.candidateValue || 'Tidak Diketahui (Unknown)' }}</strong>
           </div>
+        </div>
 
-          <!-- Side by Side Values -->
-          <dl class="compatibility-values">
-            <div>
-              <dt>Saved on Bike</dt>
-              <dd>{{ check.bikeValue ?? 'Unknown' }}</dd>
-            </div>
-            <div>
-              <dt>Candidate Part</dt>
-              <dd>{{ check.candidateValue ?? 'Unknown' }}</dd>
-            </div>
-          </dl>
-
-          <p class="check-explanation">{{ check.humanExplanation }}</p>
-          <details class="check-technical">
-            <summary>Why this matters (Technical explanation)</summary>
-            <p>{{ check.technicalExplanation }}</p>
-          </details>
-          <p v-if="check.possibleFix" class="possible-fix">
-            <strong>Possible fix / Adapter:</strong> {{ check.possibleFix }}
-          </p>
-        </article>
-
-        <!-- Missing info warning if applicable -->
-        <div v-if="result.missingInformation.length" class="missing-block">
-          <h3>Need one more detail</h3>
-          <p>We need additional information to confirm this upgrade safely:</p>
+        <!-- Missing Info Guidance -->
+        <div v-if="result.missingInformation && result.missingInformation.length" class="missing-info-box">
+          <strong>⚠️ Data yang Perlu Anda Pastikan:</strong>
           <ul>
-            <li v-for="item in result.missingInformation" :key="item">
-              {{ item }}
-            </li>
+            <li v-for="info in result.missingInformation" :key="info">{{ info }}</li>
           </ul>
         </div>
 
-        <div class="result-detail-block">
-          <details>
-            <summary>Full Rule Logic Breakdown</summary>
-            <p>{{ result.technicalExplanation }}</p>
-          </details>
-          <p v-if="result.possibleFix" class="possible-fix">
-            <strong>Next step:</strong> {{ result.possibleFix }}
-          </p>
-          <NuxtLink class="text-link" :to="`/garage/${selectedBikeId}`">
-            Review this bike’s saved specifications in My Garage →
-          </NuxtLink>
+        <!-- Possible Fix / Guidance -->
+        <div v-if="result.possibleFix" class="next-step-box">
+          <strong>🛠️ Solusi / Opsi Komponen:</strong>
+          <p>{{ result.possibleFix }}</p>
         </div>
-
-        <footer class="provenance-block">
-          <p class="technical-label">Rule Provenance &amp; Version</p>
-          <ul>
-            <li v-for="source in result.ruleProvenance" :key="source.ruleCode">
-              <a :href="source.sourceUrl" target="_blank" rel="noreferrer">
-                {{ source.sourceTitle }}
-              </a>
-              · version {{ source.ruleVersion }} · reviewed {{ source.reviewedAt }}
-            </li>
-          </ul>
-        </footer>
       </section>
     </template>
   </div>
 </template>
 
 <style scoped>
-.upgrade-page {
-  gap: 2rem;
-}
-
-.guest-upgrade-box {
+.upgrade-container {
   display: grid;
   gap: 1.25rem;
-  padding: clamp(1.25rem, 5vw, 2.5rem);
-  border: 2px dashed var(--color-ink);
-  border-radius: var(--radius-card);
-  background: rgb(201 243 106 / 20%);
+  padding-bottom: 2.5rem;
 }
 
-.guest-upgrade-content {
+.native-page-header {
+  display: grid;
+  gap: 0.35rem;
+}
+
+.header-topline {
   display: flex;
   align-items: center;
-  gap: 1rem;
+  justify-content: space-between;
 }
 
-.guest-upgrade-icon {
-  font-size: 2.8rem;
-}
-
-.guest-upgrade-box h2 {
-  margin: 0;
-  font-size: clamp(1.4rem, 5vw, 2rem);
-  letter-spacing: -0.035em;
-}
-
-.guest-upgrade-box p {
-  margin: 0.35rem 0 0;
+.native-eyebrow {
+  font-family: var(--font-mono);
+  font-size: 0.72rem;
+  font-weight: 850;
+  text-transform: uppercase;
   color: var(--color-asphalt);
-  line-height: 1.55;
+  letter-spacing: 0.05em;
 }
 
-.upgrade-presets-section {
+.rule-ver-chip {
+  font-family: var(--font-mono);
+  font-size: 0.65rem;
+  font-weight: 850;
+  padding: 0.15rem 0.5rem;
+  border-radius: 9999px;
+  background: var(--color-sand);
+  color: var(--color-ink);
+}
+
+.native-title {
+  margin: 0;
+  font-size: 1.65rem;
+  font-weight: 850;
+  letter-spacing: -0.03em;
+  color: var(--color-ink);
+}
+
+.native-sub {
+  margin: 0;
+  font-size: 0.84rem;
+  color: var(--color-asphalt);
+  line-height: 1.4;
+}
+
+/* Preset Chips */
+.preset-section {
   display: grid;
-  gap: 0.65rem;
-  padding: 1.25rem;
-  border: 1px solid var(--color-sand);
-  border-radius: var(--radius-card);
-  background: rgb(255 255 255 / 80%);
+  gap: 0.45rem;
 }
 
-.preset-chips-bar {
+.preset-label {
+  font-size: 0.72rem;
+  font-weight: 800;
+  text-transform: uppercase;
+  color: var(--color-asphalt);
+  letter-spacing: 0.04em;
+}
+
+.preset-scroll-bar {
   display: flex;
+  gap: 0.45rem;
   overflow-x: auto;
-  scroll-snap-type: x mandatory;
-  padding-bottom: 0.4rem;
-  gap: 0.5rem;
+  padding-bottom: 0.35rem;
   -webkit-overflow-scrolling: touch;
 }
 
 .preset-chip {
-  flex: 0 0 auto;
-  scroll-snap-align: start;
-  padding: 0.45rem 0.85rem;
-  border: 1px solid var(--color-sand);
-  border-radius: 0.75rem;
+  padding: 0.35rem 0.65rem;
+  border-radius: 9999px;
   background: var(--color-white);
-  color: var(--color-ink);
-  font: inherit;
-  font-size: 0.78rem;
+  border: 1px solid var(--color-sand);
+  font-size: 0.74rem;
   font-weight: 800;
-  cursor: pointer;
+  color: var(--color-ink);
   white-space: nowrap;
+  cursor: pointer;
+  box-shadow: 0 1px 4px rgb(23 32 42 / 4%);
+}
+
+.preset-chip:active {
+  background: var(--color-chain-lime);
+}
+
+/* Form Card */
+.native-form-card {
+  padding: 1.25rem;
+  border-radius: 1.35rem;
+  background: var(--color-white);
+  border: 1px solid var(--color-sand);
+  box-shadow: 0 4px 18px rgb(23 32 42 / 5%);
+}
+
+.form-field-group {
+  display: grid;
+  gap: 0.85rem;
+}
+
+.field-label {
+  display: block;
+  font-size: 0.75rem;
+  font-weight: 800;
+  color: var(--color-asphalt);
+  margin-bottom: 0.25rem;
+}
+
+.native-select {
+  width: 100%;
+  padding: 0.55rem 0.75rem;
+  border-radius: 0.75rem;
+  border: 1px solid var(--color-sand);
+  background: var(--color-canvas);
+  font-size: 0.84rem;
+  font-weight: 750;
+  color: var(--color-ink);
+  outline: none;
+}
+
+/* Candidate Spec Card */
+.candidate-spec-card {
+  display: grid;
+  gap: 0.65rem;
+  padding: 0.85rem;
+  border-radius: 0.95rem;
+  background: var(--color-canvas);
+  border: 1px solid var(--color-sand);
+}
+
+.spec-card-title {
+  font-size: 0.78rem;
+  font-weight: 850;
+  color: var(--color-ink);
+}
+
+.knowledge-segmented {
+  display: flex;
+  gap: 0.3rem;
+  padding: 0.25rem;
+  border-radius: 0.65rem;
+  background: var(--color-sand);
+}
+
+.seg-btn {
+  flex: 1;
+  padding: 0.4rem 0.5rem;
+  border-radius: 0.5rem;
+  border: none;
+  background: transparent;
+  font-size: 0.72rem;
+  font-weight: 800;
+  color: var(--color-asphalt);
+  cursor: pointer;
   transition: all 120ms ease;
 }
 
-.preset-chip:hover {
-  border-color: var(--color-ink);
-  background: rgb(201 243 106 / 25%);
-  transform: translateY(-2px);
-}
-
-.compatibility-values {
-  display: grid;
-  grid-template-columns: repeat(2, minmax(0, 1fr));
-  gap: 0.65rem;
-  margin: 0.85rem 0 0;
-}
-
-.compatibility-values > div {
-  padding: 0.7rem;
-  border: 1px solid var(--color-sand);
-  border-radius: 0.65rem;
+.seg-btn--active {
   background: var(--color-white);
+  color: var(--color-ink);
+  box-shadow: 0 1px 4px rgb(23 32 42 / 8%);
 }
 
-.compatibility-values dt {
+.unknown-guidance-pill {
+  font-size: 0.74rem;
   color: var(--color-asphalt);
-  font-size: 0.72rem;
-  font-weight: 800;
-  text-transform: uppercase;
+  padding: 0.5rem 0.65rem;
+  border-radius: 0.5rem;
+  background: var(--color-white);
+  border: 1px dashed var(--color-sand);
 }
 
-.compatibility-values dd {
-  margin: 0.2rem 0 0;
-  overflow-wrap: anywhere;
-  font-family: ui-monospace, SFMono-Regular, Menlo, monospace;
-  font-weight: 800;
+/* Result Card */
+.native-result-card {
+  display: grid;
+  gap: 0.85rem;
+  padding: 1.25rem;
+  border-radius: 1.35rem;
+  background: var(--color-white);
+  border: 2px solid var(--color-sand);
+  box-shadow: 0 6px 24px rgb(23 32 42 / 8%);
+}
+
+.result-card--compatible {
+  border-color: #22c55e;
+}
+
+.result-card--incompatible {
+  border-color: #ef4444;
+}
+
+.result-card--unknown {
+  border-color: #f59e0b;
+}
+
+.result-top-banner {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+}
+
+.result-status-badge {
+  font-size: 0.76rem;
+  font-weight: 900;
+  padding: 0.2rem 0.65rem;
+  border-radius: 9999px;
+  background: var(--color-sand);
+}
+
+.result-card--compatible .result-status-badge {
+  background: rgb(201 243 106 / 60%);
+  color: #166534;
+}
+
+.result-card--incompatible .result-status-badge {
+  background: #fee2e2;
+  color: #dc2626;
+}
+
+.result-card--unknown .result-status-badge {
+  background: #fef3c7;
+  color: #b45309;
+}
+
+.rule-ver-tag {
+  font-family: var(--font-mono);
+  font-size: 0.65rem;
+  color: var(--color-asphalt);
+}
+
+.result-headline {
+  margin: 0;
+  font-size: 1.2rem;
+  font-weight: 850;
+  letter-spacing: -0.02em;
 }
 
 .result-summary {
-  margin: 0.35rem 0 0;
-  font-size: 1.05rem;
-  font-weight: 700;
-  color: var(--color-ink);
-}
-
-.check-status {
-  padding: 0.25rem 0.55rem;
-  border-radius: 0.5rem;
-  font-family: ui-monospace, monospace;
-  font-size: 0.7rem;
-  font-weight: 900;
-  text-transform: uppercase;
-}
-
-.check-status--compatible {
-  background: rgb(201 243 106 / 50%);
-  color: #2b7a1e;
-}
-
-.check-status--conditional {
-  background: #fde8b3;
-  color: #8c6100;
-}
-
-.check-status--incompatible {
-  background: rgb(255 140 117 / 35%);
-  color: #8c261c;
-}
-
-.check-status--unknown {
-  background: rgb(142 221 244 / 50%);
-  color: #16697a;
-}
-
-.result-detail-block {
-  margin: 0 1.25rem;
-  padding: 1.25rem 0;
-  border-top: 1px solid var(--color-sand);
+  margin: 0;
+  font-size: 0.82rem;
   color: var(--color-asphalt);
-  line-height: 1.55;
+  line-height: 1.4;
 }
 
-.result-detail-block summary {
+.tech-compare-table {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 0.5rem;
+  padding: 0.75rem;
+  border-radius: 0.85rem;
+  background: var(--color-canvas);
+  border: 1px solid var(--color-sand);
+}
+
+.compare-row {
+  display: grid;
+  gap: 0.15rem;
+}
+
+.compare-lbl {
+  font-size: 0.68rem;
+  color: var(--color-asphalt);
+  font-weight: 750;
+}
+
+.compare-val {
+  font-family: var(--font-mono);
+  font-size: 0.78rem;
   color: var(--color-ink);
-  font-weight: 800;
-  cursor: pointer;
 }
 
-.text-link {
-  display: inline-block;
-  margin-top: 0.75rem;
-  font-weight: 800;
-  color: var(--color-ink);
+.why-matters-box,
+.next-step-box,
+.missing-info-box {
+  font-size: 0.76rem;
+  line-height: 1.4;
+  padding: 0.75rem;
+  border-radius: 0.75rem;
+  background: var(--color-canvas);
 }
 
-@media (max-width: 34rem) {
-  .compatibility-values {
-    grid-template-columns: 1fr;
-  }
+.missing-info-box {
+  background: #fffbeb;
+  color: #b45309;
+}
+
+.missing-info-box ul {
+  margin: 0.25rem 0 0;
+  padding-left: 1.15rem;
+}
+
+/* Guest & Empty */
+.native-guest-box,
+.native-empty-box {
+  display: grid;
+  gap: 1rem;
+  text-align: center;
+  padding: 2.25rem 1.5rem;
+  border-radius: 1.35rem;
+  background: var(--color-white);
+  border: 1px solid var(--color-sand);
+}
+
+.guest-icon,
+.empty-icon {
+  font-size: 3.2rem;
+}
+
+.native-guest-box h2,
+.native-empty-box h2 {
+  margin: 0;
+  font-size: 1.3rem;
+  font-weight: 850;
+}
+
+.native-guest-box p,
+.native-empty-box p {
+  margin: 0;
+  font-size: 0.84rem;
+  color: var(--color-asphalt);
+  line-height: 1.4;
+}
+
+.guest-actions {
+  display: grid;
+  gap: 0.65rem;
 }
 </style>

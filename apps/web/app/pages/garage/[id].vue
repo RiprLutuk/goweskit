@@ -3,7 +3,12 @@ import {
   BIKE_SPEC_DEFINITIONS,
   type BikeSpecCode,
 } from '@goweskit/bike-domain';
-import type { Bike, BikeResponse, BikeSpecResponse } from '@goweskit/contracts';
+import type {
+  Bike,
+  BikeResponse,
+  BikeSpecResponse,
+  BikeVisualResponse,
+} from '@goweskit/contracts';
 
 const route = useRoute();
 const api = useApi();
@@ -89,13 +94,17 @@ async function saveBikePhoto(): Promise<void> {
   savingPhoto.value = true;
   errorMessage.value = '';
   try {
-    const response = await api<BikeResponse>(`/bikes/${bikeId.value}`, {
-      method: 'PATCH',
-      body: { photoUrl: photoInputUrl.value.trim() || null },
-    });
-    bike.value = response.bike;
+    const response = await api<BikeVisualResponse>(
+      `/bikes/${bikeId.value}/photo`,
+      {
+        method: 'PUT',
+        body: { photoUrl: photoInputUrl.value.trim() || null },
+      },
+    );
+    bike.value.photoUrl = response.bike.photoUrl;
+    bike.value.avatarPreset = response.bike.avatarPreset;
     showPhotoModal.value = false;
-    successNotice.value = 'Foto sepeda berhasil diperbarui.';
+    successNotice.value = 'Foto sepeda berhasil disimpan ke Cloudflare R2.';
   } catch (error: unknown) {
     errorMessage.value = getApiErrorMessage(error);
   } finally {
@@ -107,6 +116,10 @@ function handlePhotoFileUpload(event: Event): void {
   const input = event.target as HTMLInputElement;
   const file = input.files?.[0];
   if (!file) return;
+  if (file.size > 700_000) {
+    errorMessage.value = 'Ukuran foto maksimal 700 KB untuk upload ke Cloudflare R2.';
+    return;
+  }
   const reader = new FileReader();
   reader.onload = (e) => {
     if (typeof e.target?.result === 'string') {
