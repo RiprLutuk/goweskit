@@ -16,7 +16,9 @@ import type {
 import type { FastifyInstance } from 'fastify';
 import { z } from 'zod';
 
+import { SESSION_COOKIE_NAME } from '../auth/session.js';
 import { parseInput } from '../http/validation.js';
+import type { AuthService } from '../services/auth-service.js';
 import type { CatalogService } from '../services/catalog-service.js';
 
 const slugParamsSchema = z.object({ slug: z.string().min(1).max(80) });
@@ -24,6 +26,7 @@ const slugParamsSchema = z.object({ slug: z.string().min(1).max(80) });
 export function registerLearnRoutes(
   app: FastifyInstance,
   catalogService: CatalogService,
+  authService?: AuthService,
 ): void {
   app.get<{ Reply: BicycleTypeListResponse }>(
     '/api/v1/learn/bicycle-types',
@@ -69,8 +72,10 @@ export function registerLearnRoutes(
 
   app.post<{ Body: unknown; Reply: GlossaryTerm }>(
     '/api/v1/learn/glossary',
-    { preHandler: app.authenticate },
     async (request, reply) => {
+      if (authService) {
+        await authService.authenticate(request.cookies[SESSION_COOKIE_NAME]);
+      }
       const input = parseInput(createGlossaryTermSchema, request.body);
       const created = catalogService.createGlossaryTerm(input);
       return reply.code(201).send(created);
@@ -79,8 +84,10 @@ export function registerLearnRoutes(
 
   app.put<{ Params: unknown; Body: unknown; Reply: GlossaryTerm }>(
     '/api/v1/learn/glossary/:slug',
-    { preHandler: app.authenticate },
     async (request) => {
+      if (authService) {
+        await authService.authenticate(request.cookies[SESSION_COOKIE_NAME]);
+      }
       const { slug } = parseInput(slugParamsSchema, request.params);
       const input = parseInput(updateGlossaryTermSchema, request.body);
       return catalogService.updateGlossaryTerm(slug, input);
@@ -89,8 +96,10 @@ export function registerLearnRoutes(
 
   app.delete<{ Params: unknown; Reply: { success: boolean } }>(
     '/api/v1/learn/glossary/:slug',
-    { preHandler: app.authenticate },
     async (request) => {
+      if (authService) {
+        await authService.authenticate(request.cookies[SESSION_COOKIE_NAME]);
+      }
       const { slug } = parseInput(slugParamsSchema, request.params);
       catalogService.deleteGlossaryTerm(slug);
       return { success: true };

@@ -234,7 +234,7 @@ export function buildApp(options: BuildAppOptions = {}): FastifyInstance {
         ? {}
         : { otpService: options.otpService }),
     });
-    registerLearnRoutes(app, options.services.catalog);
+    registerLearnRoutes(app, options.services.catalog, options.services.auth);
     registerGarageRoutes(app, options.services.auth, options.services.garage);
     registerInstalledComponentRoutes(
       app,
