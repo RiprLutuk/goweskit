@@ -380,7 +380,7 @@ async function shareToMedia() {
         <header class="modal-top-strip">
           <div class="modal-title-left">
             <span class="live-dot-pulse"></span>
-            <span id="modal-studio-title" class="modal-heading">RIDE FLEX STUDIO</span>
+            <span id="modal-studio-title" class="modal-heading">RIDE PASS STUDIO</span>
           </div>
           <button
             type="button"
@@ -400,7 +400,7 @@ async function shareToMedia() {
             :class="{ active: rideForm.aspectRatio === 'story' }"
             @click="rideForm.aspectRatio = 'story'"
           >
-            📱 Story (9:16)
+            Story (9:16)
           </button>
           <button
             type="button"
@@ -408,7 +408,7 @@ async function shareToMedia() {
             :class="{ active: rideForm.aspectRatio === 'post' }"
             @click="rideForm.aspectRatio = 'post'"
           >
-            🖼️ Square (1:1)
+            Square (1:1)
           </button>
           <button
             type="button"
@@ -416,7 +416,7 @@ async function shareToMedia() {
             :class="{ active: rideForm.aspectRatio === 'landscape' }"
             @click="rideForm.aspectRatio = 'landscape'"
           >
-            🛣️ Banner (16:9)
+            Banner (16:9)
           </button>
         </div>
 
@@ -427,7 +427,7 @@ async function shareToMedia() {
             <div
               class="modal-poster-card"
               :class="[
-                `frame--${rideForm.aspectRatio}`,
+                `aspect--${rideForm.aspectRatio}`,
                 `bg--${rideForm.bgPreset}`,
                 `theme--${rideForm.templateStyle}`,
               ]"
@@ -457,7 +457,7 @@ async function shareToMedia() {
                   <span class="m-unit">KM</span>
                 </div>
                 <h3 class="m-title">{{ rideForm.title }}</h3>
-                <div class="m-meta">🚴 {{ rideForm.bikeName }} · {{ rideForm.temperatureC }}°C</div>
+                <div class="m-meta">🚴 {{ rideForm.bikeName }} · {{ rideForm.temperatureC }}°C Cerah</div>
               </div>
 
               <div class="modal-poster-bot">
@@ -480,11 +480,16 @@ async function shareToMedia() {
                   </div>
                 </div>
               </div>
+
+              <div class="modal-watermark">
+                ⚡ VERIFIED BY GOWESKIT ENGINE · GOWESKIT.ID
+              </div>
             </div>
           </div>
 
           <!-- Right / Bottom: Toolbox Tabs & Controls -->
           <div class="modal-controls-col">
+            <!-- Horizontally scrollable menu bar -->
             <nav class="m-tabs-nav">
               <button
                 type="button"
@@ -492,7 +497,7 @@ async function shareToMedia() {
                 :class="{ active: activeTab === 'templates' }"
                 @click="activeTab = 'templates'"
               >
-                🎨 Template
+                🎨 Gaya
               </button>
               <button
                 type="button"
@@ -500,7 +505,7 @@ async function shareToMedia() {
                 :class="{ active: activeTab === 'backgrounds' }"
                 @click="activeTab = 'backgrounds'"
               >
-                🌄 Bg
+                🌄 Nuansa
               </button>
               <button
                 type="button"
@@ -524,7 +529,7 @@ async function shareToMedia() {
                 :class="{ active: activeTab === 'data' }"
                 @click="activeTab = 'data'"
               >
-                📊 Data
+                📝 Edit
               </button>
             </nav>
 
@@ -538,7 +543,7 @@ async function shareToMedia() {
                   @click="rideForm.templateStyle = 'strava_bold'"
                 >
                   🔥 <strong>Strava Bold</strong>
-                  <small>Kinetic Neon &amp; Telemetri</small>
+                  <small>Kinetic Neon</small>
                 </button>
                 <button
                   type="button"
@@ -547,7 +552,7 @@ async function shareToMedia() {
                   @click="rideForm.templateStyle = 'rapha_editorial'"
                 >
                   🏔️ <strong>Rapha Editorial</strong>
-                  <small>Clean GPS &amp; Klasik</small>
+                  <small>Clean GPS</small>
                 </button>
                 <button
                   type="button"
@@ -556,7 +561,7 @@ async function shareToMedia() {
                   @click="rideForm.templateStyle = 'cyber_hud'"
                 >
                   ⚡ <strong>Cyber HUD</strong>
-                  <small>Dashboard Sensor Digital</small>
+                  <small>Sensor Digital</small>
                 </button>
                 <button
                   type="button"
@@ -661,7 +666,7 @@ async function shareToMedia() {
                   :class="{ active: rideForm.activeSticker === 'speed' }"
                   @click="rideForm.activeSticker = 'speed'"
                 >
-                  ⚡ Breakaway Pace
+                  ⚡ Breakaway
                 </button>
                 <button
                   type="button"
@@ -677,7 +682,7 @@ async function shareToMedia() {
                   :class="{ active: rideForm.activeSticker === 'none' }"
                   @click="rideForm.activeSticker = 'none'"
                 >
-                  Tanpa Stiker
+                  🚫 Polos
                 </button>
               </div>
             </div>
@@ -870,7 +875,7 @@ async function shareToMedia() {
 .modal-poster-card {
   width: 100%;
   max-width: 18rem;
-  height: 300px;
+  aspect-ratio: 9 / 16;
   border-radius: 1.15rem;
   position: relative;
   overflow: hidden;
@@ -881,6 +886,14 @@ async function shareToMedia() {
   border: 1.5px solid rgba(255, 255, 255, 0.2);
   background-size: cover;
   background-position: center;
+}
+
+.aspect--post {
+  aspect-ratio: 1 / 1 !important;
+}
+
+.aspect--landscape {
+  aspect-ratio: 16 / 9 !important;
 }
 
 .modal-poster-vignette {
@@ -977,8 +990,7 @@ async function shareToMedia() {
   justify-content: space-between;
   font-family: var(--font-mono);
   font-size: 0.55rem;
-  font-weight: 800;
-  color: #94a3b8;
+  font-weight: 850;
 }
 
 .m-stats-row {
@@ -1007,6 +1019,17 @@ async function shareToMedia() {
   color: #f8fafc;
 }
 
+.modal-watermark {
+  position: relative;
+  z-index: 2;
+  text-align: center;
+  font-family: var(--font-mono);
+  font-size: 0.5rem;
+  color: rgba(201, 243, 106, 0.8);
+  margin-top: 0.3rem;
+  margin-bottom: 0.1rem;
+}
+
 .text-lime { color: var(--color-chain-lime); }
 .text-sky { color: #38bdf8; }
 .text-coral { color: #ff8c75; }
@@ -1024,18 +1047,28 @@ async function shareToMedia() {
   padding: 0.25rem;
   border-radius: 0.85rem;
   border: 1px solid rgba(255, 255, 255, 0.08);
+  overflow-x: auto;
+  scrollbar-width: none;
+  flex-wrap: nowrap;
+}
+
+.m-tabs-nav::-webkit-scrollbar {
+  display: none;
 }
 
 .m-tab-item {
-  flex: 1;
+  flex: 0 0 auto;
+  min-width: 4.5rem;
   background: transparent;
   border: none;
-  padding: 0.5rem 0.25rem;
+  padding: 0.5rem 0.4rem;
   font-size: 0.74rem;
   font-weight: 850;
   color: #94a3b8;
   border-radius: 0.65rem;
   cursor: pointer;
+  white-space: nowrap;
+  text-align: center;
 }
 
 .m-tab-item.active {

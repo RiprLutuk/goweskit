@@ -12,7 +12,7 @@ const initialDuration = Number(route.query.duration) || 105;
 const initialNote = String(route.query.note || 'Morning Gravel Loop Sentul');
 const initialBike = String(route.query.bike || 'Polygon Siskiu T7');
 
-// Active studio mode
+// Active studio tab
 const activeTool = ref<'style' | 'backdrop' | 'stickers' | 'ai' | 'edit'>('style');
 
 // Form state
@@ -169,7 +169,7 @@ async function renderCanvas(aspectRatio: 'story' | 'post' | 'landscape'): Promis
       ctx.drawImage(img, x, y, img.width * scale, img.height * scale);
       ctx.globalAlpha = 1.0;
     } catch {
-      // gradient drawn
+      // gradient fallback
     }
   }
 
@@ -391,9 +391,9 @@ async function shareToMedia() {
       </div>
     </header>
 
-    <!-- Main Studio Canvas Container -->
+    <!-- Main Scrollable Studio Layout -->
     <main class="studio-content-layout">
-      <!-- 1. Hero Poster Canvas -->
+      <!-- 1. Hero Poster Canvas (Naturally Scaled & Never Clipped) -->
       <section class="poster-hero-wrap">
         <div
           class="poster-box"
@@ -440,7 +440,7 @@ async function shareToMedia() {
               <span class="mileage-unit">KM</span>
             </div>
             <h2 class="session-name">{{ rideForm.title }}</h2>
-            <div class="session-specs">🚴 {{ rideForm.bikeName }} · {{ rideForm.temperatureC }}°C</div>
+            <div class="session-specs">🚴 {{ rideForm.bikeName }} · {{ rideForm.temperatureC }}°C Cerah</div>
           </div>
 
           <!-- Poster Glass Telemetry Strip -->
@@ -513,9 +513,9 @@ async function shareToMedia() {
         </div>
       </section>
 
-      <!-- 2. Studio Controls Drawer -->
+      <!-- 2. Studio Controls Drawer (Horizontally Scrollable Tabs) -->
       <section class="studio-drawer">
-        <!-- Horizontal Pill Menu -->
+        <!-- Smooth Horizontally Scrollable Tool Bar -->
         <nav class="tool-menu-bar" aria-label="Studio Tools">
           <button
             type="button"
@@ -809,6 +809,7 @@ async function shareToMedia() {
   color: #f8fafc;
   display: flex;
   flex-direction: column;
+  overflow-y: auto;
 }
 
 /* 1. Header */
@@ -888,9 +889,9 @@ async function shareToMedia() {
   display: flex;
   flex-direction: column;
   align-items: center;
-  gap: 1rem;
-  padding: 1rem 1rem 2.5rem;
-  max-width: 42rem;
+  gap: 1.25rem;
+  padding: 1.25rem 1rem 3.5rem;
+  max-width: 44rem;
   margin: 0 auto;
   width: 100%;
 }
@@ -900,21 +901,21 @@ async function shareToMedia() {
   display: flex;
   flex-direction: column;
   align-items: center;
-  gap: 0.65rem;
+  gap: 0.75rem;
   width: 100%;
 }
 
 .poster-box {
   width: 100%;
-  max-width: 19rem;
-  height: 310px;
-  border-radius: 1.25rem;
+  max-width: 21rem;
+  aspect-ratio: 9 / 16;
+  border-radius: 1.35rem;
   position: relative;
   overflow: hidden;
   display: flex;
   flex-direction: column;
   justify-content: space-between;
-  padding: 1rem;
+  padding: 1.15rem 1.15rem 0.95rem;
   box-shadow: 0 20px 50px -10px rgba(0, 0, 0, 0.8), 0 0 30px rgba(201, 243, 106, 0.06);
   border: 1px solid rgba(255, 255, 255, 0.15);
   background-size: cover;
@@ -923,11 +924,28 @@ async function shareToMedia() {
 }
 
 .aspect--post {
-  height: 290px !important;
+  aspect-ratio: 1 / 1 !important;
+  max-width: 22rem !important;
 }
 
 .aspect--landscape {
-  height: 200px !important;
+  aspect-ratio: 16 / 9 !important;
+  max-width: 26rem !important;
+  padding: 0.95rem 1.15rem 0.85rem !important;
+}
+
+/* When landscape, adjust layout to be side-by-side */
+.aspect--landscape .poster-card-center {
+  margin-top: 0.2rem !important;
+  margin-bottom: 0.2rem !important;
+}
+
+.aspect--landscape .mileage-val {
+  font-size: 2.2rem !important;
+}
+
+.aspect--landscape .poster-card-glass {
+  padding: 0.45rem 0.65rem !important;
 }
 
 /* Background Presets */
@@ -1023,18 +1041,18 @@ async function shareToMedia() {
   position: relative;
   z-index: 2;
   margin-top: auto;
-  margin-bottom: 0.45rem;
+  margin-bottom: 0.65rem;
 }
 
 .mileage-row {
   display: flex;
   align-items: baseline;
-  gap: 0.25rem;
+  gap: 0.3rem;
 }
 
 .mileage-val {
   font-family: var(--font-mono);
-  font-size: 2.6rem;
+  font-size: 2.85rem;
   font-weight: 900;
   color: var(--color-chain-lime);
   line-height: 0.9;
@@ -1042,14 +1060,14 @@ async function shareToMedia() {
 }
 
 .mileage-unit {
-  font-size: 1rem;
+  font-size: 1.15rem;
   font-weight: 900;
   color: #ffffff;
 }
 
 .session-name {
-  margin: 0.15rem 0 0;
-  font-size: 0.86rem;
+  margin: 0.2rem 0 0;
+  font-size: 0.92rem;
   font-weight: 850;
   color: #ffffff;
   white-space: nowrap;
@@ -1058,7 +1076,7 @@ async function shareToMedia() {
 }
 
 .session-specs {
-  font-size: 0.64rem;
+  font-size: 0.68rem;
   color: #cbd5e1;
 }
 
@@ -1068,11 +1086,11 @@ async function shareToMedia() {
   z-index: 2;
   background: rgba(15, 23, 42, 0.9);
   border: 1px solid rgba(201, 243, 106, 0.3);
-  border-radius: 0.85rem;
-  padding: 0.55rem 0.7rem;
+  border-radius: 0.95rem;
+  padding: 0.65rem 0.8rem;
   display: flex;
   flex-direction: column;
-  gap: 0.35rem;
+  gap: 0.4rem;
   backdrop-filter: blur(10px);
 }
 
@@ -1080,7 +1098,7 @@ async function shareToMedia() {
   display: flex;
   justify-content: space-between;
   font-family: var(--font-mono);
-  font-size: 0.54rem;
+  font-size: 0.56rem;
   font-weight: 850;
 }
 
@@ -1094,7 +1112,7 @@ async function shareToMedia() {
 
 .elev-curve-svg {
   width: 100%;
-  height: 1.1rem;
+  height: 1.25rem;
 }
 
 .pillars-row {
@@ -1102,7 +1120,7 @@ async function shareToMedia() {
   align-items: center;
   justify-content: space-between;
   border-top: 1px solid rgba(255, 255, 255, 0.08);
-  padding-top: 0.3rem;
+  padding-top: 0.35rem;
 }
 
 .p-col {
@@ -1114,19 +1132,19 @@ async function shareToMedia() {
 
 .p-div {
   width: 1px;
-  height: 1.3rem;
+  height: 1.4rem;
   background: rgba(255, 255, 255, 0.1);
 }
 
 .p-lbl {
   font-family: var(--font-mono);
-  font-size: 0.48rem;
+  font-size: 0.5rem;
   color: #94a3b8;
 }
 
 .p-val {
   font-family: var(--font-mono);
-  font-size: 0.74rem;
+  font-size: 0.8rem;
   font-weight: 900;
   color: #f8fafc;
 }
@@ -1139,9 +1157,10 @@ async function shareToMedia() {
   z-index: 2;
   text-align: center;
   font-family: var(--font-mono);
-  font-size: 0.52rem;
+  font-size: 0.54rem;
   color: rgba(201, 243, 106, 0.8);
-  margin-top: 0.25rem;
+  margin-top: 0.35rem;
+  margin-bottom: 0.1rem;
 }
 
 /* Format Switcher Bar */
@@ -1151,7 +1170,7 @@ async function shareToMedia() {
   background: rgba(255, 255, 255, 0.05);
   padding: 0.25rem;
   border-radius: 0.75rem;
-  max-width: 19rem;
+  max-width: 21rem;
   width: 100%;
 }
 
@@ -1159,8 +1178,8 @@ async function shareToMedia() {
   flex: 1;
   background: transparent;
   border: none;
-  padding: 0.35rem 0.25rem;
-  font-size: 0.7rem;
+  padding: 0.4rem 0.25rem;
+  font-size: 0.72rem;
   font-weight: 800;
   color: #94a3b8;
   border-radius: 0.55rem;
@@ -1178,48 +1197,61 @@ async function shareToMedia() {
   max-width: 28rem;
   display: flex;
   flex-direction: column;
-  gap: 0.65rem;
+  gap: 0.75rem;
 }
 
+/* Horizontally scrollable menu bar without clipping */
 .tool-menu-bar {
   display: flex;
-  gap: 0.3rem;
+  gap: 0.35rem;
   background: #050811;
-  padding: 0.3rem;
+  padding: 0.35rem;
   border-radius: 0.85rem;
   border: 1px solid rgba(255, 255, 255, 0.08);
+  overflow-x: auto;
+  scrollbar-width: none;
+  -webkit-overflow-scrolling: touch;
+  flex-wrap: nowrap;
+}
+
+.tool-menu-bar::-webkit-scrollbar {
+  display: none;
 }
 
 .tool-menu-btn {
-  flex: 1;
+  flex: 0 0 auto;
+  min-width: 4.8rem;
   background: transparent;
   border: none;
-  padding: 0.5rem 0.25rem;
-  font-size: 0.74rem;
+  padding: 0.55rem 0.65rem;
+  font-size: 0.76rem;
   font-weight: 850;
   color: #94a3b8;
   border-radius: 0.65rem;
   cursor: pointer;
   white-space: nowrap;
+  text-align: center;
+  transition: all 120ms ease;
 }
 
 .tool-menu-btn.active {
   background: #1e293b;
   color: var(--color-chain-lime);
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.4);
 }
 
 .tool-panel-box {
   background: #0c1426;
   border: 1px solid rgba(255, 255, 255, 0.08);
   border-radius: 1.15rem;
-  padding: 0.85rem;
+  padding: 0.95rem;
 }
 
 /* Style Chips */
 .scroll-chips-row {
   display: grid;
   grid-template-columns: repeat(2, 1fr);
-  gap: 0.5rem;
+  gap: 0.55rem;
 }
 
 .chip-card {
@@ -1227,8 +1259,8 @@ async function shareToMedia() {
   flex-direction: column;
   align-items: flex-start;
   gap: 0.15rem;
-  padding: 0.65rem;
-  border-radius: 0.75rem;
+  padding: 0.75rem;
+  border-radius: 0.85rem;
   background: rgba(30, 41, 59, 0.5);
   border: 1.5px solid rgba(255, 255, 255, 0.08);
   color: #f8fafc;
@@ -1243,17 +1275,17 @@ async function shareToMedia() {
 
 .chip-card-tag {
   font-family: var(--font-mono);
-  font-size: 0.55rem;
+  font-size: 0.58rem;
   color: var(--color-chain-lime);
   font-weight: 900;
 }
 
 .chip-card strong {
-  font-size: 0.8rem;
+  font-size: 0.84rem;
 }
 
 .chip-card small {
-  font-size: 0.65rem;
+  font-size: 0.68rem;
   color: #94a3b8;
 }
 
@@ -1261,7 +1293,7 @@ async function shareToMedia() {
 .backdrop-palette-flow {
   display: flex;
   flex-direction: column;
-  gap: 0.65rem;
+  gap: 0.75rem;
 }
 
 .bg-circles-row {
@@ -1271,15 +1303,15 @@ async function shareToMedia() {
 }
 
 .bg-circle {
-  width: 2.4rem;
-  height: 2.4rem;
+  width: 2.6rem;
+  height: 2.6rem;
   border-radius: 50%;
   border: 2px solid rgba(255, 255, 255, 0.15);
   cursor: pointer;
   display: flex;
   align-items: center;
   justify-content: center;
-  font-size: 0.95rem;
+  font-size: 1rem;
   transition: all 120ms ease;
 }
 
@@ -1293,11 +1325,11 @@ async function shareToMedia() {
   display: flex;
   align-items: center;
   justify-content: center;
-  padding: 0.55rem;
-  border-radius: 0.75rem;
+  padding: 0.65rem;
+  border-radius: 0.85rem;
   border: 1.5px dashed rgba(201, 243, 106, 0.4);
   background: rgba(201, 243, 106, 0.05);
-  font-size: 0.74rem;
+  font-size: 0.76rem;
   font-weight: 850;
   color: var(--color-chain-lime);
   cursor: pointer;
@@ -1307,16 +1339,16 @@ async function shareToMedia() {
 .sticker-pills-flow {
   display: flex;
   flex-wrap: wrap;
-  gap: 0.35rem;
+  gap: 0.45rem;
 }
 
 .sticker-pill {
-  padding: 0.35rem 0.65rem;
+  padding: 0.45rem 0.8rem;
   border-radius: 9999px;
   background: rgba(30, 41, 59, 0.6);
   border: 1px solid rgba(255, 255, 255, 0.1);
   color: #cbd5e1;
-  font-size: 0.7rem;
+  font-size: 0.74rem;
   font-weight: 800;
   cursor: pointer;
 }
@@ -1331,7 +1363,7 @@ async function shareToMedia() {
 .ai-studio-flow {
   display: flex;
   flex-direction: column;
-  gap: 0.55rem;
+  gap: 0.65rem;
 }
 
 .ai-persona-row {
@@ -1342,12 +1374,12 @@ async function shareToMedia() {
 
 .persona-tag {
   flex: 1;
-  padding: 0.35rem 0.45rem;
-  border-radius: 0.55rem;
+  padding: 0.45rem 0.5rem;
+  border-radius: 0.65rem;
   background: rgba(255, 255, 255, 0.06);
   border: 1px solid rgba(255, 255, 255, 0.1);
   color: #cbd5e1;
-  font-size: 0.7rem;
+  font-size: 0.74rem;
   font-weight: 800;
   cursor: pointer;
 }
@@ -1362,9 +1394,9 @@ async function shareToMedia() {
   background: var(--color-chain-lime);
   color: #080d19;
   border: none;
-  padding: 0.35rem 0.55rem;
-  border-radius: 0.55rem;
-  font-size: 0.7rem;
+  padding: 0.45rem 0.65rem;
+  border-radius: 0.65rem;
+  font-size: 0.74rem;
   font-weight: 900;
   cursor: pointer;
 }
@@ -1372,17 +1404,17 @@ async function shareToMedia() {
 .ai-caption-card {
   background: rgba(8, 13, 25, 0.7);
   border: 1px solid rgba(255, 255, 255, 0.08);
-  border-radius: 0.75rem;
-  padding: 0.65rem;
+  border-radius: 0.85rem;
+  padding: 0.75rem;
   display: flex;
   flex-direction: column;
-  gap: 0.45rem;
+  gap: 0.55rem;
 }
 
 .ai-caption-body {
   margin: 0;
-  font-size: 0.76rem;
-  line-height: 1.45;
+  font-size: 0.78rem;
+  line-height: 1.5;
   color: #e2e8f0;
 }
 
@@ -1390,15 +1422,15 @@ async function shareToMedia() {
   background: rgba(201, 243, 106, 0.15);
   border: 1px solid var(--color-chain-lime);
   color: var(--color-chain-lime);
-  padding: 0.35rem;
-  border-radius: 0.55rem;
-  font-size: 0.72rem;
+  padding: 0.45rem;
+  border-radius: 0.65rem;
+  font-size: 0.74rem;
   font-weight: 900;
   cursor: pointer;
 }
 
 .culinary-clean-tag {
-  font-size: 0.7rem;
+  font-size: 0.72rem;
   color: #ff8c75;
   font-weight: 800;
 }
@@ -1407,17 +1439,17 @@ async function shareToMedia() {
 .edit-fields-flow {
   display: grid;
   grid-template-columns: repeat(2, 1fr);
-  gap: 0.5rem;
+  gap: 0.65rem;
 }
 
 .field-item {
   display: flex;
   flex-direction: column;
-  gap: 0.2rem;
+  gap: 0.25rem;
 }
 
 .field-item label {
-  font-size: 0.68rem;
+  font-size: 0.7rem;
   color: #94a3b8;
   font-weight: 800;
 }
@@ -1425,10 +1457,10 @@ async function shareToMedia() {
 .field-item input {
   background: rgba(15, 23, 42, 0.85);
   border: 1px solid rgba(255, 255, 255, 0.15);
-  border-radius: 0.55rem;
-  padding: 0.4rem 0.55rem;
+  border-radius: 0.65rem;
+  padding: 0.45rem 0.65rem;
   color: #fff;
-  font-size: 0.78rem;
+  font-size: 0.82rem;
 }
 
 .sr-only {
