@@ -15,13 +15,38 @@
   Platform edukasi anatomi sepeda, manajemen inventaris (Garage), mesin audit kompatibilitas deterministik (Upgrade Lab), navigasi spasial PostGIS privacy-first, pelacak keselamatan solo-ride, dan poster studio data gowes.
 </p>
 
+<br />
+
+<p align="center">
+  <a href="https://goweskit.demo.pandanteknik.com/">
+    <img src="./docs/screenshots/hero-banner.png" alt="GowesKit App Hero Mockup" width="100%" style="border-radius: 14px; box-shadow: 0 16px 40px rgba(0,0,0,0.35);" />
+  </a>
+</p>
+
+<br />
+
 [Live Demo](https://goweskit.demo.pandanteknik.com/) •
+[Preview Visual](#preview-tampilan-aplikasi) •
 [Mengapa GowesKit?](#mengapa-goweskit) •
 [Fitur Utama](#fitur-utama--arsitektur-modul) •
 [Standar Resmi](#transparansi-standar-resmi-industri) •
 [Quick Start](#panduan-menjalankan-secara-lokal-quick-start) •
 [Panduan Deploy](#panduan-deployment-ke-production-vps--cloud) •
 [Donasi GoPay](#dukung-pengembangan-goweskit-donasi)
+
+</div>
+
+---
+
+## Preview Tampilan Aplikasi
+
+<div align="center">
+
+| Beranda & Rute Pilihan | Navigasi & Pitstop Spasial | Anatomi & Standar Sepeda |
+| :---: | :---: | :---: |
+| <img src="./docs/screenshots/mockup-01-home.png" width="260" alt="Beranda GowesKit" /> | <img src="./docs/screenshots/mockup-02-explore.png" width="260" alt="Explore Map PostGIS" /> | <img src="./docs/screenshots/mockup-03-learn.png" width="260" alt="Learn Center Standar Sepeda" /> |
+| **Garasi & Paspor Sepeda** | **Jadwal Mabar Komunitas** | **Profil Rider & Akun** |
+| <img src="./docs/screenshots/mockup-04-garage.png" width="260" alt="My Garage & Paspor Sepeda" /> | <img src="./docs/screenshots/mockup-06-community.png" width="260" alt="Komunitas & Jadwal Mabar" /> | <img src="./docs/screenshots/mockup-05-profile.png" width="260" alt="Pengaturan & Profil Rider" /> |
 
 </div>
 
