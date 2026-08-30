@@ -19,6 +19,7 @@ const BANDUNG_CENTER: Coordinate = {
 };
 
 const api = useApi();
+const { toast } = useNotify();
 const center = ref<Coordinate>(BANDUNG_CENTER);
 const userLocation = ref<Coordinate | null>(null);
 const radiusKm = ref(15);
@@ -379,6 +380,53 @@ function applyCategory(cat: string): void {
   void loadNearby();
 }
 
+async function shareSelectedItem(item: ExploreItem): Promise<void> {
+  const name = cleanName(item.name);
+  const desc = cleanDescription(item.description);
+  const isRoute = item.kind === 'route';
+  const url = `${window.location.origin}/explore?selected=${item.id}`;
+
+  let statsText = '';
+  if (isRoute) {
+    statsText = `📏 Jarak: ${(item.distanceMeters / 1000).toFixed(1)} km · Elevasi: +${item.elevationGainMeters}m
+🎯 Kesulitan: ${item.difficulty.toUpperCase()} · Permukaan: ${item.surface}`;
+  } else {
+    statsText = `📍 Tipe Spot: ${typeLabel(item).toUpperCase()}`;
+  }
+
+  const text = `🗺️ REKOMENDASI SPOT & RUTE GOWES · GOWESKIT
+━━━━━━━━━━━━━━━━━━━━
+🚴 Nama: ${name}
+${statsText}
+📝 Info: ${desc || 'Spot dan rute gowes terverifikasi komunitas.'}
+
+🔗 Buka peta live & rute GPX di GowesKit:
+${url}
+
+#GowesKit #RuteGowes #ExploreGowes #CyclingIndonesia`;
+
+  if (navigator.share) {
+    try {
+      await navigator.share({
+        title: `Rute/Spot: ${name}`,
+        text,
+        url,
+      });
+      toast.success('Rute Dibagikan!', 'Siap diposting atau dikirim ke teman gowes.');
+      return;
+    } catch {
+      // ignore abort
+    }
+  }
+
+  try {
+    await navigator.clipboard.writeText(text);
+    toast.success('Rute Disalin!', 'Siap ditempel ke WhatsApp atau media sosial.');
+  } catch {
+    toast.info('Gagal menyalin otomatis', 'Silakan salin manual.');
+  }
+}
+
 onMounted(() => {
   useMyLocation();
   window.addEventListener('mousemove', onTouchMoveDrag);
@@ -579,6 +627,20 @@ onBeforeUnmount(() => {
           <div class="card-bottom-actions">
             <NuxtLink class="action-btn action-btn--primary" to="/safety">
               Mulai Gowes 🚴
+            </NuxtLink>
+            <button
+              class="action-btn action-btn--share"
+              type="button"
+              @click="shareSelectedItem(selectedItem)"
+            >
+              <span>📲 Bagikan</span>
+            </button>
+            <NuxtLink
+              v-if="selectedItem.kind === 'route'"
+              class="action-btn action-btn--flex"
+              :to="`/ride-flex?distance=${(selectedItem.distanceMeters / 1000).toFixed(1)}&elevation=${selectedItem.elevationGainMeters}&note=${encodeURIComponent(cleanName(selectedItem.name))}`"
+            >
+              <span>📸 Poster AI</span>
             </NuxtLink>
             <button
               v-if="selectedItem.kind === 'route'"
@@ -810,6 +872,20 @@ onBeforeUnmount(() => {
         <div class="card-bottom-actions">
           <NuxtLink class="action-btn action-btn--primary" to="/safety">
             Mulai Gowes 🚴
+          </NuxtLink>
+          <button
+            class="action-btn action-btn--share"
+            type="button"
+            @click="shareSelectedItem(selectedItem)"
+          >
+            <span>📲 Bagikan</span>
+          </button>
+          <NuxtLink
+            v-if="selectedItem.kind === 'route'"
+            class="action-btn action-btn--flex"
+            :to="`/ride-flex?distance=${(selectedItem.distanceMeters / 1000).toFixed(1)}&elevation=${selectedItem.elevationGainMeters}&note=${encodeURIComponent(cleanName(selectedItem.name))}`"
+          >
+            <span>📸 Poster AI</span>
           </NuxtLink>
           <button
             v-if="selectedItem.kind === 'route'"
@@ -1419,6 +1495,18 @@ onBeforeUnmount(() => {
   background: var(--color-white);
   color: var(--color-ink);
   border: 1px solid var(--color-sand);
+}
+
+.action-btn--share {
+  background: var(--color-chain-lime);
+  color: var(--color-ink);
+  border: 1px solid var(--color-ink);
+}
+
+.action-btn--flex {
+  background: #0284c7;
+  color: #ffffff;
+  border: 1px solid #0284c7;
 }
 
 .sheet-feed-container {

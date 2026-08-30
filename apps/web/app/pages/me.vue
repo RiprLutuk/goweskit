@@ -44,6 +44,45 @@ async function loadUserStats(): Promise<void> {
   }
 }
 
+async function shareRiderProfile(): Promise<void> {
+  if (!user.value) return;
+  const name = user.value.displayName;
+  const url = window.location.origin;
+
+  const text = `🚴 GOWESKIT VERIFIED RIDER PASS
+━━━━━━━━━━━━━━━━━━━━
+👤 Rider: ${name}
+🚲 Garasi Sepeda: ${bikeCount.value} Sepeda Terverifikasi
+🛡️ Kontak Darurat: ${contactCount.value} Kontak Terhubung
+🏆 Reputasi Komunitas: ${reputationScore.value} Poin
+
+🔗 Digitalisasikan sepeda & eksplorasi rute gowes di:
+${url}
+
+#GowesKit #RiderPassport #GowesIndonesia #CyclingProfile`;
+
+  if (navigator.share) {
+    try {
+      await navigator.share({
+        title: `Rider Pass: ${name} - GowesKit`,
+        text,
+        url,
+      });
+      toast.success('Rider Pass Dibagikan!', 'Siap dipajang di media sosial.');
+      return;
+    } catch {
+      // ignore
+    }
+  }
+
+  try {
+    await navigator.clipboard.writeText(text);
+    toast.success('Rider Pass Disalin!', 'Siap ditempel ke WhatsApp Status.');
+  } catch {
+    toast.info('Gagal menyalin otomatis', 'Silakan salin manual.');
+  }
+}
+
 function testHaptic(): void {
   triggerHaptic([30, 60, 30]);
   hapticFeedbackSent.value = true;
@@ -158,14 +197,34 @@ async function quickDemoLogin(): Promise<void> {
             <span class="metric-label">🏆 Poin</span>
           </NuxtLink>
         </div>
+
+        <div class="rider-card-actions">
+          <button
+            type="button"
+            class="rider-share-btn"
+            @click="shareRiderProfile"
+          >
+            <span>📸 Bagikan Rider Pass</span>
+            <span>→</span>
+          </button>
+        </div>
       </section>
 
       <!-- 2. INSET GROUPED LIST: WORKSHOP & BIKES -->
       <section class="settings-group">
-        <h3 class="group-heading">Garasi &amp; Komponen</h3>
+        <h3 class="group-heading">Garasi &amp; Media</h3>
         <div class="inset-list">
+          <NuxtLink to="/ride-flex" class="inset-item">
+            <div class="item-icon-box item-icon--lime">📸</div>
+            <div class="item-body">
+              <strong>Ride Flex Studio &amp; Poster AI</strong>
+              <small>Buat poster Strava-killer HD &amp; caption medsos otomatis</small>
+            </div>
+            <span class="item-chevron">›</span>
+          </NuxtLink>
+
           <NuxtLink to="/garage" class="inset-item">
-            <div class="item-icon-box item-icon--lime">🚲</div>
+            <div class="item-icon-box item-icon--sand">🚲</div>
             <div class="item-body">
               <strong>My Garage</strong>
               <small>Kelola koleksi sepeda, foto, &amp; anatomi komponen</small>
@@ -585,6 +644,32 @@ async function quickDemoLogin(): Promise<void> {
   width: 1px;
   height: 1.6rem;
   background: var(--color-sand);
+}
+
+.rider-card-actions {
+  display: flex;
+  justify-content: flex-end;
+}
+
+.rider-share-btn {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.4rem;
+  padding: 0.55rem 1rem;
+  border-radius: 0.75rem;
+  background: var(--color-chain-lime);
+  color: var(--color-ink);
+  font-size: 0.78rem;
+  font-weight: 850;
+  border: 1px solid var(--color-ink);
+  box-shadow: 0 2px 0 var(--color-ink);
+  cursor: pointer;
+  transition: transform 90ms ease;
+}
+
+.rider-share-btn:active {
+  transform: translateY(2px);
+  box-shadow: 0 0 0 var(--color-ink);
 }
 
 /* ══════════════════════════════════════════════════════════
