@@ -53,36 +53,63 @@ const difficultyText = computed(() => {
 
 <template>
   <NuxtLink class="clean-ride-card" :to="`/community/events/${event.slug || event.id}`">
-    <!-- Left: Minimalist Date Badge -->
+    <!-- Left: Compact Date Box -->
     <div class="card-date-badge" aria-hidden="true">
       <span class="badge-month">{{ monthLabel }}</span>
       <span class="badge-day">{{ dayNumber }}</span>
       <span class="badge-dayname">{{ dayName }}</span>
     </div>
 
-    <!-- Center: Main Event Info -->
+    <!-- Right: Complete Event Details -->
     <div class="card-main">
-      <div class="card-meta-top">
-        <span class="card-community">{{ event.community.name }}</span>
-        <span v-if="distance" class="card-dist">
-          <GIcon name="pin" size="xs" />
-          <span>{{ distance }}</span>
-        </span>
+      <!-- Top Row: Community Name + Reminder Button -->
+      <div class="card-top-row">
+        <div class="community-info">
+          <span class="card-community">{{ event.community.name }}</span>
+          <span v-if="distance" class="card-dist">
+            <GIcon name="pin" size="xs" />
+            <span>{{ distance }}</span>
+          </span>
+        </div>
+
+        <div class="card-action-slot" @click.prevent.stop>
+          <button
+            v-if="!countdown.isPast"
+            class="reminder-pill"
+            :class="{ 'reminder-pill--active': isReminderActive(event.id) }"
+            type="button"
+            :title="isReminderActive(event.id) ? 'Pengingat Aktif (Klik untuk mematikan)' : 'Pasang Pengingat Jadwal'"
+            @click="toggleReminder(event)"
+          >
+            <GIcon
+              name="bell"
+              size="xs"
+              :filled="isReminderActive(event.id)"
+              :color="isReminderActive(event.id) ? '#15803D' : '#64748B'"
+            />
+            <span>{{ isReminderActive(event.id) ? 'Aktif' : countdown.label }}</span>
+          </button>
+          <span v-else class="past-pill">Selesai</span>
+        </div>
       </div>
 
+      <!-- Title: Wraps gracefully without ugly truncation -->
       <h3 class="card-title">{{ event.title }}</h3>
 
-      <div class="card-time-loc">
-        <span class="time-item">
+      <!-- Time & Location Details: Flex Wrap prevents cutting text -->
+      <div class="card-time-loc-row">
+        <span class="detail-tag">
           <GIcon name="history" size="xs" />
           <span>{{ timeLabel }} WIB</span>
         </span>
-        <span class="loc-item">
-          <GIcon name="pin" size="xs" />
+        <span class="detail-dot">·</span>
+        <span class="detail-tag">
+          <GIcon name="pin" size="xs" color="#EF4444" />
           <span>{{ event.meetingArea }}</span>
         </span>
       </div>
 
+      <!-- Category & Participant Chips -->
       <div class="card-pills-row">
         <span class="spec-pill spec-pill--diff">
           <GIcon :name="event.difficulty === 'hard' ? 'mountain' : 'route'" size="xs" />
@@ -98,36 +125,14 @@ const difficultyText = computed(() => {
         </span>
       </div>
     </div>
-
-    <!-- Right: Single Clean Reminder Action -->
-    <div class="card-aside" @click.prevent.stop>
-      <button
-        v-if="!countdown.isPast"
-        class="reminder-pill"
-        :class="{ 'reminder-pill--active': isReminderActive(event.id) }"
-        type="button"
-        :title="isReminderActive(event.id) ? 'Pengingat Aktif (Klik untuk mematikan)' : 'Pasang Pengingat Jadwal'"
-        @click="toggleReminder(event)"
-      >
-        <GIcon
-          name="bell"
-          size="xs"
-          :filled="isReminderActive(event.id)"
-          :color="isReminderActive(event.id) ? '#15803D' : '#64748B'"
-        />
-        <span>{{ isReminderActive(event.id) ? 'Aktif' : countdown.label }}</span>
-      </button>
-      <span v-else class="past-pill">Selesai</span>
-    </div>
   </NuxtLink>
 </template>
 
 <style scoped>
 .clean-ride-card {
-  display: grid;
-  grid-template-columns: auto 1fr auto;
-  gap: 0.85rem;
+  display: flex;
   align-items: flex-start;
+  gap: 0.85rem;
   padding: 0.95rem 1.1rem;
   border-radius: 1.15rem;
   background: var(--color-white);
@@ -189,19 +194,28 @@ const difficultyText = computed(() => {
   line-height: 1;
 }
 
-/* Main Content */
+/* Main Content Area */
 .card-main {
+  flex: 1;
   display: grid;
-  gap: 0.25rem;
+  gap: 0.35rem;
   min-width: 0;
 }
 
-.card-meta-top {
+.card-top-row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 0.5rem;
+}
+
+.community-info {
   display: flex;
   align-items: center;
   gap: 0.4rem;
   font-size: 0.72rem;
   color: var(--color-asphalt);
+  min-width: 0;
 }
 
 .card-community {
@@ -221,68 +235,7 @@ const difficultyText = computed(() => {
   flex-shrink: 0;
 }
 
-.card-title {
-  margin: 0;
-  font-size: 0.95rem;
-  font-weight: 850;
-  color: var(--color-ink);
-  line-height: 1.25;
-  overflow: hidden;
-  text-overflow: ellipsis;
-  white-space: nowrap;
-}
-
-.card-time-loc {
-  display: flex;
-  align-items: center;
-  gap: 0.6rem;
-  font-size: 0.74rem;
-  color: var(--color-asphalt);
-  overflow: hidden;
-  text-overflow: ellipsis;
-  white-space: nowrap;
-}
-
-.time-item,
-.loc-item {
-  display: inline-flex;
-  align-items: center;
-  gap: 0.25rem;
-  overflow: hidden;
-  text-overflow: ellipsis;
-  white-space: nowrap;
-}
-
-.card-pills-row {
-  display: flex;
-  align-items: center;
-  gap: 0.35rem;
-  flex-wrap: wrap;
-  margin-top: 0.15rem;
-}
-
-.spec-pill {
-  display: inline-flex;
-  align-items: center;
-  gap: 0.25rem;
-  font-size: 0.66rem;
-  font-weight: 750;
-  color: var(--color-asphalt);
-  background: var(--color-canvas);
-  padding: 0.12rem 0.45rem;
-  border-radius: 0.35rem;
-  border: 1px solid var(--color-sand);
-}
-
-.spec-pill--diff {
-  color: var(--color-ink);
-  font-weight: 800;
-}
-
-/* Aside / Reminder Action */
-.card-aside {
-  display: flex;
-  align-items: center;
+.card-action-slot {
   flex-shrink: 0;
 }
 
@@ -295,7 +248,7 @@ const difficultyText = computed(() => {
   color: var(--color-asphalt);
   background: var(--color-canvas);
   border: 1px solid var(--color-sand);
-  padding: 0.22rem 0.55rem;
+  padding: 0.18rem 0.5rem;
   border-radius: 9999px;
   cursor: pointer;
   transition: all 120ms ease;
@@ -317,8 +270,62 @@ const difficultyText = computed(() => {
   font-weight: 750;
   color: #94A3B8;
   background: var(--color-canvas);
-  padding: 0.18rem 0.45rem;
+  padding: 0.15rem 0.45rem;
   border-radius: 9999px;
   white-space: nowrap;
+}
+
+.card-title {
+  margin: 0;
+  font-size: 0.98rem;
+  font-weight: 850;
+  color: var(--color-ink);
+  line-height: 1.3;
+  word-break: break-word;
+}
+
+.card-time-loc-row {
+  display: flex;
+  align-items: center;
+  gap: 0.35rem;
+  font-size: 0.74rem;
+  color: var(--color-asphalt);
+  flex-wrap: wrap;
+}
+
+.detail-tag {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.25rem;
+}
+
+.detail-dot {
+  opacity: 0.4;
+}
+
+.card-pills-row {
+  display: flex;
+  align-items: center;
+  gap: 0.35rem;
+  flex-wrap: wrap;
+  margin-top: 0.1rem;
+}
+
+.spec-pill {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.25rem;
+  font-size: 0.66rem;
+  font-weight: 750;
+  color: var(--color-asphalt);
+  background: var(--color-canvas);
+  padding: 0.12rem 0.45rem;
+  border-radius: 0.35rem;
+  border: 1px solid var(--color-sand);
+}
+
+.spec-pill--diff {
+  color: var(--color-ink);
+  font-weight: 800;
 }
 </style>
