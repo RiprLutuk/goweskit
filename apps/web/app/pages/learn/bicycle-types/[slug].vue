@@ -13,6 +13,11 @@ const activeHotspotIndex = ref<number | null>(null);
 
 const slug = computed(() => String(route.params.slug));
 
+const activeHotspot = computed(() => {
+  if (activeHotspotIndex.value === null || !anatomy.value) return null;
+  return anatomy.value.hotspots[activeHotspotIndex.value] ?? null;
+});
+
 onMounted(loadAnatomy);
 
 async function loadAnatomy(): Promise<void> {
@@ -40,382 +45,760 @@ function selectHotspot(index: number | null): void {
 </script>
 
 <template>
-  <div class="page-stack anatomy-page">
-    <NuxtLink class="anatomy-back" to="/learn">← Back to Learn Library</NuxtLink>
+  <div class="anatomy-page-wrapper">
+    <!-- Top Navigation Row -->
+    <div class="anatomy-nav-bar">
+      <NuxtLink class="back-nav-btn" to="/learn">
+        <span>←</span>
+        <span>Kembali ke Ensiklopedia</span>
+      </NuxtLink>
+    </div>
 
-    <p v-if="loading" class="state-card" role="status">
-      Preparing the workshop diagram…
-    </p>
+    <!-- Loading State -->
+    <div v-if="loading" class="state-card state-card--loading" role="status">
+      <span class="loading-spinner"></span>
+      <span>Menyiapkan diagram anatomi dan standar teknis…</span>
+    </div>
 
+    <!-- Error State -->
     <div
       v-else-if="errorMessage"
-      class="state-card state-card--error anatomy-state"
+      class="state-card state-card--error"
       role="alert"
     >
       <p>{{ errorMessage }}</p>
       <button
-        class="button button--secondary"
+        class="retry-btn"
         type="button"
         @click="loadAnatomy"
       >
-        Try again
+        Coba Lagi
       </button>
     </div>
 
-    <div v-else-if="anatomy === null" class="state-card anatomy-state">
-      <span class="status-chip status-chip--sky">Starter path</span>
-      <h1>This anatomy guide is still on the workstand.</h1>
+    <!-- Not Found / Work In Progress State -->
+    <div v-else-if="anatomy === null" class="empty-anatomy-card">
+      <span class="type-badge">DALAM PENGEMBANGAN</span>
+      <h2>Diagram Anatomi Masih Disiapkan</h2>
       <p>
-        The first interactive guides cover MTB Hardtail and Folding Bike. You
-        can still browse every component in the Learn catalog.
+        Panduan interaktif saat ini tersedia lengkap untuk MTB Hardtail, Folding Bike, Gravel Bike, dan Road Bike. Anda tetap dapat menjelajahi seluruh katalog komponen.
       </p>
-      <NuxtLink class="button button--primary" to="/learn">
-        Browse components
+      <NuxtLink class="cta-link-btn" to="/learn">
+        Jelajahi Katalog Komponen →
       </NuxtLink>
     </div>
 
+    <!-- Main Content -->
     <template v-else>
-      <header class="page-heading anatomy-heading">
-        <span class="status-chip status-chip--sky">{{ anatomy.bicycleType.name }}</span>
-        <h1>Meet the parts of your bike.</h1>
-        <p>{{ anatomy.overview }}</p>
+      <!-- Page Hero Header -->
+      <header class="anatomy-hero">
+        <div class="anatomy-hero__inner">
+          <div class="anatomy-hero__top">
+            <div class="category-badge">
+              <span class="badge-dot"></span>
+              <span>ANATOMI &amp; STANDAR</span>
+            </div>
+            <span class="type-pill-tag">
+              {{ anatomy.bicycleType.name }}
+            </span>
+          </div>
+
+          <h1 class="anatomy-hero__title">
+            Anatomi Komponen {{ anatomy.bicycleType.name }}
+          </h1>
+          <p class="anatomy-hero__subtitle">
+            {{ anatomy.overview }}
+          </p>
+        </div>
       </header>
 
-      <!-- Interactive Hotspot Workbench -->
-      <section class="anatomy-workbench" aria-labelledby="diagram-title">
-        <div class="anatomy-workbench__heading">
-          <div>
-            <p class="technical-label">Direct Interactive Blueprint</p>
-            <h2 id="diagram-title">Interactive Anatomy Diagram</h2>
-          </div>
-          <span class="count-chip">{{ anatomy.hotspots.length }} parts</span>
-        </div>
-
-        <div class="bike-diagram-container">
-          <RealisticBikeDiagram
-            :type-slug="slug"
-            :anatomy="anatomy"
-            :active-index="activeHotspotIndex"
-            @select="selectHotspot"
-          />
-        </div>
-
-        <p class="diagram-note">
-          💡 <strong>Tip:</strong> Click or hover directly on any part of the bicycle illustration above to inspect its specs, or browse the list below.
-        </p>
-      </section>
-
-      <!-- Parts Guide List -->
-      <section aria-labelledby="parts-title">
-        <div class="section-heading">
-          <div>
-            <p class="section-heading__eyebrow">The same parts, in words</p>
-            <h2 id="parts-title">Component Guide</h2>
-          </div>
-        </div>
-
-        <ol class="anatomy-list">
-          <li
-            v-for="(hotspot, index) in anatomy.hotspots"
-            :key="hotspot.component.id"
-            class="anatomy-list__item"
-            :class="{ 'anatomy-list__item--highlighted': activeHotspotIndex === index }"
-            @click="selectHotspot(index)"
-          >
-            <span class="anatomy-list__number" aria-hidden="true">
-              {{ index + 1 }}
-            </span>
-            <div class="anatomy-list__content">
-              <p class="technical-label">{{ hotspot.beginnerLabel }}</p>
-              <h3>{{ hotspot.component.name }}</h3>
-              <p>{{ hotspot.beginnerSummary }}</p>
-              <div class="anatomy-list__actions">
-                <NuxtLink
-                  class="anatomy-list__link"
-                  :to="`/learn/components/${hotspot.component.slug}`"
-                  @click.stop
-                >
-                  Learn about {{ hotspot.component.name }} →
-                </NuxtLink>
-              </div>
+      <div class="anatomy-content-container">
+        <!-- Interactive Hotspot Workbench -->
+        <section class="blueprint-workbench" aria-labelledby="diagram-title">
+          <div class="blueprint-workbench__header">
+            <div>
+              <span class="blueprint-eyebrow">🔬 BLUEPRINT INTERAKTIF</span>
+              <h2 id="diagram-title" class="blueprint-title">Diagram Titik Komponen</h2>
             </div>
-          </li>
-        </ol>
-      </section>
+            <span class="parts-counter-badge">
+              {{ anatomy.hotspots.length }} Titik Standar
+            </span>
+          </div>
+
+          <!-- Diagram Component -->
+          <div class="bike-diagram-container">
+            <RealisticBikeDiagram
+              :type-slug="slug"
+              :anatomy="anatomy"
+              :active-index="activeHotspotIndex"
+              @select="selectHotspot"
+            />
+          </div>
+
+          <!-- Interactive Tip Banner -->
+          <div class="diagram-tip-banner">
+            <span class="tip-icon">💡</span>
+            <p>
+              <strong>Petunjuk:</strong> Sentuh atau klik langsung pada bagian sepeda di atas untuk memeriksa spesifikasi teknisnya, atau pilih dari daftar komponen di bawah.
+            </p>
+          </div>
+        </section>
+
+        <!-- Selected Component Inspector Card (if selected) -->
+        <div
+          v-if="activeHotspot !== null"
+          class="selected-inspector-card"
+        >
+          <div class="inspector-card__header">
+            <div class="inspector-badge">
+              {{ (activeHotspotIndex ?? 0) + 1 }}
+            </div>
+            <div>
+              <span class="inspector-cat-pill">
+                {{ activeHotspot.beginnerLabel }}
+              </span>
+              <h3 class="inspector-title">
+                {{ activeHotspot.component.name }}
+              </h3>
+            </div>
+            <button
+              class="inspector-close-btn"
+              type="button"
+              aria-label="Tutup Inspektor"
+              @click="activeHotspotIndex = null"
+            >
+              ✕
+            </button>
+          </div>
+
+          <p class="inspector-desc">
+            {{ activeHotspot.beginnerSummary }}
+          </p>
+
+          <div class="inspector-actions">
+            <NuxtLink
+              class="inspector-action-btn"
+              :to="`/learn/components/${activeHotspot.component.slug}`"
+            >
+              <span>Pelajari Standar Komponen Ini</span>
+              <span>→</span>
+            </NuxtLink>
+          </div>
+        </div>
+
+        <!-- Parts Guide List Section -->
+        <section class="components-list-section" aria-labelledby="parts-title">
+          <div class="components-list-header">
+            <div>
+              <span class="section-eyebrow">PANDUAN LENGKAP</span>
+              <h2 id="parts-title" class="section-title">
+                Daftar Komponen &amp; Fungsi
+              </h2>
+            </div>
+            <span class="counter-chip">
+              {{ anatomy.hotspots.length }} Komponen
+            </span>
+          </div>
+
+          <div class="anatomy-list-grid">
+            <article
+              v-for="(hotspot, index) in anatomy.hotspots"
+              :key="hotspot.component.id"
+              class="component-item-card"
+              :class="{ 'component-item-card--active': activeHotspotIndex === index }"
+              @click="selectHotspot(index)"
+            >
+              <div class="component-item__top">
+                <span class="component-number-badge">
+                  {{ index + 1 }}
+                </span>
+                <span class="component-label-tag">
+                  {{ hotspot.beginnerLabel }}
+                </span>
+              </div>
+
+              <h3 class="component-item__name">
+                {{ hotspot.component.name }}
+              </h3>
+              <p class="component-item__summary">
+                {{ hotspot.beginnerSummary }}
+              </p>
+
+              <NuxtLink
+                class="component-item__link"
+                :to="`/learn/components/${hotspot.component.slug}`"
+                @click.stop
+              >
+                <span>Detail Standar</span>
+                <span>→</span>
+              </NuxtLink>
+            </article>
+          </div>
+        </section>
+      </div>
     </template>
   </div>
 </template>
 
 <style scoped>
-.anatomy-page {
-  gap: 2rem;
-}
-
-.anatomy-back {
-  justify-self: start;
-  color: var(--color-asphalt);
-  font-weight: 800;
-  text-decoration-thickness: 2px;
-  text-underline-offset: 0.25rem;
-}
-
-.anatomy-heading {
-  max-width: 48rem;
-}
-
-.anatomy-state {
-  display: grid;
-  justify-items: start;
-  gap: 1rem;
-}
-
-.anatomy-state > * {
-  margin: 0;
-}
-
-.anatomy-workbench {
-  display: grid;
-  gap: 1.25rem;
-  padding: clamp(1rem, 4vw, 2rem);
-  border: 1px solid rgb(64 80 95 / 14%);
-  border-radius: var(--radius-card);
-  background:
-    linear-gradient(rgb(255 255 255 / 92%), rgb(255 255 255 / 92%)),
-    repeating-linear-gradient(
-      90deg,
-      transparent 0 31px,
-      rgb(64 80 95 / 8%) 31px 32px
-    );
-  box-shadow: var(--shadow-card);
-}
-
-.anatomy-workbench__heading {
+.anatomy-page-wrapper {
   display: flex;
-  align-items: end;
+  flex-direction: column;
+  gap: 1.25rem;
+  padding-bottom: 3rem;
+}
+
+/* ══════════════════════════════════════════════════════════
+   TOP NAVIGATION
+   ══════════════════════════════════════════════════════════ */
+.anatomy-nav-bar {
+  display: flex;
+  align-items: center;
+}
+
+.back-nav-btn {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.45rem;
+  padding: 0.4rem 0.85rem;
+  border-radius: 9999px;
+  background: var(--color-white);
+  border: 1.5px solid var(--color-sand);
+  color: var(--color-ink);
+  font-size: 0.78rem;
+  font-weight: 850;
+  text-decoration: none;
+  box-shadow: 0 2px 6px rgba(23, 32, 42, 0.03);
+  transition: all 100ms ease;
+}
+
+.back-nav-btn:hover {
+  border-color: var(--color-ink);
+  background: var(--color-canvas);
+}
+
+.back-nav-btn:active {
+  transform: translateY(1px);
+}
+
+/* ══════════════════════════════════════════════════════════
+   HERO / HEADER SECTION
+   ══════════════════════════════════════════════════════════ */
+.anatomy-hero {
+  background: var(--color-white);
+  border-bottom: 1.5px solid var(--color-sand);
+  padding: 1.25rem 1rem 1.5rem;
+  margin: -1rem -1rem 0 -1rem;
+}
+
+@media (min-width: 640px) {
+  .anatomy-hero {
+    border-radius: 1.5rem;
+    border: 1.5px solid var(--color-sand);
+    margin: 0;
+    padding: 1.5rem 1.75rem 1.75rem;
+  }
+}
+
+.anatomy-hero__inner {
+  max-width: 54rem;
+  margin: 0 auto;
+  display: flex;
+  flex-direction: column;
+  gap: 0.65rem;
+}
+
+.anatomy-hero__top {
+  display: flex;
+  align-items: center;
   justify-content: space-between;
+  gap: 0.75rem;
+  flex-wrap: wrap;
+}
+
+.category-badge {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.45rem;
+  font-family: var(--font-mono);
+  font-size: 0.7rem;
+  font-weight: 900;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+  color: var(--color-asphalt);
+  background: var(--color-canvas);
+  border: 1px solid var(--color-sand);
+  padding: 0.2rem 0.6rem;
+  border-radius: 9999px;
+}
+
+.badge-dot {
+  width: 0.45rem;
+  height: 0.45rem;
+  border-radius: 50%;
+  background: #16A34A;
+}
+
+.type-pill-tag {
+  font-family: var(--font-mono);
+  font-size: 0.72rem;
+  font-weight: 850;
+  color: #0284C7;
+  background: #E0F2FE;
+  padding: 0.2rem 0.65rem;
+  border-radius: 9999px;
+  border: 1px solid rgba(2, 132, 199, 0.2);
+}
+
+.anatomy-hero__title {
+  margin: 0;
+  font-size: 1.75rem;
+  font-weight: 900;
+  letter-spacing: -0.03em;
+  color: var(--color-ink);
+  line-height: 1.2;
+}
+
+.anatomy-hero__subtitle {
+  margin: 0;
+  font-size: 0.86rem;
+  color: var(--color-asphalt);
+  line-height: 1.5;
+  max-width: 44rem;
+}
+
+/* ══════════════════════════════════════════════════════════
+   CONTENT CONTAINER & BLUEPRINT WORKBENCH
+   ══════════════════════════════════════════════════════════ */
+.anatomy-content-container {
+  display: flex;
+  flex-direction: column;
+  gap: 1.5rem;
+  max-width: 54rem;
+  margin: 0 auto;
+  width: 100%;
+}
+
+.blueprint-workbench {
+  background: var(--color-white);
+  border: 1.5px solid var(--color-sand);
+  border-radius: 1.5rem;
+  padding: 1.25rem;
+  box-shadow: 0 8px 32px rgba(23, 32, 42, 0.04);
+  display: flex;
+  flex-direction: column;
   gap: 1rem;
 }
 
-.anatomy-workbench__heading p,
-.anatomy-workbench__heading h2 {
-  margin: 0;
+@media (min-width: 640px) {
+  .blueprint-workbench {
+    padding: 1.75rem;
+  }
+}
+
+.blueprint-workbench__header {
+  display: flex;
+  align-items: flex-end;
+  justify-content: space-between;
+  gap: 0.75rem;
+  flex-wrap: wrap;
+}
+
+.blueprint-eyebrow {
+  font-family: var(--font-mono);
+  font-size: 0.68rem;
+  font-weight: 850;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+  color: var(--color-asphalt);
+  display: block;
+}
+
+.blueprint-title {
+  margin: 0.15rem 0 0;
+  font-size: 1.35rem;
+  font-weight: 900;
+  letter-spacing: -0.02em;
+  color: var(--color-ink);
+}
+
+.parts-counter-badge {
+  font-family: var(--font-mono);
+  font-size: 0.72rem;
+  font-weight: 900;
+  color: var(--color-ink);
+  background: var(--color-chain-lime);
+  padding: 0.25rem 0.75rem;
+  border-radius: 9999px;
+  border: 1px solid var(--color-ink);
+  box-shadow: 0 2px 0 var(--color-ink);
 }
 
 .bike-diagram-container {
-  display: grid;
-  gap: 1rem;
-}
-
-.bike-diagram {
-  position: relative;
   width: 100%;
-  aspect-ratio: 100 / 78;
+  border-radius: 1.25rem;
+  background: #F8FAFC;
+  border: 1.5px solid var(--color-sand);
   overflow: hidden;
-  border: 1px solid rgb(64 80 95 / 15%);
-  border-radius: 1rem;
-  background:
-    radial-gradient(circle at 50% 70%, rgb(201 243 106 / 35%), transparent 50%),
-    var(--color-canvas);
 }
 
-.bike-diagram__drawing {
-  width: 100%;
-  height: 100%;
-  fill: none;
-  stroke: var(--color-asphalt);
-  stroke-linecap: round;
-  stroke-linejoin: round;
-  stroke-width: 1.6;
-}
-
-.bike-diagram__hotspots {
-  margin: 0;
-  padding: 0;
-  list-style: none;
-}
-
-.bike-diagram__hotspots li {
-  position: absolute;
-  transform: translate(-50%, -50%);
-}
-
-.hotspot-pin {
-  display: grid;
-  width: 2.75rem;
-  height: 2.75rem;
-  place-items: center;
-  border: 2px solid var(--color-ink);
-  border-radius: 50%;
-  background: var(--color-chain-lime);
-  box-shadow: 0 5px 0 var(--color-ink);
-  color: var(--color-ink);
-  font-size: 0.85rem;
-  font-weight: 900;
-  cursor: pointer;
-  transition: transform 150ms ease, box-shadow 150ms ease, background-color 150ms ease;
-}
-
-.hotspot-pin:hover,
-.hotspot-pin:focus-visible {
-  outline: 3px solid var(--color-sky);
-  outline-offset: 3px;
-  box-shadow: 0 2px 0 var(--color-ink);
-  transform: translateY(3px);
-}
-
-.hotspot-pin--active {
-  background: var(--color-sky);
-  box-shadow: 0 0 0 4px var(--color-ink), 0 5px 0 var(--color-ink);
-  transform: scale(1.15) translateY(-2px);
-}
-
-/* Active Hotspot Preview Card */
-.active-hotspot-card {
-  padding: 1.15rem;
-  border: 2px solid var(--color-ink);
-  border-radius: 1rem;
-  background: var(--color-white);
-  box-shadow: 0 8px 25px rgb(23 32 42 / 12%);
-  display: grid;
+/* Tip Banner */
+.diagram-tip-banner {
+  display: flex;
+  align-items: flex-start;
   gap: 0.65rem;
-  animation: fadeIn 150ms ease-out;
+  background: var(--color-canvas);
+  border: 1px solid var(--color-sand);
+  border-radius: 1rem;
+  padding: 0.75rem 1rem;
+  font-size: 0.8rem;
+  color: var(--color-asphalt);
+  line-height: 1.45;
 }
 
-@keyframes fadeIn {
-  from { opacity: 0; transform: translateY(-4px); }
+.tip-icon {
+  font-size: 1.1rem;
+  flex-shrink: 0;
+}
+
+.diagram-tip-banner p {
+  margin: 0;
+}
+
+/* ══════════════════════════════════════════════════════════
+   SELECTED INSPECTOR CARD
+   ══════════════════════════════════════════════════════════ */
+.selected-inspector-card {
+  background: var(--color-white);
+  border: 2px solid var(--color-ink);
+  border-radius: 1.25rem;
+  padding: 1.25rem;
+  box-shadow: 0 8px 24px rgba(23, 32, 42, 0.08);
+  display: flex;
+  flex-direction: column;
+  gap: 0.75rem;
+  animation: slideDown 150ms ease-out;
+}
+
+@keyframes slideDown {
+  from { opacity: 0; transform: translateY(-6px); }
   to { opacity: 1; transform: translateY(0); }
 }
 
-.active-hotspot-card__header {
+.inspector-card__header {
   display: flex;
   align-items: center;
   gap: 0.75rem;
 }
 
-.active-hotspot-card__header h3 {
-  margin: 0;
-  font-size: 1.25rem;
-}
-
-.active-hotspot-pin-badge {
-  display: grid;
-  width: 2.2rem;
-  height: 2.2rem;
-  place-items: center;
-  border-radius: 0.65rem;
-  background: var(--color-chain-lime);
-  font-weight: 900;
-  font-size: 0.85rem;
-}
-
-.active-hotspot-card__header .text-button {
-  margin-left: auto;
-  font-size: 1.1rem;
-  padding: 0.2rem 0.5rem;
-}
-
-.active-hotspot-card__summary {
-  margin: 0;
-  color: var(--color-asphalt);
-  font-size: 0.9rem;
-  line-height: 1.55;
-}
-
-.active-hotspot-card__actions {
-  display: flex;
-  flex-wrap: wrap;
-  gap: 0.5rem;
-  margin-top: 0.35rem;
-}
-
-.diagram-note {
-  margin: 0;
-  color: var(--color-asphalt);
-  font-size: 0.84rem;
-  line-height: 1.6;
-}
-
-.anatomy-list {
-  display: grid;
-  gap: 0.85rem;
-  margin: 0;
-  padding: 0;
-  list-style: none;
-}
-
-.anatomy-list__item {
-  display: grid;
-  grid-template-columns: 2.5rem 1fr;
-  gap: 0.85rem;
-  padding: 1.15rem;
-  border: 1px solid rgb(64 80 95 / 13%);
-  border-radius: 1rem;
-  background: var(--color-white);
-  cursor: pointer;
-  transition: border-color 120ms ease, background-color 120ms ease;
-}
-
-.anatomy-list__item:hover {
-  border-color: var(--color-ink);
-}
-
-.anatomy-list__item--highlighted {
-  border-color: var(--color-ink);
-  background: rgb(201 243 106 / 15%);
-  box-shadow: 0 4px 15px rgb(23 32 42 / 8%);
-}
-
-.anatomy-list__number {
-  display: grid;
-  width: 2.5rem;
-  height: 2.5rem;
-  place-items: center;
+.inspector-badge {
+  width: 2.35rem;
+  height: 2.35rem;
   border-radius: 0.75rem;
-  background: var(--color-sky);
+  background: var(--color-chain-lime);
+  border: 1.5px solid var(--color-ink);
+  display: flex;
+  align-items: center;
+  justify-content: center;
   font-weight: 900;
-}
-
-.anatomy-list p,
-.anatomy-list h3 {
-  margin: 0;
-}
-
-.anatomy-list h3 {
-  margin-top: 0.2rem;
-}
-
-.anatomy-list__content > p:not(.technical-label) {
-  margin-top: 0.45rem;
-  color: var(--color-asphalt);
-  line-height: 1.6;
-}
-
-.anatomy-list__actions {
-  margin-top: 0.75rem;
-}
-
-.anatomy-list__link {
-  font-weight: 800;
-  font-size: 0.85rem;
+  font-size: 0.95rem;
   color: var(--color-ink);
-  text-decoration: underline;
-  text-underline-offset: 0.2rem;
+  flex-shrink: 0;
 }
 
-.button--sm {
-  min-height: 2.25rem;
-  padding: 0.35rem 0.75rem;
+.inspector-cat-pill {
+  font-family: var(--font-mono);
+  font-size: 0.65rem;
+  font-weight: 850;
+  color: var(--color-asphalt);
+  text-transform: uppercase;
+}
+
+.inspector-title {
+  margin: 0;
+  font-size: 1.15rem;
+  font-weight: 900;
+  color: var(--color-ink);
+}
+
+.inspector-close-btn {
+  margin-left: auto;
+  border: none;
+  background: var(--color-canvas);
+  border: 1px solid var(--color-sand);
+  width: 1.85rem;
+  height: 1.85rem;
+  border-radius: 50%;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 0.85rem;
+  color: var(--color-asphalt);
+}
+
+.inspector-desc {
+  margin: 0;
+  font-size: 0.84rem;
+  color: var(--color-asphalt);
+  line-height: 1.45;
+}
+
+.inspector-actions {
+  display: flex;
+  margin-top: 0.25rem;
+}
+
+.inspector-action-btn {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.45rem;
+  padding: 0.55rem 1rem;
+  border-radius: 0.75rem;
+  background: var(--color-ink);
+  color: var(--color-white);
+  font-size: 0.8rem;
+  font-weight: 850;
+  text-decoration: none;
+  transition: transform 90ms ease;
+}
+
+.inspector-action-btn:active {
+  transform: scale(0.97);
+}
+
+/* ══════════════════════════════════════════════════════════
+   COMPONENTS LIST GRID
+   ══════════════════════════════════════════════════════════ */
+.components-list-section {
+  display: flex;
+  flex-direction: column;
+  gap: 1rem;
+}
+
+.components-list-header {
+  display: flex;
+  align-items: flex-end;
+  justify-content: space-between;
+  gap: 0.75rem;
+}
+
+.section-eyebrow {
+  font-family: var(--font-mono);
+  font-size: 0.68rem;
+  font-weight: 850;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+  color: var(--color-asphalt);
+  display: block;
+}
+
+.section-title {
+  margin: 0.15rem 0 0;
+  font-size: 1.25rem;
+  font-weight: 900;
+  color: var(--color-ink);
+}
+
+.counter-chip {
+  font-family: var(--font-mono);
+  font-size: 0.68rem;
+  font-weight: 850;
+  padding: 0.2rem 0.6rem;
+  border-radius: 9999px;
+  background: var(--color-sand);
+  color: var(--color-ink);
+}
+
+.anatomy-list-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(18rem, 1fr));
+  gap: 0.85rem;
+}
+
+.component-item-card {
+  background: var(--color-white);
+  border: 1.5px solid var(--color-sand);
+  border-radius: 1.25rem;
+  padding: 1.15rem;
+  display: flex;
+  flex-direction: column;
+  gap: 0.65rem;
+  cursor: pointer;
+  transition: all 120ms ease;
+}
+
+.component-item-card:hover {
+  border-color: var(--color-ink);
+  box-shadow: 0 4px 16px rgba(23, 32, 42, 0.05);
+}
+
+.component-item-card--active {
+  border-color: var(--color-ink);
+  background: rgba(201, 243, 106, 0.15);
+  box-shadow: 0 6px 20px rgba(23, 32, 42, 0.08);
+}
+
+.component-item__top {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 0.5rem;
+}
+
+.component-number-badge {
+  width: 1.85rem;
+  height: 1.85rem;
+  border-radius: 0.55rem;
+  background: #E0F2FE;
+  color: #0369A1;
+  font-family: var(--font-mono);
+  font-weight: 900;
   font-size: 0.78rem;
+  display: flex;
+  align-items: center;
+  justify-content: center;
 }
 
-@media (min-width: 48rem) {
-  .bike-diagram {
-    max-width: 58rem;
-    margin-inline: auto;
-  }
+.component-item-card--active .component-number-badge {
+  background: var(--color-chain-lime);
+  color: var(--color-ink);
+}
 
-  .anatomy-list {
-    grid-template-columns: repeat(2, minmax(0, 1fr));
-  }
+.component-label-tag {
+  font-family: var(--font-mono);
+  font-size: 0.65rem;
+  font-weight: 850;
+  color: var(--color-asphalt);
+  background: var(--color-canvas);
+  border: 1px solid var(--color-sand);
+  padding: 0.15rem 0.45rem;
+  border-radius: 0.35rem;
+}
+
+.component-item__name {
+  margin: 0;
+  font-size: 1.05rem;
+  font-weight: 900;
+  color: var(--color-ink);
+}
+
+.component-item__summary {
+  margin: 0;
+  font-size: 0.8rem;
+  color: var(--color-asphalt);
+  line-height: 1.45;
+  flex: 1;
+}
+
+.component-item__link {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.35rem;
+  margin-top: 0.25rem;
+  font-size: 0.78rem;
+  font-weight: 850;
+  color: var(--color-ink);
+  text-decoration: none;
+  padding: 0.35rem 0.65rem;
+  border-radius: 0.55rem;
+  background: var(--color-canvas);
+  border: 1px solid var(--color-sand);
+  width: fit-content;
+  transition: all 100ms ease;
+}
+
+.component-item__link:hover {
+  background: var(--color-chain-lime);
+  border-color: var(--color-ink);
+}
+
+/* State & Empty */
+.state-card {
+  padding: 1.5rem;
+  border-radius: 1.25rem;
+  background: var(--color-white);
+  border: 1.5px solid var(--color-sand);
+  text-align: center;
+  font-size: 0.85rem;
+  font-weight: 750;
+  color: var(--color-asphalt);
+}
+
+.state-card--loading {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.65rem;
+}
+
+.loading-spinner {
+  width: 1rem;
+  height: 1rem;
+  border: 2px solid var(--color-sand);
+  border-top-color: var(--color-ink);
+  border-radius: 50%;
+  animation: spin 0.6s linear infinite;
+}
+
+@keyframes spin {
+  to { transform: rotate(360deg); }
+}
+
+.state-card--error {
+  background: #FEE2E2;
+  border-color: #FCA5A5;
+  color: #991B1B;
+}
+
+.empty-anatomy-card {
+  background: var(--color-white);
+  border: 1.5px solid var(--color-sand);
+  border-radius: 1.5rem;
+  padding: 2rem 1.5rem;
+  text-align: center;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 0.85rem;
+}
+
+.type-badge {
+  font-family: var(--font-mono);
+  font-size: 0.65rem;
+  font-weight: 900;
+  background: #E0F2FE;
+  color: #0369A1;
+  padding: 0.2rem 0.6rem;
+  border-radius: 9999px;
+}
+
+.empty-anatomy-card h2 {
+  margin: 0;
+  font-size: 1.35rem;
+  font-weight: 900;
+  color: var(--color-ink);
+}
+
+.empty-anatomy-card p {
+  margin: 0;
+  font-size: 0.85rem;
+  color: var(--color-asphalt);
+  max-width: 32rem;
+  line-height: 1.5;
+}
+
+.cta-link-btn {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.45rem;
+  padding: 0.65rem 1.25rem;
+  border-radius: 0.85rem;
+  background: var(--color-ink);
+  color: var(--color-white);
+  font-size: 0.84rem;
+  font-weight: 850;
+  text-decoration: none;
+  margin-top: 0.5rem;
 }
 </style>
