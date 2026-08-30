@@ -197,6 +197,7 @@ export type NearbyEventsRequest = z.infer<typeof nearbyEventsRequestSchema>;
 export const publicEventSchema = z
   .object({
     id: z.uuid(),
+    slug: z.string().trim().min(1).max(200).default(''),
     community: publicCommunitySchema.pick({
       id: true,
       slug: true,

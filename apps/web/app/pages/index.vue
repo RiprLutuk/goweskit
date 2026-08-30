@@ -52,6 +52,7 @@ const fallbackFeaturedRoute: NearbyRoute = {
 const fallbackEvents: NearbyEvent[] = [
   {
     id: '40000000-0000-4000-8000-000000000001',
+    slug: 'sunday-morning-coffee-ride',
     community: {
       id: '20000000-0000-4000-8000-000000000001',
       slug: 'bandung-gravel-society',
@@ -75,6 +76,7 @@ const fallbackEvents: NearbyEvent[] = [
   },
   {
     id: '40000000-0000-4000-8000-000000000002',
+    slug: 'dago-giri-hill-climb-challenge',
     community: {
       id: '20000000-0000-4000-8000-000000000002',
       slug: 'puncak-climbers-club',

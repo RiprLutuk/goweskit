@@ -202,7 +202,7 @@ export class CommunityService {
     const participation =
       viewer === null
         ? null
-        : await this.repository.findParticipation(eventId, viewer.id);
+        : await this.repository.findParticipation(stored.event.id, viewer.id);
     return {
       event: stored.event,
       viewerParticipation: mapParticipation(participation),
@@ -217,7 +217,7 @@ export class CommunityService {
     if (stored === null) throw this.eventNotFound();
     const [membership, participation] = await Promise.all([
       this.repository.findMembership(stored.communityId, user.id),
-      this.repository.findParticipation(eventId, user.id),
+      this.repository.findParticipation(stored.event.id, user.id),
     ]);
     const decision = decideEventJoin({
       status: stored.event.status,
@@ -236,7 +236,7 @@ export class CommunityService {
       };
     }
     const joined = await this.repository.joinEventAtomically(
-      eventId,
+      stored.event.id,
       user.id,
       stored.event.capacity,
     );

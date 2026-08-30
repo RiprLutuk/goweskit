@@ -19,7 +19,7 @@ const joining = ref(false);
 const errorMessage = ref('');
 const joinMessage = ref('');
 
-const eventId = computed(() => String(route.params.id));
+const eventIdentifier = computed(() => String(route.params.id));
 const isJoined = computed(
   () => detail.value?.viewerParticipation?.status === 'joined',
 );
@@ -56,12 +56,79 @@ const timeLabel = computed(() =>
     : '',
 );
 
+const pageTitle = computed(() =>
+  detail.value
+    ? `${detail.value.event.title} - Mabar ${detail.value.event.community.name} · GowesKit`
+    : 'Jadwal Gowes Bareng · GowesKit',
+);
+
+const pageDescription = computed(() =>
+  detail.value
+    ? `${detail.value.event.title} bersama ${detail.value.event.community.name}. Titik kumpul: ${detail.value.event.meetingArea}. Tingkat kesulitan: ${detail.value.event.difficulty}.`
+    : 'Informasi rute, jadwal kumpul, dan registrasi gowes bareng komunitas sepeda di GowesKit.',
+);
+
+const canonicalUrl = computed(() => {
+  const slugOrId = detail.value?.event.slug || eventIdentifier.value;
+  return `https://goweskit.com/community/events/${slugOrId}`;
+});
+
+useSeoMeta({
+  title: pageTitle,
+  description: pageDescription,
+  ogTitle: pageTitle,
+  ogDescription: pageDescription,
+  ogType: 'website',
+  ogUrl: canonicalUrl,
+  twitterCard: 'summary_large_image',
+});
+
+useHead({
+  link: [{ rel: 'canonical', href: canonicalUrl }],
+  script: [
+    {
+      type: 'application/ld+json',
+      innerHTML: computed(() =>
+        detail.value
+          ? JSON.stringify({
+              '@context': 'https://schema.org',
+              '@type': 'SportsEvent',
+              name: detail.value.event.title,
+              description: detail.value.event.description,
+              startDate: detail.value.event.startsAt,
+              location: {
+                '@type': 'Place',
+                name: detail.value.event.meetingArea,
+              },
+              organizer: {
+                '@type': 'SportsClub',
+                name: detail.value.event.community.name,
+                url: `https://goweskit.com/community/${detail.value.event.community.slug || detail.value.event.community.id}`,
+              },
+            })
+          : '{}',
+      ),
+    },
+  ],
+});
+
 async function loadEvent(): Promise<void> {
   loading.value = true;
   errorMessage.value = '';
   try {
     if (!initialized.value) await refresh();
-    detail.value = await api<EventDetailResponse>(`/events/${eventId.value}`);
+    detail.value = await api<EventDetailResponse>(`/events/${eventIdentifier.value}`);
+    if (
+      detail.value?.event.slug &&
+      typeof window !== 'undefined' &&
+      route.params.id !== detail.value.event.slug
+    ) {
+      window.history.replaceState(
+        {},
+        '',
+        `/community/events/${detail.value.event.slug}`,
+      );
+    }
   } catch (error: unknown) {
     errorMessage.value = getApiErrorMessage(error);
   } finally {
@@ -71,14 +138,14 @@ async function loadEvent(): Promise<void> {
 
 async function joinEvent(): Promise<void> {
   if (!user.value) {
-    await navigateTo(`/login?redirect=/community/events/${eventId.value}`);
+    await navigateTo(`/login?redirect=/community/events/${eventIdentifier.value}`);
     return;
   }
   joining.value = true;
   joinMessage.value = '';
   try {
     const response = await api<JoinEventResponse>(
-      `/events/${eventId.value}/join`,
+      `/events/${eventIdentifier.value}/join`,
       {
         method: 'POST',
         body: {},

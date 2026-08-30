@@ -49,7 +49,7 @@ const difficultyText = computed(() => {
 </script>
 
 <template>
-  <NuxtLink class="clean-ride-card" :to="`/community/events/${event.id}`">
+  <NuxtLink class="clean-ride-card" :to="`/community/events/${event.slug || event.id}`">
     <!-- Left: Compact Minimalist Date Tile -->
     <div class="clean-date-tile" aria-hidden="true">
       <span class="date-month">{{ monthLabel }}</span>

@@ -61,10 +61,27 @@ function buildCommunityApp() {
       }),
     findNearbyEvents: (input: { radiusKm: number }) =>
       Promise.resolve({ radiusKm: input.radiusKm, events: [] }),
-    getEventDetail: () =>
-      Promise.reject(
-        new AppError('RIDE_EVENT_NOT_FOUND', 'Ride event not found.', 404),
-      ),
+    getEventDetail: (eventId: string) =>
+      Promise.resolve({
+        event: {
+          id: '10000000-0000-4000-8000-000000000030',
+          slug: eventId,
+          community: { id: communityId, slug: 'demo-community', name: 'Demo Community', verificationStatus: 'verified' },
+          title: 'Demo Sunday Loop',
+          description: 'Santai rolling.',
+          status: 'scheduled',
+          participantCount: 1,
+          startsAt: '2026-09-05T06:30:00.000Z',
+          meetingArea: 'Taman Cikapayang Dago',
+          difficulty: 'moderate',
+          bicycleTypes: ['road'],
+          visibility: 'public',
+          capacity: 20,
+          requirements: 'Helm wajib.',
+          createdAt: '2026-08-28T21:40:00.000Z',
+        },
+        viewerParticipation: null,
+      }),
     joinEvent: () =>
       Promise.resolve({ outcome: 'event_unavailable', participation: null }),
     getModerationQueue: () =>
@@ -126,6 +143,18 @@ describe('Community routes', () => {
     expect(response.statusCode).toBe(200);
     expect(response.json()).toMatchObject({
       community: { id: communityId, slug: 'demo-community' },
+    });
+  });
+
+  it('accepts an event slug as the public event route identifier', async () => {
+    const response = await buildCommunityApp().inject({
+      method: 'GET',
+      url: '/api/v1/events/demo-sunday-beginner-loop',
+    });
+
+    expect(response.statusCode).toBe(200);
+    expect(response.json()).toMatchObject({
+      event: { slug: 'demo-sunday-beginner-loop' },
     });
   });
 

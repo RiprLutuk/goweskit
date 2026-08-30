@@ -184,9 +184,18 @@ function mapCommunity(row: CommunityRow): PublicCommunity {
   });
 }
 
+function slugify(text: string): string {
+  return text
+    .toLowerCase()
+    .trim()
+    .replace(/[^a-z0-9]+/gu, '-')
+    .replace(/^-+|-+$/gu, '');
+}
+
 function mapEvent(row: EventRow): PublicEvent {
   return publicEventSchema.parse({
     id: row.id,
+    slug: slugify(row.title),
     community: {
       id: row.community_id,
       slug: row.community_slug,
@@ -388,13 +397,23 @@ export class DrizzleCommunityRepository implements CommunityRepository {
     return (result.rows as unknown as EventRow[]).map(mapEvent);
   }
 
-  public async findEventById(id: string): Promise<StoredPublicEvent | null> {
+  public async findEventById(
+    identifier: string,
+  ): Promise<StoredPublicEvent | null> {
+    const isUuid =
+      /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i.test(
+        identifier,
+      );
+    const filter = isUuid
+      ? sql`e.id = ${identifier}::uuid`
+      : sql`LOWER(REGEXP_REPLACE(REGEXP_REPLACE(e.title, '[^a-zA-Z0-9]+', '-', 'g'), '(^-|-$)', '', 'g')) = LOWER(${identifier})`;
+
     const result = await this.database.execute(sql`
       SELECT ${eventColumns}
       FROM ride_events e
       INNER JOIN communities c ON c.id = e.community_id
       LEFT JOIN ride_event_participations ep ON ep.event_id = e.id
-      WHERE e.id = ${id}
+      WHERE ${filter}
       GROUP BY e.id, c.id
       LIMIT 1
     `);

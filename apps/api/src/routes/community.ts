@@ -29,7 +29,9 @@ import type { CommunityService } from '../services/community-service.js';
 const communityParamsSchema = z.object({
   communityId: z.string().trim().min(1).max(80),
 });
-const eventParamsSchema = z.object({ eventId: z.uuid() });
+const eventParamsSchema = z.object({
+  eventId: z.string().trim().min(1).max(200),
+});
 const moderationParamsSchema = z.object({
   communityId: z.string().trim().min(1).max(80),
   membershipId: z.uuid(),
