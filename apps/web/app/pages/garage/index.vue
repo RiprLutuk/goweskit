@@ -53,12 +53,14 @@ async function quickDemoLogin(): Promise<void> {
   }
 }
 
-function bikeTypeIcon(slug: string): string {
-  if (slug === 'mtb_hardtail') return '🌲';
-  if (slug === 'folding') return '🧲';
-  if (slug === 'road') return '⚡';
-  if (slug === 'gravel') return '🌾';
-  return '🚲';
+function bikeTypeSvg(slug: string): string {
+  const map: Record<string, string> = {
+    folding: '/bikes/folding.svg',
+    gravel: '/bikes/gravel.svg',
+    mtb_hardtail: '/bikes/mtb_hardtail.svg',
+    road: '/bikes/road.svg',
+  };
+  return map[slug] ?? '/bikes/mtb_hardtail.svg';
 }
 
 function specsBreakdown(bike: Bike): { known: number; unknown: number } {
@@ -73,183 +75,306 @@ function specsBreakdown(bike: Bike): { known: number; unknown: number } {
 </script>
 
 <template>
-  <div class="native-container garage-container">
-    <!-- Header with Action Button -->
-    <header class="native-page-header">
-      <div class="header-topline">
-        <span class="native-eyebrow">Workshop Pribadi</span>
-        <span v-if="user && bikes.length" class="counter-chip">{{ bikes.length }} Sepeda Aktif</span>
+  <div class="garage-page-wrapper">
+    <!-- PAGE HERO HEADER -->
+    <header class="garage-hero">
+      <div class="garage-hero__inner">
+        <div class="garage-hero__top">
+          <div class="garage-badge">
+            <span class="garage-badge__dot"></span>
+            <span>Workshop Pribadi</span>
+          </div>
+          <span v-if="user && bikes.length" class="counter-chip">
+            {{ bikes.length }} Sepeda Terdaftar
+          </span>
+        </div>
+
+        <div class="garage-hero__main">
+          <div>
+            <h1 class="garage-hero__title">My Garage</h1>
+            <p class="garage-hero__subtitle">
+              Simpan anatomi sepeda, pantau standar teknis terverifikasi, dan catat servis secara digital tanpa tebak-tebakan merek.
+            </p>
+          </div>
+          <NuxtLink v-if="user" class="add-bike-btn" to="/garage/new">
+            <span>＋</span>
+            <span>Tambah Sepeda</span>
+          </NuxtLink>
+        </div>
       </div>
-      <div class="header-main-row">
-        <h1 class="native-title">My Garage</h1>
-        <NuxtLink v-if="user" class="add-bike-fab" to="/garage/new" title="Tambah Sepeda">
-          ＋ Tambah Sepeda
-        </NuxtLink>
-      </div>
-      <p class="native-sub">
-        Simpan anatomi sepeda, pantau standar teknis terverifikasi, dan catat servis secara digital tanpa tebak-tebakan merek.
-      </p>
     </header>
 
-    <p v-if="loading" class="state-card" role="status">Membuka Garasi Anda…</p>
+    <div class="garage-content-container">
+      <!-- Loading State -->
+      <div v-if="loading" class="state-card state-card--loading" role="status">
+        <span class="loading-spinner"></span>
+        <span>Membuka Garasi Digital Anda…</span>
+      </div>
 
-    <!-- Signed-out state with 1-click Demo helper -->
-    <div v-else-if="!user" class="native-guest-box">
-      <div class="guest-icon">🚲</div>
-      <h2>Buka Garasi Sepeda Anda</h2>
-      <p>
-        Simpan spesifikasi komponen as roda, headset, BB, rantai, dan catatan servis rutin sepeda Anda di GowesKit.
+      <!-- SIGNED-OUT SHOWCASE HERO CARD (CLEAN WORKSHOP DESIGN) -->
+      <div v-else-if="!user" class="garage-guest-card">
+        <!-- Artwork Illustration Banner -->
+        <div class="guest-card__artwork">
+          <img
+            src="/bikes/mtb_hardtail.svg"
+            alt="Ilustrasi Garasi Sepeda"
+            class="guest-artwork-svg"
+          />
+        </div>
+
+        <!-- Content Details -->
+        <div class="guest-card__body">
+          <div class="guest-card__header">
+            <span class="guest-pill">FITUR WORKSHOP</span>
+            <h2>Buka Garasi Sepeda Anda</h2>
+            <p>
+              Simpan spesifikasi 17 titik komponen (as roda, headset, BB, rantai) dan pantau jadwal servis berkala sepeda Anda secara digital di GowesKit.
+            </p>
+          </div>
+
+          <!-- Feature Value Badges -->
+          <div class="guest-features-grid">
+            <div class="feature-chip">
+              <span class="feature-icon">📐</span>
+              <div>
+                <strong>17 Standar Terverifikasi</strong>
+                <small>As roda, BB, Freehub, Headset</small>
+              </div>
+            </div>
+            <div class="feature-chip">
+              <span class="feature-icon">🛠️</span>
+              <div>
+                <strong>Buku Servis Digital</strong>
+                <small>Riwayat rantai &amp; part berkala</small>
+              </div>
+            </div>
+            <div class="feature-chip">
+              <span class="feature-icon">⚡</span>
+              <div>
+                <strong>Simulasi Upgrade Lab</strong>
+                <small>Cek kecocokan komponen 1-klik</small>
+              </div>
+            </div>
+          </div>
+
+          <!-- Auth CTA Actions -->
+          <div class="guest-cta-stack">
+            <div class="guest-main-actions">
+              <NuxtLink class="cta-btn cta-btn--primary" to="/login">
+                <span>Masuk ke Akun</span>
+                <span>→</span>
+              </NuxtLink>
+              <NuxtLink class="cta-btn cta-btn--secondary" to="/register">
+                <span>Daftar Akun Baru</span>
+              </NuxtLink>
+            </div>
+
+            <!-- 1-Click Instant Demo Helper -->
+            <button
+              class="demo-quick-btn"
+              type="button"
+              :disabled="demoLoggingIn"
+              @click="quickDemoLogin"
+            >
+              <span class="demo-bolt">⚡</span>
+              <span class="demo-text">
+                {{ demoLoggingIn ? 'Membuka Garasi Demo…' : 'Coba Garasi Demo (1-Klik Tanpa Daftar)' }}
+              </span>
+            </button>
+          </div>
+        </div>
+      </div>
+
+      <!-- Error State -->
+      <p
+        v-else-if="errorMessage"
+        class="state-card state-card--error"
+        role="alert"
+      >
+        {{ errorMessage }}
       </p>
 
-      <div class="guest-btn-group">
-        <NuxtLink class="button button--primary button--full" to="/login">Masuk ke Akun</NuxtLink>
-        <NuxtLink class="button button--secondary button--full" to="/register">Daftar Akun Baru</NuxtLink>
-        <button
-          class="button button--sand button--full"
-          type="button"
-          :disabled="demoLoggingIn"
-          @click="quickDemoLogin"
-        >
-          {{ demoLoggingIn ? 'Memuat Demo…' : '⚡ Buka Contoh Garasi Demo (1-Klik)' }}
-        </button>
-      </div>
-    </div>
+      <!-- Bike List Section -->
+      <template v-else-if="bikes.length">
+        <!-- Search Filter Input -->
+        <div class="garage-search-bar">
+          <span class="search-icon" aria-hidden="true">🔍</span>
+          <input
+            v-model="filterQuery"
+            type="search"
+            placeholder="Cari sepeda berdasarkan nama, merek, atau tipe…"
+            class="garage-search-input"
+          />
+          <button
+            v-if="filterQuery"
+            class="clear-search-btn"
+            type="button"
+            @click="filterQuery = ''"
+          >
+            ✕
+          </button>
+        </div>
 
-    <p
-      v-else-if="errorMessage"
-      class="state-card state-card--error"
-      role="alert"
-    >
-      {{ errorMessage }}
-    </p>
-
-    <!-- Bike List / Empty State -->
-    <template v-else-if="bikes.length">
-      <!-- Search Input if multiple bikes -->
-      <div class="search-bar-wrap">
-        <span class="search-icon" aria-hidden="true">🔍</span>
-        <input
-          v-model="filterQuery"
-          type="search"
-          placeholder="Cari sepeda berdasarkan nama, merek, atau tipe…"
-          class="search-field"
-        />
-        <button
-          v-if="filterQuery"
-          class="clear-search-btn"
-          type="button"
-          @click="filterQuery = ''"
-        >
-          ✕
-        </button>
-      </div>
-
-      <!-- Native Cards Grid -->
-      <div class="bike-cards-feed">
-        <article
-          v-for="bike in filteredBikes"
-          :key="bike.id"
-          class="native-bike-card"
-        >
-          <!-- Visual Photo / Illustration -->
-          <div class="card-cover">
-            <img
-              v-if="bike.photoUrl"
-              :src="bike.photoUrl"
-              :alt="bike.nickname"
-              class="cover-image"
-            />
-            <div v-else class="cover-placeholder">
-              <span class="cover-placeholder-icon">{{ bikeTypeIcon(bike.bicycleType.slug) }}</span>
-            </div>
-
-            <div class="cover-pills">
-              <span class="type-pill">
-                {{ bikeTypeIcon(bike.bicycleType.slug) }} {{ bike.bicycleType.name }}
-              </span>
-              <span v-if="bike.modelYear" class="year-pill">{{ bike.modelYear }}</span>
-            </div>
-          </div>
-
-          <!-- Content Body -->
-          <div class="card-body">
-            <h2 class="bike-name">
-              <NuxtLink :to="`/garage/${bike.id}`">{{ bike.nickname }}</NuxtLink>
-            </h2>
-
-            <p class="bike-spec-sub">
-              {{ [bike.brand, bike.model].filter(Boolean).join(' · ') || 'Custom Build / Rakitan' }}
-            </p>
-
-            <!-- Verified Standards Progress Gauge -->
-            <div class="standards-gauge">
-              <div class="gauge-labels">
-                <span class="gauge-known">
-                  <strong>{{ specsBreakdown(bike).known }}</strong> Standar Terverifikasi
-                </span>
-                <span v-if="specsBreakdown(bike).unknown" class="gauge-unknown">
-                  {{ specsBreakdown(bike).unknown }} belum tahu
-                </span>
-              </div>
-              <div class="gauge-track">
-                <div
-                  class="gauge-fill"
-                  :style="{ width: `${Math.min(100, Math.round((specsBreakdown(bike).known / 17) * 100))}%` }"
+        <!-- Bike Cards Grid -->
+        <div class="bike-cards-grid">
+          <article
+            v-for="bike in filteredBikes"
+            :key="bike.id"
+            class="bike-card"
+          >
+            <!-- Card Cover (Photo or Vector Artwork) -->
+            <div class="bike-card__cover">
+              <img
+                v-if="bike.photoUrl"
+                :src="bike.photoUrl"
+                :alt="bike.nickname"
+                class="cover-image"
+              />
+              <div v-else class="cover-vector-box">
+                <img
+                  :src="bikeTypeSvg(bike.bicycleType.slug)"
+                  :alt="bike.bicycleType.name"
+                  class="cover-vector-svg"
                 />
               </div>
+
+              <!-- Badges on cover -->
+              <div class="cover-badges-overlay">
+                <span class="type-pill">
+                  {{ bike.bicycleType.name }}
+                </span>
+                <span v-if="bike.modelYear" class="year-pill">{{ bike.modelYear }}</span>
+              </div>
             </div>
 
-            <!-- Native 1-Tap Action Buttons -->
-            <div class="card-actions-row">
-              <NuxtLink class="native-btn native-btn--secondary" :to="`/garage/${bike.id}`">
-                🔧 Spesifikasi &amp; Servis
-              </NuxtLink>
-              <NuxtLink class="native-btn native-btn--primary" :to="`/upgrade-lab?bike=${bike.id}`">
-                ⚡ Cek Upgrade Lab
-              </NuxtLink>
+            <!-- Card Body -->
+            <div class="bike-card__body">
+              <div class="bike-identity">
+                <h2 class="bike-name">
+                  <NuxtLink :to="`/garage/${bike.id}`">{{ bike.nickname }}</NuxtLink>
+                </h2>
+                <p class="bike-spec-sub">
+                  {{ [bike.brand, bike.model].filter(Boolean).join(' · ') || 'Custom Build / Rakitan' }}
+                </p>
+              </div>
+
+              <!-- Verified Standards Progress Gauge -->
+              <div class="standards-gauge">
+                <div class="gauge-labels">
+                  <span class="gauge-known">
+                    <strong>{{ specsBreakdown(bike).known }}</strong> Standar Terverifikasi
+                  </span>
+                  <span v-if="specsBreakdown(bike).unknown" class="gauge-unknown">
+                    {{ specsBreakdown(bike).unknown }} belum tahu
+                  </span>
+                </div>
+                <div class="gauge-track">
+                  <div
+                    class="gauge-fill"
+                    :style="{ width: `${Math.min(100, Math.round((specsBreakdown(bike).known / 17) * 100))}%` }"
+                  />
+                </div>
+              </div>
+
+              <!-- Card Action Buttons -->
+              <div class="bike-card-actions">
+                <NuxtLink class="action-link action-link--secondary" :to="`/garage/${bike.id}`">
+                  🔧 Spesifikasi &amp; Servis
+                </NuxtLink>
+                <NuxtLink class="action-link action-link--primary" :to="`/upgrade-lab?bike=${bike.id}`">
+                  ⚡ Cek Upgrade
+                </NuxtLink>
+              </div>
             </div>
-          </div>
-        </article>
+          </article>
+        </div>
+      </template>
+
+      <!-- Empty Garage State for Signed-in user with 0 bikes -->
+      <div v-else class="empty-garage-card">
+        <div class="empty-artwork-box">
+          <img src="/bikes/gravel.svg" alt="Garasi Kosong" class="empty-artwork-svg" />
+        </div>
+        <div class="empty-garage-content">
+          <span class="guest-pill">GARASI SIAP DIGUNAKAN</span>
+          <h2>Garasi Anda Masih Kosong</h2>
+          <p>
+            Daftarkan sepeda pertama Anda untuk mulai mencatat anatomi komponen, riwayat servis berkala, dan memeriksa kompatibilitas upgrade.
+          </p>
+          <NuxtLink class="cta-btn cta-btn--primary" to="/garage/new">
+            <span>＋ Daftarkan Sepeda Pertama</span>
+            <span>→</span>
+          </NuxtLink>
+        </div>
       </div>
-    </template>
-
-    <!-- Empty Garage State -->
-    <div v-else class="empty-garage-box">
-      <div class="empty-icon">🚲</div>
-      <h2>Garasi Anda Masih Kosong</h2>
-      <p>Tambahkan sepeda pertama Anda untuk mulai memetakan standar teknis dan riwayat servis.</p>
-      <NuxtLink class="button button--primary" to="/garage/new">
-        ＋ Daftarkan Sepeda Pertama
-      </NuxtLink>
     </div>
   </div>
 </template>
 
 <style scoped>
-.garage-container {
-  display: grid;
+.garage-page-wrapper {
+  display: flex;
+  flex-direction: column;
   gap: 1.25rem;
-  padding-bottom: 2rem;
+  padding-bottom: 3rem;
 }
 
-.native-page-header {
-  display: grid;
-  gap: 0.35rem;
+/* ══════════════════════════════════════════════════════════
+   HERO / HEADER SECTION
+   ══════════════════════════════════════════════════════════ */
+.garage-hero {
+  background: var(--color-white);
+  border-bottom: 1.5px solid var(--color-sand);
+  padding: 1.25rem 1rem 1.5rem;
+  margin: -1rem -1rem 0 -1rem;
 }
 
-.header-topline {
+@media (min-width: 640px) {
+  .garage-hero {
+    border-radius: 1.5rem;
+    border: 1.5px solid var(--color-sand);
+    margin: 0;
+    padding: 1.5rem 1.75rem 1.75rem;
+  }
+}
+
+.garage-hero__inner {
+  max-width: 54rem;
+  margin: 0 auto;
+  display: flex;
+  flex-direction: column;
+  gap: 0.75rem;
+}
+
+.garage-hero__top {
   display: flex;
   align-items: center;
   justify-content: space-between;
+  gap: 0.75rem;
 }
 
-.native-eyebrow {
+.garage-badge {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.45rem;
   font-family: var(--font-mono);
   font-size: 0.72rem;
   font-weight: 850;
   text-transform: uppercase;
-  color: var(--color-asphalt);
   letter-spacing: 0.05em;
+  color: var(--color-asphalt);
+  background: var(--color-canvas);
+  border: 1px solid var(--color-sand);
+  padding: 0.2rem 0.6rem;
+  border-radius: 9999px;
+  width: fit-content;
+}
+
+.garage-badge__dot {
+  width: 0.45rem;
+  height: 0.45rem;
+  border-radius: 50%;
+  background: #16A34A;
 }
 
 .counter-chip {
@@ -262,111 +387,318 @@ function specsBreakdown(bike: Bike): { known: number; unknown: number } {
   color: var(--color-ink);
 }
 
-.header-main-row {
+.garage-hero__main {
   display: flex;
-  align-items: center;
+  align-items: flex-start;
   justify-content: space-between;
-  gap: 0.85rem;
+  gap: 1rem;
+  flex-wrap: wrap;
 }
 
-.native-title {
+.garage-hero__title {
   margin: 0;
-  font-size: 1.65rem;
-  font-weight: 850;
+  font-size: 1.75rem;
+  font-weight: 900;
   letter-spacing: -0.03em;
   color: var(--color-ink);
+  line-height: 1.2;
 }
 
-.add-bike-fab {
+.garage-hero__subtitle {
+  margin: 0.25rem 0 0;
+  font-size: 0.86rem;
+  color: var(--color-asphalt);
+  line-height: 1.45;
+  max-width: 40rem;
+}
+
+.add-bike-btn {
   display: inline-flex;
   align-items: center;
-  gap: 0.35rem;
-  padding: 0.45rem 0.85rem;
-  border-radius: 0.75rem;
+  gap: 0.4rem;
+  padding: 0.5rem 1rem;
+  border-radius: 9999px;
   background: var(--color-chain-lime);
   color: var(--color-ink);
-  font-size: 0.78rem;
+  font-size: 0.8rem;
   font-weight: 850;
   text-decoration: none;
   border: 1.5px solid var(--color-ink);
   box-shadow: 0 2px 0 var(--color-ink);
-  transition: transform 90ms ease;
+  transition: transform 90ms ease, box-shadow 90ms ease;
   white-space: nowrap;
 }
 
-.add-bike-fab:active {
-  transform: scale(0.96);
+.add-bike-btn:active {
+  transform: translateY(2px);
+  box-shadow: 0 0 0 var(--color-ink);
 }
 
-.native-sub {
+/* ══════════════════════════════════════════════════════════
+   CONTAINER & GUEST SHOWCASE CARD
+   ══════════════════════════════════════════════════════════ */
+.garage-content-container {
+  display: flex;
+  flex-direction: column;
+  gap: 1.25rem;
+  max-width: 54rem;
+  margin: 0 auto;
+  width: 100%;
+}
+
+.garage-guest-card {
+  background: var(--color-white);
+  border: 1.5px solid var(--color-sand);
+  border-radius: 1.5rem;
+  overflow: hidden;
+  box-shadow: 0 8px 32px rgba(23, 32, 42, 0.05);
+  display: flex;
+  flex-direction: column;
+}
+
+@media (min-width: 768px) {
+  .garage-guest-card {
+    flex-direction: row;
+  }
+}
+
+.guest-card__artwork {
+  background: #F8FAFC;
+  border-bottom: 1.5px solid var(--color-sand);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 1.5rem;
+}
+
+@media (min-width: 768px) {
+  .guest-card__artwork {
+    width: 42%;
+    border-bottom: none;
+    border-right: 1.5px solid var(--color-sand);
+    padding: 2rem;
+  }
+}
+
+.guest-artwork-svg {
+  width: 100%;
+  max-width: 16rem;
+  height: auto;
+  object-fit: contain;
+}
+
+.guest-card__body {
+  padding: 1.5rem;
+  display: flex;
+  flex-direction: column;
+  gap: 1.25rem;
+  flex: 1;
+}
+
+.guest-card__header {
+  display: flex;
+  flex-direction: column;
+  gap: 0.45rem;
+}
+
+.guest-pill {
+  font-family: var(--font-mono);
+  font-size: 0.65rem;
+  font-weight: 900;
+  letter-spacing: 0.05em;
+  color: #0284C7;
+  background: #E0F2FE;
+  padding: 0.15rem 0.5rem;
+  border-radius: 9999px;
+  width: fit-content;
+}
+
+.guest-card__header h2 {
+  margin: 0;
+  font-size: 1.45rem;
+  font-weight: 900;
+  letter-spacing: -0.02em;
+  color: var(--color-ink);
+}
+
+.guest-card__header p {
   margin: 0;
   font-size: 0.84rem;
   color: var(--color-asphalt);
-  line-height: 1.4;
+  line-height: 1.45;
 }
 
-/* Search Bar */
-.search-bar-wrap {
+/* Feature Value Badges */
+.guest-features-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(12rem, 1fr));
+  gap: 0.65rem;
+}
+
+.feature-chip {
   display: flex;
   align-items: center;
-  gap: 0.45rem;
-  padding: 0.5rem 0.85rem;
-  border-radius: 0.95rem;
-  background: var(--color-white);
+  gap: 0.65rem;
+  padding: 0.65rem 0.85rem;
+  border-radius: 0.85rem;
+  background: var(--color-canvas);
   border: 1px solid var(--color-sand);
-  box-shadow: 0 2px 8px rgb(23 32 42 / 3%);
+}
+
+.feature-icon {
+  font-size: 1.25rem;
+}
+
+.feature-chip strong {
+  font-size: 0.78rem;
+  font-weight: 850;
+  color: var(--color-ink);
+  display: block;
+}
+
+.feature-chip small {
+  font-size: 0.68rem;
+  color: var(--color-asphalt);
+  display: block;
+}
+
+/* CTA Stack */
+.guest-cta-stack {
+  display: flex;
+  flex-direction: column;
+  gap: 0.75rem;
+  margin-top: 0.25rem;
+}
+
+.guest-main-actions {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 0.65rem;
+}
+
+.cta-btn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.45rem;
+  padding: 0.65rem 1rem;
+  border-radius: 0.85rem;
+  font-size: 0.84rem;
+  font-weight: 850;
+  text-decoration: none;
+  cursor: pointer;
+  transition: all 100ms ease;
+  border: 1.5px solid var(--color-ink);
+  box-shadow: 0 2px 0 var(--color-ink);
+}
+
+.cta-btn:active {
+  transform: translateY(2px);
+  box-shadow: 0 0 0 var(--color-ink);
+}
+
+.cta-btn--primary {
+  background: var(--color-ink);
+  color: var(--color-white);
+}
+
+.cta-btn--secondary {
+  background: var(--color-white);
+  color: var(--color-ink);
+}
+
+.demo-quick-btn {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.45rem;
+  padding: 0.75rem 1rem;
+  border-radius: 0.85rem;
+  background: var(--color-chain-lime);
+  color: var(--color-ink);
+  border: 1.5px solid var(--color-ink);
+  box-shadow: 0 2px 0 var(--color-ink);
+  font-size: 0.82rem;
+  font-weight: 850;
+  cursor: pointer;
+  transition: transform 90ms ease, box-shadow 90ms ease;
+}
+
+.demo-quick-btn:active {
+  transform: translateY(2px);
+  box-shadow: 0 0 0 var(--color-ink);
+}
+
+.demo-bolt {
+  font-size: 0.95rem;
+}
+
+/* ══════════════════════════════════════════════════════════
+   AUTHENTICATED BIKE LIST
+   ══════════════════════════════════════════════════════════ */
+.garage-search-bar {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  padding: 0.45rem 0.85rem;
+  border-radius: 9999px;
+  background: var(--color-white);
+  border: 1.5px solid var(--color-sand);
+  box-shadow: 0 2px 8px rgba(23, 32, 42, 0.03);
 }
 
 .search-icon {
-  font-size: 0.85rem;
-  opacity: 0.5;
+  font-size: 0.9rem;
+  opacity: 0.6;
 }
 
-.search-field {
+.garage-search-input {
   flex: 1;
   border: none;
   background: transparent;
   outline: none;
-  font-size: 0.82rem;
-  font-weight: 750;
+  font-size: 0.84rem;
+  font-weight: 700;
   color: var(--color-ink);
 }
 
 .clear-search-btn {
   border: none;
   background: none;
-  font-size: 0.75rem;
+  font-size: 0.8rem;
   color: var(--color-asphalt);
   cursor: pointer;
 }
 
-/* Bike Cards Feed */
-.bike-cards-feed {
+/* Bike Cards Grid */
+.bike-cards-grid {
   display: grid;
-  grid-template-columns: repeat(auto-fill, minmax(18rem, 1fr));
-  gap: 1rem;
+  grid-template-columns: repeat(auto-fill, minmax(20rem, 1fr));
+  gap: 1.25rem;
 }
 
-.native-bike-card {
+.bike-card {
+  background: var(--color-white);
+  border: 1.5px solid var(--color-sand);
+  border-radius: 1.35rem;
+  overflow: hidden;
   display: flex;
   flex-direction: column;
-  border-radius: 1.25rem;
-  background: var(--color-white);
-  border: 1px solid var(--color-sand);
-  overflow: hidden;
-  box-shadow: 0 4px 18px rgb(23 32 42 / 6%);
-  transition: transform 120ms ease, border-color 120ms ease;
+  box-shadow: 0 4px 16px rgba(23, 32, 42, 0.04);
+  transition: border-color 150ms ease, box-shadow 150ms ease;
 }
 
-.native-bike-card:hover {
+.bike-card:hover {
   border-color: var(--color-ink);
+  box-shadow: 0 8px 24px rgba(23, 32, 42, 0.07);
 }
 
-.card-cover {
+.bike-card__cover {
   position: relative;
   width: 100%;
-  height: 9.5rem;
-  background: var(--color-sand);
+  height: 10rem;
+  background: #F8FAFC;
+  border-bottom: 1.5px solid var(--color-sand);
   overflow: hidden;
 }
 
@@ -376,23 +708,27 @@ function specsBreakdown(bike: Bike): { known: number; unknown: number } {
   object-fit: cover;
 }
 
-.cover-placeholder {
+.cover-vector-box {
   width: 100%;
   height: 100%;
-  display: grid;
-  place-items: center;
-  background: radial-gradient(circle at center, #ffffff 0%, #ede4d2 100%);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 0.75rem;
 }
 
-.cover-placeholder-icon {
-  font-size: 3.5rem;
+.cover-vector-svg {
+  width: 100%;
+  height: 100%;
+  max-width: 15rem;
+  object-fit: contain;
 }
 
-.cover-pills {
+.cover-badges-overlay {
   position: absolute;
-  top: 0.65rem;
-  left: 0.65rem;
-  right: 0.65rem;
+  top: 0.75rem;
+  left: 0.75rem;
+  right: 0.75rem;
   display: flex;
   align-items: center;
   justify-content: space-between;
@@ -401,13 +737,13 @@ function specsBreakdown(bike: Bike): { known: number; unknown: number } {
 .type-pill {
   font-size: 0.72rem;
   font-weight: 850;
-  padding: 0.2rem 0.55rem;
+  padding: 0.2rem 0.6rem;
   border-radius: 9999px;
-  background: rgb(255 255 255 / 92%);
+  background: rgba(255, 255, 255, 0.94);
   backdrop-filter: blur(8px);
   -webkit-backdrop-filter: blur(8px);
   color: var(--color-ink);
-  border: 1px solid rgb(23 32 42 / 10%);
+  border: 1px solid rgba(23, 32, 42, 0.12);
 }
 
 .year-pill {
@@ -415,22 +751,29 @@ function specsBreakdown(bike: Bike): { known: number; unknown: number } {
   font-size: 0.68rem;
   font-weight: 850;
   padding: 0.15rem 0.45rem;
-  border-radius: 0.45rem;
-  background: rgb(23 32 42 / 75%);
+  border-radius: 0.4rem;
+  background: rgba(23, 32, 42, 0.85);
   color: var(--color-white);
 }
 
-.card-body {
-  padding: 1rem;
-  display: grid;
-  gap: 0.65rem;
+.bike-card__body {
+  padding: 1.25rem;
+  display: flex;
+  flex-direction: column;
+  gap: 0.85rem;
   flex: 1;
+}
+
+.bike-identity {
+  display: flex;
+  flex-direction: column;
+  gap: 0.2rem;
 }
 
 .bike-name {
   margin: 0;
-  font-size: 1.15rem;
-  font-weight: 850;
+  font-size: 1.25rem;
+  font-weight: 900;
   letter-spacing: -0.02em;
 }
 
@@ -443,15 +786,16 @@ function specsBreakdown(bike: Bike): { known: number; unknown: number } {
   margin: 0;
   font-size: 0.78rem;
   color: var(--color-asphalt);
-  font-weight: 700;
+  font-weight: 750;
 }
 
-/* Standards Progress */
+/* Standards Gauge */
 .standards-gauge {
-  display: grid;
-  gap: 0.25rem;
-  padding: 0.55rem 0.75rem;
-  border-radius: 0.75rem;
+  display: flex;
+  flex-direction: column;
+  gap: 0.35rem;
+  padding: 0.65rem 0.85rem;
+  border-radius: 0.85rem;
   background: var(--color-canvas);
   border: 1px solid var(--color-sand);
 }
@@ -460,8 +804,8 @@ function specsBreakdown(bike: Bike): { known: number; unknown: number } {
   display: flex;
   align-items: center;
   justify-content: space-between;
-  font-size: 0.68rem;
-  font-weight: 750;
+  font-size: 0.72rem;
+  font-weight: 800;
 }
 
 .gauge-known strong {
@@ -473,11 +817,12 @@ function specsBreakdown(bike: Bike): { known: number; unknown: number } {
   background: #e0f2fe;
   padding: 0.05rem 0.35rem;
   border-radius: 0.35rem;
+  font-size: 0.65rem;
 }
 
 .gauge-track {
   width: 100%;
-  height: 0.35rem;
+  height: 0.4rem;
   border-radius: 9999px;
   background: var(--color-sand);
   overflow: hidden;
@@ -485,79 +830,132 @@ function specsBreakdown(bike: Bike): { known: number; unknown: number } {
 
 .gauge-fill {
   height: 100%;
-  background: var(--color-chain-lime);
+  background: #16A34A;
   border-radius: 9999px;
   transition: width 300ms ease;
 }
 
-/* 1-Tap Action Buttons */
-.card-actions-row {
+.bike-card-actions {
   display: grid;
   grid-template-columns: 1fr 1fr;
-  gap: 0.45rem;
-  margin-top: 0.35rem;
+  gap: 0.5rem;
+  margin-top: 0.25rem;
 }
 
-.native-btn {
-  display: grid;
-  place-items: center;
-  text-align: center;
-  padding: 0.5rem 0.65rem;
+.action-link {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 0.6rem 0.75rem;
   border-radius: 0.75rem;
   font-size: 0.76rem;
   font-weight: 850;
   text-decoration: none;
-  transition: transform 90ms ease;
+  transition: all 100ms ease;
+  text-align: center;
 }
 
-.native-btn:active {
+.action-link:active {
   transform: scale(0.96);
 }
 
-.native-btn--primary {
+.action-link--primary {
   background: var(--color-ink);
   color: var(--color-white);
+  border: 1.5px solid var(--color-ink);
 }
 
-.native-btn--secondary {
-  background: var(--color-sand);
+.action-link--secondary {
+  background: var(--color-canvas);
+  color: var(--color-ink);
+  border: 1.5px solid var(--color-sand);
+}
+
+/* ══════════════════════════════════════════════════════════
+   EMPTY GARAGE STATE
+   ══════════════════════════════════════════════════════════ */
+.empty-garage-card {
+  background: var(--color-white);
+  border: 1.5px solid var(--color-sand);
+  border-radius: 1.5rem;
+  overflow: hidden;
+  padding: 2rem 1.5rem;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  text-align: center;
+  gap: 1.25rem;
+}
+
+.empty-artwork-box {
+  width: 100%;
+  max-width: 14rem;
+}
+
+.empty-artwork-svg {
+  width: 100%;
+  height: auto;
+}
+
+.empty-garage-content {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 0.65rem;
+  max-width: 28rem;
+}
+
+.empty-garage-content h2 {
+  margin: 0;
+  font-size: 1.35rem;
+  font-weight: 900;
   color: var(--color-ink);
 }
 
-/* Guest & Empty */
-.native-guest-box,
-.empty-garage-box {
-  display: grid;
-  gap: 1rem;
-  text-align: center;
-  padding: 2.25rem 1.5rem;
-  border-radius: 1.35rem;
-  background: var(--color-white);
-  border: 1px solid var(--color-sand);
-}
-
-.guest-icon,
-.empty-icon {
-  font-size: 3.2rem;
-}
-
-.native-guest-box h2,
-.empty-garage-box h2 {
-  margin: 0;
-  font-size: 1.3rem;
-  font-weight: 850;
-}
-
-.native-guest-box p,
-.empty-garage-box p {
+.empty-garage-content p {
   margin: 0;
   font-size: 0.84rem;
   color: var(--color-asphalt);
-  line-height: 1.4;
+  line-height: 1.45;
 }
 
-.guest-btn-group {
-  display: grid;
+/* State Cards */
+.state-card {
+  padding: 1.5rem;
+  border-radius: 1.25rem;
+  background: var(--color-white);
+  border: 1.5px solid var(--color-sand);
+  text-align: center;
+  font-size: 0.85rem;
+  font-weight: 750;
+  color: var(--color-asphalt);
+}
+
+.state-card--loading {
+  display: flex;
+  align-items: center;
+  justify-content: center;
   gap: 0.65rem;
+}
+
+.loading-spinner {
+  width: 1rem;
+  height: 1rem;
+  border: 2px solid var(--color-sand);
+  border-top-color: var(--color-ink);
+  border-radius: 50%;
+  animation: spin 0.6s linear infinite;
+}
+
+@keyframes spin {
+  to {
+    transform: rotate(360deg);
+  }
+}
+
+.state-card--error {
+  background: #FEE2E2;
+  border-color: #FCA5A5;
+  color: #991B1B;
 }
 </style>
