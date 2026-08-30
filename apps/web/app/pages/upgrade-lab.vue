@@ -389,13 +389,21 @@ ${window.location.origin}/upgrade-lab
           </ul>
         </div>
 
-        <!-- Possible Fix / Guidance -->
-        <div v-if="result.possibleFix" class="next-step-box">
-          <span class="next-step-title">
-            <GIcon name="wrench" size="xs" color="#15803D" />
-            <span>Solusi / Opsi Komponen:</span>
-          </span>
-          <p>{{ result.possibleFix }}</p>
+        <!-- Official Standard Provenance Reference -->
+        <div v-if="result.ruleProvenance && result.ruleProvenance.length" class="provenance-source-box">
+          <div class="provenance-header">
+            <GIcon name="shield" size="xs" color="#0284C7" filled />
+            <span class="provenance-label">Dasar Standar Resmi (Verified Provenance)</span>
+          </div>
+          <div class="provenance-list">
+            <div v-for="prov in result.ruleProvenance" :key="prov.ruleCode" class="provenance-item">
+              <a :href="prov.sourceUrl" target="_blank" rel="noopener noreferrer" class="provenance-link">
+                <span>{{ prov.sourceTitle }}</span>
+                <span class="ext-icon">↗</span>
+              </a>
+              <span class="provenance-meta">Aturan v{{ prov.ruleVersion }} · Ditinjau {{ prov.reviewedAt }}</span>
+            </div>
+          </div>
         </div>
 
         <!-- Share & Flex Action Bar -->
@@ -709,6 +717,64 @@ ${window.location.origin}/upgrade-lab
 .missing-info-box ul {
   margin: 0.25rem 0 0;
   padding-left: 1.15rem;
+}
+
+/* Provenance Reference Box */
+.provenance-source-box {
+  display: grid;
+  gap: 0.4rem;
+  padding: 0.75rem 0.95rem;
+  border-radius: 0.85rem;
+  background: var(--color-canvas);
+  border: 1px solid var(--color-sand);
+}
+
+.provenance-header {
+  display: flex;
+  align-items: center;
+  gap: 0.35rem;
+  font-size: 0.7rem;
+  font-weight: 850;
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+  color: var(--color-asphalt);
+}
+
+.provenance-list {
+  display: grid;
+  gap: 0.35rem;
+}
+
+.provenance-item {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 0.5rem;
+  flex-wrap: wrap;
+}
+
+.provenance-link {
+  font-size: 0.76rem;
+  font-weight: 800;
+  color: #0284c7;
+  text-decoration: none;
+  display: inline-flex;
+  align-items: center;
+  gap: 0.2rem;
+}
+
+.provenance-link:hover {
+  text-decoration: underline;
+}
+
+.ext-icon {
+  font-size: 0.7rem;
+}
+
+.provenance-meta {
+  font-family: var(--font-mono);
+  font-size: 0.66rem;
+  color: var(--color-asphalt);
 }
 
 .result-share-bar {
