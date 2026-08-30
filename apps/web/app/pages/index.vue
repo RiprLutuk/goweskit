@@ -177,11 +177,11 @@ function formatKm(meters: number): string {
       </NuxtLink>
     </header>
 
-    <!-- 2. Quick Action Hub (4 Clean Cycling Shortcuts) -->
+    <!-- 2. Quick Action Hub (5 Clean Cycling Shortcuts) -->
     <nav class="quick-shortcuts-row" aria-label="Aksi Cepat">
       <NuxtLink to="/explore" class="shortcut-pill">
         <span class="shortcut-icon">🗺️</span>
-        <span class="shortcut-label">Rute &amp; GPX</span>
+        <span class="shortcut-label">Rute</span>
       </NuxtLink>
       <NuxtLink to="/community" class="shortcut-pill">
         <span class="shortcut-icon">👥</span>
@@ -189,13 +189,32 @@ function formatKm(meters: number): string {
       </NuxtLink>
       <NuxtLink to="/upgrade-lab" class="shortcut-pill">
         <span class="shortcut-icon">⚡</span>
-        <span class="shortcut-label">Upgrade Lab</span>
+        <span class="shortcut-label">Upgrade</span>
       </NuxtLink>
       <NuxtLink to="/garage" class="shortcut-pill">
         <span class="shortcut-icon">🚲</span>
         <span class="shortcut-label">Garasi</span>
       </NuxtLink>
+      <NuxtLink to="/ride-flex" class="shortcut-pill shortcut-pill--flex">
+        <span class="shortcut-icon">📸</span>
+        <span class="shortcut-label">Flex AI</span>
+      </NuxtLink>
     </nav>
+
+    <!-- 2.5 Agentic AI Ride Flex Spotlight Banner -->
+    <section class="home-flex-spotlight">
+      <div class="flex-spotlight-content">
+        <span class="spotlight-chip">✨ AGENTIC AI &amp; STRAVA-STYLE FLEX</span>
+        <h2 class="spotlight-title">Pamerkan Hasil Gowes dengan Poster Sinematik</h2>
+        <p class="spotlight-desc">
+          Gabungkan foto gowes, telemetri live, sticker KOM, dan caption AI otomatis untuk Instagram Story &amp; WhatsApp.
+        </p>
+      </div>
+      <NuxtLink to="/ride-flex" class="spotlight-action-btn">
+        <span>📸 Buka Studio</span>
+        <span>→</span>
+      </NuxtLink>
+    </section>
 
     <!-- 3. FEATURED ROUTE HERO (Komoot & Strava Elevation Style) -->
     <section class="home-section" aria-labelledby="sec-featured-route">
@@ -397,8 +416,8 @@ function formatKm(meters: number): string {
 /* 2. Quick Shortcuts Row */
 .quick-shortcuts-row {
   display: grid;
-  grid-template-columns: repeat(4, 1fr);
-  gap: 0.45rem;
+  grid-template-columns: repeat(5, 1fr);
+  gap: 0.35rem;
 }
 
 .shortcut-pill {
@@ -407,7 +426,7 @@ function formatKm(meters: number): string {
   align-items: center;
   justify-content: center;
   gap: 0.2rem;
-  padding: 0.65rem 0.25rem;
+  padding: 0.6rem 0.2rem;
   border-radius: 0.85rem;
   background: var(--color-white);
   border: 1px solid rgb(23 32 42 / 8%);
@@ -421,15 +440,96 @@ function formatKm(meters: number): string {
   transform: scale(0.95);
 }
 
+.shortcut-pill--flex {
+  background: rgba(201, 243, 106, 0.2);
+  border-color: var(--color-chain-lime);
+}
+
 .shortcut-icon {
-  font-size: 1.25rem;
+  font-size: 1.15rem;
 }
 
 .shortcut-label {
-  font-size: 0.68rem;
-  font-weight: 800;
+  font-size: 0.65rem;
+  font-weight: 850;
   color: var(--color-ink);
-  text-align: center;
+  white-space: nowrap;
+}
+
+/* 2.5 Agentic AI Flex Spotlight */
+.home-flex-spotlight {
+  background: linear-gradient(135deg, #17202A 0%, #0F172A 100%);
+  border: 1.5px solid rgba(201, 243, 106, 0.4);
+  border-radius: 1.25rem;
+  padding: 1.15rem;
+  display: flex;
+  flex-direction: column;
+  gap: 0.85rem;
+  box-shadow: 0 4px 20px rgba(0, 0, 0, 0.15);
+}
+
+@media (min-width: 640px) {
+  .home-flex-spotlight {
+    flex-direction: row;
+    align-items: center;
+    justify-content: space-between;
+  }
+}
+
+.flex-spotlight-content {
+  display: flex;
+  flex-direction: column;
+  gap: 0.35rem;
+}
+
+.spotlight-chip {
+  font-family: var(--font-mono);
+  font-size: 0.62rem;
+  font-weight: 900;
+  color: var(--color-chain-lime);
+  background: rgba(201, 243, 106, 0.12);
+  padding: 0.15rem 0.5rem;
+  border-radius: 9999px;
+  width: fit-content;
+  border: 1px solid rgba(201, 243, 106, 0.25);
+}
+
+.spotlight-title {
+  margin: 0;
+  font-size: 1.05rem;
+  font-weight: 900;
+  color: #FFFFFF;
+  letter-spacing: -0.02em;
+}
+
+.spotlight-desc {
+  margin: 0;
+  font-size: 0.78rem;
+  color: #94A3B8;
+  line-height: 1.4;
+}
+
+.spotlight-action-btn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.4rem;
+  padding: 0.65rem 1.15rem;
+  border-radius: 0.75rem;
+  background: var(--color-chain-lime);
+  color: #17202A;
+  font-size: 0.8rem;
+  font-weight: 900;
+  text-decoration: none;
+  white-space: nowrap;
+  border: 1px solid var(--color-ink);
+  box-shadow: 0 2px 0 var(--color-ink);
+  transition: transform 90ms ease;
+}
+
+.spotlight-action-btn:active {
+  transform: translateY(2px);
+  box-shadow: 0 0 0 var(--color-ink);
 }
 
 /* 3. Section Commons */

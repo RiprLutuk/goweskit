@@ -12,6 +12,7 @@ import {
 const route = useRoute();
 const api = useApi();
 const { user, initialized, refresh } = useAuth();
+const { toast } = useNotify();
 const detail = ref<EventDetailResponse | null>(null);
 const loading = ref(true);
 const joining = ref(false);
@@ -92,6 +93,48 @@ async function joinEvent(): Promise<void> {
   }
 }
 
+async function shareEventInvitation(): Promise<void> {
+  if (!detail.value) return;
+  const evt = detail.value.event;
+  const url = window.location.href;
+
+  const text = `🚴 UNDANGAN GOWES BARENG (MABAR) · GOWESKIT
+━━━━━━━━━━━━━━━━━━━━
+🏆 Event: ${evt.title}
+👥 Komunitas: ${evt.community.name}
+📅 Tanggal: ${dayName.value}, ${formatCommunityDate(evt.startsAt)}
+⏰ Waktu: ${timeLabel.value} WIB
+📍 Titik Kumpul: ${evt.meetingArea}
+🚴 Tipe Sepeda: ${evt.bicycleTypes.join(', ')}
+🎯 Tingkat Kesulitan: ${evt.difficulty.toUpperCase()}
+
+🔗 Info rute lengkap & pendaftaran (gratis) di:
+${url}
+
+#GowesBareng #MabarGowes #GowesKit #CyclingIndonesia`;
+
+  if (navigator.share) {
+    try {
+      await navigator.share({
+        title: `Gowes Bareng: ${evt.title}`,
+        text,
+        url,
+      });
+      toast.success('Undangan Dibagikan!', 'Siap dibagikan ke WhatsApp Group atau medsos.');
+      return;
+    } catch {
+      // fallback
+    }
+  }
+
+  try {
+    await navigator.clipboard.writeText(text);
+    toast.success('Undangan Disalin!', 'Siap ditempel ke WhatsApp Group komunitas.');
+  } catch {
+    toast.info('Gagal menyalin otomatis', 'Silakan salin manual.');
+  }
+}
+
 onMounted(loadEvent);
 </script>
 
@@ -151,20 +194,30 @@ onMounted(loadEvent);
             <span class="counter-lbl">Riders Terdaftar</span>
           </div>
 
-          <button
-            class="button button--primary join-btn"
-            type="button"
-            :disabled="joining || isJoined"
-            @click="joinEvent"
-          >
-            {{
-              joining
-                ? 'Mendaftarkan…'
-                : isJoined
-                  ? '✓ Anda Terdaftar di Mabar Ini'
-                  : '🚴 Gabung Gowes Bareng'
-            }}
-          </button>
+          <div class="event-join-actions">
+            <button
+              class="button button--primary join-btn"
+              type="button"
+              :disabled="joining || isJoined"
+              @click="joinEvent"
+            >
+              {{
+                joining
+                  ? 'Mendaftarkan…'
+                  : isJoined
+                    ? '✓ Anda Terdaftar'
+                    : '🚴 Gabung Mabar'
+              }}
+            </button>
+            <button
+              class="button button--secondary share-invite-btn"
+              type="button"
+              @click="shareEventInvitation"
+            >
+              <span>📲</span>
+              <span>Undang Teman</span>
+            </button>
+          </div>
         </div>
 
         <p v-if="!user" class="permission-note">
@@ -371,10 +424,30 @@ onMounted(loadEvent);
   color: var(--color-asphalt);
 }
 
+.event-join-actions {
+  display: flex;
+  align-items: center;
+  gap: 0.45rem;
+  flex-wrap: wrap;
+}
+
 .join-btn {
   padding: 0.55rem 1.15rem;
   font-size: 0.82rem;
   font-weight: 850;
+}
+
+.share-invite-btn {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.35rem;
+  padding: 0.55rem 0.85rem;
+  font-size: 0.8rem;
+  font-weight: 850;
+  background: var(--color-white);
+  border: 1px solid var(--color-ink);
+  color: var(--color-ink);
+  cursor: pointer;
 }
 
 .permission-note {
