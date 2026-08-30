@@ -256,7 +256,7 @@ function resetWizard(): void {
         <div class="learn-quick-actions">
           <NuxtLink to="/learn/diagnostics" class="action-pill action-pill--alert">
             <span class="pill-icon">🔧</span>
-            <span>Diagnostik Masalah</span>
+            <span>Diagnostik</span>
           </NuxtLink>
           <button
             class="action-pill action-pill--wizard"
@@ -264,7 +264,7 @@ function resetWizard(): void {
             @click="showWizard = true"
           >
             <span class="pill-icon">🧭</span>
-            <span>Deteksi Tipe</span>
+            <span>Deteksi</span>
           </button>
           <button
             class="action-pill action-pill--curate"
@@ -272,7 +272,7 @@ function resetWizard(): void {
             @click="showAdminModal = true"
           >
             <span class="pill-icon">➕</span>
-            <span>Tambah Istilah</span>
+            <span>Tambah</span>
           </button>
         </div>
 
@@ -753,31 +753,23 @@ function resetWizard(): void {
   max-width: 44rem;
 }
 
-/* Quick Tools Row (Clean horizontally scrollable chips on mobile) */
+/* Quick Tools Row (Clean 3-pill balanced fit) */
 .learn-quick-actions {
   display: flex;
   align-items: center;
-  gap: 0.5rem;
-  overflow-x: auto;
-  -webkit-overflow-scrolling: touch;
-  scrollbar-width: none;
-  padding: 0.15rem 0.15rem 0.35rem;
-  margin: 0 -0.5rem;
-  padding-left: 0.5rem;
-  padding-right: 0.5rem;
-}
-
-.learn-quick-actions::-webkit-scrollbar {
-  display: none;
+  gap: 0.45rem;
+  width: 100%;
 }
 
 .action-pill {
+  flex: 1 1 0%;
   display: inline-flex;
   align-items: center;
-  gap: 0.35rem;
-  padding: 0.4rem 0.85rem;
+  justify-content: center;
+  gap: 0.3rem;
+  padding: 0.45rem 0.5rem;
   border-radius: 9999px;
-  font-size: 0.76rem;
+  font-size: 0.78rem;
   font-weight: 850;
   text-decoration: none;
   cursor: pointer;
@@ -785,7 +777,8 @@ function resetWizard(): void {
   box-shadow: 0 2px 0 var(--color-ink);
   transition: transform 90ms ease, box-shadow 90ms ease;
   white-space: nowrap;
-  flex-shrink: 0;
+  min-width: 0;
+  box-sizing: border-box;
 }
 
 .action-pill:active {
