@@ -181,7 +181,7 @@ async function renderCanvas(aspectRatio: 'story' | 'post' | 'landscape'): Promis
       ctx.drawImage(img, x, y, img.width * scale, img.height * scale);
       ctx.globalAlpha = 1.0;
     } catch {
-      // fallback drawn
+      // fallback
     }
   }
 
@@ -273,32 +273,82 @@ async function renderCanvas(aspectRatio: 'story' | 'post' | 'landscape'): Promis
   }
 
   const heroY = isStory ? 1040 : (isLandscape ? 420 : 470);
-  ctx.fillStyle = '#C9F36A';
-  ctx.font = '900 145px monospace';
-  ctx.fillText(`${rideForm.distanceKm}`, 70, heroY);
-  ctx.fillStyle = '#FFFFFF';
-  ctx.font = '900 56px sans-serif';
-  ctx.fillText('KM', 70 + ctx.measureText(`${rideForm.distanceKm}`).width + 25, heroY - 50);
+  
+  if (rideForm.templateStyle === 'rapha_editorial') {
+    ctx.fillStyle = '#FFFFFF';
+    ctx.font = '900 135px serif';
+    ctx.fillText(`${rideForm.distanceKm}`, 70, heroY);
+    ctx.fillStyle = '#FF8C75';
+    ctx.font = '700 48px serif';
+    ctx.fillText('KM', 70 + ctx.measureText(`${rideForm.distanceKm}`).width + 25, heroY - 45);
 
-  ctx.fillStyle = '#FFFFFF';
-  ctx.font = '900 46px sans-serif';
-  ctx.fillText(rideForm.title.slice(0, 32), 70, heroY + 70);
+    ctx.fillStyle = '#FFFFFF';
+    ctx.font = '600 42px serif';
+    ctx.fillText(rideForm.title.slice(0, 32), 70, heroY + 65);
 
-  ctx.fillStyle = '#CBD5E1';
-  ctx.font = 'bold 28px sans-serif';
-  ctx.fillText(`🚴 ${rideForm.bikeName} · ${rideForm.temperatureC}°C Cerah`, 70, heroY + 120);
+    ctx.fillStyle = '#FFD1C9';
+    ctx.font = '500 26px serif';
+    ctx.fillText(`ETAPPE · ${rideForm.bikeName} · ${rideForm.temperatureC}°C`, 70, heroY + 115);
+  } else if (rideForm.templateStyle === 'cyber_hud') {
+    ctx.fillStyle = '#38BDF8';
+    ctx.font = '900 145px monospace';
+    ctx.fillText(`${rideForm.distanceKm}`, 70, heroY);
+    ctx.fillStyle = '#00FF66';
+    ctx.font = '900 52px monospace';
+    ctx.fillText('KM_RAW', 70 + ctx.measureText(`${rideForm.distanceKm}`).width + 25, heroY - 50);
+
+    ctx.fillStyle = '#FFFFFF';
+    ctx.font = '900 44px monospace';
+    ctx.fillText(`SYS.ROUTE > ${rideForm.title.slice(0, 26)}`, 70, heroY + 70);
+
+    ctx.fillStyle = '#38BDF8';
+    ctx.font = 'bold 26px monospace';
+    ctx.fillText(`[RIG: ${rideForm.bikeName}] · TEMP: ${rideForm.temperatureC}°C`, 70, heroY + 120);
+  } else if (rideForm.templateStyle === 'cafe_santai') {
+    ctx.fillStyle = '#F59E0B';
+    ctx.font = '900 145px monospace';
+    ctx.fillText(`${rideForm.distanceKm}`, 70, heroY);
+    ctx.fillStyle = '#FDE68A';
+    ctx.font = '900 56px sans-serif';
+    ctx.fillText('KM', 70 + ctx.measureText(`${rideForm.distanceKm}`).width + 25, heroY - 50);
+
+    ctx.fillStyle = '#FFFFFF';
+    ctx.font = '900 46px sans-serif';
+    ctx.fillText(`☕ ${rideForm.title.slice(0, 30)}`, 70, heroY + 70);
+
+    ctx.fillStyle = '#FDE68A';
+    ctx.font = 'bold 28px sans-serif';
+    ctx.fillText(`🍢 Sate Fuel · ${rideForm.bikeName} · ${rideForm.temperatureC}°C`, 70, heroY + 120);
+  } else {
+    ctx.fillStyle = '#C9F36A';
+    ctx.font = '900 145px monospace';
+    ctx.fillText(`${rideForm.distanceKm}`, 70, heroY);
+    ctx.fillStyle = '#FFFFFF';
+    ctx.font = '900 56px sans-serif';
+    ctx.fillText('KM', 70 + ctx.measureText(`${rideForm.distanceKm}`).width + 25, heroY - 50);
+
+    ctx.fillStyle = '#FFFFFF';
+    ctx.font = '900 46px sans-serif';
+    ctx.fillText(rideForm.title.slice(0, 32), 70, heroY + 70);
+
+    ctx.fillStyle = '#CBD5E1';
+    ctx.font = 'bold 28px sans-serif';
+    ctx.fillText(`🚴 ${rideForm.bikeName} · ${rideForm.temperatureC}°C Cerah`, 70, heroY + 120);
+  }
 
   const cardY = heroY + 155;
   const cardH = isStory ? 480 : (isLandscape ? 340 : 360);
   ctx.fillStyle = 'rgba(15, 23, 42, 0.92)';
-  ctx.strokeStyle = 'rgba(201, 243, 106, 0.4)';
+  ctx.strokeStyle = rideForm.templateStyle === 'rapha_editorial' 
+    ? 'rgba(255, 140, 117, 0.5)' 
+    : (rideForm.templateStyle === 'cyber_hud' ? 'rgba(56, 189, 248, 0.6)' : (rideForm.templateStyle === 'cafe_santai' ? 'rgba(245, 158, 11, 0.5)' : 'rgba(201, 243, 106, 0.4)'));
   ctx.lineWidth = 3;
   ctx.beginPath();
   ctx.roundRect(70, cardY, canvas.width - 140, cardH, 32);
   ctx.fill();
   ctx.stroke();
 
-  ctx.strokeStyle = '#38BDF8';
+  ctx.strokeStyle = rideForm.templateStyle === 'cafe_santai' ? '#F59E0B' : '#38BDF8';
   ctx.lineWidth = 5;
   ctx.beginPath();
   ctx.moveTo(120, cardY + 80);
@@ -309,7 +359,7 @@ async function renderCanvas(aspectRatio: 'story' | 'post' | 'landscape'): Promis
   const metrics = [
     { label: 'ELEVASI TANJAKAN', val: `+${rideForm.elevationM} m`, color: '#38BDF8' },
     { label: 'WAKTU TEMPUH', val: formatDuration(rideForm.durationMinutes), color: '#FFFFFF' },
-    { label: 'RATA-RATA SPEED', val: `${rideForm.avgSpeedKmH} km/h`, color: '#C9F36A' },
+    { label: 'RATA-RATA SPEED', val: `${rideForm.avgSpeedKmH} km/h`, color: rideForm.templateStyle === 'cafe_santai' ? '#F59E0B' : '#C9F36A' },
     { label: 'KALORI TERBAKAR', val: `~${rideForm.caloriesKcal} kcal`, color: '#FF8C75' },
   ];
 
@@ -468,6 +518,15 @@ async function shareToMedia() {
               ]"
               :style="rideForm.bgPreset === 'custom' && rideForm.customPhotoUrl ? { backgroundImage: `url(${rideForm.customPhotoUrl})` } : {}"
             >
+              <!-- Cyber HUD Elements -->
+              <template v-if="rideForm.templateStyle === 'cyber_hud'">
+                <div class="m-hud-corner m-hud-tl">⌜</div>
+                <div class="m-hud-corner m-hud-tr">⌝</div>
+                <div class="m-hud-corner m-hud-bl">⌞</div>
+                <div class="m-hud-corner m-hud-br">⌟</div>
+                <div class="m-hud-grid-layer"></div>
+              </template>
+
               <div class="modal-poster-vignette"></div>
 
               <!-- Official GowesKit Brand Chip -->
@@ -501,6 +560,19 @@ async function shareToMedia() {
               </div>
 
               <div class="modal-poster-mid">
+                <!-- Rapha Tag -->
+                <div v-if="rideForm.templateStyle === 'rapha_editorial'" class="m-rapha-tag">
+                  STAGE 01 · FINISHED ETAPPE
+                </div>
+                <!-- Cyber Tag -->
+                <div v-else-if="rideForm.templateStyle === 'cyber_hud'" class="m-cyber-tag">
+                  GPS: LOCKED (14 SATS) · CAD: 88 RPM
+                </div>
+                <!-- Cafe Tag -->
+                <div v-else-if="rideForm.templateStyle === 'cafe_santai'" class="m-cafe-tag">
+                  ☕ RECOVERY MODE · KULINERAN
+                </div>
+
                 <div class="m-mileage-row">
                   <span class="m-num">{{ rideForm.distanceKm }}</span>
                   <span class="m-unit">KM</span>
@@ -521,7 +593,7 @@ async function shareToMedia() {
                   </div>
                   <div class="m-stat-item">
                     <span class="m-s-lbl">SPEED</span>
-                    <strong class="m-s-val text-lime">{{ rideForm.avgSpeedKmH }} km/h</strong>
+                    <strong class="m-s-val" :class="rideForm.templateStyle === 'cafe_santai' ? 'text-amber' : (rideForm.templateStyle === 'rapha_editorial' ? 'text-coral' : 'text-lime')">{{ rideForm.avgSpeedKmH }} km/h</strong>
                   </div>
                   <div class="m-stat-item">
                     <span class="m-s-lbl">KALORI</span>
@@ -592,7 +664,7 @@ async function shareToMedia() {
                   @click="rideForm.templateStyle = 'strava_bold'"
                 >
                   🔥 <strong>Strava Bold</strong>
-                  <small>Kinetic Neon</small>
+                  <small>Kinetic Neon Green</small>
                 </button>
                 <button
                   type="button"
@@ -601,7 +673,7 @@ async function shareToMedia() {
                   @click="rideForm.templateStyle = 'rapha_editorial'"
                 >
                   🏔️ <strong>Rapha Editorial</strong>
-                  <small>Clean GPS</small>
+                  <small>Serif &amp; Clean GPS</small>
                 </button>
                 <button
                   type="button"
@@ -610,7 +682,7 @@ async function shareToMedia() {
                   @click="rideForm.templateStyle = 'cyber_hud'"
                 >
                   ⚡ <strong>Cyber HUD</strong>
-                  <small>Sensor Digital</small>
+                  <small>HUD Grid &amp; Sensor</small>
                 </button>
                 <button
                   type="button"
@@ -619,7 +691,7 @@ async function shareToMedia() {
                   @click="rideForm.templateStyle = 'cafe_santai'"
                 >
                   ☕ <strong>Kopi &amp; Sate</strong>
-                  <small>Warm Food Fuel</small>
+                  <small>Golden Amber Fuel</small>
                 </button>
               </div>
             </div>
@@ -935,6 +1007,7 @@ async function shareToMedia() {
   border: 1.5px solid rgba(255, 255, 255, 0.2);
   background-size: cover;
   background-position: center;
+  transition: all 180ms ease;
 }
 
 .aspect--post {
@@ -943,6 +1016,96 @@ async function shareToMedia() {
 
 .aspect--landscape {
   aspect-ratio: 16 / 9 !important;
+}
+
+/* Modal Themes */
+.theme--rapha_editorial {
+  font-family: Georgia, Cambria, serif;
+  border-color: rgba(255, 140, 117, 0.35);
+}
+
+.theme--rapha_editorial .m-num {
+  font-family: Georgia, serif;
+  color: #FFFFFF;
+}
+
+.theme--rapha_editorial .m-unit {
+  color: #FF8C75;
+}
+
+.m-rapha-tag {
+  font-family: var(--font-mono);
+  font-size: 0.52rem;
+  font-weight: 900;
+  color: #FF8C75;
+  margin-bottom: 0.15rem;
+}
+
+.theme--cyber_hud {
+  font-family: var(--font-mono);
+  border-color: rgba(56, 189, 248, 0.4);
+}
+
+.theme--cyber_hud .m-num {
+  color: #38BDF8;
+  text-shadow: 0 0 12px rgba(56, 189, 248, 0.6);
+}
+
+.theme--cyber_hud .m-unit {
+  color: #00FF66;
+}
+
+.m-cyber-tag {
+  font-family: var(--font-mono);
+  font-size: 0.52rem;
+  font-weight: 900;
+  color: #00FF66;
+  margin-bottom: 0.15rem;
+}
+
+.m-hud-corner {
+  position: absolute;
+  font-family: var(--font-mono);
+  font-size: 1.1rem;
+  font-weight: 900;
+  color: rgba(56, 189, 248, 0.7);
+  z-index: 5;
+  pointer-events: none;
+  line-height: 1;
+}
+
+.m-hud-tl { top: 0.4rem; left: 0.4rem; }
+.m-hud-tr { top: 0.4rem; right: 0.4rem; }
+.m-hud-bl { bottom: 0.4rem; left: 0.4rem; }
+.m-hud-br { bottom: 0.4rem; right: 0.4rem; }
+
+.m-hud-grid-layer {
+  position: absolute;
+  inset: 0;
+  background-image: linear-gradient(rgba(56, 189, 248, 0.05) 1px, transparent 1px),
+                    linear-gradient(90deg, rgba(56, 189, 248, 0.05) 1px, transparent 1px);
+  background-size: 20px 20px;
+  pointer-events: none;
+  z-index: 1;
+}
+
+.theme--cafe_santai {
+  border-color: rgba(245, 158, 11, 0.4);
+}
+
+.theme--cafe_santai .m-num {
+  color: #F59E0B;
+}
+
+.theme--cafe_santai .m-unit {
+  color: #FDE68A;
+}
+
+.m-cafe-tag {
+  font-size: 0.54rem;
+  font-weight: 900;
+  color: #FDE68A;
+  margin-bottom: 0.15rem;
 }
 
 .modal-poster-vignette {
@@ -988,6 +1151,7 @@ async function shareToMedia() {
 
 .text-white { color: #FFFFFF; }
 .text-lime { color: var(--color-chain-lime); }
+.text-amber { color: #f59e0b; }
 
 .m-brand-dot {
   display: inline-block;
@@ -1107,7 +1271,6 @@ async function shareToMedia() {
   margin-bottom: 0.1rem;
 }
 
-.text-lime { color: var(--color-chain-lime); }
 .text-sky { color: #38bdf8; }
 .text-coral { color: #ff8c75; }
 
