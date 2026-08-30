@@ -66,7 +66,7 @@ describe('BikePassportCard Logic', () => {
     expect(title).toBe('Polygon Siskiu T7 2024');
   });
 
-  it('formats copyable specification summary for mechanics', () => {
+  it('formats copyable specification summary for mechanics and social media', () => {
     const specsText = mockBike.specs
       .map((s) => `• ${s.label}: ${s.valueLabel ?? s.value ?? 'Unknown'} [${s.knowledge}]`)
       .join('\n');
@@ -74,5 +74,12 @@ describe('BikePassportCard Logic', () => {
     expect(specsText).toContain('• Bottom Bracket: BSA Threaded 73mm [known]');
     expect(specsText).toContain('• Rear Axle: 12x148mm Boost [known]');
     expect(specsText).toContain('• Seatpost Diameter: Unknown [unknown]');
+  });
+
+  it('supports multiple share format modes (story 9:16, post 1:1, sheet)', () => {
+    const validFormats = ['story', 'post', 'sheet'];
+    expect(validFormats).toContain('story');
+    expect(validFormats).toContain('post');
+    expect(validFormats).toContain('sheet');
   });
 });

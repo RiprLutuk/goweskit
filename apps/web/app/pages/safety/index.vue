@@ -48,6 +48,7 @@ const startForm = reactive({
 });
 
 let sosTimer: ReturnType<typeof setTimeout> | undefined;
+const showFlexModal = ref(false);
 
 const activeSession = computed(
   () =>
@@ -430,6 +431,13 @@ function statusBadge(status: SafetySession['status']): { label: string; class: s
           <div class="share-action-buttons">
             <button
               type="button"
+              class="share-btn-flex"
+              @click="showFlexModal = true"
+            >
+              📸 Flex Pass
+            </button>
+            <button
+              type="button"
               class="share-btn-copy"
               @click="copyShareLink"
             >
@@ -690,6 +698,15 @@ function statusBadge(status: SafetySession['status']): { label: string; class: s
           </p>
         </div>
       </aside>
+
+      <!-- Solo Ride Flex Pass Modal -->
+      <SoloRideFlexCard
+        :session="activeSession"
+        :is-open="showFlexModal"
+        :rider-name="user?.displayName"
+        :share-url="shareUrl"
+        @close="showFlexModal = false"
+      />
     </template>
   </div>
 </template>
@@ -915,18 +932,31 @@ function statusBadge(status: SafetySession['status']): { label: string; class: s
 
 .share-action-buttons {
   display: grid;
-  grid-template-columns: 1fr 1fr;
-  gap: 0.4rem;
+  grid-template-columns: 1fr 1fr 1fr;
+  gap: 0.35rem;
 }
 
 .share-btn-copy,
-.share-btn-wa {
-  padding: 0.4rem 0.6rem;
+.share-btn-wa,
+.share-btn-flex {
+  padding: 0.45rem 0.5rem;
   border-radius: 0.55rem;
-  font-size: 0.74rem;
+  font-size: 0.72rem;
   font-weight: 850;
   border: none;
   cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.25rem;
+  white-space: nowrap;
+}
+
+.share-btn-flex {
+  background: var(--color-chain-lime);
+  color: var(--color-ink);
+  border: 1px solid var(--color-ink);
+  box-shadow: 0 1px 4px rgba(201, 243, 106, 0.4);
 }
 
 .share-btn-copy {

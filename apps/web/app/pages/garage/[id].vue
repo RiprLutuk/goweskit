@@ -230,11 +230,11 @@ function specStatus(code: string): 'known' | 'unknown' | 'missing' {
           </div>
           <div class="bike-hero-rich__actions">
             <button
-              class="button button--secondary"
+              class="button button--secondary button--passport"
               type="button"
               @click="showPassportModal = true"
             >
-              🪪 Paspor Sepeda
+              📸 Flex / Paspor Sepeda
             </button>
             <NuxtLink
               class="button button--primary"
@@ -542,6 +542,14 @@ function specStatus(code: string): 'known' | 'unknown' | 'missing' {
   flex-direction: column;
   gap: 0.45rem;
   align-items: flex-end;
+}
+
+.button--passport {
+  background: var(--color-chain-lime) !important;
+  color: var(--color-ink) !important;
+  border: 1.5px solid var(--color-ink) !important;
+  box-shadow: 0 2px 0 var(--color-ink) !important;
+  font-weight: 850 !important;
 }
 
 .bike-notes-box {

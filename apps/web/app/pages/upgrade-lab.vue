@@ -12,6 +12,7 @@ import { COMPATIBILITY_STATUS_PRESENTATION } from '@goweskit/ui';
 const route = useRoute();
 const api = useApi();
 const { user, initialized, refresh, login } = useAuth();
+const { toast } = useNotify();
 const bikes = ref<Bike[]>([]);
 const rules = ref<CompatibilityRule[]>([]);
 const selectedBikeId = ref('');
@@ -123,6 +124,46 @@ async function evaluate(): Promise<void> {
     errorMessage.value = getApiErrorMessage(error);
   } finally {
     evaluating.value = false;
+  }
+}
+
+async function shareUpgradeResult(): Promise<void> {
+  if (!result.value) return;
+  const currentBike = bikes.value.find((b) => b.id === selectedBikeId.value);
+  const bikeName = currentBike ? currentBike.nickname : 'Sepeda';
+  const statusLabel = presentation.value ? presentation.value.label : result.value.status;
+
+  const text = `⚡ HASIL UJI KOMPATIBILITAS GOWESKIT
+━━━━━━━━━━━━━━━━━━━━
+🚴 Sepeda: ${bikeName}
+🔬 Uji Komponen: ${activeRule.value?.label ?? 'Komponen'}
+📊 Status: ${presentation.value?.symbol ?? '✓'} ${statusLabel.toUpperCase()}
+📝 Keterangan: ${result.value.humanExplanation}
+
+🔗 Uji kompatibilitas part sepeda Anda di GowesKit:
+${window.location.origin}/upgrade-lab
+
+#GowesKit #UpgradeLab #BikeSpecs #KompatibilitasSepeda`;
+
+  if (navigator.share) {
+    try {
+      await navigator.share({
+        title: `Hasil Uji Kompatibilitas ${bikeName} - GowesKit`,
+        text,
+        url: window.location.href,
+      });
+      toast.success('Hasil Uji Dibagikan!', 'Siap diposting ke media sosial.');
+      return;
+    } catch {
+      // ignore abort
+    }
+  }
+
+  try {
+    await navigator.clipboard.writeText(text);
+    toast.success('Hasil Uji Disalin!', 'Siap ditempel ke WhatsApp atau forum sepeda.');
+  } catch {
+    toast.info('Gagal menyalin otomatis', 'Silakan salin manual.');
   }
 }
 </script>
@@ -323,6 +364,18 @@ async function evaluate(): Promise<void> {
         <div v-if="result.possibleFix" class="next-step-box">
           <strong>🛠️ Solusi / Opsi Komponen:</strong>
           <p>{{ result.possibleFix }}</p>
+        </div>
+
+        <!-- Share & Flex Action Bar -->
+        <div class="result-share-bar">
+          <button
+            type="button"
+            class="result-share-btn"
+            @click="shareUpgradeResult"
+          >
+            <span>📲 Bagikan Hasil Uji Lab</span>
+            <span>→</span>
+          </button>
         </div>
       </section>
     </template>
@@ -623,6 +676,33 @@ async function evaluate(): Promise<void> {
 .missing-info-box ul {
   margin: 0.25rem 0 0;
   padding-left: 1.15rem;
+}
+
+.result-share-bar {
+  margin-top: 0.5rem;
+  display: flex;
+  justify-content: flex-end;
+}
+
+.result-share-btn {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.45rem;
+  padding: 0.6rem 1.15rem;
+  border-radius: 0.75rem;
+  background: var(--color-ink);
+  color: var(--color-white);
+  font-size: 0.8rem;
+  font-weight: 850;
+  border: 1.5px solid var(--color-ink);
+  box-shadow: 0 2px 0 var(--color-ink);
+  cursor: pointer;
+  transition: transform 90ms ease;
+}
+
+.result-share-btn:active {
+  transform: translateY(2px);
+  box-shadow: 0 0 0 var(--color-ink);
 }
 
 /* Guest & Empty */
