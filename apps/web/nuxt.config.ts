@@ -25,6 +25,16 @@ export default defineNuxtConfig({
     optimizeDeps: {
       exclude: ['maplibre-gl'],
     },
+    ssr: {
+      external: ['zod'],
+    },
+  },
+  nitro: {
+    // Zod 4 exports an internal top-level `process` function. Keeping Zod as a
+    // runtime external avoids a name collision with Nitro's Vercel env shim.
+    externals: {
+      external: ['zod'],
+    },
   },
   runtimeConfig: {
     public: {
