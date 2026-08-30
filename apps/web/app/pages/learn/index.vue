@@ -541,6 +541,84 @@ function resetWizard(): void {
           </div>
         </section>
       </template>
+
+      <!-- ══════════════════════════════════════════════════════════
+           OFFICIAL ENGINEERING STANDARDS PROVENANCE BANNER
+           ══════════════════════════════════════════════════════════ -->
+      <section class="standards-provenance-section" aria-labelledby="standards-provenance-title">
+        <div class="provenance-section-header">
+          <div class="provenance-header-left">
+            <span class="provenance-chip">
+              <GIcon name="shield" size="xs" color="#15803D" filled />
+              <span>Standar Terverifikasi</span>
+            </span>
+            <h2 id="standards-provenance-title" class="provenance-section-title">
+              Transparansi &amp; Rujukan Standar Resmi
+            </h2>
+            <p class="provenance-section-sub">
+              Seluruh aturan kompatibilitas dan dimensi mekanik di GowesKit diverifikasi dari dokumen teknis resmi industri sepeda internasional:
+            </p>
+          </div>
+        </div>
+
+        <div class="standards-cards-grid">
+          <a
+            href="https://www.iso.org/standard/80740.html"
+            target="_blank"
+            rel="noopener noreferrer"
+            class="standard-ref-card"
+          >
+            <div class="standard-card-head">
+              <span class="standard-org">ISO &amp; ETRTO</span>
+              <span class="ext-icon">↗</span>
+            </div>
+            <strong class="standard-title">ISO 5775-1 / ISO 4210</strong>
+            <p class="standard-desc">Standar dimensi pelek, Bead Seat Diameter (BSD ban), dan uji keselamatan rangka sepeda.</p>
+          </a>
+
+          <a
+            href="https://www.canecreek.com/pages/everything-you-need-to-know-about-headsets"
+            target="_blank"
+            rel="noopener noreferrer"
+            class="standard-ref-card"
+          >
+            <div class="standard-card-head">
+              <span class="standard-org">SHIS (Standard Headset)</span>
+              <span class="ext-icon">↗</span>
+            </div>
+            <strong class="standard-title">Cane Creek, FSA &amp; Park Tool</strong>
+            <p class="standard-desc">Standardized Headset Identification System untuk kecocokan fork steerer (EC, ZS, IS).</p>
+          </a>
+
+          <a
+            href="https://www.parktool.com/en-int/blog/repair-help/bottom-bracket-identification"
+            target="_blank"
+            rel="noopener noreferrer"
+            class="standard-ref-card"
+          >
+            <div class="standard-card-head">
+              <span class="standard-org">Bottom Bracket Standards</span>
+              <span class="ext-icon">↗</span>
+            </div>
+            <strong class="standard-title">Park Tool &amp; Manufacturer Specs</strong>
+            <p class="standard-desc">Identifikasi shell ulir BSA/T47 dan pressfit BB86/92, BB30, DUB 28.99mm, 24mm.</p>
+          </a>
+
+          <a
+            href="https://productinfo.shimano.com/en/compatibility"
+            target="_blank"
+            rel="noopener noreferrer"
+            class="standard-ref-card"
+          >
+            <div class="standard-card-head">
+              <span class="standard-org">Shimano &amp; SRAM Tech</span>
+              <span class="ext-icon">↗</span>
+            </div>
+            <strong class="standard-title">Groupset &amp; Axle Compatibility</strong>
+            <p class="standard-desc">Matriks kompatibilitas drivetrain Micro Spline, HG, XD/XDR, Boost 148, dan Linkglide CUES.</p>
+          </a>
+        </div>
+      </section>
     </div>
 
     <!-- ══════════════════════════════════════════════════════════
@@ -1690,5 +1768,103 @@ function resetWizard(): void {
   flex-direction: column;
   gap: 0.5rem;
   margin-top: 0.35rem;
+}
+
+/* Standards Provenance Section */
+.standards-provenance-section {
+  margin-top: 2rem;
+  padding: 1.5rem;
+  border-radius: 1.35rem;
+  background: var(--color-white);
+  border: 1px solid var(--color-sand);
+  box-shadow: 0 4px 18px rgb(23 32 42 / 4%);
+  display: grid;
+  gap: 1.15rem;
+}
+
+.provenance-chip {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.35rem;
+  font-size: 0.7rem;
+  font-weight: 850;
+  text-transform: uppercase;
+  color: #15803d;
+  background: rgba(22, 163, 74, 0.12);
+  padding: 0.2rem 0.6rem;
+  border-radius: 9999px;
+  width: fit-content;
+  margin-bottom: 0.35rem;
+}
+
+.provenance-section-title {
+  margin: 0;
+  font-size: 1.25rem;
+  font-weight: 850;
+  letter-spacing: -0.02em;
+  color: var(--color-ink);
+}
+
+.provenance-section-sub {
+  margin: 0.3rem 0 0;
+  font-size: 0.82rem;
+  color: var(--color-asphalt);
+  line-height: 1.45;
+}
+
+.standards-cards-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(16rem, 1fr));
+  gap: 0.85rem;
+}
+
+.standard-ref-card {
+  display: grid;
+  gap: 0.35rem;
+  padding: 1rem;
+  border-radius: 1rem;
+  background: var(--color-canvas);
+  border: 1px solid var(--color-sand);
+  text-decoration: none;
+  color: inherit;
+  transition: border-color 120ms ease, transform 120ms ease;
+}
+
+.standard-ref-card:hover {
+  border-color: var(--color-ink);
+  transform: translateY(-2px);
+}
+
+.standard-card-head {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 0.5rem;
+}
+
+.standard-org {
+  font-family: var(--font-mono);
+  font-size: 0.68rem;
+  font-weight: 850;
+  color: #0284c7;
+  text-transform: uppercase;
+}
+
+.ext-icon {
+  font-size: 0.75rem;
+  color: var(--color-asphalt);
+}
+
+.standard-title {
+  font-size: 0.92rem;
+  font-weight: 850;
+  color: var(--color-ink);
+}
+
+.standard-desc {
+  margin: 0;
+  font-size: 0.75rem;
+  color: var(--color-asphalt);
+  line-height: 1.4;
 }
 </style>
