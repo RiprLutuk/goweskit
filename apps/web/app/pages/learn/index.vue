@@ -138,6 +138,30 @@ function bikeTypeEmoji(slug: string): string {
   return '🚲';
 }
 
+function bikeTypeHighlights(slug: string): string[] {
+  if (slug === 'mtb_hardtail') {
+    return ['Boost 15×110 / 12×148', 'Fork Tapered', '1×12 Wide Range', 'Dropper 30.9/31.6'];
+  }
+  if (slug === 'folding') {
+    return ['ISO 406 / ISO 305', 'QR 135mm / 130mm', 'BB BSA 68mm', 'Seatpost 33.9mm'];
+  }
+  if (slug === 'road') {
+    return ['700c (ISO 622)', 'Thru-Axle 12×100/142', 'Flat Mount Disc', '2×11 / 2×12 Speed'];
+  }
+  if (slug === 'gravel') {
+    return ['Ban 38–50mm', 'Drop Bar Flare', 'Thru-Axle 12mm', 'Clutch Derailleur'];
+  }
+  return ['Standar Terverifikasi'];
+}
+
+function bikeTypeTerrainLabel(slug: string): string {
+  if (slug === 'mtb_hardtail') return 'Singletrack • Off-road • Jalur Tanah';
+  if (slug === 'folding') return 'Perkotaan • Komuter • Multi-modal';
+  if (slug === 'road') return 'Aspal Mulus • Balap • Endurance';
+  if (slug === 'gravel') return 'Aspal & Kerikil • Bikepacking • All-Road';
+  return 'Jalur Serbaguna';
+}
+
 // Guided Identification Logic
 function runWizardEvaluation(): void {
   if (wizardFolding.value === 'yes') {
@@ -210,190 +234,271 @@ function resetWizard(): void {
 </script>
 
 <template>
-  <div class="native-container learn-container">
-    <!-- Header -->
-    <header class="native-page-header">
-      <div class="header-topline">
-        <span class="native-eyebrow">Pusat Pengetahuan Gowes</span>
-        <div class="header-pills-group">
-          <NuxtLink to="/learn/diagnostics" class="wizard-open-pill wizard-open-pill--alert">
-            🔧 Diagnostik Masalah
-          </NuxtLink>
-          <button
-            class="wizard-open-pill"
-            type="button"
-            @click="showWizard = true"
-          >
-            🧭 Deteksi Tipe
-          </button>
-          <button
-            class="wizard-open-pill wizard-open-pill--admin"
-            type="button"
-            @click="showAdminModal = true"
-          >
-            ➕ Tambah Istilah
-          </button>
-        </div>
-      </div>
-      <h1 class="native-title">Anatomi &amp; Standar Sepeda</h1>
-      <p class="native-sub">
-        Pelajari tipe sepeda, kompatibilitas komponen as roda, BB, headset, dan kamus istilah mekanik secara transparan.
-      </p>
+  <div class="learn-page-wrapper">
+    <!-- HERO / PAGE HEADER -->
+    <header class="learn-hero">
+      <div class="learn-hero__inner">
+        <!-- Eyebrow & Quick Tools Row -->
+        <div class="learn-hero__top">
+          <div class="learn-badge">
+            <span class="learn-badge__dot"></span>
+            <span>Pusat Pengetahuan Gowes</span>
+          </div>
 
-      <!-- Instant Search Field -->
-      <form class="native-search-bar" @submit.prevent="searchLearn">
-        <span class="search-icon" aria-hidden="true">🔍</span>
-        <input
-          v-model="searchQuery"
-          type="search"
-          placeholder="Cari Boost, Freehub, Tapered, BSA, Ban…"
-          :minlength="LEARN_SEARCH_MIN_QUERY_LENGTH"
-          :maxlength="LEARN_SEARCH_MAX_QUERY_LENGTH"
-          class="search-input"
-          @input="searchQuery ? null : clearSearch()"
-        />
-        <button v-if="searchQuery" class="clear-btn" type="button" @click="clearSearch">✕</button>
-        <button class="search-submit-btn" type="submit" :disabled="searching">
-          {{ searching ? '…' : 'Cari' }}
-        </button>
-      </form>
+          <!-- Quick Action Buttons -->
+          <div class="learn-quick-actions">
+            <NuxtLink to="/learn/diagnostics" class="action-pill action-pill--alert">
+              <span class="pill-icon">🔧</span>
+              <span class="pill-text">Diagnostik Masalah</span>
+            </NuxtLink>
+            <button
+              class="action-pill action-pill--wizard"
+              type="button"
+              @click="showWizard = true"
+            >
+              <span class="pill-icon">🧭</span>
+              <span class="pill-text">Deteksi Tipe</span>
+            </button>
+            <button
+              class="action-pill action-pill--curate"
+              type="button"
+              @click="showAdminModal = true"
+            >
+              <span class="pill-icon">➕</span>
+              <span class="pill-text">Tambah Istilah</span>
+            </button>
+          </div>
+        </div>
+
+        <!-- Main Title & Sub -->
+        <h1 class="learn-hero__title">Anatomi &amp; Standar Sepeda</h1>
+        <p class="learn-hero__subtitle">
+          Pelajari tipe sepeda, kompatibilitas komponen as roda, bottom bracket, headset, dan standar teknis secara transparan tanpa bingung.
+        </p>
+
+        <!-- Search Bar -->
+        <form class="learn-search" @submit.prevent="searchLearn">
+          <span class="learn-search__icon" aria-hidden="true">🔍</span>
+          <input
+            v-model="searchQuery"
+            type="search"
+            placeholder="Cari Boost, Freehub, Tapered, BSA, Ban, Rotor…"
+            :minlength="LEARN_SEARCH_MIN_QUERY_LENGTH"
+            :maxlength="LEARN_SEARCH_MAX_QUERY_LENGTH"
+            class="learn-search__input"
+            @input="searchQuery ? null : clearSearch()"
+          />
+          <button v-if="searchQuery" class="learn-search__clear" type="button" @click="clearSearch">✕</button>
+          <button class="learn-search__submit" type="submit" :disabled="searching">
+            {{ searching ? 'Mencari…' : 'Cari' }}
+          </button>
+        </form>
+      </div>
     </header>
 
-    <!-- Search Results View (If searched) -->
-    <div v-if="hasSearched" class="search-results-section">
-      <div class="search-results-header">
-        <span>Hasil Pencarian untuk <strong>"{{ searchQuery }}"</strong> ({{ searchResults.length }})</span>
-        <button class="clear-text-btn" type="button" @click="clearSearch">Tutup Hasil</button>
+    <div class="learn-content-container">
+      <!-- Search Results View (If searched) -->
+      <div v-if="hasSearched" class="search-results-section">
+        <div class="search-results-header">
+          <span>Hasil Pencarian untuk <strong>"{{ searchQuery }}"</strong> ({{ searchResults.length }})</span>
+          <button class="clear-text-btn" type="button" @click="clearSearch">✕ Tutup Pencarian</button>
+        </div>
+
+        <p v-if="searchError" class="state-card state-card--error" role="alert">{{ searchError }}</p>
+        <p v-else-if="searchResults.length === 0" class="state-card state-card--empty">
+          Tidak ditemukan istilah yang cocok. Coba cari kata kunci seperti "axle", "freehub", "travel", atau "bb".
+        </p>
+        <div v-else class="search-results-grid">
+          <NuxtLink
+            v-for="res in searchResults"
+            :key="`${res.kind}-${res.slug}`"
+            :to="searchResultHref(res)"
+            class="search-result-card"
+          >
+            <div class="result-topline">
+              <span class="result-badge">{{ searchKindLabel(res.kind) }}</span>
+            </div>
+            <strong class="result-title">{{ res.title }}</strong>
+            <p class="result-desc">{{ res.summary }}</p>
+          </NuxtLink>
+        </div>
       </div>
 
-      <p v-if="searchError" class="state-card state-card--error" role="alert">{{ searchError }}</p>
-      <p v-else-if="searchResults.length === 0" class="state-card state-card--empty">
-        Tidak ditemukan istilah yang cocok. Coba cari kata kunci seperti "axle", "freehub", "travel", atau "bb".
-      </p>
-      <div v-else class="search-results-grid">
-        <NuxtLink
-          v-for="res in searchResults"
-          :key="`${res.kind}-${res.slug}`"
-          :to="searchResultHref(res)"
-          class="search-result-card"
-        >
-          <div class="result-topline">
-            <span class="result-badge">{{ searchKindLabel(res.kind) }}</span>
-          </div>
-          <strong class="result-title">{{ res.title }}</strong>
-          <p class="result-desc">{{ res.summary }}</p>
-        </NuxtLink>
+      <!-- Segmented Control Navigation Tabs -->
+      <div v-if="!hasSearched" class="segmented-tabs-wrapper">
+        <nav class="segmented-tabs" role="tablist" aria-label="Menu Belajar">
+          <button
+            class="tab-btn"
+            :class="{ 'tab-btn--active': activeTab === 'types' }"
+            type="button"
+            role="tab"
+            :aria-selected="activeTab === 'types'"
+            @click="activeTab = 'types'"
+          >
+            <span class="tab-btn__icon">🚲</span>
+            <span class="tab-btn__label">Tipe Sepeda</span>
+            <span class="tab-btn__badge">{{ bicycleTypes.length }}</span>
+          </button>
+
+          <button
+            class="tab-btn"
+            :class="{ 'tab-btn--active': activeTab === 'components' }"
+            type="button"
+            role="tab"
+            :aria-selected="activeTab === 'components'"
+            @click="activeTab = 'components'"
+          >
+            <span class="tab-btn__icon">⚙️</span>
+            <span class="tab-btn__label">Komponen Anatomi</span>
+            <span class="tab-btn__badge">{{ componentCategories.length }}</span>
+          </button>
+
+          <button
+            class="tab-btn"
+            :class="{ 'tab-btn--active': activeTab === 'glossary' }"
+            type="button"
+            role="tab"
+            :aria-selected="activeTab === 'glossary'"
+            @click="activeTab = 'glossary'"
+          >
+            <span class="tab-btn__icon">📖</span>
+            <span class="tab-btn__label">Kamus Glosarium</span>
+            <span class="tab-btn__badge">{{ glossaryTerms.length }}</span>
+          </button>
+        </nav>
       </div>
+
+      <!-- Loading & Error States -->
+      <div v-if="loading" class="state-card state-card--loading" role="status">
+        <span class="loading-spinner"></span>
+        <span>Memuat ensiklopedia dan diagram sepeda…</span>
+      </div>
+      <p v-else-if="errorMessage" class="state-card state-card--error" role="alert">{{ errorMessage }}</p>
+
+      <template v-else-if="!hasSearched">
+        <!-- ══════════════════════════════════════════════════════════
+             TAB 1: BICYCLE TYPES (ANATOMY & STANDARDS)
+             ══════════════════════════════════════════════════════════ -->
+        <section v-if="activeTab === 'types'" class="types-section">
+          <div class="types-grid">
+            <article
+              v-for="bType in bicycleTypes"
+              :key="bType.id"
+              class="bike-type-card"
+            >
+              <!-- Card Header -->
+              <div class="bike-type-card__header">
+                <div class="bike-type-icon-wrapper">
+                  <span class="bike-type-icon">{{ bikeTypeEmoji(bType.slug) }}</span>
+                </div>
+                <div class="bike-type-header-content">
+                  <div class="bike-type-category-pill">
+                    {{ bType.slug.replace('_', ' ').toUpperCase() }}
+                  </div>
+                  <h2 class="bike-type-title">{{ bType.name }}</h2>
+                  <div class="bike-type-terrain">
+                    {{ bikeTypeTerrainLabel(bType.slug) }}
+                  </div>
+                </div>
+              </div>
+
+              <!-- Summary -->
+              <p class="bike-type-summary">{{ bType.summary }}</p>
+
+              <!-- Technical Standards Highlights Chips -->
+              <div class="bike-type-specs-shelf">
+                <div class="specs-shelf-label">Standar Kunci:</div>
+                <div class="specs-chips-row">
+                  <span
+                    v-for="badge in bikeTypeHighlights(bType.slug)"
+                    :key="badge"
+                    class="spec-chip"
+                  >
+                    {{ badge }}
+                  </span>
+                </div>
+              </div>
+
+              <!-- Card Action Button -->
+              <NuxtLink
+                class="bike-type-action-btn"
+                :to="`/learn/bicycle-types/${bType.slug}`"
+              >
+                <span>Buka Diagram Anatomi &amp; Standar</span>
+                <span class="action-btn-arrow">→</span>
+              </NuxtLink>
+            </article>
+          </div>
+        </section>
+
+        <!-- ══════════════════════════════════════════════════════════
+             TAB 2: 20 COMPONENT CATEGORIES GRID
+             ══════════════════════════════════════════════════════════ -->
+        <section v-else-if="activeTab === 'components'" class="components-section">
+          <div class="components-grid">
+            <NuxtLink
+              v-for="cat in componentCategories"
+              :key="cat.id"
+              :to="`/learn/components/${cat.slug}`"
+              class="component-card"
+            >
+              <div class="component-card__icon-box">
+                {{ categoryIcon(cat.slug) }}
+              </div>
+              <div class="component-card__details">
+                <h3 class="component-card__name">{{ cat.name }}</h3>
+                <p class="component-card__desc">{{ cat.description }}</p>
+              </div>
+              <span class="component-card__arrow">›</span>
+            </NuxtLink>
+          </div>
+        </section>
+
+        <!-- ══════════════════════════════════════════════════════════
+             TAB 3: GLOSSARY TERMS
+             ══════════════════════════════════════════════════════════ -->
+        <section v-else-if="activeTab === 'glossary'" class="glossary-section">
+          <div class="glossary-header-banner">
+            <div class="glossary-banner-text">
+              <h3>Kamus Standar &amp; Istilah Bengkel Sepeda</h3>
+              <p>Pelajari arti istilah mekanik seperti Boost, UDH, Tapered, BSA, Micro Spline, dan HG.</p>
+            </div>
+            <button
+              class="curate-button"
+              type="button"
+              @click="showAdminModal = true"
+            >
+              ➕ Tambah Istilah Baru
+            </button>
+          </div>
+
+          <div class="glossary-grid">
+            <article
+              v-for="term in glossaryTerms"
+              :id="`glossary-${term.slug}`"
+              :key="term.slug"
+              class="glossary-card"
+            >
+              <div class="glossary-card__top">
+                <h3 class="glossary-card__title">{{ term.term }}</h3>
+                <span class="glossary-card__code">{{ term.slug }}</span>
+              </div>
+              <p class="glossary-card__plain">{{ term.plainDefinition }}</p>
+              
+              <div v-if="term.technicalDefinition" class="glossary-card__tech">
+                <span class="tech-label">Spesifikasi Teknis:</span>
+                <p>{{ term.technicalDefinition }}</p>
+              </div>
+
+              <div v-if="term.aliases && term.aliases.length > 0" class="glossary-card__aliases">
+                <span class="alias-label">Alias:</span>
+                <span v-for="alias in term.aliases" :key="alias" class="alias-pill">{{ alias }}</span>
+              </div>
+            </article>
+          </div>
+        </section>
+      </template>
     </div>
-
-    <!-- Segmented Control Navigation Tabs -->
-    <nav v-if="!hasSearched" class="native-segmented-bar" role="tablist" aria-label="Menu Belajar">
-      <button
-        class="segment-tab"
-        :class="{ 'segment-tab--active': activeTab === 'types' }"
-        type="button"
-        role="tab"
-        :aria-selected="activeTab === 'types'"
-        @click="activeTab = 'types'"
-      >
-        🚲 Tipe Sepeda ({{ bicycleTypes.length }})
-      </button>
-      <button
-        class="segment-tab"
-        :class="{ 'segment-tab--active': activeTab === 'components' }"
-        type="button"
-        role="tab"
-        :aria-selected="activeTab === 'components'"
-        @click="activeTab = 'components'"
-      >
-        🔩 Komponen ({{ componentCategories.length }})
-      </button>
-      <button
-        class="segment-tab"
-        :class="{ 'segment-tab--active': activeTab === 'glossary' }"
-        type="button"
-        role="tab"
-        :aria-selected="activeTab === 'glossary'"
-        @click="activeTab = 'glossary'"
-      >
-        📚 Glosarium ({{ glossaryTerms.length }})
-      </button>
-    </nav>
-
-    <p v-if="loading" class="state-card" role="status">Memuat ensiklopedia sepeda…</p>
-    <p v-else-if="errorMessage" class="state-card state-card--error" role="alert">{{ errorMessage }}</p>
-
-    <template v-else-if="!hasSearched">
-      <!-- ══════════════════════════════════════════════════════════
-           TAB 1: BICYCLE TYPES (ANATOMY & STANDARDS)
-           ══════════════════════════════════════════════════════════ -->
-      <section v-if="activeTab === 'types'" class="tab-content-grid">
-        <article
-          v-for="bType in bicycleTypes"
-          :key="bType.id"
-          class="native-type-card"
-        >
-          <div class="type-card-top">
-            <span class="type-emoji-box">{{ bikeTypeEmoji(bType.slug) }}</span>
-            <div class="type-card-header">
-              <span class="type-slug-pill">{{ bType.slug.replace('_', ' ') }}</span>
-              <h2>{{ bType.name }}</h2>
-            </div>
-          </div>
-
-          <p class="type-card-desc">{{ bType.summary }}</p>
-
-          <NuxtLink
-            class="native-action-link"
-            :to="`/learn/bicycle-types/${bType.slug}`"
-          >
-            <span>Buka Diagram Anatomi &amp; Standar</span>
-            <span class="action-arrow">→</span>
-          </NuxtLink>
-        </article>
-      </section>
-
-      <!-- ══════════════════════════════════════════════════════════
-           TAB 2: 20 COMPONENT CATEGORIES GRID
-           ══════════════════════════════════════════════════════════ -->
-      <section v-else-if="activeTab === 'components'" class="components-tab-section">
-        <div class="components-grid">
-          <NuxtLink
-            v-for="cat in componentCategories"
-            :key="cat.id"
-            :to="`/learn/components/${cat.slug}`"
-            class="component-cell-card"
-          >
-            <div class="component-icon">{{ categoryIcon(cat.slug) }}</div>
-            <div class="component-info">
-              <strong>{{ cat.name }}</strong>
-              <small>{{ cat.description }}</small>
-            </div>
-            <span class="cell-arrow">›</span>
-          </NuxtLink>
-        </div>
-      </section>
-
-      <!-- ══════════════════════════════════════════════════════════
-           TAB 3: GLOSSARY TERMS
-           ══════════════════════════════════════════════════════════ -->
-      <section v-else-if="activeTab === 'glossary'" class="glossary-tab-section">
-        <div class="glossary-feed">
-          <article
-            v-for="term in glossaryTerms"
-            :id="`glossary-${term.slug}`"
-            :key="term.slug"
-            class="glossary-card"
-          >
-            <div class="glossary-top">
-              <h3 class="glossary-term">{{ term.term }}</h3>
-              <span class="glossary-code">{{ term.slug }}</span>
-            </div>
-            <p class="glossary-def">{{ term.plainDefinition }}</p>
-          </article>
-        </div>
-      </section>
-    </template>
 
     <!-- ══════════════════════════════════════════════════════════
          GUIDED IDENTIFICATION WIZARD MODAL
@@ -401,15 +506,17 @@ function resetWizard(): void {
     <div
       v-if="showWizard"
       class="native-modal-backdrop"
+      role="dialog"
+      aria-modal="true"
       @click.self="showWizard = false"
     >
-      <div class="native-modal-sheet">
+      <div class="wizard-modal-sheet">
         <div class="modal-header">
           <div class="modal-header-titles">
             <span class="modal-step-badge">Langkah {{ wizardStep <= 3 ? `${wizardStep}/3` : 'Selesai' }}</span>
             <h2>Deteksi Tipe Sepeda Anda</h2>
           </div>
-          <button class="modal-close" type="button" @click="showWizard = false">✕</button>
+          <button class="modal-close" type="button" aria-label="Tutup" @click="showWizard = false">✕</button>
         </div>
 
         <!-- Step 1 -->
@@ -448,7 +555,7 @@ function resetWizard(): void {
               <span class="btn-icon">🌾</span>
               <div>
                 <strong>Kombinasi Aspal &amp; Jalan Makadam / Kerikil</strong>
-                <small>Eksplorasi jalan pedesaan, perkebunan, dan aspal tambalan</small>
+                <small>Jalur pedesaan, perkebunan, dan rute jarak jauh all-road</small>
               </div>
             </button>
           </div>
@@ -456,7 +563,7 @@ function resetWizard(): void {
 
         <!-- Step 2 -->
         <div v-else-if="wizardStep === 2" class="wizard-step-body">
-          <p class="step-question">Apakah rangka sepeda Anda memiliki engsel lipat?</p>
+          <p class="step-question">Apakah rangka sepeda Anda memiliki engsel lipat di bagian tengah?</p>
           <div class="step-buttons-stack">
             <button
               class="wizard-btn-card"
@@ -465,8 +572,8 @@ function resetWizard(): void {
             >
               <span class="btn-icon">🧲</span>
               <div>
-                <strong>Ya, Rangka Bisa Dilipat</strong>
-                <small>Memiliki klem engsel di tengah untuk masuk bagasi/KRL</small>
+                <strong>Ya, Sepeda Bisa Dilipat (Folding)</strong>
+                <small>Rangka berengsel, roda kecil (16–20 inci), mudah disimpan</small>
               </div>
             </button>
 
@@ -477,8 +584,8 @@ function resetWizard(): void {
             >
               <span class="btn-icon">🚲</span>
               <div>
-                <strong>Tidak, Rangka Utuh (Non-folding)</strong>
-                <small>Rangka sepeda rigid atau suspensi standar</small>
+                <strong>Tidak, Rangka Standar / Kaku (Rigid / Fixed)</strong>
+                <small>Rangka MTB, Road, Gravel, atau Hybrid standar</small>
               </div>
             </button>
           </div>
@@ -486,17 +593,17 @@ function resetWizard(): void {
 
         <!-- Step 3 -->
         <div v-else-if="wizardStep === 3" class="wizard-step-body">
-          <p class="step-question">Bagaimana bentuk stang (handlebar) sepeda Anda?</p>
+          <p class="step-question">Model setang (handlebar) seperti apa yang terpasang?</p>
           <div class="step-buttons-stack">
             <button
               class="wizard-btn-card"
               type="button"
               @click="wizardHandlebar = 'flat'; runWizardEvaluation()"
             >
-              <span class="btn-icon">➖</span>
+              <span class="btn-icon">🛵</span>
               <div>
-                <strong>Stang Lurus / Riser (Flat Bar)</strong>
-                <small>Posisi berkendara tegak dengan tuas rem dan shifter jempol</small>
+                <strong>Setang Lurus / Riser (Flat Bar)</strong>
+                <small>Posisi gowes tegak, kontrol stabil di medan off-road / kota</small>
               </div>
             </button>
 
@@ -505,23 +612,25 @@ function resetWizard(): void {
               type="button"
               @click="wizardHandlebar = 'drop'; runWizardEvaluation()"
             >
-              <span class="btn-icon">➰</span>
+              <span class="btn-icon">🏎️</span>
               <div>
-                <strong>Stang Melengkung Balap (Drop Bar)</strong>
-                <small>Posisi aerodinamis dengan tuas rem-shifter terintegrasi</small>
+                <strong>Setang Balap Melengkung (Drop Bar)</strong>
+                <small>Posisi gowes aerodinamis untuk kecepatan dan jarak jauh</small>
               </div>
             </button>
           </div>
         </div>
 
-        <!-- Step 4 Result -->
+        <!-- Step 4: Result -->
         <div v-else-if="wizardStep === 4 && wizardResult" class="wizard-result-box">
-          <div class="result-score-badge">✓ {{ wizardResult.matchScore }}</div>
+          <div class="result-score-badge">
+            ✓ {{ wizardResult.matchScore }}
+          </div>
           <h3 class="result-bike-name">{{ wizardResult.typeName }}</h3>
           <p class="result-bike-summary">{{ wizardResult.summary }}</p>
 
           <div class="common-standards-box">
-            <strong>Standar Umum Sepeda Ini:</strong>
+            <strong>Standar Komponen Umum:</strong>
             <ul>
               <li v-for="spec in wizardResult.commonSpecs" :key="spec">{{ spec }}</li>
             </ul>
@@ -529,20 +638,13 @@ function resetWizard(): void {
 
           <div class="wizard-action-group">
             <NuxtLink
-              class="button button--primary button--full"
+              class="button button--primary"
               :to="`/learn/bicycle-types/${wizardResult.typeSlug}`"
               @click="showWizard = false"
             >
-              📐 Buka Diagram Anatomi Interaktif
+              Buka Anatomi {{ wizardResult.typeName }} →
             </NuxtLink>
-            <NuxtLink
-              class="button button--secondary button--full"
-              to="/garage/new"
-              @click="showWizard = false"
-            >
-              ＋ Daftarkan Sepeda ke My Garage
-            </NuxtLink>
-            <button class="button button--sand button--full" type="button" @click="resetWizard">
+            <button class="button button--secondary" type="button" @click="resetWizard">
               Ulangi Deteksi
             </button>
           </div>
@@ -560,303 +662,485 @@ function resetWizard(): void {
 </template>
 
 <style scoped>
-.learn-container {
-  display: grid;
-  gap: 1.25rem;
-  padding-bottom: 2.5rem;
+.learn-page-wrapper {
+  display: flex;
+  flex-direction: column;
+  gap: 1.5rem;
+  padding-bottom: 3rem;
 }
 
-.native-page-header {
-  display: grid;
-  gap: 0.45rem;
+/* ══════════════════════════════════════════════════════════
+   HERO / HEADER SECTION
+   ══════════════════════════════════════════════════════════ */
+.learn-hero {
+  background: var(--color-white);
+  border-bottom: 1.5px solid var(--color-sand);
+  padding: 1.5rem 1rem 1.75rem;
+  margin: -1rem -1rem 0 -1rem;
 }
 
-.header-topline {
+@media (min-width: 640px) {
+  .learn-hero {
+    border-radius: 1.5rem;
+    border: 1.5px solid var(--color-sand);
+    margin: 0;
+    padding: 1.75rem 2rem 2rem;
+  }
+}
+
+.learn-hero__inner {
+  max-width: 54rem;
+  margin: 0 auto;
+  display: flex;
+  flex-direction: column;
+  gap: 0.85rem;
+}
+
+.learn-hero__top {
   display: flex;
   align-items: center;
   justify-content: space-between;
-  gap: 0.5rem;
+  gap: 0.75rem;
+  flex-wrap: wrap;
 }
 
-.native-eyebrow {
+.learn-badge {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.45rem;
   font-family: var(--font-mono);
   font-size: 0.72rem;
   font-weight: 850;
   text-transform: uppercase;
-  color: var(--color-asphalt);
   letter-spacing: 0.05em;
-}
-
-.header-pills-group {
-  display: flex;
-  align-items: center;
-  gap: 0.4rem;
-  flex-wrap: wrap;
-}
-
-.wizard-open-pill {
-  border: 1px solid var(--color-ink);
-  background: var(--color-chain-lime);
-  color: var(--color-ink);
-  font-size: 0.74rem;
-  font-weight: 850;
+  color: var(--color-asphalt);
+  background: var(--color-canvas);
+  border: 1px solid var(--color-sand);
   padding: 0.25rem 0.65rem;
   border-radius: 9999px;
-  cursor: pointer;
-  box-shadow: 0 2px 0 var(--color-ink);
-  transition: transform 90ms ease;
-  text-decoration: none;
-  display: inline-flex;
-  align-items: center;
 }
 
-.wizard-open-pill--alert {
-  background: #FEF3C7;
-  color: #92400E;
+.learn-badge__dot {
+  width: 0.45rem;
+  height: 0.45rem;
+  border-radius: 50%;
+  background: #16A34A;
 }
 
-.wizard-open-pill:active {
-  transform: scale(0.96);
-}
-
-.native-title {
-  margin: 0;
-  font-size: 1.65rem;
-  font-weight: 850;
-  letter-spacing: -0.03em;
-  color: var(--color-ink);
-}
-
-.native-sub {
-  margin: 0;
-  font-size: 0.84rem;
-  color: var(--color-asphalt);
-  line-height: 1.4;
-}
-
-/* Search Bar */
-.native-search-bar {
+.learn-quick-actions {
   display: flex;
   align-items: center;
   gap: 0.45rem;
-  padding: 0.35rem 0.45rem 0.35rem 0.85rem;
+  flex-wrap: wrap;
+}
+
+.action-pill {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.35rem;
+  padding: 0.35rem 0.75rem;
   border-radius: 9999px;
+  font-size: 0.76rem;
+  font-weight: 800;
+  text-decoration: none;
+  cursor: pointer;
+  border: 1px solid var(--color-ink);
+  box-shadow: 0 2px 0 var(--color-ink);
+  transition: transform 90ms ease, box-shadow 90ms ease;
+  white-space: nowrap;
+}
+
+.action-pill:active {
+  transform: translateY(2px);
+  box-shadow: 0 0 0 var(--color-ink);
+}
+
+.action-pill--alert {
+  background: #FEF3C7;
+  color: #92400E;
+  border-color: #92400E;
+  box-shadow: 0 2px 0 #92400E;
+}
+
+.action-pill--wizard {
+  background: var(--color-chain-lime);
+  color: var(--color-ink);
+}
+
+.action-pill--curate {
   background: var(--color-white);
-  border: 1px solid var(--color-sand);
-  box-shadow: 0 2px 10px rgb(23 32 42 / 4%);
-  margin-top: 0.45rem;
+  color: var(--color-ink);
 }
 
-.search-icon {
-  font-size: 0.85rem;
-  opacity: 0.5;
+.learn-hero__title {
+  margin: 0;
+  font-size: 1.85rem;
+  font-weight: 900;
+  letter-spacing: -0.03em;
+  color: var(--color-ink);
+  line-height: 1.2;
 }
 
-.search-input {
+.learn-hero__subtitle {
+  margin: 0;
+  font-size: 0.88rem;
+  color: var(--color-asphalt);
+  line-height: 1.5;
+  max-width: 42rem;
+}
+
+/* Search Bar */
+.learn-search {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  padding: 0.35rem 0.45rem 0.35rem 1rem;
+  border-radius: 9999px;
+  background: var(--color-canvas);
+  border: 1.5px solid var(--color-sand);
+  box-shadow: 0 3px 12px rgba(23, 32, 42, 0.04);
+  margin-top: 0.5rem;
+  transition: border-color 150ms ease, background-color 150ms ease;
+}
+
+.learn-search:focus-within {
+  border-color: var(--color-ink);
+  background: var(--color-white);
+}
+
+.learn-search__icon {
+  font-size: 0.95rem;
+  opacity: 0.6;
+}
+
+.learn-search__input {
   flex: 1;
   border: none;
   background: transparent;
   outline: none;
-  font-size: 0.82rem;
-  font-weight: 750;
+  font-size: 0.85rem;
+  font-weight: 700;
   color: var(--color-ink);
+  font-family: inherit;
 }
 
-.clear-btn {
+.learn-search__clear {
   border: none;
   background: none;
-  font-size: 0.75rem;
+  font-size: 0.8rem;
   color: var(--color-asphalt);
   cursor: pointer;
+  padding: 0.2rem 0.4rem;
 }
 
-.search-submit-btn {
-  padding: 0.35rem 0.75rem;
+.learn-search__submit {
+  padding: 0.45rem 1rem;
   border-radius: 9999px;
   background: var(--color-ink);
   color: var(--color-white);
   border: none;
-  font-size: 0.75rem;
+  font-size: 0.78rem;
   font-weight: 800;
   cursor: pointer;
+  transition: transform 90ms ease;
 }
 
-/* Segmented Bar */
-.native-segmented-bar {
+.learn-search__submit:active {
+  transform: scale(0.96);
+}
+
+/* ══════════════════════════════════════════════════════════
+   SEGMENTED NAVIGATION TABS
+   ══════════════════════════════════════════════════════════ */
+.learn-content-container {
+  display: flex;
+  flex-direction: column;
+  gap: 1.25rem;
+  max-width: 54rem;
+  margin: 0 auto;
+  width: 100%;
+}
+
+.segmented-tabs-wrapper {
+  display: flex;
+  justify-content: center;
+}
+
+.segmented-tabs {
   display: flex;
   gap: 0.35rem;
-  padding: 0.3rem;
-  border-radius: 0.95rem;
+  padding: 0.35rem;
+  border-radius: 1.15rem;
   background: var(--color-sand);
+  width: 100%;
+  max-width: 36rem;
 }
 
-.segment-tab {
+.tab-btn {
   flex: 1;
-  padding: 0.5rem 0.65rem;
-  border-radius: 0.75rem;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.45rem;
+  padding: 0.6rem 0.75rem;
+  border-radius: 0.85rem;
   border: none;
   background: transparent;
   color: var(--color-asphalt);
-  font-size: 0.78rem;
-  font-weight: 800;
+  font-size: 0.8rem;
+  font-weight: 850;
   cursor: pointer;
   transition: all 120ms ease;
   white-space: nowrap;
-  text-align: center;
 }
 
-.segment-tab--active {
+.tab-btn--active {
   background: var(--color-white);
   color: var(--color-ink);
-  box-shadow: 0 2px 6px rgb(23 32 42 / 8%);
+  box-shadow: 0 2px 8px rgba(23, 32, 42, 0.08);
 }
 
-/* TAB 1: Bike Types Grid */
-.tab-content-grid {
-  display: grid;
-  grid-template-columns: repeat(auto-fill, minmax(18rem, 1fr));
-  gap: 1rem;
-}
-
-.native-type-card {
-  display: flex;
-  flex-direction: column;
-  padding: 1.15rem;
-  border-radius: 1.25rem;
-  background: var(--color-white);
-  border: 1px solid var(--color-sand);
-  box-shadow: 0 4px 16px rgb(23 32 42 / 5%);
-  gap: 0.85rem;
-}
-
-.type-card-top {
-  display: flex;
-  align-items: center;
-  gap: 0.85rem;
-}
-
-.type-emoji-box {
-  width: 3rem;
-  height: 3rem;
-  border-radius: 0.85rem;
-  background: var(--color-canvas);
-  border: 1px solid var(--color-sand);
-  display: grid;
-  place-items: center;
-  font-size: 1.6rem;
-  flex-shrink: 0;
-}
-
-.type-card-header {
-  display: grid;
-  gap: 0.15rem;
-}
-
-.type-slug-pill {
+.tab-btn__badge {
   font-family: var(--font-mono);
   font-size: 0.65rem;
   font-weight: 850;
-  text-transform: uppercase;
-  color: #0369a1;
-  background: #e0f2fe;
   padding: 0.1rem 0.4rem;
-  border-radius: 0.35rem;
-  display: inline-block;
-  width: fit-content;
+  border-radius: 9999px;
+  background: rgba(23, 32, 42, 0.08);
+  color: var(--color-ink);
 }
 
-.type-card-header h2 {
-  margin: 0;
-  font-size: 1.15rem;
-  font-weight: 850;
-  letter-spacing: -0.02em;
+.tab-btn--active .tab-btn__badge {
+  background: var(--color-chain-lime);
+  color: var(--color-ink);
 }
 
-.type-card-desc {
-  margin: 0;
-  font-size: 0.8rem;
-  color: var(--color-asphalt);
-  line-height: 1.4;
+/* ══════════════════════════════════════════════════════════
+   TAB 1: BICYCLE TYPE CARDS (CLEAN WORKSHOP AESTHETIC)
+   ══════════════════════════════════════════════════════════ */
+.types-section {
+  display: flex;
+  flex-direction: column;
+  gap: 1.25rem;
+}
+
+.types-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(22rem, 1fr));
+  gap: 1rem;
+}
+
+.bike-type-card {
+  background: var(--color-white);
+  border: 1.5px solid var(--color-sand);
+  border-radius: 1.35rem;
+  padding: 1.35rem;
+  display: flex;
+  flex-direction: column;
+  gap: 0.95rem;
+  box-shadow: 0 4px 16px rgba(23, 32, 42, 0.03);
+  transition: border-color 150ms ease, box-shadow 150ms ease;
+}
+
+.bike-type-card:hover {
+  border-color: var(--color-ink);
+  box-shadow: 0 6px 20px rgba(23, 32, 42, 0.06);
+}
+
+.bike-type-card__header {
+  display: flex;
+  align-items: flex-start;
+  gap: 0.85rem;
+}
+
+.bike-type-icon-wrapper {
+  width: 3.25rem;
+  height: 3.25rem;
+  border-radius: 1rem;
+  background: var(--color-canvas);
+  border: 1.5px solid var(--color-sand);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 1.75rem;
+  flex-shrink: 0;
+}
+
+.bike-type-header-content {
+  display: flex;
+  flex-direction: column;
+  gap: 0.2rem;
   flex: 1;
 }
 
-.native-action-link {
+.bike-type-category-pill {
+  font-family: var(--font-mono);
+  font-size: 0.62rem;
+  font-weight: 900;
+  color: #0284C7;
+  background: #E0F2FE;
+  padding: 0.15rem 0.5rem;
+  border-radius: 9999px;
+  width: fit-content;
+  letter-spacing: 0.03em;
+}
+
+.bike-type-title {
+  margin: 0;
+  font-size: 1.25rem;
+  font-weight: 900;
+  color: var(--color-ink);
+  letter-spacing: -0.02em;
+}
+
+.bike-type-terrain {
+  font-size: 0.72rem;
+  font-weight: 750;
+  color: var(--color-asphalt);
+}
+
+.bike-type-summary {
+  margin: 0;
+  font-size: 0.82rem;
+  color: var(--color-asphalt);
+  line-height: 1.45;
+  flex: 1;
+}
+
+/* Specs Chips Shelf */
+.bike-type-specs-shelf {
+  background: var(--color-canvas);
+  border: 1px solid var(--color-sand);
+  border-radius: 0.85rem;
+  padding: 0.65rem 0.85rem;
+  display: flex;
+  flex-direction: column;
+  gap: 0.4rem;
+}
+
+.specs-shelf-label {
+  font-size: 0.68rem;
+  font-weight: 850;
+  color: var(--color-asphalt);
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+}
+
+.specs-chips-row {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.35rem;
+}
+
+.spec-chip {
+  font-family: var(--font-mono);
+  font-size: 0.68rem;
+  font-weight: 800;
+  color: var(--color-ink);
+  background: var(--color-white);
+  border: 1px solid var(--color-sand);
+  padding: 0.15rem 0.5rem;
+  border-radius: 0.4rem;
+}
+
+.bike-type-action-btn {
   display: flex;
   align-items: center;
   justify-content: space-between;
-  padding: 0.65rem 0.85rem;
-  border-radius: 0.75rem;
+  padding: 0.75rem 1rem;
+  border-radius: 0.85rem;
   background: var(--color-canvas);
-  border: 1px solid var(--color-sand);
+  border: 1.5px solid var(--color-ink);
   text-decoration: none;
-  font-size: 0.78rem;
+  font-size: 0.82rem;
   font-weight: 850;
   color: var(--color-ink);
-  transition: transform 90ms ease, background-color 100ms ease;
+  box-shadow: 0 2px 0 var(--color-ink);
+  transition: all 100ms ease;
 }
 
-.native-action-link:active {
-  transform: scale(0.98);
+.bike-type-action-btn:hover {
   background: var(--color-chain-lime);
 }
 
-.action-arrow {
-  font-size: 0.95rem;
+.bike-type-action-btn:active {
+  transform: translateY(2px);
+  box-shadow: 0 0 0 var(--color-ink);
 }
 
-/* TAB 2: Components Grid */
+.action-btn-arrow {
+  font-size: 1rem;
+  font-weight: 900;
+}
+
+/* ══════════════════════════════════════════════════════════
+   TAB 2: COMPONENTS GRID
+   ══════════════════════════════════════════════════════════ */
+.components-section {
+  display: flex;
+  flex-direction: column;
+  gap: 1rem;
+}
+
 .components-grid {
   display: grid;
-  grid-template-columns: repeat(auto-fill, minmax(17rem, 1fr));
-  gap: 0.65rem;
+  grid-template-columns: repeat(auto-fill, minmax(16rem, 1fr));
+  gap: 0.75rem;
 }
 
-.component-cell-card {
+.component-card {
   display: flex;
   align-items: center;
   gap: 0.75rem;
-  padding: 0.75rem 0.95rem;
-  border-radius: 1rem;
+  padding: 0.85rem 1rem;
+  border-radius: 1.15rem;
   background: var(--color-white);
-  border: 1px solid var(--color-sand);
+  border: 1.5px solid var(--color-sand);
   text-decoration: none;
   color: var(--color-ink);
   transition: all 120ms ease;
 }
 
-.component-cell-card:hover {
+.component-card:hover {
   border-color: var(--color-ink);
+  box-shadow: 0 4px 12px rgba(23, 32, 42, 0.05);
 }
 
-.component-cell-card:active {
+.component-card:active {
   transform: scale(0.98);
   background: var(--color-canvas);
 }
 
-.component-icon {
-  width: 2.3rem;
-  height: 2.3rem;
-  border-radius: 0.65rem;
-  background: var(--color-sand);
-  display: grid;
-  place-items: center;
-  font-size: 1.25rem;
+.component-card__icon-box {
+  width: 2.65rem;
+  height: 2.65rem;
+  border-radius: 0.75rem;
+  background: var(--color-canvas);
+  border: 1px solid var(--color-sand);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 1.35rem;
   flex-shrink: 0;
 }
 
-.component-info {
+.component-card__details {
   flex: 1;
   min-width: 0;
-  display: grid;
-  gap: 0.1rem;
+  display: flex;
+  flex-direction: column;
+  gap: 0.15rem;
 }
 
-.component-info strong {
-  font-size: 0.86rem;
+.component-card__name {
+  margin: 0;
+  font-size: 0.88rem;
   font-weight: 850;
+  color: var(--color-ink);
 }
 
-.component-info small {
+.component-card__desc {
+  margin: 0;
   font-size: 0.72rem;
   color: var(--color-asphalt);
   white-space: nowrap;
@@ -864,75 +1148,172 @@ function resetWizard(): void {
   text-overflow: ellipsis;
 }
 
-.cell-arrow {
-  font-size: 1.15rem;
+.component-card__arrow {
+  font-size: 1.25rem;
   color: var(--color-asphalt);
-  opacity: 0.45;
+  opacity: 0.4;
 }
 
-/* TAB 3: Glossary */
-.glossary-feed {
+/* ══════════════════════════════════════════════════════════
+   TAB 3: GLOSSARY SECTION
+   ══════════════════════════════════════════════════════════ */
+.glossary-section {
+  display: flex;
+  flex-direction: column;
+  gap: 1rem;
+}
+
+.glossary-header-banner {
+  background: var(--color-white);
+  border: 1.5px solid var(--color-sand);
+  border-radius: 1.25rem;
+  padding: 1.25rem 1.5rem;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 1rem;
+  flex-wrap: wrap;
+}
+
+.glossary-banner-text h3 {
+  margin: 0;
+  font-size: 1.05rem;
+  font-weight: 850;
+  color: var(--color-ink);
+}
+
+.glossary-banner-text p {
+  margin: 0.2rem 0 0;
+  font-size: 0.78rem;
+  color: var(--color-asphalt);
+}
+
+.curate-button {
+  padding: 0.45rem 0.85rem;
+  border-radius: 0.65rem;
+  background: var(--color-ink);
+  color: var(--color-white);
+  border: none;
+  font-size: 0.76rem;
+  font-weight: 800;
+  cursor: pointer;
+  white-space: nowrap;
+}
+
+.glossary-grid {
   display: grid;
-  gap: 0.75rem;
+  grid-template-columns: repeat(auto-fill, minmax(22rem, 1fr));
+  gap: 0.85rem;
 }
 
 .glossary-card {
-  display: grid;
-  gap: 0.35rem;
-  padding: 0.95rem 1.15rem;
-  border-radius: 1rem;
   background: var(--color-white);
-  border: 1px solid var(--color-sand);
+  border: 1.5px solid var(--color-sand);
+  border-radius: 1.15rem;
+  padding: 1.15rem;
+  display: flex;
+  flex-direction: column;
+  gap: 0.65rem;
 }
 
-.glossary-top {
+.glossary-card__top {
   display: flex;
   align-items: center;
   justify-content: space-between;
   gap: 0.5rem;
 }
 
-.glossary-term {
+.glossary-card__title {
   margin: 0;
-  font-size: 0.95rem;
-  font-weight: 850;
+  font-size: 1.05rem;
+  font-weight: 900;
+  color: var(--color-ink);
 }
 
-.glossary-code {
+.glossary-card__code {
   font-family: var(--font-mono);
   font-size: 0.65rem;
   font-weight: 850;
   color: var(--color-asphalt);
-  background: var(--color-sand);
-  padding: 0.1rem 0.4rem;
+  background: var(--color-canvas);
+  border: 1px solid var(--color-sand);
+  padding: 0.15rem 0.45rem;
   border-radius: 0.35rem;
 }
 
-.glossary-def {
+.glossary-card__plain {
   margin: 0;
-  font-size: 0.78rem;
+  font-size: 0.82rem;
+  color: var(--color-ink);
+  line-height: 1.45;
+}
+
+.glossary-card__tech {
+  background: var(--color-canvas);
+  border: 1px solid var(--color-sand);
+  border-radius: 0.65rem;
+  padding: 0.65rem 0.75rem;
+  font-size: 0.75rem;
   color: var(--color-asphalt);
   line-height: 1.4;
 }
 
-/* Search Results */
+.tech-label {
+  font-weight: 850;
+  color: var(--color-ink);
+  display: block;
+  margin-bottom: 0.15rem;
+  font-size: 0.7rem;
+  text-transform: uppercase;
+}
+
+.glossary-card__tech p {
+  margin: 0;
+}
+
+.glossary-card__aliases {
+  display: flex;
+  align-items: center;
+  gap: 0.35rem;
+  flex-wrap: wrap;
+  font-size: 0.72rem;
+}
+
+.alias-label {
+  font-weight: 800;
+  color: var(--color-asphalt);
+}
+
+.alias-pill {
+  font-size: 0.68rem;
+  font-weight: 750;
+  background: var(--color-sand);
+  color: var(--color-ink);
+  padding: 0.1rem 0.45rem;
+  border-radius: 9999px;
+}
+
+/* ══════════════════════════════════════════════════════════
+   SEARCH RESULTS
+   ══════════════════════════════════════════════════════════ */
 .search-results-section {
-  display: grid;
-  gap: 0.75rem;
+  display: flex;
+  flex-direction: column;
+  gap: 0.85rem;
 }
 
 .search-results-header {
   display: flex;
   align-items: center;
   justify-content: space-between;
-  font-size: 0.8rem;
+  font-size: 0.85rem;
   color: var(--color-asphalt);
 }
 
 .clear-text-btn {
   border: none;
   background: none;
-  font-size: 0.75rem;
+  font-size: 0.78rem;
   font-weight: 800;
   color: var(--color-ink);
   cursor: pointer;
@@ -942,76 +1323,109 @@ function resetWizard(): void {
 .search-results-grid {
   display: grid;
   grid-template-columns: repeat(auto-fill, minmax(18rem, 1fr));
-  gap: 0.65rem;
+  gap: 0.75rem;
 }
 
 .search-result-card {
-  display: grid;
-  gap: 0.25rem;
-  padding: 0.85rem 1rem;
-  border-radius: 1rem;
   background: var(--color-white);
-  border: 1px solid var(--color-sand);
+  border: 1.5px solid var(--color-sand);
+  border-radius: 1.15rem;
+  padding: 1rem;
   text-decoration: none;
   color: var(--color-ink);
+  display: flex;
+  flex-direction: column;
+  gap: 0.35rem;
 }
 
 .result-badge {
   font-family: var(--font-mono);
   font-size: 0.62rem;
-  font-weight: 850;
+  font-weight: 900;
   background: var(--color-chain-lime);
   color: var(--color-ink);
-  padding: 0.1rem 0.4rem;
+  padding: 0.15rem 0.45rem;
   border-radius: 0.3rem;
   text-transform: uppercase;
 }
 
 .result-title {
-  font-size: 0.9rem;
+  font-size: 0.95rem;
   font-weight: 850;
 }
 
 .result-desc {
   margin: 0;
-  font-size: 0.74rem;
+  font-size: 0.78rem;
   color: var(--color-asphalt);
-  line-height: 1.35;
+  line-height: 1.4;
 }
 
-/* Wizard Modal Sheet */
-.native-modal-backdrop {
-  position: fixed;
-  inset: 0;
-  background: rgb(15 23 42 / 60%);
-  backdrop-filter: blur(6px);
-  -webkit-backdrop-filter: blur(6px);
-  display: grid;
-  place-items: center;
-  z-index: 100;
-  padding: 1rem;
-}
-
-.native-modal-sheet {
-  width: 100%;
-  max-width: 28rem;
+/* State Cards */
+.state-card {
+  padding: 1.5rem;
+  border-radius: 1.25rem;
   background: var(--color-white);
-  border-radius: 1.35rem;
-  padding: 1.35rem;
-  box-shadow: 0 16px 48px rgb(0 0 0 / 25%);
-  display: grid;
-  gap: 1rem;
+  border: 1.5px solid var(--color-sand);
+  text-align: center;
+  font-size: 0.85rem;
+  font-weight: 750;
+  color: var(--color-asphalt);
+}
+
+.state-card--loading {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.65rem;
+}
+
+.loading-spinner {
+  width: 1rem;
+  height: 1rem;
+  border: 2px solid var(--color-sand);
+  border-top-color: var(--color-ink);
+  border-radius: 50%;
+  animation: spin 0.6s linear infinite;
+}
+
+@keyframes spin {
+  to {
+    transform: rotate(360deg);
+  }
+}
+
+.state-card--error {
+  background: #FEE2E2;
+  border-color: #FCA5A5;
+  color: #991B1B;
+}
+
+/* ══════════════════════════════════════════════════════════
+   WIZARD MODAL SHEET
+   ══════════════════════════════════════════════════════════ */
+.wizard-modal-sheet {
+  width: 100%;
+  max-width: 30rem;
+  background: var(--color-white);
+  border-radius: 1.5rem;
+  padding: 1.5rem;
+  box-shadow: 0 20px 48px rgba(0, 0, 0, 0.25);
+  display: flex;
+  flex-direction: column;
+  gap: 1.15rem;
 }
 
 .modal-header {
   display: flex;
-  align-items: center;
+  align-items: flex-start;
   justify-content: space-between;
 }
 
 .modal-header-titles {
-  display: grid;
-  gap: 0.15rem;
+  display: flex;
+  flex-direction: column;
+  gap: 0.25rem;
 }
 
 .modal-step-badge {
@@ -1019,54 +1433,69 @@ function resetWizard(): void {
   font-size: 0.65rem;
   font-weight: 850;
   color: #166534;
-  background: rgb(201 243 106 / 50%);
-  padding: 0.1rem 0.45rem;
-  border-radius: 0.35rem;
+  background: rgba(201, 243, 106, 0.6);
+  padding: 0.15rem 0.5rem;
+  border-radius: 9999px;
   width: fit-content;
 }
 
 .modal-header h2 {
   margin: 0;
-  font-size: 1.15rem;
-  font-weight: 850;
+  font-size: 1.25rem;
+  font-weight: 900;
+  color: var(--color-ink);
 }
 
 .modal-close {
   border: none;
-  background: none;
-  font-size: 1rem;
-  color: var(--color-asphalt);
+  background: var(--color-canvas);
+  border: 1px solid var(--color-sand);
+  width: 2rem;
+  height: 2rem;
+  border-radius: 50%;
+  font-size: 0.9rem;
   cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
 }
 
 .wizard-step-body {
-  display: grid;
-  gap: 0.85rem;
+  display: flex;
+  flex-direction: column;
+  gap: 0.95rem;
 }
 
 .step-question {
   margin: 0;
-  font-size: 0.88rem;
-  font-weight: 800;
+  font-size: 0.92rem;
+  font-weight: 850;
   color: var(--color-ink);
+  line-height: 1.35;
 }
 
 .step-buttons-stack {
-  display: grid;
-  gap: 0.5rem;
+  display: flex;
+  flex-direction: column;
+  gap: 0.6rem;
 }
 
 .wizard-btn-card {
   display: flex;
   align-items: center;
-  gap: 0.75rem;
-  padding: 0.85rem 1rem;
-  border-radius: 1rem;
+  gap: 0.85rem;
+  padding: 0.95rem 1.15rem;
+  border-radius: 1.15rem;
   background: var(--color-canvas);
-  border: 1px solid var(--color-sand);
+  border: 1.5px solid var(--color-sand);
   text-align: left;
   cursor: pointer;
   transition: all 100ms ease;
+}
+
+.wizard-btn-card:hover {
+  border-color: var(--color-ink);
+  background: var(--color-white);
 }
 
 .wizard-btn-card:active {
@@ -1075,66 +1504,74 @@ function resetWizard(): void {
 }
 
 .btn-icon {
-  font-size: 1.6rem;
+  font-size: 1.75rem;
 }
 
 .wizard-btn-card strong {
-  font-size: 0.84rem;
+  font-size: 0.88rem;
   font-weight: 850;
+  color: var(--color-ink);
   display: block;
 }
 
 .wizard-btn-card small {
-  font-size: 0.72rem;
+  font-size: 0.75rem;
   color: var(--color-asphalt);
+  line-height: 1.3;
 }
 
 .wizard-result-box {
-  display: grid;
-  gap: 0.85rem;
+  display: flex;
+  flex-direction: column;
+  gap: 0.95rem;
 }
 
 .result-score-badge {
   font-family: var(--font-mono);
-  font-size: 0.75rem;
+  font-size: 0.78rem;
   font-weight: 900;
   color: #166534;
-  background: rgb(201 243 106 / 60%);
-  padding: 0.2rem 0.65rem;
+  background: var(--color-chain-lime);
+  padding: 0.25rem 0.75rem;
   border-radius: 9999px;
   width: fit-content;
 }
 
 .result-bike-name {
   margin: 0;
-  font-size: 1.3rem;
-  font-weight: 850;
+  font-size: 1.35rem;
+  font-weight: 900;
+  color: var(--color-ink);
 }
 
 .result-bike-summary {
   margin: 0;
-  font-size: 0.8rem;
+  font-size: 0.82rem;
   color: var(--color-asphalt);
-  line-height: 1.4;
+  line-height: 1.45;
 }
 
 .common-standards-box {
-  padding: 0.85rem;
-  border-radius: 0.85rem;
+  padding: 0.95rem;
+  border-radius: 0.95rem;
   background: var(--color-canvas);
   border: 1px solid var(--color-sand);
-  font-size: 0.76rem;
+  font-size: 0.78rem;
 }
 
 .common-standards-box ul {
-  margin: 0.35rem 0 0;
-  padding-left: 1.15rem;
-  display: grid;
-  gap: 0.25rem;
+  margin: 0.45rem 0 0;
+  padding-left: 1.25rem;
+  display: flex;
+  flex-direction: column;
+  gap: 0.35rem;
+  color: var(--color-ink);
 }
 
 .wizard-action-group {
-  display: grid;
+  display: flex;
+  flex-direction: column;
   gap: 0.5rem;
+  margin-top: 0.35rem;
 }
 </style>
