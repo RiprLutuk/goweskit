@@ -668,10 +668,16 @@ function statusBadge(status: SafetySession['status']): { label: string; class: s
       </section>
 
       <!-- ══════════════════════════════════════════════════════════
-           4. PAST SESSIONS LOG
+           4. PAST SESSIONS LOG & AI RIDE FLEX
            ══════════════════════════════════════════════════════════ -->
       <section v-if="pastSessions.length" class="history-section">
-        <h3 class="section-title">Riwayat Sesi Gowes</h3>
+        <div class="history-header-row">
+          <h3 class="section-title">Riwayat Sesi Gowes</h3>
+          <NuxtLink class="studio-shortcut-link" to="/ride-flex">
+            <span>✨ Buka AI Flex Studio</span>
+            <span>→</span>
+          </NuxtLink>
+        </div>
         <div class="history-feed">
           <div v-for="s in pastSessions" :key="s.id" class="history-card">
             <div class="history-top">
@@ -681,7 +687,15 @@ function statusBadge(status: SafetySession['status']): { label: string; class: s
               </span>
             </div>
             <p v-if="s.note" class="history-note">{{ s.note }}</p>
-            <small class="history-ended">Selesai: {{ formatDate(s.endedAt) }}</small>
+            <div class="history-footer-row">
+              <small class="history-ended">Selesai: {{ formatDate(s.endedAt) }}</small>
+              <NuxtLink
+                class="card-flex-btn"
+                :to="`/ride-flex?note=${encodeURIComponent(s.note || 'Gowes Solo')}`"
+              >
+                <span>📸 Buat Poster AI</span>
+              </NuxtLink>
+            </div>
           </div>
         </div>
       </section>
@@ -1460,6 +1474,27 @@ function statusBadge(status: SafetySession['status']): { label: string; class: s
   gap: 0.65rem;
 }
 
+.history-header-row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 0.5rem;
+}
+
+.studio-shortcut-link {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.35rem;
+  font-size: 0.74rem;
+  font-weight: 850;
+  color: var(--color-ink);
+  background: var(--color-chain-lime);
+  padding: 0.25rem 0.65rem;
+  border-radius: 9999px;
+  text-decoration: none;
+  border: 1px solid var(--color-ink);
+}
+
 .history-feed {
   display: grid;
   gap: 0.5rem;
@@ -1467,7 +1502,7 @@ function statusBadge(status: SafetySession['status']): { label: string; class: s
 
 .history-card {
   display: grid;
-  gap: 0.25rem;
+  gap: 0.35rem;
   padding: 0.75rem 0.95rem;
   border-radius: 0.95rem;
   background: var(--color-white);
@@ -1499,9 +1534,35 @@ function statusBadge(status: SafetySession['status']): { label: string; class: s
   color: var(--color-asphalt);
 }
 
+.history-footer-row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 0.5rem;
+  margin-top: 0.2rem;
+}
+
 .history-ended {
   font-size: 0.68rem;
   color: var(--color-asphalt);
+}
+
+.card-flex-btn {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.25rem;
+  font-size: 0.7rem;
+  font-weight: 850;
+  color: var(--color-ink);
+  background: var(--color-sand);
+  border: 1px solid rgb(23 32 42 / 10%);
+  padding: 0.2rem 0.55rem;
+  border-radius: 0.5rem;
+  text-decoration: none;
+}
+
+.card-flex-btn:hover {
+  background: var(--color-chain-lime);
 }
 
 /* Disclaimer Banner */

@@ -237,6 +237,12 @@ function specStatus(code: string): 'known' | 'unknown' | 'missing' {
               📸 Flex / Paspor Sepeda
             </button>
             <NuxtLink
+              class="button button--secondary"
+              :to="`/ride-flex?bike=${encodeURIComponent(bike.nickname)}`"
+            >
+              ✨ AI Ride Flex Poster
+            </NuxtLink>
+            <NuxtLink
               class="button button--primary"
               :to="`/upgrade-lab?bike=${bike.id}`"
             >
