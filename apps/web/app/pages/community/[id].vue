@@ -419,7 +419,7 @@ onMounted(loadCommunity);
       <!-- ── COMMUNITY QUICK FACTS (2-COLUMN GRID) ─────────────── -->
       <section class="facts-section" aria-labelledby="community-facts-title">
         <h2 id="community-facts-title" class="section-heading">
-          <GIcon name="passport" size="sm" />
+          <GIcon name="community" size="sm" color="#17202A" />
           <span>Informasi Komunitas</span>
         </h2>
         <div class="facts-grid">
@@ -476,7 +476,7 @@ onMounted(loadCommunity);
         <div class="events-section-header">
           <div class="title-wrap">
             <h2 id="community-rides-title" class="section-heading">
-              <GIcon name="history" size="sm" />
+              <GIcon name="calendar" size="sm" color="#17202A" />
               <span>Jadwal Gowes Bersama</span>
             </h2>
             <span class="events-count-badge">{{ events.length }}</span>

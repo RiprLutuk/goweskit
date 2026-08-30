@@ -203,7 +203,8 @@ onMounted(() => {
       <section v-if="activeView === 'all' || activeView === 'events'" class="feed-section">
         <div v-if="activeView === 'all'" class="feed-section-header">
           <h2 class="feed-heading">
-            <GIcon name="history" size="sm" /> Jadwal Gowes Bersama
+            <GIcon name="calendar" size="sm" color="#17202A" />
+            <span>Jadwal Gowes Bersama</span>
           </h2>
         </div>
 

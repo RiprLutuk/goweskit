@@ -13,6 +13,8 @@ const route = useRoute();
 const api = useApi();
 const { user, initialized, refresh } = useAuth();
 const { toast } = useNotify();
+const { isReminderActive, toggleReminder, getGoogleCalendarUrl, downloadIcsFile, getCountdownText } = useEventReminder();
+
 const detail = ref<EventDetailResponse | null>(null);
 const loading = ref(true);
 const joining = ref(false);
@@ -26,6 +28,10 @@ const isJoined = computed(
 
 const startDate = computed(() =>
   detail.value?.event.startsAt ? new Date(detail.value.event.startsAt) : null,
+);
+
+const countdown = computed(() =>
+  detail.value ? getCountdownText(detail.value.event.startsAt) : null,
 );
 
 const monthLabel = computed(() =>
@@ -310,6 +316,49 @@ onMounted(loadEvent);
           </div>
         </div>
 
+        <!-- Reminder & Calendar Sync Action Strip -->
+        <div class="event-calendar-strip">
+          <div class="calendar-strip-left">
+            <span class="countdown-badge" :class="{ 'countdown-badge--urgent': countdown?.isUrgent }">
+              <GIcon name="bell" size="xs" :filled="isReminderActive(detail.event.id)" :color="isReminderActive(detail.event.id) ? '#16A34A' : '#64748B'" />
+              <span>{{ countdown?.label }}</span>
+            </span>
+          </div>
+
+          <div class="calendar-strip-actions">
+            <button
+              class="cal-action-btn"
+              :class="{ 'cal-action-btn--active': isReminderActive(detail.event.id) }"
+              type="button"
+              @click="toggleReminder(detail.event)"
+            >
+              <GIcon name="bell" size="xs" :filled="isReminderActive(detail.event.id)" />
+              <span>{{ isReminderActive(detail.event.id) ? 'Pengingat Aktif' : 'Set Pengingat' }}</span>
+            </button>
+
+            <a
+              class="cal-action-btn"
+              :href="getGoogleCalendarUrl(detail.event)"
+              target="_blank"
+              rel="noopener noreferrer"
+              title="Tambahkan ke Google Calendar"
+            >
+              <GIcon name="calendar" size="xs" />
+              <span>Google Cal</span>
+            </a>
+
+            <button
+              class="cal-action-btn"
+              type="button"
+              title="Download file iCalendar (.ics) untuk Apple Calendar / Garmin"
+              @click="downloadIcsFile(detail.event)"
+            >
+              <GIcon name="download" size="xs" />
+              <span>.ICS</span>
+            </button>
+          </div>
+        </div>
+
         <p v-if="!user" class="permission-note">
           Masuk ke akun Anda untuk ikut bergabung dalam jadwal mabar ini.
         </p>
@@ -553,6 +602,78 @@ onMounted(loadEvent);
   margin: 0;
   font-size: 0.74rem;
   color: var(--color-asphalt);
+}
+
+/* Calendar & Reminder Strip */
+.event-calendar-strip {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 0.75rem;
+  padding: 0.75rem 1rem;
+  border-radius: 0.95rem;
+  background: var(--color-canvas);
+  border: 1px solid var(--color-sand);
+  flex-wrap: wrap;
+}
+
+.calendar-strip-left {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+}
+
+.countdown-badge {
+  font-family: var(--font-mono);
+  font-size: 0.72rem;
+  font-weight: 850;
+  display: inline-flex;
+  align-items: center;
+  gap: 0.35rem;
+  padding: 0.2rem 0.55rem;
+  border-radius: 9999px;
+  background: var(--color-white);
+  border: 1px solid var(--color-sand);
+  color: var(--color-ink);
+}
+
+.countdown-badge--urgent {
+  background: rgba(22, 163, 74, 0.1);
+  color: #15803D;
+  border-color: rgba(22, 163, 74, 0.3);
+}
+
+.calendar-strip-actions {
+  display: flex;
+  align-items: center;
+  gap: 0.4rem;
+  flex-wrap: wrap;
+}
+
+.cal-action-btn {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.3rem;
+  font-size: 0.74rem;
+  font-weight: 850;
+  padding: 0.35rem 0.65rem;
+  border-radius: 0.55rem;
+  background: var(--color-white);
+  border: 1px solid var(--color-sand);
+  color: var(--color-ink);
+  text-decoration: none;
+  cursor: pointer;
+  transition: all 120ms ease;
+}
+
+.cal-action-btn:hover {
+  background: var(--color-sand);
+}
+
+.cal-action-btn--active {
+  background: rgba(22, 163, 74, 0.12);
+  color: #15803D;
+  border-color: rgba(22, 163, 74, 0.3);
 }
 
 .join-message {

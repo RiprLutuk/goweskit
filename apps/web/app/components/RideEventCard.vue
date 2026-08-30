@@ -5,6 +5,8 @@ import { formatCommunityDistance } from '../community-display';
 
 const props = defineProps<{ event: NearbyEvent | PublicEvent }>();
 
+const { isReminderActive, toggleReminder, getCountdownText } = useEventReminder();
+
 const distance = computed(() =>
   'distanceMeters' in props.event
     ? formatCommunityDistance(props.event.distanceMeters)
@@ -12,6 +14,8 @@ const distance = computed(() =>
 );
 
 const startDate = computed(() => new Date(props.event.startsAt));
+
+const countdown = computed(() => getCountdownText(props.event.startsAt));
 
 const monthLabel = computed(() =>
   startDate.value.toLocaleString('id-ID', { month: 'short' }).toUpperCase(),
@@ -61,6 +65,13 @@ const difficultyText = computed(() => {
     <div class="clean-card-body">
       <div class="card-topline">
         <span class="community-name">{{ event.community.name }}</span>
+        <span
+          class="countdown-chip"
+          :class="{ 'countdown-chip--urgent': countdown.isUrgent }"
+        >
+          <GIcon name="bell" size="xs" :filled="isReminderActive(event.id)" :color="isReminderActive(event.id) ? '#16A34A' : '#64748B'" />
+          <span>{{ countdown.label }}</span>
+        </span>
         <span v-if="distance" class="dist-tag">
           <GIcon name="pin" size="xs" /> {{ distance }}
         </span>
@@ -70,7 +81,8 @@ const difficultyText = computed(() => {
 
       <p class="event-meta-line">
         <span class="event-time-chip">
-          <GIcon name="history" size="xs" /> {{ timeLabel }} WIB
+          <GIcon name="history" size="xs" />
+          <span>{{ timeLabel }} WIB</span>
         </span>
         <span class="dot-sep">·</span>
         <span class="meeting-loc">{{ event.meetingArea }}</span>
@@ -78,21 +90,35 @@ const difficultyText = computed(() => {
 
       <div class="event-tags-row">
         <span class="meta-tag meta-tag--diff">
-          <GIcon :name="event.difficulty === 'hard' ? 'mountain' : 'route'" size="xs" /> {{ difficultyText }}
+          <GIcon :name="event.difficulty === 'hard' ? 'mountain' : 'route'" size="xs" />
+          <span>{{ difficultyText }}</span>
         </span>
         <span class="meta-tag">
-          <GIcon name="users" size="xs" /> {{ event.participantCount }}{{ event.capacity ? `/${event.capacity}` : '' }} Riders
+          <GIcon name="users" size="xs" />
+          <span>{{ event.participantCount }}{{ event.capacity ? `/${event.capacity}` : '' }} Riders</span>
         </span>
         <span v-if="event.bicycleTypes.length" class="meta-tag">
-          <GIcon name="bike" size="xs" /> {{ event.bicycleTypes.slice(0, 2).map((t) => t.replaceAll('_', ' ')).join(', ') }}
+          <GIcon name="bike" size="xs" />
+          <span>{{ event.bicycleTypes.slice(0, 2).map((t) => t.replaceAll('_', ' ')).join(', ') }}</span>
         </span>
       </div>
     </div>
 
-    <!-- Right: Subtle Navigation Chevron -->
-    <span class="card-chevron" aria-hidden="true">
-      <GIcon name="chevron-right" size="xs" color="#94A3B8" />
-    </span>
+    <!-- Right: Quick Reminder Toggle & Action -->
+    <div class="card-actions-right" @click.prevent.stop>
+      <button
+        class="reminder-quick-btn"
+        :class="{ 'reminder-quick-btn--active': isReminderActive(event.id) }"
+        type="button"
+        :title="isReminderActive(event.id) ? 'Hapus Pengingat' : 'Pasang Pengingat Jadwal'"
+        @click="toggleReminder(event)"
+      >
+        <GIcon name="bell" size="xs" :filled="isReminderActive(event.id)" :color="isReminderActive(event.id) ? '#15803D' : '#64748B'" />
+      </button>
+      <span class="card-chevron" aria-hidden="true">
+        <GIcon name="chevron-right" size="xs" color="#94A3B8" />
+      </span>
+    </div>
   </NuxtLink>
 </template>
 
@@ -241,9 +267,53 @@ const difficultyText = computed(() => {
   color: var(--color-asphalt);
 }
 
-.meta-tag--diff {
-  color: var(--color-ink);
+.countdown-chip {
+  font-family: var(--font-mono);
+  font-size: 0.64rem;
   font-weight: 800;
+  display: inline-flex;
+  align-items: center;
+  gap: 0.25rem;
+  padding: 0.1rem 0.4rem;
+  border-radius: 0.35rem;
+  background: var(--color-canvas);
+  color: var(--color-asphalt);
+  border: 1px solid var(--color-sand);
+}
+
+.countdown-chip--urgent {
+  background: rgba(22, 163, 74, 0.1);
+  color: #15803D;
+  border-color: rgba(22, 163, 74, 0.25);
+}
+
+/* Card Actions Right */
+.card-actions-right {
+  display: flex;
+  align-items: center;
+  gap: 0.35rem;
+  flex-shrink: 0;
+}
+
+.reminder-quick-btn {
+  width: 2rem;
+  height: 2rem;
+  border-radius: 0.55rem;
+  background: var(--color-canvas);
+  border: 1px solid var(--color-sand);
+  display: grid;
+  place-items: center;
+  cursor: pointer;
+  transition: all 120ms ease;
+}
+
+.reminder-quick-btn:hover {
+  background: var(--color-sand);
+}
+
+.reminder-quick-btn--active {
+  background: rgba(22, 163, 74, 0.12);
+  border-color: rgba(22, 163, 74, 0.3);
 }
 
 /* Chevron */
@@ -253,6 +323,6 @@ const difficultyText = computed(() => {
   color: var(--color-sand);
   line-height: 1;
   flex-shrink: 0;
-  padding-left: 0.25rem;
+  padding-left: 0.15rem;
 }
 </style>
