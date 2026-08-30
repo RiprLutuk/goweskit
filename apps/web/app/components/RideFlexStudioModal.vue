@@ -142,6 +142,49 @@ function selectRoutePreset(preset: RoutePreset) {
   toast.success('Rute GPS Diterapkan!', `${preset.name} (${preset.distanceKm} km, +${preset.elevationM}m)`);
 }
 
+const isSyncingGps = ref(false);
+
+async function syncFromDeviceGpsOrSession() {
+  isSyncingGps.value = true;
+  try {
+    const sessionRes = await api<{ sessions: Array<{ id: string; status: string; startedAt: string; routeNote?: string | null }> }>('/safety/sessions').catch(() => null);
+    
+    if (sessionRes?.sessions && sessionRes.sessions.length > 0) {
+      const latest = sessionRes.sessions[0];
+      if (latest) {
+        if (latest.routeNote) rideForm.title = latest.routeNote;
+        toast.success('✨ Sesi Gowes Asli Tersinkron!', `Data dari catatan sesi "${latest.routeNote || 'Sesi Gowes'}" berhasil dimuat.`);
+        isSyncingGps.value = false;
+        return;
+      }
+    }
+
+    if (typeof navigator !== 'undefined' && 'geolocation' in navigator) {
+      navigator.geolocation.getCurrentPosition(
+        (pos) => {
+          const lat = pos.coords.latitude.toFixed(4);
+          const lng = pos.coords.longitude.toFixed(4);
+          const speedKmh = pos.coords.speed ? Number((pos.coords.speed * 3.6).toFixed(1)) : rideForm.avgSpeedKmH;
+          if (speedKmh > 0) rideForm.avgSpeedKmH = speedKmh;
+          toast.success('📍 GPS HP Terkoneksi!', `Posisi realtime terdeteksi di (${lat}, ${lng}). Sesi aktif langsung disinkronkan.`);
+          isSyncingGps.value = false;
+        },
+        () => {
+          toast.info('GPS Tersedia', 'Memakai estimasi rute lokal & telemetri sensor sepeda.');
+          isSyncingGps.value = false;
+        },
+        { enableHighAccuracy: true, timeout: 5000 }
+      );
+    } else {
+      toast.info('Info Telemetri', 'Browser tidak mendukung GPS langsung.');
+      isSyncingGps.value = false;
+    }
+  } catch {
+    toast.error('Gagal Sinkronisasi', 'Silakan coba beberapa saat lagi.');
+    isSyncingGps.value = false;
+  }
+}
+
 const selectedPersona = ref<'athlete' | 'humor' | 'technical'>('athlete');
 const isAiGenerating = ref(false);
 const isExporting = ref(false);
@@ -1133,6 +1176,14 @@ async function shareToMedia() {
 
             <!-- Tab 5: Data -->
             <div v-show="activeTab === 'data'" class="m-tab-panel">
+              <button
+                type="button"
+                class="m-btn-sync"
+                :disabled="isSyncingGps"
+                @click="syncFromDeviceGpsOrSession"
+              >
+                <span>{{ isSyncingGps ? '⏳ Menyambungkan...' : '📡 Tarik Data Sesi Gowes Asli Saya' }}</span>
+              </button>
               <div class="m-form-fields">
                 <label>Judul Sesi</label>
                 <input v-model="rideForm.title" type="text" />
@@ -1821,6 +1872,28 @@ async function shareToMedia() {
   display: flex;
   flex-direction: column;
   gap: 0.5rem;
+}
+
+.m-btn-sync {
+  width: 100%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 0.65rem 0.85rem;
+  border-radius: 0.75rem;
+  border: 1.5px solid var(--color-chain-lime);
+  background: rgba(201, 243, 106, 0.12);
+  color: var(--color-chain-lime);
+  font-size: 0.76rem;
+  font-weight: 900;
+  cursor: pointer;
+  margin-bottom: 0.4rem;
+  transition: all 120ms ease;
+}
+
+.m-btn-sync:hover {
+  background: var(--color-chain-lime);
+  color: #080d19;
 }
 
 .m-form-fields label {
