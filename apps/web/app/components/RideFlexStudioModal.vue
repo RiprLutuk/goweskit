@@ -156,8 +156,7 @@ async function renderCanvas(aspectRatio: 'story' | 'post' | 'landscape'): Promis
   const ctx = canvas.getContext('2d');
   if (!ctx) throw new Error('Canvas 2D context not available');
 
-  const FONT_UI = '-apple-system, BlinkMacSystemFont, "Plus Jakarta Sans", "Inter", "Segoe UI", Roboto, sans-serif';
-  const FONT_MONO = '"SF Pro Text", "JetBrains Mono", "Geist Mono", "Courier New", monospace';
+  const FONT_UI = '-apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif';
   const FONT_SERIF = 'Georgia, "Playfair Display", "Times New Roman", serif';
 
   const bgGradients: Record<string, [string, string, string]> = {
@@ -244,7 +243,6 @@ async function renderCanvas(aspectRatio: 'story' | 'post' | 'landscape'): Promis
     ctx.stroke();
   }
 
-  // Subtle Topo Lines
   ctx.strokeStyle = 'rgba(201, 243, 106, 0.14)';
   ctx.lineWidth = 3;
   ctx.beginPath();
@@ -252,64 +250,68 @@ async function renderCanvas(aspectRatio: 'story' | 'post' | 'landscape'): Promis
   ctx.bezierCurveTo(canvas.width * 0.35, canvas.height * 0.18, canvas.width * 0.65, canvas.height * 0.38, canvas.width, canvas.height * 0.24);
   ctx.stroke();
 
-  // Dark Vignette
   const vignette = ctx.createLinearGradient(0, 0, 0, canvas.height);
-  vignette.addColorStop(0, 'rgba(6, 10, 18, 0.4)');
-  vignette.addColorStop(0.35, 'rgba(6, 10, 18, 0.08)');
-  vignette.addColorStop(0.7, 'rgba(6, 10, 18, 0.85)');
+  vignette.addColorStop(0, 'rgba(6, 10, 18, 0.45)');
+  vignette.addColorStop(0.3, 'rgba(6, 10, 18, 0.05)');
+  vignette.addColorStop(0.65, 'rgba(6, 10, 18, 0.85)');
   vignette.addColorStop(1, 'rgba(6, 10, 18, 0.98)');
   ctx.fillStyle = vignette;
   ctx.fillRect(0, 0, canvas.width, canvas.height);
 
-  const pillY = isStory ? 90 : 60;
-  const pillH = 68;
-  const pillW = 340;
+  const pillY = isStory ? 100 : 60;
+  const pillH = 64;
+
+  ctx.font = `900 32px ${FONT_UI}`;
+  const gowesTextW = ctx.measureText('Gowes').width;
+  const kitTextW = ctx.measureText('Kit').width;
+  const brandPillW = 16 + 46 + 14 + gowesTextW + kitTextW + 36;
 
   ctx.fillStyle = 'rgba(23, 32, 42, 0.94)';
   ctx.strokeStyle = 'rgba(201, 243, 106, 0.45)';
   ctx.lineWidth = 2.5;
   ctx.beginPath();
-  ctx.roundRect(70, pillY, pillW, pillH, 34);
+  ctx.roundRect(70, pillY, brandPillW, pillH, pillH / 2);
   ctx.fill();
   ctx.stroke();
 
+  ctx.save();
+  ctx.translate(86, pillY + 11);
   ctx.fillStyle = '#0F172A';
   ctx.beginPath();
-  ctx.roundRect(82, pillY + 10, 48, 48, 14);
+  ctx.roundRect(0, 0, 42, 42, 12);
   ctx.fill();
 
+  const gWheelPath = new Path2D('M27 15.2C25.3 13.2 22.8 12 20 12C15.0294 12 11 16.0294 11 21C11 25.9706 15.0294 30 20 30C24.4 30 28.1 26.8 28.8 22.5H19');
+  const speedArrowPath = new Path2D('M23 17.5L28.2 22.5L23 27.5');
+
+  ctx.scale(42 / 40, 42 / 40);
   ctx.strokeStyle = '#C9F36A';
-  ctx.lineWidth = 4;
+  ctx.lineWidth = 3.5;
   ctx.lineCap = 'round';
   ctx.lineJoin = 'round';
-  ctx.beginPath();
-  ctx.arc(106, pillY + 34, 13, 0.6 * Math.PI, 1.8 * Math.PI);
-  ctx.lineTo(106, pillY + 34);
-  ctx.stroke();
+  ctx.stroke(gWheelPath);
 
   ctx.strokeStyle = '#8EDDF4';
-  ctx.lineWidth = 3.5;
-  ctx.beginPath();
-  ctx.moveTo(110, pillY + 28);
-  ctx.lineTo(119, pillY + 34);
-  ctx.lineTo(110, pillY + 40);
-  ctx.stroke();
+  ctx.lineWidth = 3;
+  ctx.stroke(speedArrowPath);
 
   ctx.fillStyle = '#FFFFFF';
   ctx.beginPath();
-  ctx.arc(106, pillY + 34, 3, 0, 2 * Math.PI);
+  ctx.arc(20, 21, 2.5, 0, 2 * Math.PI);
   ctx.fill();
+  ctx.restore();
 
-  ctx.font = `900 34px ${FONT_UI}`;
+  const textStartX = 86 + 42 + 14;
+  ctx.font = `900 32px ${FONT_UI}`;
   ctx.textBaseline = 'middle';
   ctx.fillStyle = '#FFFFFF';
-  ctx.fillText('Gowes', 145, pillY + 35);
+  ctx.fillText('Gowes', textStartX, pillY + pillH / 2);
   ctx.fillStyle = '#C9F36A';
-  ctx.fillText('Kit', 260, pillY + 35);
+  ctx.fillText('Kit', textStartX + gowesTextW, pillY + pillH / 2);
 
   ctx.fillStyle = '#C9F36A';
   ctx.beginPath();
-  ctx.arc(316, pillY + 31, 5, 0, 2 * Math.PI);
+  ctx.arc(textStartX + gowesTextW + kitTextW + 10, pillY + pillH / 2 - 3, 4.5, 0, 2 * Math.PI);
   ctx.fill();
 
   if (rideForm.activeSticker !== 'none') {
@@ -323,33 +325,38 @@ async function renderCanvas(aspectRatio: 'story' | 'post' | 'landscape'): Promis
     }[rideForm.activeSticker];
 
     if (stickerText) {
-      const stickerW = 390;
+      ctx.font = `900 24px ${FONT_UI}`;
+      const stickerTextW = ctx.measureText(stickerText).width;
+      const stickerPad = 26;
+      const stickerPillW = stickerTextW + stickerPad * 2;
+      const stickerX = canvas.width - 70 - stickerPillW;
+
       ctx.fillStyle = '#C9F36A';
       ctx.beginPath();
-      ctx.roundRect(canvas.width - stickerW - 70, pillY, stickerW, pillH, 34);
+      ctx.roundRect(stickerX, pillY, stickerPillW, pillH, pillH / 2);
       ctx.fill();
 
       ctx.fillStyle = '#080d19';
       ctx.font = `900 24px ${FONT_UI}`;
       ctx.textBaseline = 'middle';
-      ctx.fillText(stickerText, canvas.width - stickerW - 70 + 25, pillY + 35);
+      ctx.fillText(stickerText, stickerX + stickerPad, pillY + pillH / 2);
     }
   }
 
-  const heroY = isStory ? 1080 : (isLandscape ? 400 : 470);
+  const heroY = isStory ? 1020 : (isLandscape ? 400 : 470);
   ctx.textBaseline = 'alphabetic';
 
   if (rideForm.templateStyle === 'rapha_editorial') {
     ctx.fillStyle = '#FF8C75';
-    ctx.font = `900 26px ${FONT_MONO}`;
+    ctx.font = `900 24px ${FONT_UI}`;
     ctx.fillText('STAGE 01 · FINISHED ETAPPE', 70, heroY - 170);
   } else if (rideForm.templateStyle === 'cyber_hud') {
     ctx.fillStyle = '#00FF66';
-    ctx.font = `900 26px ${FONT_MONO}`;
+    ctx.font = `900 24px ${FONT_UI}`;
     ctx.fillText('GPS: LOCKED (14 SATS) · CAD: 88 RPM', 70, heroY - 170);
   } else if (rideForm.templateStyle === 'cafe_santai') {
     ctx.fillStyle = '#FDE68A';
-    ctx.font = `900 26px ${FONT_UI}`;
+    ctx.font = `900 24px ${FONT_UI}`;
     ctx.fillText('☕ RECOVERY MODE · KULINERAN', 70, heroY - 170);
   }
 
@@ -374,20 +381,20 @@ async function renderCanvas(aspectRatio: 'story' | 'post' | 'landscape'): Promis
     ctx.fillText(`🚴 ${rideForm.bikeName} · ${rideForm.temperatureC}°C Cerah`, 70, heroY + 120);
   } else if (rideForm.templateStyle === 'cyber_hud') {
     ctx.fillStyle = '#38BDF8';
-    ctx.font = `900 160px ${FONT_MONO}`;
+    ctx.font = `900 160px ${FONT_UI}`;
     ctx.fillText(distNumberStr, 70, heroY);
 
     const numWidth = ctx.measureText(distNumberStr).width;
     ctx.fillStyle = '#00FF66';
-    ctx.font = `900 50px ${FONT_MONO}`;
+    ctx.font = `900 50px ${FONT_UI}`;
     ctx.fillText('KM', 70 + numWidth + 24, heroY - 55);
 
     ctx.fillStyle = '#38BDF8';
-    ctx.font = `900 44px ${FONT_MONO}`;
+    ctx.font = `900 44px ${FONT_UI}`;
     ctx.fillText(`> ${rideForm.title.slice(0, 28)}`, 70, heroY + 68);
 
     ctx.fillStyle = '#94A3B8';
-    ctx.font = `700 28px ${FONT_MONO}`;
+    ctx.font = `700 28px ${FONT_UI}`;
     ctx.fillText(`RIG: ${rideForm.bikeName} · ${rideForm.temperatureC}°C`, 70, heroY + 120);
   } else if (rideForm.templateStyle === 'cafe_santai') {
     ctx.fillStyle = '#F59E0B';
@@ -426,7 +433,7 @@ async function renderCanvas(aspectRatio: 'story' | 'post' | 'landscape'): Promis
   }
 
   const cardY = heroY + 165;
-  const cardH = isStory ? 480 : (isLandscape ? 340 : 360);
+  const cardH = isStory ? 520 : (isLandscape ? 340 : 360);
   const cardW = canvas.width - 140;
 
   ctx.fillStyle = 'rgba(15, 23, 42, 0.94)';
@@ -440,19 +447,21 @@ async function renderCanvas(aspectRatio: 'story' | 'post' | 'landscape'): Promis
   ctx.stroke();
 
   ctx.fillStyle = '#94A3B8';
-  ctx.font = `900 24px ${FONT_MONO}`;
-  ctx.fillText('ELEVASI PROFILE', 120, cardY + 55);
+  ctx.font = `800 22px ${FONT_UI}`;
+  ctx.fillText('ELEVASI PROFILE', 120, cardY + 60);
 
   ctx.fillStyle = rideForm.templateStyle === 'cafe_santai' ? '#F59E0B' : (rideForm.templateStyle === 'rapha_editorial' ? '#FF8C75' : '#38BDF8');
-  ctx.font = `900 26px ${FONT_MONO}`;
-  ctx.fillText(`+${rideForm.elevationM}m Climb`, cardW - 140, cardY + 55);
+  ctx.font = `900 26px ${FONT_UI}`;
+  ctx.textAlign = 'right';
+  ctx.fillText(`+${rideForm.elevationM}m Climb`, 70 + cardW - 50, cardY + 60);
+  ctx.textAlign = 'left';
 
-  const curveY = cardY + 105;
+  const curveY = cardY + 115;
   ctx.strokeStyle = rideForm.templateStyle === 'cafe_santai' ? '#F59E0B' : (rideForm.templateStyle === 'rapha_editorial' ? '#FF8C75' : '#38BDF8');
   ctx.lineWidth = 5;
   ctx.beginPath();
   ctx.moveTo(120, curveY + 25);
-  ctx.bezierCurveTo(340, curveY + 10, 600, curveY + 35, cardW - 40, curveY - 5);
+  ctx.bezierCurveTo(340, curveY + 10, 600, curveY + 35, 70 + cardW - 50, curveY - 5);
   ctx.stroke();
 
   ctx.fillStyle = '#38BDF8';
@@ -462,7 +471,7 @@ async function renderCanvas(aspectRatio: 'story' | 'post' | 'landscape'): Promis
 
   ctx.fillStyle = '#C9F36A';
   ctx.beginPath();
-  ctx.arc(cardW - 40, curveY - 5, 9, 0, 2 * Math.PI);
+  ctx.arc(70 + cardW - 50, curveY - 5, 9, 0, 2 * Math.PI);
   ctx.fill();
 
   const cellW = (cardW - 60) / 2;
@@ -477,19 +486,19 @@ async function renderCanvas(aspectRatio: 'story' | 'post' | 'landscape'): Promis
     const col = idx % 2;
     const row = Math.floor(idx / 2);
     const x = 120 + col * cellW;
-    const y = cardY + 185 + row * (isStory ? 135 : 95);
+    const y = cardY + 210 + row * (isStory ? 145 : 100);
 
     ctx.fillStyle = '#94A3B8';
-    ctx.font = `800 22px ${FONT_MONO}`;
+    ctx.font = `800 22px ${FONT_UI}`;
     ctx.fillText(m.label, x, y);
 
     ctx.fillStyle = m.color;
-    ctx.font = `900 52px ${FONT_UI}`;
-    ctx.fillText(m.val, x, y + 55);
+    ctx.font = `900 54px ${FONT_UI}`;
+    ctx.fillText(m.val, x, y + 60);
   });
 
   ctx.fillStyle = 'rgba(201, 243, 106, 0.85)';
-  ctx.font = `900 24px ${FONT_MONO}`;
+  ctx.font = `900 24px ${FONT_UI}`;
   ctx.textAlign = 'center';
   ctx.fillText('⚡ VERIFIED BY GOWESKIT ENGINE · GOWESKIT.ID', canvas.width / 2, canvas.height - 45);
   ctx.textAlign = 'start';
@@ -1143,7 +1152,7 @@ async function shareToMedia() {
 }
 
 .m-rapha-tag {
-  font-family: var(--font-mono);
+  font-family: var(--font-ui);
   font-size: 0.52rem;
   font-weight: 900;
   color: #FF8C75;
@@ -1151,7 +1160,7 @@ async function shareToMedia() {
 }
 
 .theme--cyber_hud {
-  font-family: var(--font-mono);
+  font-family: var(--font-ui);
   border-color: rgba(56, 189, 248, 0.4);
 }
 
@@ -1165,7 +1174,7 @@ async function shareToMedia() {
 }
 
 .m-cyber-tag {
-  font-family: var(--font-mono);
+  font-family: var(--font-ui);
   font-size: 0.52rem;
   font-weight: 900;
   color: #00FF66;
@@ -1174,7 +1183,7 @@ async function shareToMedia() {
 
 .m-hud-corner {
   position: absolute;
-  font-family: var(--font-mono);
+  font-family: var(--font-ui);
   font-size: 1.1rem;
   font-weight: 900;
   color: rgba(56, 189, 248, 0.7);
@@ -1295,7 +1304,7 @@ async function shareToMedia() {
 }
 
 .m-num {
-  font-family: var(--font-mono);
+  font-family: var(--font-ui);
   font-size: 2.5rem;
   font-weight: 900;
   color: var(--color-chain-lime);
@@ -1338,7 +1347,7 @@ async function shareToMedia() {
 .m-elev-row {
   display: flex;
   justify-content: space-between;
-  font-family: var(--font-mono);
+  font-family: var(--font-ui);
   font-size: 0.55rem;
   font-weight: 850;
 }
@@ -1357,13 +1366,13 @@ async function shareToMedia() {
 }
 
 .m-s-lbl {
-  font-family: var(--font-mono);
+  font-family: var(--font-ui);
   font-size: 0.5rem;
   color: #94a3b8;
 }
 
 .m-s-val {
-  font-family: var(--font-mono);
+  font-family: var(--font-ui);
   font-size: 0.76rem;
   font-weight: 900;
   color: #f8fafc;
@@ -1373,7 +1382,7 @@ async function shareToMedia() {
   position: relative;
   z-index: 2;
   text-align: center;
-  font-family: var(--font-mono);
+  font-family: var(--font-ui);
   font-size: 0.5rem;
   color: rgba(201, 243, 106, 0.8);
   margin-top: 0.3rem;
