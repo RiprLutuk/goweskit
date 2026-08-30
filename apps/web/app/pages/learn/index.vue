@@ -324,7 +324,7 @@ function resetWizard(): void {
         </div>
       </div>
 
-      <!-- Segmented Control Navigation Tabs (Mobile-responsive, no text overlapping) -->
+      <!-- Segmented Control Navigation Tabs (Perfect fit, never cut off) -->
       <div v-if="!hasSearched" class="segmented-tabs-wrapper">
         <nav class="segmented-tabs" role="tablist" aria-label="Menu Belajar">
           <button
@@ -336,7 +336,10 @@ function resetWizard(): void {
             @click="activeTab = 'types'"
           >
             <span class="tab-btn__icon">🚲</span>
-            <span class="tab-btn__label">Tipe Sepeda</span>
+            <span class="tab-btn__label">
+              <span class="label-short">Sepeda</span>
+              <span class="label-full">Tipe Sepeda</span>
+            </span>
             <span class="tab-btn__badge">{{ bicycleTypes.length }}</span>
           </button>
 
@@ -349,7 +352,10 @@ function resetWizard(): void {
             @click="activeTab = 'components'"
           >
             <span class="tab-btn__icon">⚙️</span>
-            <span class="tab-btn__label">Komponen Anatomi</span>
+            <span class="tab-btn__label">
+              <span class="label-short">Komponen</span>
+              <span class="label-full">Komponen Anatomi</span>
+            </span>
             <span class="tab-btn__badge">{{ componentCategories.length }}</span>
           </button>
 
@@ -362,7 +368,10 @@ function resetWizard(): void {
             @click="activeTab = 'glossary'"
           >
             <span class="tab-btn__icon">📖</span>
-            <span class="tab-btn__label">Kamus Glosarium</span>
+            <span class="tab-btn__label">
+              <span class="label-short">Glosarium</span>
+              <span class="label-full">Kamus Glosarium</span>
+            </span>
             <span class="tab-btn__badge">{{ glossaryTerms.length }}</span>
           </button>
         </nav>
@@ -866,7 +875,7 @@ function resetWizard(): void {
 }
 
 /* ══════════════════════════════════════════════════════════
-   SEGMENTED NAVIGATION TABS (HORIZONTALLY SCROLLABLE)
+   SEGMENTED NAVIGATION TABS (ADAPTIVE PERFECT-FIT)
    ══════════════════════════════════════════════════════════ */
 .learn-content-container {
   display: flex;
@@ -879,58 +888,83 @@ function resetWizard(): void {
 
 .segmented-tabs-wrapper {
   width: 100%;
-  overflow-x: auto;
-  -webkit-overflow-scrolling: touch;
-  scrollbar-width: none;
-  padding: 0.15rem 0.25rem;
-}
-
-.segmented-tabs-wrapper::-webkit-scrollbar {
-  display: none;
+  display: flex;
+  justify-content: center;
 }
 
 .segmented-tabs {
-  display: inline-flex;
-  align-items: center;
-  gap: 0.35rem;
-  padding: 0.35rem;
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 0.25rem;
+  padding: 0.25rem;
   border-radius: 9999px;
   background: var(--color-sand);
-  min-width: max-content;
+  width: 100%;
+  max-width: 38rem;
+  box-sizing: border-box;
 }
 
 .tab-btn {
-  display: inline-flex;
+  display: flex;
   align-items: center;
-  gap: 0.45rem;
-  padding: 0.55rem 0.95rem;
+  justify-content: center;
+  gap: 0.35rem;
+  padding: 0.5rem 0.25rem;
   border-radius: 9999px;
   border: none;
   background: transparent;
   color: var(--color-asphalt);
-  font-size: 0.82rem;
+  font-size: 0.8rem;
   font-weight: 850;
   cursor: pointer;
   transition: all 120ms ease;
-  white-space: nowrap;
-  flex-shrink: 0;
+  min-width: 0;
+  width: 100%;
+  box-sizing: border-box;
 }
 
 .tab-btn--active {
   background: var(--color-white);
   color: var(--color-ink);
-  box-shadow: 0 2px 8px rgba(23, 32, 42, 0.08);
+  box-shadow: 0 2px 6px rgba(23, 32, 42, 0.08);
+}
+
+.tab-btn__icon {
+  font-size: 0.9rem;
+  flex-shrink: 0;
 }
 
 .tab-btn__label {
-  white-space: nowrap;
+  display: flex;
+  align-items: center;
+}
+
+.label-full {
+  display: none;
+}
+
+.label-short {
+  display: inline;
+}
+
+@media (min-width: 520px) {
+  .label-full {
+    display: inline;
+  }
+  .label-short {
+    display: none;
+  }
+  .tab-btn {
+    padding: 0.55rem 0.75rem;
+    gap: 0.45rem;
+  }
 }
 
 .tab-btn__badge {
   font-family: var(--font-mono);
-  font-size: 0.68rem;
+  font-size: 0.65rem;
   font-weight: 850;
-  padding: 0.15rem 0.45rem;
+  padding: 0.1rem 0.38rem;
   border-radius: 9999px;
   background: rgba(23, 32, 42, 0.08);
   color: var(--color-ink);
