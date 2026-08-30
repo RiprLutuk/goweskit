@@ -970,7 +970,8 @@ async function shareToMedia() {
                 :class="{ active: activeTab === 'templates' }"
                 @click="activeTab = 'templates'"
               >
-                🎨 Gaya
+                <GIcon name="sparkles" size="xs" />
+                <span>Gaya</span>
               </button>
               <button
                 type="button"
@@ -978,7 +979,8 @@ async function shareToMedia() {
                 :class="{ active: activeTab === 'route' }"
                 @click="activeTab = 'route'"
               >
-                🗺️ Rute
+                <GIcon name="route" size="xs" />
+                <span>Rute</span>
               </button>
               <button
                 type="button"
@@ -986,7 +988,8 @@ async function shareToMedia() {
                 :class="{ active: activeTab === 'backgrounds' }"
                 @click="activeTab = 'backgrounds'"
               >
-                🌄 Nuansa
+                <GIcon name="mountain" size="xs" />
+                <span>Nuansa</span>
               </button>
               <button
                 type="button"
@@ -994,7 +997,8 @@ async function shareToMedia() {
                 :class="{ active: activeTab === 'stickers' }"
                 @click="activeTab = 'stickers'"
               >
-                🏷️ Stiker
+                <GIcon name="trophy" size="xs" />
+                <span>Stiker</span>
               </button>
               <button
                 type="button"
@@ -1002,7 +1006,8 @@ async function shareToMedia() {
                 :class="{ active: activeTab === 'ai' }"
                 @click="activeTab = 'ai'"
               >
-                ✨ AI
+                <GIcon name="sparkles" size="xs" />
+                <span>AI</span>
               </button>
               <button
                 type="button"
@@ -1010,7 +1015,8 @@ async function shareToMedia() {
                 :class="{ active: activeTab === 'data' }"
                 @click="activeTab = 'data'"
               >
-                📝 Edit
+                <GIcon name="edit" size="xs" />
+                <span>Edit</span>
               </button>
             </nav>
 
@@ -1023,7 +1029,8 @@ async function shareToMedia() {
                   :class="{ active: rideForm.templateStyle === 'strava_bold' }"
                   @click="rideForm.templateStyle = 'strava_bold'"
                 >
-                  🔥 <strong>Strava Bold</strong>
+                  <GIcon name="bolt" size="xs" filled color="#C9F36A" />
+                  <strong>Strava Bold</strong>
                   <small>Kinetic Neon Green</small>
                 </button>
                 <button
@@ -1032,7 +1039,8 @@ async function shareToMedia() {
                   :class="{ active: rideForm.templateStyle === 'rapha_editorial' }"
                   @click="rideForm.templateStyle = 'rapha_editorial'"
                 >
-                  🏔️ <strong>Rapha Editorial</strong>
+                  <GIcon name="mountain" size="xs" color="#FF8C75" />
+                  <strong>Rapha Editorial</strong>
                   <small>Serif &amp; Clean GPS</small>
                 </button>
                 <button
@@ -1041,7 +1049,8 @@ async function shareToMedia() {
                   :class="{ active: rideForm.templateStyle === 'cyber_hud' }"
                   @click="rideForm.templateStyle = 'cyber_hud'"
                 >
-                  ⚡ <strong>Cyber HUD</strong>
+                  <GIcon name="radar" size="xs" color="#38BDF8" />
+                  <strong>Cyber HUD</strong>
                   <small>HUD Grid &amp; Sensor</small>
                 </button>
                 <button
@@ -1050,7 +1059,8 @@ async function shareToMedia() {
                   :class="{ active: rideForm.templateStyle === 'cafe_santai' }"
                   @click="rideForm.templateStyle = 'cafe_santai'"
                 >
-                  ☕ <strong>Kopi &amp; Sate</strong>
+                  <GIcon name="coffee" size="xs" color="#F59E0B" />
+                  <strong>Kopi &amp; Sate</strong>
                   <small>Golden Amber Fuel</small>
                 </button>
               </div>
@@ -1080,7 +1090,8 @@ async function shareToMedia() {
                 :class="{ active: rideForm.bgPreset === 'alpine' }"
                 @click="rideForm.bgPreset = 'alpine'"
               >
-                🏔️ Alpine
+                <GIcon name="mountain" size="xs" color="#38BDF8" />
+                <span>Alpine</span>
               </button>
               <button
                 type="button"
@@ -1088,7 +1099,8 @@ async function shareToMedia() {
                 :class="{ active: rideForm.bgPreset === 'gravel' }"
                 @click="rideForm.bgPreset = 'gravel'"
               >
-                🌲 Gravel
+                <GIcon name="tree" size="xs" color="#4ADE80" />
+                <span>Gravel</span>
               </button>
               <button
                 type="button"
@@ -1096,7 +1108,8 @@ async function shareToMedia() {
                 :class="{ active: rideForm.bgPreset === 'sunset' }"
                 @click="rideForm.bgPreset = 'sunset'"
               >
-                🌅 Sunset
+                <GIcon name="sun" size="xs" color="#FB923C" />
+                <span>Sunset</span>
               </button>
               <button
                 type="button"
@@ -1104,7 +1117,8 @@ async function shareToMedia() {
                 :class="{ active: rideForm.bgPreset === 'crit' }"
                 @click="rideForm.bgPreset = 'crit'"
               >
-                ⚡ Crit
+                <GIcon name="bolt" size="xs" color="#C084FC" filled />
+                <span>Crit</span>
               </button>
               <button
                 type="button"
@@ -1112,7 +1126,8 @@ async function shareToMedia() {
                 :class="{ active: rideForm.bgPreset === 'cafe' }"
                 @click="rideForm.bgPreset = 'cafe'"
               >
-                ☕ Cafe
+                <GIcon name="coffee" size="xs" color="#FBBF24" />
+                <span>Cafe</span>
               </button>
               <button
                 type="button"
@@ -1120,7 +1135,8 @@ async function shareToMedia() {
                 :class="{ active: rideForm.bgPreset === 'topo' }"
                 @click="rideForm.bgPreset = 'topo'"
               >
-                <GIcon name="route" size="xs" /> Topo
+                <GIcon name="route" size="xs" color="#C9F36A" />
+                <span>Topo</span>
               </button>
             </div>
             <label v-show="activeTab === 'backgrounds'" class="m-upload-cta">
@@ -1187,9 +1203,10 @@ async function shareToMedia() {
             <div v-show="activeTab === 'ai'" class="m-tab-panel">
               <div class="m-ai-box">
                 <div class="m-ai-top">
-                  <strong>✨ AI Story &amp; Caption</strong>
+                  <strong><GIcon name="sparkles" size="xs" /> AI Story &amp; Caption</strong>
                   <button type="button" class="m-gen-btn" :disabled="isAiGenerating" @click="generateAiStory">
-                    {{ isAiGenerating ? 'Meracik...' : '🪄 Generate' }}
+                    <GIcon name="sparkles" size="xs" />
+                    <span>{{ isAiGenerating ? 'Meracik...' : 'Generate' }}</span>
                   </button>
                 </div>
                 <div class="m-persona-deck">
@@ -1199,7 +1216,8 @@ async function shareToMedia() {
                     :class="{ active: selectedPersona === 'athlete' }"
                     @click="selectedPersona = 'athlete'"
                   >
-                    🏆 Atlet
+                    <GIcon name="trophy" size="xs" />
+                    <span>Atlet</span>
                   </button>
                   <button
                     type="button"
@@ -1207,7 +1225,8 @@ async function shareToMedia() {
                     :class="{ active: selectedPersona === 'humor' }"
                     @click="selectedPersona = 'humor'"
                   >
-                    😂 Santai
+                    <GIcon name="coffee" size="xs" />
+                    <span>Santai</span>
                   </button>
                   <button
                     type="button"
@@ -1215,12 +1234,14 @@ async function shareToMedia() {
                     :class="{ active: selectedPersona === 'technical' }"
                     @click="selectedPersona = 'technical'"
                   >
-                    ⚙️ Tech
+                    <GIcon name="wrench" size="xs" />
+                    <span>Tech</span>
                   </button>
                 </div>
                 <p class="m-caption-text">{{ aiRecap.captions[selectedPersona] }}</p>
                 <button type="button" class="m-copy-btn" @click="copyCaption(aiRecap.captions[selectedPersona])">
-                  📋 Salin Caption
+                  <GIcon name="bookmark" size="xs" />
+                  <span>Salin Caption</span>
                 </button>
               </div>
             </div>
@@ -1233,7 +1254,8 @@ async function shareToMedia() {
                 :disabled="isSyncingGps"
                 @click="syncFromDeviceGpsOrSession"
               >
-                <span>{{ isSyncingGps ? '⏳ Menyambungkan...' : '📡 Tarik Data Sesi Gowes Asli Saya' }}</span>
+                <GIcon name="radar" size="xs" color="var(--color-chain-lime)" />
+                <span>{{ isSyncingGps ? 'Menyambungkan...' : 'Tarik Data Sesi Gowes Asli Saya' }}</span>
               </button>
               <div class="m-form-fields">
                 <label>Judul Sesi</label>
@@ -1246,10 +1268,12 @@ async function shareToMedia() {
             <!-- Modal Action Buttons -->
             <footer class="modal-footer-actions">
               <button type="button" class="m-action-share" :disabled="isExporting" @click="shareToMedia">
-                📲 Bagikan Langsung
+                <GIcon name="share" size="xs" />
+                <span>Bagikan Langsung</span>
               </button>
               <button type="button" class="m-action-dl" :disabled="isExporting" @click="downloadStoryImage">
-                💾 Unduh PNG
+                <GIcon name="download" size="xs" />
+                <span>Unduh PNG</span>
               </button>
             </footer>
           </div>

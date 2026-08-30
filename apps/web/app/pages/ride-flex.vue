@@ -771,12 +771,13 @@ async function shareToMedia() {
     <!-- Minimalist Top Navbar -->
     <header class="studio-header">
       <NuxtLink to="/safety" class="btn-icon-nav" aria-label="Kembali">
-        <svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" stroke-width="2.5">
-          <path d="M19 12H5M12 19l-7-7 7-7" stroke-linecap="round" stroke-linejoin="round" />
-        </svg>
+        <GIcon name="arrow-left" size="sm" />
       </NuxtLink>
 
-      <span class="studio-header-title">⚡ RIDE PASS STUDIO</span>
+      <div class="studio-header-title">
+        <GIcon name="bolt" size="xs" color="var(--color-chain-lime)" filled />
+        <span>RIDE PASS STUDIO</span>
+      </div>
 
       <div class="studio-header-right">
         <button
@@ -786,9 +787,7 @@ async function shareToMedia() {
           :disabled="isExporting"
           @click="downloadStoryImage"
         >
-          <svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="2.5">
-            <path d="M21 15v4a2 2 0 01-2 2H5a2 2 0 01-2-2v-4M7 10l5 5 5-5M12 15V3" stroke-linecap="round" stroke-linejoin="round" />
-          </svg>
+          <GIcon name="download" size="xs" />
         </button>
         <button
           type="button"
@@ -797,9 +796,7 @@ async function shareToMedia() {
           @click="shareToMedia"
         >
           <span>Bagikan</span>
-          <svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2.5">
-            <path d="M4 12v8a2 2 0 002 2h12a2 2 0 002-2v-8M16 6l-4-4-4 4M12 2v13" stroke-linecap="round" stroke-linejoin="round" />
-          </svg>
+          <GIcon name="share" size="xs" />
         </button>
       </div>
     </header>
@@ -1020,7 +1017,8 @@ async function shareToMedia() {
             :class="{ active: activeTool === 'style' }"
             @click="activeTool = 'style'"
           >
-            🎨 Gaya
+            <GIcon name="sparkles" size="xs" />
+            <span>Gaya</span>
           </button>
           <button
             type="button"
@@ -1028,7 +1026,8 @@ async function shareToMedia() {
             :class="{ active: activeTool === 'route' }"
             @click="activeTool = 'route'"
           >
-            🗺️ Rute GPS
+            <GIcon name="route" size="xs" />
+            <span>Rute GPS</span>
           </button>
           <button
             type="button"
@@ -1036,7 +1035,8 @@ async function shareToMedia() {
             :class="{ active: activeTool === 'backdrop' }"
             @click="activeTool = 'backdrop'"
           >
-            🌄 Nuansa
+            <GIcon name="mountain" size="xs" />
+            <span>Nuansa</span>
           </button>
           <button
             type="button"
@@ -1044,7 +1044,8 @@ async function shareToMedia() {
             :class="{ active: activeTool === 'stickers' }"
             @click="activeTool = 'stickers'"
           >
-            🏷️ Stiker
+            <GIcon name="trophy" size="xs" />
+            <span>Stiker</span>
           </button>
           <button
             type="button"
@@ -1052,7 +1053,8 @@ async function shareToMedia() {
             :class="{ active: activeTool === 'ai' }"
             @click="activeTool = 'ai'"
           >
-            ✨ Caption AI
+            <GIcon name="sparkles" size="xs" />
+            <span>Caption AI</span>
           </button>
           <button
             type="button"
@@ -1060,7 +1062,8 @@ async function shareToMedia() {
             :class="{ active: activeTool === 'edit' }"
             @click="activeTool = 'edit'"
           >
-            📝 Edit
+            <GIcon name="edit" size="xs" />
+            <span>Edit</span>
           </button>
         </nav>
 
@@ -1074,7 +1077,7 @@ async function shareToMedia() {
               :class="{ active: rideForm.templateStyle === 'strava_bold' }"
               @click="rideForm.templateStyle = 'strava_bold'"
             >
-              <span class="chip-card-tag">🔥 BOLD</span>
+              <span class="chip-card-tag"><GIcon name="bolt" size="xs" filled /> BOLD</span>
               <strong>Strava Pro</strong>
               <small>Kinetic Neon Green</small>
             </button>
@@ -1084,7 +1087,7 @@ async function shareToMedia() {
               :class="{ active: rideForm.templateStyle === 'rapha_editorial' }"
               @click="rideForm.templateStyle = 'rapha_editorial'"
             >
-              <span class="chip-card-tag">🏔️ CLASSIC</span>
+              <span class="chip-card-tag"><GIcon name="mountain" size="xs" /> CLASSIC</span>
               <strong>Rapha Editorial</strong>
               <small>Serif &amp; Clean GPS</small>
             </button>
@@ -1094,7 +1097,7 @@ async function shareToMedia() {
               :class="{ active: rideForm.templateStyle === 'cyber_hud' }"
               @click="rideForm.templateStyle = 'cyber_hud'"
             >
-              <span class="chip-card-tag">⚡ CYBER</span>
+              <span class="chip-card-tag"><GIcon name="radar" size="xs" /> CYBER</span>
               <strong>Cyber Telemetry</strong>
               <small>HUD Grid &amp; Sensor</small>
             </button>
@@ -1104,7 +1107,7 @@ async function shareToMedia() {
               :class="{ active: rideForm.templateStyle === 'cafe_santai' }"
               @click="rideForm.templateStyle = 'cafe_santai'"
             >
-              <span class="chip-card-tag">☕ COFFEE</span>
+              <span class="chip-card-tag"><GIcon name="coffee" size="xs" /> COFFEE</span>
               <strong>Kopi &amp; Sate</strong>
               <small>Golden Amber Fuel</small>
             </button>
@@ -1131,7 +1134,8 @@ async function shareToMedia() {
                 :class="{ active: rideForm.routeRenderStyle === 'spectrum_elevation' }"
                 @click="rideForm.routeRenderStyle = 'spectrum_elevation'"
               >
-                🌈 Gradien Elevasi
+                <GIcon name="route" size="xs" />
+                <span>Gradien Elevasi</span>
               </button>
               <button
                 type="button"
@@ -1139,7 +1143,8 @@ async function shareToMedia() {
                 :class="{ active: rideForm.routeRenderStyle === 'kinetic_neon' }"
                 @click="rideForm.routeRenderStyle = 'kinetic_neon'"
               >
-                ⚡ Neon Glow
+                <GIcon name="bolt" size="xs" filled />
+                <span>Neon Glow</span>
               </button>
               <button
                 type="button"
@@ -1147,7 +1152,8 @@ async function shareToMedia() {
                 :class="{ active: rideForm.routeRenderStyle === 'topo_radar' }"
                 @click="rideForm.routeRenderStyle = 'topo_radar'"
               >
-                🗺️ Radar Topo
+                <GIcon name="radar" size="xs" />
+                <span>Radar Topo</span>
               </button>
               <button
                 type="button"
@@ -1155,7 +1161,8 @@ async function shareToMedia() {
                 :class="{ active: rideForm.routeRenderStyle === 'minimal_wire' }"
                 @click="rideForm.routeRenderStyle = 'minimal_wire'"
               >
-                ⚪ Minimal Outline
+                <GIcon name="map" size="xs" />
+                <span>Minimal Outline</span>
               </button>
             </div>
 
@@ -1168,19 +1175,24 @@ async function shareToMedia() {
                 :class="{ active: rideForm.selectedRoutePresetId === preset.id }"
                 @click="selectRoutePreset(preset)"
               >
-                <div class="preset-icon-col">🗺️</div>
+                <div class="preset-icon-col">
+                  <GIcon name="route" size="sm" color="var(--color-chain-lime)" />
+                </div>
                 <div class="preset-info-col">
                   <strong>{{ preset.name }}</strong>
                   <small>{{ preset.location }} · {{ preset.distanceKm }} km · +{{ preset.elevationM }}m</small>
                 </div>
-                <div v-if="rideForm.selectedRoutePresetId === preset.id" class="preset-active-check">✓</div>
+                <div v-if="rideForm.selectedRoutePresetId === preset.id" class="preset-active-check">
+                  <GIcon name="check" size="xs" color="#080d19" />
+                </div>
               </div>
             </div>
 
             <!-- GPX Import CTA -->
             <label class="btn-upload-clean">
               <input type="file" accept=".gpx,.geojson" class="sr-only" @change="handleGpxUpload" />
-              <span>📂 Unggah File Jejak GPX / GeoJSON Sendiri</span>
+              <GIcon name="route" size="xs" />
+              <span>Unggah File Jejak GPX / GeoJSON Sendiri</span>
             </label>
           </div>
 
@@ -1194,7 +1206,7 @@ async function shareToMedia() {
                 title="Alpine Blue"
                 @click="rideForm.bgPreset = 'alpine'"
               >
-                <span>🏔️</span>
+                <GIcon name="mountain" size="xs" color="#38BDF8" />
               </button>
               <button
                 type="button"
@@ -1203,7 +1215,7 @@ async function shareToMedia() {
                 title="Gravel Pine"
                 @click="rideForm.bgPreset = 'gravel'"
               >
-                <span>🌲</span>
+                <GIcon name="tree" size="xs" color="#4ADE80" />
               </button>
               <button
                 type="button"
@@ -1212,7 +1224,7 @@ async function shareToMedia() {
                 title="Sunset Amber"
                 @click="rideForm.bgPreset = 'sunset'"
               >
-                <span>🌅</span>
+                <GIcon name="sun" size="xs" color="#FB923C" />
               </button>
               <button
                 type="button"
@@ -1221,7 +1233,7 @@ async function shareToMedia() {
                 title="Speed Crit Purple"
                 @click="rideForm.bgPreset = 'crit'"
               >
-                <span>⚡</span>
+                <GIcon name="bolt" size="xs" color="#C084FC" filled />
               </button>
               <button
                 type="button"
@@ -1230,7 +1242,7 @@ async function shareToMedia() {
                 title="Coffee Mocha"
                 @click="rideForm.bgPreset = 'cafe'"
               >
-                <span>☕</span>
+                <GIcon name="coffee" size="xs" color="#FBBF24" />
               </button>
               <button
                 type="button"
@@ -1239,7 +1251,7 @@ async function shareToMedia() {
                 title="Topo Neon"
                 @click="rideForm.bgPreset = 'topo'"
               >
-                <GIcon name="route" size="xs" />
+                <GIcon name="route" size="xs" color="#C9F36A" />
               </button>
             </div>
 
@@ -1311,7 +1323,8 @@ async function shareToMedia() {
                 :class="{ active: selectedPersona === 'athlete' }"
                 @click="selectedPersona = 'athlete'"
               >
-                🏆 Atlet
+                <GIcon name="trophy" size="xs" />
+                <span>Atlet</span>
               </button>
               <button
                 type="button"
@@ -1319,7 +1332,8 @@ async function shareToMedia() {
                 :class="{ active: selectedPersona === 'humor' }"
                 @click="selectedPersona = 'humor'"
               >
-                😂 Santai
+                <GIcon name="coffee" size="xs" />
+                <span>Santai</span>
               </button>
               <button
                 type="button"
@@ -1327,7 +1341,8 @@ async function shareToMedia() {
                 :class="{ active: selectedPersona === 'technical' }"
                 @click="selectedPersona = 'technical'"
               >
-                ⚙️ Tech Geek
+                <GIcon name="wrench" size="xs" />
+                <span>Tech Geek</span>
               </button>
               <button
                 type="button"
@@ -1335,7 +1350,8 @@ async function shareToMedia() {
                 :disabled="isAiGenerating"
                 @click="generateAiStory"
               >
-                {{ isAiGenerating ? '⏳' : '🪄 Racik Ulang' }}
+                <GIcon name="sparkles" size="xs" />
+                <span>{{ isAiGenerating ? 'Meracik...' : 'Racik Ulang' }}</span>
               </button>
             </div>
 
@@ -1346,12 +1362,14 @@ async function shareToMedia() {
                 class="btn-copy-clean"
                 @click="copyCaption(aiRecap.captions[selectedPersona])"
               >
-                📋 Salin Caption &amp; Tagar
+                <GIcon name="bookmark" size="xs" />
+                <span>Salin Caption &amp; Tagar</span>
               </button>
             </div>
 
             <div class="culinary-clean-tag">
-              <span>🍢 {{ aiRecap.foodEquivalency }}</span>
+              <GIcon name="coffee" size="xs" color="#F59E0B" />
+              <span>{{ aiRecap.foodEquivalency }}</span>
             </div>
           </div>
 
@@ -1363,7 +1381,8 @@ async function shareToMedia() {
               :disabled="isSyncingGps"
               @click="syncFromDeviceGpsOrSession"
             >
-              <span>{{ isSyncingGps ? '⏳ Menyambungkan GPS...' : '📡 Tarik Data Sesi Gowes Asli / GPS Saya' }}</span>
+              <GIcon name="radar" size="sm" color="var(--color-chain-lime)" />
+              <span>{{ isSyncingGps ? 'Menyambungkan GPS...' : 'Tarik Data Sesi Gowes Asli / GPS Saya' }}</span>
             </button>
             <div class="field-item">
               <label>Judul Sesi</label>
@@ -1432,6 +1451,9 @@ async function shareToMedia() {
 }
 
 .studio-header-title {
+  display: flex;
+  align-items: center;
+  gap: 0.35rem;
   font-family: var(--font-mono);
   font-size: 0.84rem;
   font-weight: 900;
