@@ -140,9 +140,27 @@ onMounted(loadEvent);
 
 <template>
   <div class="native-container event-detail-page">
-    <NuxtLink class="back-link" to="/community">← Direktori Komunitas</NuxtLink>
+    <NuxtLink class="back-link" to="/community">
+      <GIcon name="chevron-left" size="xs" />
+      <span>Direktori Komunitas</span>
+    </NuxtLink>
 
-    <p v-if="loading" class="state-card" role="status">Memuat jadwal gowes…</p>
+    <!-- Skeleton Event Detail Shimmer during Loading -->
+    <div v-if="loading" style="display: grid; gap: 1rem;">
+      <div class="native-event-hero" style="padding: 1.5rem; display: grid; gap: 0.85rem; border-radius: 1.25rem; background: var(--color-white); border: 1px solid rgb(23 32 42 / 8%);">
+        <div style="display: flex; gap: 0.5rem;">
+          <div class="skeleton-shimmer" style="width: 35%; height: 1.2rem; border-radius: 0.35rem;" />
+        </div>
+        <div style="display: flex; gap: 1rem; align-items: center;">
+          <div class="skeleton-shimmer" style="width: 4rem; height: 4rem; border-radius: 0.75rem; flex-shrink: 0;" />
+          <div style="flex: 1; display: grid; gap: 0.4rem;">
+            <div class="skeleton-shimmer" style="width: 70%; height: 1.5rem; border-radius: 0.4rem;" />
+            <div class="skeleton-shimmer" style="width: 50%; height: 0.9rem; border-radius: 0.3rem;" />
+          </div>
+        </div>
+        <div class="skeleton-shimmer" style="width: 100%; height: 3.5rem; border-radius: 0.85rem;" />
+      </div>
+    </div>
     <div
       v-else-if="errorMessage"
       class="state-card state-card--error"
@@ -160,9 +178,10 @@ onMounted(loadEvent);
         <div class="hero-top-bar">
           <NuxtLink
             class="host-community-badge"
-            :to="`/community/${detail.event.community.id}`"
+            :to="`/community/${detail.event.community.slug || detail.event.community.id}`"
           >
-            🚲 {{ detail.event.community.name }}
+            <GIcon name="bike" size="xs" />
+            <span>{{ detail.event.community.name }}</span>
           </NuxtLink>
           <span class="status-badge" :class="`status-badge--${detail.event.status}`">
             {{ detail.event.status === 'scheduled' ? 'Terjadwal' : detail.event.status }}
@@ -179,7 +198,8 @@ onMounted(loadEvent);
           <div class="hero-text-block">
             <h1 class="event-title">{{ detail.event.title }}</h1>
             <p class="event-schedule">
-              📅 {{ dayName }}, {{ formatCommunityDate(detail.event.startsAt) }} · ⏰ {{ timeLabel }} WIB
+              <GIcon name="history" size="xs" />
+              <span>{{ dayName }}, {{ formatCommunityDate(detail.event.startsAt) }} · {{ timeLabel }} WIB</span>
             </p>
           </div>
         </div>
@@ -201,20 +221,23 @@ onMounted(loadEvent);
               :disabled="joining || isJoined"
               @click="joinEvent"
             >
-              {{
-                joining
-                  ? 'Mendaftarkan…'
-                  : isJoined
-                    ? '✓ Anda Terdaftar'
-                    : '🚴 Gabung Mabar'
-              }}
+              <GIcon :name="isJoined ? 'check' : 'bike'" size="xs" />
+              <span>
+                {{
+                  joining
+                    ? 'Mendaftarkan…'
+                    : isJoined
+                      ? 'Anda Terdaftar'
+                      : 'Gabung Mabar'
+                }}
+              </span>
             </button>
             <button
               class="button button--secondary share-invite-btn"
               type="button"
               @click="shareEventInvitation"
             >
-              <span>📲</span>
+              <GIcon name="share" size="xs" />
               <span>Undang Teman</span>
             </button>
           </div>
@@ -235,33 +258,42 @@ onMounted(loadEvent);
         <div class="specs-grid">
           <div class="spec-tile">
             <span class="tile-lbl">Titik Kumpul</span>
-            <strong class="tile-val">📌 {{ detail.event.meetingArea }}</strong>
+            <strong class="tile-val">
+              <GIcon name="pin" size="xs" color="#EF4444" />
+              <span>{{ detail.event.meetingArea }}</span>
+            </strong>
           </div>
 
           <div class="spec-tile">
             <span class="tile-lbl">Tingkat Kesulitan</span>
             <strong class="tile-val capitalize">
-              {{ detail.event.difficulty === 'easy' ? '🟢 Santai (Easy)' : detail.event.difficulty === 'moderate' ? '🟡 Sedang (Moderate)' : '🔴 Nanjak (Hard)' }}
+              <GIcon :name="detail.event.difficulty === 'hard' ? 'mountain' : 'route'" size="xs" />
+              <span>{{ detail.event.difficulty === 'easy' ? 'Santai (Easy)' : detail.event.difficulty === 'moderate' ? 'Sedang (Moderate)' : 'Nanjak (Hard)' }}</span>
             </strong>
           </div>
 
           <div class="spec-tile">
             <span class="tile-lbl">Tipe Sepeda</span>
             <strong class="tile-val capitalize">
-              {{ detail.event.bicycleTypes.map((v) => v.replaceAll('_', ' ')).join(', ') }}
+              <GIcon name="bike" size="xs" />
+              <span>{{ detail.event.bicycleTypes.map((v) => v.replaceAll('_', ' ')).join(', ') }}</span>
             </strong>
           </div>
 
           <div class="spec-tile">
             <span class="tile-lbl">Visibilitas</span>
             <strong class="tile-val capitalize">
-              {{ detail.event.visibility === 'public' ? '🌐 Terbuka Umum' : '🔒 Khusus Member' }}
+              <GIcon :name="detail.event.visibility === 'public' ? 'community' : 'shield'" size="xs" />
+              <span>{{ detail.event.visibility === 'public' ? 'Terbuka Umum' : 'Khusus Member' }}</span>
             </strong>
           </div>
         </div>
 
         <div v-if="detail.event.requirements" class="requirements-box">
-          <span class="req-title">⚠️ Perlengkapan &amp; Syarat Wajib:</span>
+          <span class="req-title">
+            <GIcon name="shield" size="xs" color="#EF4444" filled />
+            <span>Perlengkapan &amp; Syarat Wajib:</span>
+          </span>
           <p class="req-content">{{ detail.event.requirements }}</p>
         </div>
       </section>

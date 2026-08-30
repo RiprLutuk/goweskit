@@ -67,6 +67,8 @@ const event: PublicEvent = {
 class MemoryCommunityRepository implements CommunityRepository {
   public membership: StoredCommunityMembership | null = null;
   public participation: StoredEventParticipation | null = null;
+  public lastMembershipCommunityId: string | null = null;
+  public lastCreatedEventCommunityId: string | null = null;
   public atomicJoinReturnsNull = false;
   public knownRoute = true;
   public knownBicycleTypes = true;
@@ -81,11 +83,18 @@ class MemoryCommunityRepository implements CommunityRepository {
     return Promise.resolve([{ ...community, distanceMeters: 2000 }]);
   }
 
-  public findCommunityById(id: string): Promise<PublicCommunity | null> {
-    return Promise.resolve(id === communityId ? community : null);
+  public findCommunityById(identifier: string): Promise<PublicCommunity | null> {
+    return Promise.resolve(
+      identifier === communityId || identifier === community.slug
+        ? community
+        : null,
+    );
   }
 
-  public findMembership(): Promise<StoredCommunityMembership | null> {
+  public findMembership(
+    requestedCommunityId: string,
+  ): Promise<StoredCommunityMembership | null> {
+    this.lastMembershipCommunityId = requestedCommunityId;
     return Promise.resolve(this.membership);
   }
 
@@ -127,6 +136,7 @@ class MemoryCommunityRepository implements CommunityRepository {
     _createdByUserId: string,
     input: CreateCommunityEventRequest,
   ): Promise<CreatedCommunityEvent> {
+    this.lastCreatedEventCommunityId = savedCommunityId;
     return Promise.resolve({
       id: eventId,
       communityId: savedCommunityId,
@@ -228,6 +238,27 @@ describe('CommunityService', () => {
       participantCount: 1,
       status: 'scheduled',
     });
+  });
+
+  it('resolves a community slug before UUID-scoped membership and event writes', async () => {
+    const repository = new MemoryCommunityRepository();
+    repository.membership = {
+      id: '10000000-0000-4000-8000-000000000040',
+      communityId,
+      userId: user.id,
+      role: 'member',
+      status: 'active',
+      createdAt: new Date('2026-08-20T00:00:00.000Z'),
+      updatedAt: new Date('2026-08-20T00:00:00.000Z'),
+    };
+
+    await new CommunityService(
+      repository,
+      () => new Date('2026-08-28T00:00:00.000Z'),
+    ).createEvent(community.slug, user, createEventInput);
+
+    expect(repository.lastMembershipCommunityId).toBe(communityId);
+    expect(repository.lastCreatedEventCommunityId).toBe(communityId);
   });
 
   it('rejects event creation by a non-member and invalid references', async () => {

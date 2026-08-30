@@ -7,8 +7,11 @@
   --color-coral: #ff8c75;
   --color-sand: #ede4d2;
   --color-white: #ffffff;
-  --font-ui: -apple-system, BlinkMacSystemFont, 'Plus Jakarta Sans', 'Manrope', system-ui, sans-serif;
-  --font-mono: 'Geist Mono', ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace;
+  --font-ui: 'Outfit', 'Plus Jakarta Sans', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+  --font-heading: 'Outfit', 'Space Grotesk', -apple-system, BlinkMacSystemFont, sans-serif;
+  --font-body: 'Plus Jakarta Sans', 'Outfit', -apple-system, BlinkMacSystemFont, sans-serif;
+  --font-display: 'Space Grotesk', 'Outfit', -apple-system, BlinkMacSystemFont, sans-serif;
+  --font-mono: 'JetBrains Mono', 'Space Grotesk', ui-monospace, SFMono-Regular, Menlo, Monaco, monospace;
   --radius-card: 20px;
   --shadow-card: 0 8px 28px rgb(23 32 42 / 7%);
   --safe-top: env(safe-area-inset-top, 0px);
@@ -36,6 +39,20 @@ html {
   -webkit-text-size-adjust: 100%;
   -webkit-font-smoothing: antialiased;
   -moz-osx-font-smoothing: grayscale;
+}
+
+h1, h2, h3, h4, h5, h6 {
+  font-family: var(--font-heading);
+  letter-spacing: -0.025em;
+  color: var(--color-ink);
+}
+
+p, li, dd, input, textarea, select {
+  font-family: var(--font-body);
+}
+
+code, kbd, samp, pre, .technical-label {
+  font-family: var(--font-mono);
 }
 
 body {
@@ -1546,3 +1563,26 @@ button, a, input, select, textarea, [role="button"] {
   }
 }
 
+/* ═══════════════════════════════════════════════════════════════
+   SKELETON SHIMMER PLACEHOLDERS (WARM CLEAN CYCLING CANVAS)
+   ═══════════════════════════════════════════════════════════════ */
+.skeleton-shimmer {
+  background: linear-gradient(
+    90deg,
+    rgba(237, 228, 210, 0.4) 0%,
+    rgba(255, 255, 255, 0.8) 50%,
+    rgba(237, 228, 210, 0.4) 100%
+  );
+  background-size: 200% 100%;
+  animation: skeletonPulse 1.6s ease-in-out infinite;
+  border-radius: 0.5rem;
+}
+
+@keyframes skeletonPulse {
+  0% {
+    background-position: 200% 0;
+  }
+  100% {
+    background-position: -200% 0;
+  }
+}

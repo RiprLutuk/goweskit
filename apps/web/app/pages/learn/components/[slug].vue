@@ -29,9 +29,18 @@ async function loadComponent(): Promise<void> {
   <div class="page-stack">
     <NuxtLink class="component-back" to="/learn">← Back to Learn</NuxtLink>
 
-    <p v-if="loading" class="state-card" role="status">
-      Opening the component guide…
-    </p>
+    <!-- Skeleton Component Shimmer during Loading -->
+    <div v-if="loading" style="display: grid; gap: 1rem;">
+      <div class="component-hero" style="display: flex; gap: 1.25rem; align-items: center;">
+        <div class="skeleton-shimmer" style="width: 5rem; height: 5rem; border-radius: 1.25rem; flex-shrink: 0;" />
+        <div style="flex: 1; display: grid; gap: 0.5rem;">
+          <div class="skeleton-shimmer" style="width: 30%; height: 1rem; border-radius: 0.35rem;" />
+          <div class="skeleton-shimmer" style="width: 55%; height: 1.8rem; border-radius: 0.5rem;" />
+          <div class="skeleton-shimmer" style="width: 80%; height: 0.9rem; border-radius: 0.35rem;" />
+        </div>
+      </div>
+      <div class="skeleton-shimmer" style="width: 100%; height: 10rem; border-radius: 1.15rem;" />
+    </div>
 
     <div
       v-else-if="component === null"

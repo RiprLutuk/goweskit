@@ -3,7 +3,6 @@ import type { SendOtpResponse } from '@goweskit/contracts';
 
 const api = useApi();
 const { register, login } = useAuth();
-const { loading: googleLoading, triggerGoogleSignIn } = useGoogleAuth();
 const { toast, alert } = useNotify();
 
 // Step 1: Form Data | Step 2: OTP Verification
@@ -163,11 +162,6 @@ async function submitOtpRegistration(): Promise<void> {
     submitting.value = false;
   }
 }
-
-async function continueWithGoogle(): Promise<void> {
-  errorMessage.value = '';
-  await triggerGoogleSignIn();
-}
 </script>
 
 <template>
@@ -209,7 +203,10 @@ async function continueWithGoogle(): Promise<void> {
               @input="errors.displayName = ''"
             />
           </label>
-          <span v-if="errors.displayName" class="field-error-msg">⚠️ {{ errors.displayName }}</span>
+          <span v-if="errors.displayName" class="field-error-msg">
+            <GIcon name="shield" size="xs" color="#EF4444" filled />
+            <span>{{ errors.displayName }}</span>
+          </span>
         </div>
 
         <div class="form-field">
@@ -226,7 +223,10 @@ async function continueWithGoogle(): Promise<void> {
               @input="errors.email = ''"
             />
           </label>
-          <span v-if="errors.email" class="field-error-msg">⚠️ {{ errors.email }}</span>
+          <span v-if="errors.email" class="field-error-msg">
+            <GIcon name="shield" size="xs" color="#EF4444" filled />
+            <span>{{ errors.email }}</span>
+          </span>
         </div>
 
         <div class="form-field">
@@ -243,7 +243,10 @@ async function continueWithGoogle(): Promise<void> {
               @input="errors.password = ''"
             />
           </label>
-          <span v-if="errors.password" class="field-error-msg">⚠️ {{ errors.password }}</span>
+          <span v-if="errors.password" class="field-error-msg">
+            <GIcon name="shield" size="xs" color="#EF4444" filled />
+            <span>{{ errors.password }}</span>
+          </span>
         </div>
 
         <button
@@ -280,7 +283,10 @@ async function continueWithGoogle(): Promise<void> {
               @input="errors.otp = ''"
             />
           </label>
-          <span v-if="errors.otp" class="field-error-msg">⚠️ {{ errors.otp }}</span>
+          <span v-if="errors.otp" class="field-error-msg">
+            <GIcon name="shield" size="xs" color="#EF4444" filled />
+            <span>{{ errors.otp }}</span>
+          </span>
         </div>
 
         <div class="otp-resend-row">

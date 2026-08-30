@@ -26,109 +26,38 @@ function handleTabClick(): void {
             :aria-current="isActive(item.path) ? 'page' : undefined"
             @click="handleTabClick"
           >
-            <!-- Clean Minimalist Cycling Icon -->
+            <!-- Clean Signature Cycling Icon -->
             <div class="app-navigation__icon-box" aria-hidden="true">
-              <!-- 1. Home / Ride: Clean Minimalist Road Bike -->
-              <svg
+              <GIcon
                 v-if="item.path === '/'"
+                name="bike"
+                size="md"
                 class="tab-icon"
-                viewBox="0 0 24 24"
-                width="22"
-                height="22"
-                fill="none"
-                stroke="currentColor"
-                stroke-width="1.8"
-                stroke-linecap="round"
-                stroke-linejoin="round"
-              >
-                <circle cx="5.5" cy="16.5" r="3.5" />
-                <circle cx="18.5" cy="16.5" r="3.5" />
-                <circle cx="11.5" cy="16.5" r="1.5" />
-                <path d="M5.5 16.5L10 9h4.5l4 7.5" />
-                <path d="M10 9l1.5 7.5h7" />
-                <path d="M10 9L8.5 6.5h2.5" />
-                <path d="M14.5 9l1-2.5h2.2" />
-              </svg>
-
-              <!-- 2. Learn: Clean Handbook / Spec Guide -->
-              <svg
+              />
+              <GIcon
                 v-else-if="item.path === '/learn'"
+                name="passport"
+                size="md"
                 class="tab-icon"
-                viewBox="0 0 24 24"
-                width="22"
-                height="22"
-                fill="none"
-                stroke="currentColor"
-                stroke-width="1.8"
-                stroke-linecap="round"
-                stroke-linejoin="round"
-              >
-                <path d="M4 19.5v-15A2.5 2.5 0 0 1 6.5 2H20v20H6.5a2.5 2.5 0 0 1-2.5-2.5Z" />
-                <path d="M6 6h10" />
-                <path d="M6 10h10" />
-                <path d="M6 14h6" />
-              </svg>
-
-              <!-- 3. Garage: Clean Bike Workshop Stand / Frame -->
-              <svg
+              />
+              <GIcon
                 v-else-if="item.path === '/garage'"
+                name="wrench"
+                size="md"
                 class="tab-icon"
-                viewBox="0 0 24 24"
-                width="22"
-                height="22"
-                fill="none"
-                stroke="currentColor"
-                stroke-width="1.8"
-                stroke-linecap="round"
-                stroke-linejoin="round"
-              >
-                <!-- Double Wheels -->
-                <circle cx="6" cy="16" r="3.5" />
-                <circle cx="18" cy="16" r="3.5" />
-                <!-- Frame & Seat -->
-                <path d="M6 16l4-7h4l4 7" />
-                <path d="M10 9l2 7h6" />
-                <path d="M10 9L8.5 6h3" />
-                <path d="M14 9l1-2.5h2" />
-                <!-- Tool/Service Accent -->
-                <path d="M12 2v3" />
-              </svg>
-
-              <!-- 4. Explore: Clean Compass & Route Waypoint -->
-              <svg
+              />
+              <GIcon
                 v-else-if="item.path === '/explore'"
+                name="route"
+                size="md"
                 class="tab-icon"
-                viewBox="0 0 24 24"
-                width="22"
-                height="22"
-                fill="none"
-                stroke="currentColor"
-                stroke-width="1.8"
-                stroke-linecap="round"
-                stroke-linejoin="round"
-              >
-                <circle cx="12" cy="12" r="9" />
-                <polygon points="16 8 13.5 13.5 8 16 10.5 10.5 16 8" />
-              </svg>
-
-              <!-- 5. Me: Clean Rider Profile with Helmet -->
-              <svg
+              />
+              <GIcon
                 v-else-if="item.path === '/me'"
+                name="community"
+                size="md"
                 class="tab-icon"
-                viewBox="0 0 24 24"
-                width="22"
-                height="22"
-                fill="none"
-                stroke="currentColor"
-                stroke-width="1.8"
-                stroke-linecap="round"
-                stroke-linejoin="round"
-              >
-                <path d="M19 21v-1a5 5 0 0 0-5-5h-4a5 5 0 0 0-5 5v1" />
-                <!-- Helmet & Visor -->
-                <circle cx="12" cy="8" r="4" />
-                <path d="M8 8.5c0-2.2 1.8-4 4-4s4 1.8 4 4" />
-              </svg>
+              />
             </div>
 
             <!-- Clean Titlecase Label -->

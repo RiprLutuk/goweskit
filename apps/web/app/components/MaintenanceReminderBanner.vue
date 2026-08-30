@@ -11,7 +11,7 @@ interface MaintenanceSchedule {
   daysOverdue?: number;
 }
 
-const props = defineProps<{
+defineProps<{
   bike: Bike;
 }>();
 
@@ -56,7 +56,14 @@ const overdueCount = computed(() => schedules.value.filter((s) => s.urgency === 
   <div class="maint-banner" :class="{ 'maint-banner--alert': overdueCount > 0 }">
     <div class="maint-banner__header">
       <div class="maint-banner__title-group">
-        <span class="maint-icon">{{ overdueCount > 0 ? '⚠️' : '🛡️' }}</span>
+        <div class="maint-icon-box">
+          <GIcon
+            :name="overdueCount > 0 ? 'shield' : 'check'"
+            size="sm"
+            :color="overdueCount > 0 ? '#EF4444' : '#16A34A'"
+            filled
+          />
+        </div>
         <div>
           <h3 class="maint-title">Jadwal Servis Berkala &amp; Perawatan</h3>
           <p class="maint-subtitle">
@@ -89,7 +96,8 @@ const overdueCount = computed(() => schedules.value.filter((s) => s.urgency === 
           class="log-service-btn"
           @click="emit('logService', item.taskName)"
         >
-          ＋ Catat Selesai Servis
+          <GIcon name="check" size="xs" />
+          <span>Catat Selesai Servis</span>
         </button>
       </div>
     </div>

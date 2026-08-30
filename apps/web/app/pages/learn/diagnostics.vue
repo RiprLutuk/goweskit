@@ -64,7 +64,9 @@ function getSeverityClass(severity: DiagnosticSymptom['severity']) {
 
       <!-- Search Box -->
       <div class="search-bar">
-        <span class="search-icon" aria-hidden="true">🔍</span>
+        <span class="search-icon" aria-hidden="true">
+          <GIcon name="search" size="xs" />
+        </span>
         <input
           v-model="searchQuery"
           type="search"
@@ -93,7 +95,9 @@ function getSeverityClass(severity: DiagnosticSymptom['severity']) {
     <!-- List of Symptoms -->
     <main class="symptoms-container">
       <div v-if="filteredSymptoms.length === 0" class="empty-state">
-        <span class="empty-icon">🔧</span>
+        <div class="empty-icon-box">
+          <GIcon name="wrench" size="2xl" color="#94A3B8" />
+        </div>
         <h3>Tidak ada masalah yang cocok</h3>
         <p>Coba gunakan kata kunci lain seperti "rantai", "rem", atau "bottom bracket".</p>
       </div>
@@ -121,7 +125,7 @@ function getSeverityClass(severity: DiagnosticSymptom['severity']) {
           <div class="symptom-title-row">
             <h2 class="symptom-title">{{ symptom.title }}</h2>
             <span class="expand-chevron" aria-hidden="true">
-              {{ activeSymptomId === symptom.id ? '▲' : '▼' }}
+              <GIcon :name="activeSymptomId === symptom.id ? 'chevron-up' : 'chevron-down'" size="xs" />
             </span>
           </div>
 
@@ -132,7 +136,10 @@ function getSeverityClass(severity: DiagnosticSymptom['severity']) {
         <div v-if="activeSymptomId === symptom.id" class="symptom-card__body">
           <!-- Probable Causes -->
           <section class="detail-section">
-            <h3 class="detail-heading">⚠️ Kemungkinan Penyebab:</h3>
+            <h3 class="detail-heading">
+              <GIcon name="shield" size="xs" color="#EF4444" filled />
+              <span>Kemungkinan Penyebab:</span>
+            </h3>
             <ul class="detail-list">
               <li v-for="(cause, i) in symptom.probableCauses" :key="i">{{ cause }}</li>
             </ul>
@@ -140,7 +147,10 @@ function getSeverityClass(severity: DiagnosticSymptom['severity']) {
 
           <!-- Inspection Steps -->
           <section class="detail-section">
-            <h3 class="detail-heading">🔍 Langkah Pemeriksaan Mandiri:</h3>
+            <h3 class="detail-heading">
+              <GIcon name="search" size="xs" />
+              <span>Langkah Pemeriksaan Mandiri:</span>
+            </h3>
             <ol class="detail-numbered-list">
               <li v-for="(step, i) in symptom.inspectionSteps" :key="i">{{ step }}</li>
             </ol>
@@ -148,7 +158,10 @@ function getSeverityClass(severity: DiagnosticSymptom['severity']) {
 
           <!-- Quick Fix & Standard Torque -->
           <section class="detail-section highlight-box">
-            <h3 class="detail-heading">🛠️ Solusi Penanganan:</h3>
+            <h3 class="detail-heading">
+              <GIcon name="wrench" size="xs" />
+              <span>Solusi Penanganan:</span>
+            </h3>
             <p class="highlight-text">{{ symptom.quickFix }}</p>
             <div v-if="symptom.standardTorqueNm" class="torque-spec">
               <strong>Torsi Standar:</strong> {{ symptom.standardTorqueNm }}
@@ -157,7 +170,10 @@ function getSeverityClass(severity: DiagnosticSymptom['severity']) {
 
           <!-- When to visit bike shop -->
           <section class="shop-callout">
-            <strong>🏥 Rekomendasi ke Bengkel Mekanik:</strong>
+            <div class="shop-callout-header">
+              <GIcon name="wrench" size="xs" color="#0F766E" />
+              <strong>Rekomendasi ke Bengkel Mekanik:</strong>
+            </div>
             <p>{{ symptom.proShopRecommendedIf }}</p>
           </section>
         </div>

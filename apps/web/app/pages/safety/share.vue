@@ -17,7 +17,7 @@ async function resolveShare(): Promise<void> {
   const token = readSafetyShareToken(window.location.hash);
   if (token === null) {
     errorMessage.value =
-      'This private safety link is invalid, incomplete, or no longer available.';
+      'Tautan pemantauan privat ini tidak valid, tidak lengkap, atau sudah tidak tersedia.';
     loading.value = false;
     return;
   }
@@ -29,15 +29,15 @@ async function resolveShare(): Promise<void> {
     });
   } catch {
     errorMessage.value =
-      'This private safety link is invalid, expired, revoked, or temporarily unavailable.';
+      'Tautan pemantauan privat ini tidak valid, telah kedaluwarsa, dicabut oleh rider, atau sedang tidak dapat diakses.';
   } finally {
     loading.value = false;
   }
 }
 
 function formatDate(value: string | null): string {
-  if (value === null) return 'Not set';
-  return new Intl.DateTimeFormat('en-GB', {
+  if (value === null) return '—';
+  return new Intl.DateTimeFormat('id-ID', {
     dateStyle: 'medium',
     timeStyle: 'short',
   }).format(new Date(value));
@@ -48,48 +48,64 @@ function formatCoordinate(value: number): string {
 }
 
 function statusLabel(status: SafetyShareResponse['status']): string {
-  return status === 'sos'
-    ? 'SOS marked'
-    : status.charAt(0).toUpperCase() + status.slice(1);
+  switch (status) {
+    case 'active':
+      return 'Sedang Berlangsung';
+    case 'sos':
+      return 'Darurat (SOS)';
+    case 'ended':
+      return 'Selesai';
+    case 'revoked':
+      return 'Akses Dicabut';
+    case 'expired':
+      return 'Kedaluwarsa';
+  }
 }
 </script>
 
 <template>
   <div class="page-stack share-page">
     <header class="page-heading">
-      <span class="status-chip status-chip--sky">Private ride check-in</span>
-      <h1>Last-known Ride Safety update</h1>
+      <span class="status-chip status-chip--sky">
+        <GIcon name="shield" size="xs" color="#0284C7" filled />
+        <span>Pemantauan Gowes Solo Privat</span>
+      </span>
+      <h1>Status Pembaruan Ride Safety</h1>
       <p>
-        This page is available only to someone holding the private link. It does
-        not show a live rider location.
+        Halaman ini hanya dapat diakses oleh pemegang tautan privat resmi. Tidak melacak posisi secara live tanpa izin.
       </p>
     </header>
 
-    <aside class="public-warning" aria-label="Important safety limitation">
-      <span aria-hidden="true">!</span>
+    <aside class="public-warning" aria-label="Batasan penting keselamatan">
+      <div class="warning-icon-circle">
+        <GIcon name="shield" size="xs" color="#B91C1C" filled />
+      </div>
       <p>
-        <strong>Not an emergency service.</strong> GowesKit does not contact or
-        dispatch emergency services. If someone may be in danger, contact the
-        appropriate local services directly.
+        <strong>Bukan layanan tanggap darurat kepolisian.</strong> GowesKit tidak melakukan panggilan atau pengiriman ambulans/polisi otomatis. Jika rekan Anda dalam bahaya, segera hubungi nomor darurat 112 atau fasilitas medis setempat.
       </p>
     </aside>
 
-    <p v-if="loading" class="state-card" role="status">
-      Checking this private link…
-    </p>
+    <!-- Skeleton Share Shimmer during Loading -->
+    <div v-if="loading" style="display: grid; gap: 1rem;">
+      <div style="padding: 1.5rem; display: grid; gap: 0.85rem; border-radius: 1.25rem; background: var(--color-white); border: 1px solid rgb(23 32 42 / 8%);">
+        <div class="skeleton-shimmer" style="width: 30%; height: 1.1rem; border-radius: 0.35rem;" />
+        <div class="skeleton-shimmer" style="width: 60%; height: 2rem; border-radius: 0.5rem;" />
+        <div class="skeleton-shimmer" style="width: 85%; height: 1rem; border-radius: 0.35rem;" />
+      </div>
+    </div>
     <section
       v-else-if="errorMessage"
       class="state-card state-card--error unavailable-card"
       role="alert"
     >
-      <strong>Share unavailable</strong>
+      <strong>Tautan Tidak Tersedia</strong>
       <p>{{ errorMessage }}</p>
       <button
         class="button button--secondary"
         type="button"
         @click="resolveShare"
       >
-        Try again
+        Coba Lagi
       </button>
     </section>
 
@@ -101,42 +117,42 @@ function statusLabel(status: SafetyShareResponse['status']): string {
       >
         <div class="rider-status-card__heading">
           <div>
-            <p class="technical-label">Ride Safety status</p>
+            <p class="technical-label">Rider Terdaftar</p>
             <h2 id="rider-status-title">{{ share.riderDisplayName }}</h2>
           </div>
           <span class="share-status" :class="`share-status--${share.status}`">
-            {{ statusLabel(share.status) }}
+            <GIcon :name="share.status === 'sos' ? 'sos' : 'radar'" size="xs" :filled="share.status === 'sos'" />
+            <span>{{ statusLabel(share.status) }}</span>
           </span>
         </div>
 
         <p v-if="share.status === 'sos'" class="sos-notice">
-          The rider deliberately marked SOS in GowesKit. This is only a shared
-          status and did not dispatch emergency help.
+          Rider secara sadar menekan tombol SOS Darurat di aplikasi GowesKit. Tetap tenang dan segera hubungi rider secara langsung.
         </p>
 
         <dl class="share-facts">
           <div>
-            <dt>Ride started</dt>
+            <dt>Mulai Gowes</dt>
             <dd>{{ formatDate(share.startedAt) }}</dd>
           </div>
           <div>
-            <dt>Expected back</dt>
+            <dt>Estimasi Selesai</dt>
             <dd>{{ formatDate(share.expectedEndAt) }}</dd>
           </div>
           <div>
-            <dt>Status changed</dt>
+            <dt>Status Terakhir</dt>
             <dd>
               {{
                 share.sosTriggeredAt
-                  ? `SOS marked ${formatDate(share.sosTriggeredAt)}`
+                  ? `SOS ditandai pada ${formatDate(share.sosTriggeredAt)}`
                   : share.endedAt
-                    ? `Ended ${formatDate(share.endedAt)}`
-                    : 'Session is still open'
+                    ? `Selesai pada ${formatDate(share.endedAt)}`
+                    : 'Sesi masih aktif berjalan'
               }}
             </dd>
           </div>
           <div>
-            <dt>Link expires</dt>
+            <dt>Tautan Kedaluwarsa</dt>
             <dd>{{ formatDate(share.shareExpiresAt) }}</dd>
           </div>
         </dl>
@@ -145,34 +161,33 @@ function statusLabel(status: SafetyShareResponse['status']): string {
       <section aria-labelledby="location-title">
         <div class="section-heading">
           <div>
-            <p class="section-heading__eyebrow">Not live</p>
-            <h2 id="location-title">Last-known location</h2>
+            <p class="section-heading__eyebrow">Snapshot Koordinat</p>
+            <h2 id="location-title">Lokasi Terakhir Terdata</h2>
           </div>
-          <span class="not-live-chip">Snapshot</span>
+          <span class="not-live-chip">Snapshot GPS</span>
         </div>
 
         <article v-if="share.lastLocation" class="location-card">
-          <div class="location-marker" aria-hidden="true">·</div>
+          <div class="location-marker" aria-hidden="true">
+            <GIcon name="pin" size="sm" color="#EF4444" />
+          </div>
           <div>
             <strong>
               {{ formatCoordinate(share.lastLocation.coordinate.latitude) }},
               {{ formatCoordinate(share.lastLocation.coordinate.longitude) }}
             </strong>
             <p>
-              Recorded {{ formatDate(share.lastLocation.recordedAt) }} with
-              {{ formatAccuracy(share.lastLocation.accuracyMeters) }} accuracy.
+              Terekam pada {{ formatDate(share.lastLocation.recordedAt) }} dengan akurasi {{ formatAccuracy(share.lastLocation.accuracyMeters) }}.
             </p>
             <p class="snapshot-note">
-              The rider may have moved since this timestamp. This page does not
-              poll or track them in real time.
+              Rider mungkin telah berpindah sejak koordinat ini dikirimkan. Halaman ini tidak melacak posisi secara kontinu demi menjaga privasi dan daya baterai rider.
             </p>
           </div>
         </article>
         <div v-else class="state-card empty-location">
-          <strong>No location update shared.</strong>
+          <strong>Belum Ada Koordinat yang Dikirimkan</strong>
           <p>
-            The rider started a safety session but has not explicitly shared a
-            location snapshot.
+            Rider telah memulai sesi keselamatan tetapi belum memperbarui titik koordinat GPS.
           </p>
         </div>
       </section>
@@ -182,11 +197,11 @@ function statusLabel(status: SafetyShareResponse['status']): string {
         type="button"
         @click="resolveShare"
       >
-        Refresh last-known update
+        <GIcon name="radar" size="xs" />
+        <span>Muat Ulang Pembaruan Terkini</span>
       </button>
       <p class="fragment-note">
-        For privacy, the secret part of this link stays in the browser URL
-        fragment and is sent only in the protected request body.
+        Demi privasi dan keamanan, token rahasia tautan ini tersimpan pada fragmen browser (#) dan hanya dikirimkan via payload permintaan terlindungi.
       </p>
     </template>
   </div>

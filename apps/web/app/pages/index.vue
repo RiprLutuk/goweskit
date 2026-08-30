@@ -98,6 +98,52 @@ const fallbackEvents: NearbyEvent[] = [
   },
 ];
 
+const detectingLocation = ref(false);
+
+async function loadNearbyForCoordinates(center: { latitude: number; longitude: number }): Promise<void> {
+  // 1. Fetch nearby explore routes & workshops around location
+  try {
+    const exploreRes = await api<NearbyExploreResponse>('/explore/nearby', {
+      method: 'POST',
+      body: {
+        center: { longitude: center.longitude, latitude: center.latitude },
+        radiusKm: 25,
+      },
+    });
+    routes.value = exploreRes.routes;
+    places.value = exploreRes.places;
+  } catch {
+    routes.value = [];
+    places.value = [];
+  }
+
+  // 2. Fetch nearby community ride events around location
+  try {
+    const eventsRes = await api<NearbyEventsResponse>('/events/nearby', {
+      method: 'POST',
+      body: {
+        center: { longitude: center.longitude, latitude: center.latitude },
+        radiusKm: 25,
+      },
+    });
+    events.value = eventsRes.events;
+  } catch {
+    events.value = [];
+  }
+}
+
+async function handleRefreshLocation(): Promise<void> {
+  detectingLocation.value = true;
+  try {
+    const loc = await requestLocation(true);
+    const center = { latitude: loc.latitude, longitude: loc.longitude };
+    void fetchLiveWeather(center.latitude, center.longitude, userCityName.value);
+    await loadNearbyForCoordinates(center);
+  } finally {
+    detectingLocation.value = false;
+  }
+}
+
 onMounted(async () => {
   if (!initialized.value) await refresh();
 
@@ -117,35 +163,8 @@ onMounted(async () => {
     }
   }
 
-  // 4. Fetch nearby explore routes & workshops around real location
-  try {
-    const exploreRes = await api<NearbyExploreResponse>('/explore/nearby', {
-      method: 'POST',
-      body: {
-        center: { longitude: center.longitude, latitude: center.latitude },
-        radiusKm: 25,
-      },
-    });
-    routes.value = exploreRes.routes;
-    places.value = exploreRes.places;
-  } catch {
-    routes.value = [];
-    places.value = [];
-  }
-
-  // 5. Fetch nearby community ride events around real location
-  try {
-    const eventsRes = await api<NearbyEventsResponse>('/events/nearby', {
-      method: 'POST',
-      body: {
-        center: { longitude: center.longitude, latitude: center.latitude },
-        radiusKm: 25,
-      },
-    });
-    events.value = eventsRes.events;
-  } catch {
-    events.value = [];
-  }
+  // 4. Fetch nearby explore routes & community ride events
+  await loadNearbyForCoordinates(center);
 
   loading.value = false;
 });
@@ -161,42 +180,61 @@ function formatKm(meters: number): string {
     <header class="rider-cockpit-bar">
       <div class="cockpit-left">
         <span class="cockpit-eyebrow">
-          {{ user ? `Halo, ${user.displayName.split(' ')[0]}` : 'Selamat Pagi, Rider' }} 👋
+          {{ user ? `Halo, ${user.displayName.split(' ')[0]}` : 'Selamat Pagi, Rider' }}
         </span>
-        <div
+        <button
+          type="button"
           class="weather-chip"
-          :title="`Kelembapan ${weather.humidityPercent}%, Angin ${weather.windSpeedKmh} km/h`"
+          :class="{ 'weather-chip--interactive': true, 'weather-chip--live': isLiveGps }"
+          :title="isLiveGps ? `GPS Aktif (${weather.cityName}). Klik untuk perbarui cuaca.` : 'Klik untuk mengaktifkan izin GPS & mendeteksi kotamu'"
+          :disabled="detectingLocation"
+          @click="handleRefreshLocation"
         >
-          <span class="weather-icon">{{ weather.icon }}</span>
-          <span class="weather-text">{{ weather.cityName }} · {{ weather.temperatureC }}°C · {{ weather.cyclingAdvice }}</span>
-          <span v-if="isLiveGps" class="live-gps-dot" title="GPS Aktif">📍</span>
-        </div>
+          <GIcon :name="weather.icon === '☀️' ? 'sun' : (weather.icon === '🌧️' ? 'rain' : 'cloud')" size="sm" class="weather-icon-svg" />
+          <span class="weather-text">
+            {{ detectingLocation ? 'Mendeteksi GPS…' : `${weather.cityName} · ${weather.temperatureC}°C · ${weather.cyclingAdvice}` }}
+          </span>
+          <GIcon v-if="isLiveGps" name="radar" size="xs" color="#16A34A" class="live-gps-dot" title="GPS Terverifikasi" />
+          <span v-else-if="!detectingLocation" class="gps-ask-badge">
+            <GIcon name="pin" size="xs" /> Izinkan GPS
+          </span>
+        </button>
       </div>
       <NuxtLink to="/safety" class="sos-quick-badge" title="Solo Ride Safety">
-        <span class="sos-dot" /> Live Safety
+        <GIcon name="shield" size="xs" color="#FF8C75" filled /> Live Safety
       </NuxtLink>
     </header>
 
-    <!-- 2. Quick Action Hub (5 Clean Cycling Shortcuts) -->
+    <!-- 2. Quick Action Hub (5 Clean Cycling Shortcuts with Signature SVG Icons) -->
     <nav class="quick-shortcuts-row" aria-label="Aksi Cepat">
       <NuxtLink to="/explore" class="shortcut-pill">
-        <span class="shortcut-icon">🗺️</span>
+        <div class="shortcut-icon-box">
+          <GIcon name="route" size="md" color="#0F766E" />
+        </div>
         <span class="shortcut-label">Rute</span>
       </NuxtLink>
       <NuxtLink to="/community" class="shortcut-pill">
-        <span class="shortcut-icon">👥</span>
+        <div class="shortcut-icon-box">
+          <GIcon name="community" size="md" color="#2563EB" />
+        </div>
         <span class="shortcut-label">Mabar</span>
       </NuxtLink>
       <NuxtLink to="/upgrade-lab" class="shortcut-pill">
-        <span class="shortcut-icon">⚡</span>
+        <div class="shortcut-icon-box">
+          <GIcon name="upgrade" size="md" color="#D97706" filled />
+        </div>
         <span class="shortcut-label">Upgrade</span>
       </NuxtLink>
       <NuxtLink to="/garage" class="shortcut-pill">
-        <span class="shortcut-icon">🚲</span>
+        <div class="shortcut-icon-box">
+          <GIcon name="bike" size="md" color="#17202A" />
+        </div>
         <span class="shortcut-label">Garasi</span>
       </NuxtLink>
       <NuxtLink to="/ride-flex" class="shortcut-pill shortcut-pill--flex">
-        <span class="shortcut-icon">📸</span>
+        <div class="shortcut-icon-box">
+          <GIcon name="flex" size="md" color="#17202A" />
+        </div>
         <span class="shortcut-label">Flex AI</span>
       </NuxtLink>
     </nav>
@@ -204,14 +242,17 @@ function formatKm(meters: number): string {
     <!-- 2.5 Agentic AI Ride Flex Spotlight Banner -->
     <section class="home-flex-spotlight">
       <div class="flex-spotlight-content">
-        <span class="spotlight-chip">✨ AGENTIC AI &amp; STRAVA-STYLE FLEX</span>
+        <span class="spotlight-chip">
+          <GIcon name="sparkles" size="xs" color="#C9F36A" /> AGENTIC AI &amp; STRAVA-STYLE FLEX
+        </span>
         <h2 class="spotlight-title">Pamerkan Hasil Gowes dengan Poster Sinematik</h2>
         <p class="spotlight-desc">
           Gabungkan foto gowes, telemetri live, sticker KOM, dan caption AI otomatis untuk Instagram Story &amp; WhatsApp.
         </p>
       </div>
       <NuxtLink to="/ride-flex" class="spotlight-action-btn">
-        <span>📸 Buka Studio</span>
+        <GIcon name="camera" size="sm" />
+        <span>Buka Studio</span>
         <span>→</span>
       </NuxtLink>
     </section>
@@ -223,16 +264,39 @@ function formatKm(meters: number): string {
         <NuxtLink to="/explore" class="section-link">Semua Rute →</NuxtLink>
       </div>
 
-      <article class="clean-featured-route-card">
+      <!-- Skeleton Route Shimmer during Loading -->
+      <article v-if="loading" class="clean-featured-route-card skeleton-card-box">
+        <div class="route-header-tags">
+          <div class="skeleton-shimmer skeleton-badge" />
+          <div class="skeleton-shimmer skeleton-badge skeleton-badge--sm" />
+        </div>
+        <div class="skeleton-shimmer skeleton-title-bar" />
+        <div class="skeleton-shimmer skeleton-desc-line" />
+        <div class="skeleton-shimmer skeleton-desc-line skeleton-desc-line--short" />
+        <div class="skeleton-shimmer skeleton-spark-box" />
+        <div class="route-metrics-strip">
+          <div class="metric-col"><div class="skeleton-shimmer skeleton-metric-val" /></div>
+          <div class="metric-divider" />
+          <div class="metric-col"><div class="skeleton-shimmer skeleton-metric-val" /></div>
+          <div class="metric-divider" />
+          <div class="metric-col"><div class="skeleton-shimmer skeleton-metric-val" /></div>
+        </div>
+        <div class="skeleton-shimmer skeleton-btn-bar" />
+      </article>
+
+      <!-- Loaded Featured Route -->
+      <article v-else-if="featuredRoute || fallbackFeaturedRoute" class="clean-featured-route-card">
         <!-- Top Tags -->
         <div class="route-header-tags">
           <span class="route-type-badge">
-            🚲 {{ (featuredRoute || fallbackFeaturedRoute).routeType.toUpperCase() }}
+            <GIcon name="bike" size="xs" /> {{ (featuredRoute || fallbackFeaturedRoute).routeType.toUpperCase() }}
           </span>
           <span class="route-surface-badge">
             {{ (featuredRoute || fallbackFeaturedRoute).surface }}
           </span>
-          <span class="route-verified-badge">✓ Verified GPX</span>
+          <span class="route-verified-badge">
+            <GIcon name="check" size="xs" color="#15803d" /> Verified GPX
+          </span>
         </div>
 
         <!-- Title & Bio -->
@@ -286,7 +350,7 @@ function formatKm(meters: number): string {
       </article>
 
       <!-- Mini Horizontal Routes -->
-      <div v-if="otherRoutes.length" class="mini-routes-scroll">
+      <div v-if="!loading && otherRoutes.length" class="mini-routes-scroll">
         <NuxtLink
           v-for="r in otherRoutes"
           :key="r.id"
@@ -310,7 +374,16 @@ function formatKm(meters: number): string {
         <NuxtLink to="/community" class="section-link">Semua Event →</NuxtLink>
       </div>
 
-      <div class="events-feed-list">
+      <!-- Skeleton Event Shimmer during Loading -->
+      <div v-if="loading" class="events-feed-list">
+        <div v-for="i in 2" :key="i" class="skeleton-event-card">
+          <div class="skeleton-shimmer skeleton-event-header" />
+          <div class="skeleton-shimmer skeleton-event-title" />
+          <div class="skeleton-shimmer skeleton-event-meta" />
+        </div>
+      </div>
+
+      <div v-else class="events-feed-list">
         <RideEventCard
           v-for="evt in (events.length ? events.slice(0, 2) : fallbackEvents)"
           :key="evt.id"
@@ -326,9 +399,20 @@ function formatKm(meters: number): string {
         <NuxtLink to="/garage" class="section-link">Garasi →</NuxtLink>
       </div>
 
+      <!-- Skeleton Garage during Loading -->
+      <div v-if="loading || !initialized" class="skeleton-garage-banner">
+        <div class="skeleton-shimmer skeleton-garage-icon" />
+        <div class="skeleton-garage-info">
+          <div class="skeleton-shimmer skeleton-garage-title" />
+          <div class="skeleton-shimmer skeleton-garage-sub" />
+        </div>
+      </div>
+
       <!-- Logged In: Active Bike Snapshot -->
-      <NuxtLink v-if="activeBike" :to="`/garage/${activeBike.id}`" class="active-bike-banner">
-        <div class="bike-banner-icon">🚲</div>
+      <NuxtLink v-else-if="activeBike" :to="`/garage/${activeBike.id}`" class="active-bike-banner">
+        <div class="bike-banner-icon">
+          <GIcon name="bike" size="lg" color="#17202A" />
+        </div>
         <div class="bike-banner-info">
           <strong class="bike-banner-name">{{ activeBike.nickname }}</strong>
           <span class="bike-banner-sub">{{ activeBike.brand }} {{ activeBike.model }} · Standar Terverifikasi</span>
@@ -379,12 +463,48 @@ function formatKm(meters: number): string {
 }
 
 .weather-chip {
-  display: flex;
+  display: inline-flex;
   align-items: center;
   gap: 0.35rem;
   font-size: 0.72rem;
   color: var(--color-asphalt);
   font-weight: 650;
+  background: transparent;
+  border: none;
+  padding: 0.15rem 0.35rem 0.15rem 0;
+  text-align: left;
+  border-radius: 0.5rem;
+  transition: transform 90ms ease, opacity 90ms ease;
+}
+
+.weather-chip--interactive {
+  cursor: pointer;
+}
+
+.weather-chip--interactive:active {
+  transform: scale(0.97);
+}
+
+.gps-ask-badge {
+  font-family: var(--font-mono);
+  font-size: 0.6rem;
+  font-weight: 900;
+  color: #17202A;
+  background: var(--color-chain-lime);
+  padding: 0.1rem 0.35rem;
+  border-radius: 0.35rem;
+  border: 1px solid rgba(23, 32, 42, 0.2);
+  margin-left: 0.2rem;
+  animation: pulseGps 2s infinite ease-in-out;
+}
+
+@keyframes pulseGps {
+  0%, 100% {
+    transform: scale(1);
+  }
+  50% {
+    transform: scale(1.05);
+  }
 }
 
 .weather-icon {
@@ -816,35 +936,165 @@ function formatKm(meters: number): string {
   display: flex;
   align-items: center;
   justify-content: space-between;
-  gap: 0.75rem;
-  padding: 0.85rem 1rem;
-  border-radius: 1rem;
+  gap: 0.85rem;
+  padding: 1rem 1.15rem;
+  border-radius: 1.15rem;
   background: var(--color-white);
   border: 1px solid rgb(23 32 42 / 8%);
   box-shadow: 0 2px 10px rgb(23 32 42 / 3%);
 }
 
+.guest-banner-text {
+  flex: 1 1 auto;
+  min-width: 0;
+}
+
 .guest-banner-text strong {
   display: block;
-  font-size: 0.85rem;
+  font-size: 0.88rem;
   font-weight: 850;
   color: var(--color-ink);
+  line-height: 1.25;
 }
 
 .guest-banner-text p {
-  margin: 0.1rem 0 0;
-  font-size: 0.72rem;
+  margin: 0.2rem 0 0;
+  font-size: 0.73rem;
   color: var(--color-asphalt);
+  line-height: 1.35;
 }
 
 .guest-banner-btn {
-  padding: 0.4rem 0.75rem;
-  border-radius: 0.65rem;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  padding: 0.45rem 0.85rem;
+  border-radius: 0.75rem;
   background: var(--color-ink);
   color: var(--color-white);
   text-decoration: none;
   font-size: 0.75rem;
   font-weight: 850;
   white-space: nowrap;
+  flex-shrink: 0;
+  box-shadow: 0 2px 6px rgb(23 32 42 / 12%);
+  transition: transform 90ms ease, opacity 90ms ease;
+}
+
+.guest-banner-btn:active {
+  transform: scale(0.96);
+  opacity: 0.9;
+}
+
+/* ═══════════════════════════════════════════════════════════════
+   SKELETON SHIMMER LOADERS (CLEAN & FLICKER-FREE UX)
+   ═══════════════════════════════════════════════════════════════ */
+.skeleton-card-box {
+  border: 1px solid rgb(23 32 42 / 8%);
+  pointer-events: none;
+  display: grid;
+  gap: 0.85rem;
+}
+
+.skeleton-badge {
+  width: 4.5rem;
+  height: 1.25rem;
+  border-radius: 0.4rem;
+}
+
+.skeleton-badge--sm {
+  width: 3.5rem;
+}
+
+.skeleton-title-bar {
+  width: 65%;
+  height: 1.5rem;
+  border-radius: 0.5rem;
+}
+
+.skeleton-desc-line {
+  width: 95%;
+  height: 0.85rem;
+  border-radius: 0.4rem;
+}
+
+.skeleton-desc-line--short {
+  width: 75%;
+}
+
+.skeleton-spark-box {
+  width: 100%;
+  height: 5rem;
+  border-radius: 0.85rem;
+}
+
+.skeleton-metric-val {
+  width: 3.5rem;
+  height: 1.25rem;
+  margin: 0.2rem auto;
+  border-radius: 0.35rem;
+}
+
+.skeleton-btn-bar {
+  width: 100%;
+  height: 2.85rem;
+  border-radius: 0.85rem;
+}
+
+.skeleton-event-card {
+  padding: 1rem 1.15rem;
+  border-radius: 1.15rem;
+  background: var(--color-white);
+  border: 1px solid rgb(23 32 42 / 8%);
+  display: grid;
+  gap: 0.65rem;
+}
+
+.skeleton-event-header {
+  width: 40%;
+  height: 0.9rem;
+}
+
+.skeleton-event-title {
+  width: 70%;
+  height: 1.2rem;
+}
+
+.skeleton-event-meta {
+  width: 55%;
+  height: 0.85rem;
+}
+
+.skeleton-garage-banner {
+  display: flex;
+  align-items: center;
+  gap: 0.85rem;
+  padding: 0.85rem 1rem;
+  border-radius: 1rem;
+  background: var(--color-white);
+  border: 1px solid rgb(23 32 42 / 8%);
+}
+
+.skeleton-garage-icon {
+  width: 2.5rem;
+  height: 2.5rem;
+  border-radius: 0.75rem;
+  flex-shrink: 0;
+}
+
+.skeleton-garage-info {
+  display: grid;
+  gap: 0.4rem;
+  flex: 1;
+}
+
+.skeleton-garage-title {
+  width: 45%;
+  height: 1rem;
+}
+
+.skeleton-garage-sub {
+  width: 65%;
+  height: 0.75rem;
 }
 </style>

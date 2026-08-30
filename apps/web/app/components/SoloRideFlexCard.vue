@@ -238,7 +238,7 @@ async function shareToMedia() {
         <div class="pass-preview">
           <div class="pass-header">
             <div class="pass-badge">
-              <span class="pass-dot"></span>
+              <span class="pass-dot"/>
               <span>GOWESKIT SAFE RIDER</span>
             </div>
             <span class="pass-chip">LIVE SESSION</span>

@@ -1,19 +1,19 @@
-import { beforeEach, describe, expect, it, vi } from 'vitest';
+import { beforeEach, describe, expect, it } from 'vitest';
 import { useOfflineNavigator } from './useOfflineNavigator.js';
 
 // Mock localStorage
 const localStorageMock = (() => {
-  let store: Record<string, string> = {};
+  const store = new Map<string, string>();
   return {
-    getItem: (key: string) => store[key] || null,
+    getItem: (key: string) => store.get(key) || null,
     setItem: (key: string, value: string) => {
-      store[key] = value.toString();
+      store.set(key, value.toString());
     },
     clear: () => {
-      store = {};
+      store.clear();
     },
     removeItem: (key: string) => {
-      delete store[key];
+      store.delete(key);
     },
   };
 })();

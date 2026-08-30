@@ -81,7 +81,7 @@ function specsBreakdown(bike: Bike): { known: number; unknown: number } {
       <div class="garage-hero__inner">
         <div class="garage-hero__top">
           <div class="garage-badge">
-            <span class="garage-badge__dot"></span>
+            <span class="garage-badge__dot" />
             <span>Workshop Pribadi</span>
           </div>
           <span v-if="user && bikes.length" class="counter-chip">
@@ -97,7 +97,7 @@ function specsBreakdown(bike: Bike): { known: number; unknown: number } {
             </p>
           </div>
           <NuxtLink v-if="user" class="add-bike-btn" to="/garage/new">
-            <span>＋</span>
+            <GIcon name="plus" size="xs" color="#17202A" />
             <span>Tambah Sepeda</span>
           </NuxtLink>
         </div>
@@ -105,10 +105,16 @@ function specsBreakdown(bike: Bike): { known: number; unknown: number } {
     </header>
 
     <div class="garage-content-container">
-      <!-- Loading State -->
-      <div v-if="loading" class="state-card state-card--loading" role="status">
-        <span class="loading-spinner"></span>
-        <span>Membuka Garasi Digital Anda…</span>
+      <!-- Loading Skeleton State -->
+      <div v-if="loading" class="bike-cards-grid">
+        <div v-for="i in 2" :key="i" class="bike-card skeleton-card-box">
+          <div class="skeleton-shimmer" style="width: 100%; height: 11rem; border-radius: 0.85rem;" />
+          <div style="padding: 1rem; display: grid; gap: 0.65rem;">
+            <div class="skeleton-shimmer" style="width: 55%; height: 1.4rem; border-radius: 0.4rem;" />
+            <div class="skeleton-shimmer" style="width: 75%; height: 0.9rem; border-radius: 0.35rem;" />
+            <div class="skeleton-shimmer" style="width: 100%; height: 2.2rem; border-radius: 0.65rem; margin-top: 0.5rem;" />
+          </div>
+        </div>
       </div>
 
       <!-- SIGNED-OUT SHOWCASE HERO CARD (CLEAN WORKSHOP DESIGN) -->
@@ -135,21 +141,27 @@ function specsBreakdown(bike: Bike): { known: number; unknown: number } {
           <!-- Feature Value Badges -->
           <div class="guest-features-grid">
             <div class="feature-chip">
-              <span class="feature-icon">📐</span>
+              <div class="feature-icon-box">
+                <GIcon name="frame" size="sm" color="#17202A" />
+              </div>
               <div>
                 <strong>17 Standar Terverifikasi</strong>
                 <small>As roda, BB, Freehub, Headset</small>
               </div>
             </div>
             <div class="feature-chip">
-              <span class="feature-icon">🛠️</span>
+              <div class="feature-icon-box">
+                <GIcon name="wrench" size="sm" color="#17202A" />
+              </div>
               <div>
                 <strong>Buku Servis Digital</strong>
                 <small>Riwayat rantai &amp; part berkala</small>
               </div>
             </div>
             <div class="feature-chip">
-              <span class="feature-icon">⚡</span>
+              <div class="feature-icon-box">
+                <GIcon name="upgrade" size="sm" color="#D97706" filled />
+              </div>
               <div>
                 <strong>Simulasi Upgrade Lab</strong>
                 <small>Cek kecocokan komponen 1-klik</small>
@@ -176,7 +188,7 @@ function specsBreakdown(bike: Bike): { known: number; unknown: number } {
               :disabled="demoLoggingIn"
               @click="quickDemoLogin"
             >
-              <span class="demo-bolt">⚡</span>
+              <GIcon name="bolt" size="xs" color="#C9F36A" filled class="demo-bolt" />
               <span class="demo-text">
                 {{ demoLoggingIn ? 'Membuka Garasi Demo…' : 'Coba Garasi Demo (1-Klik Tanpa Daftar)' }}
               </span>
@@ -198,7 +210,9 @@ function specsBreakdown(bike: Bike): { known: number; unknown: number } {
       <template v-else-if="bikes.length">
         <!-- Search Filter Input -->
         <div class="garage-search-bar">
-          <span class="search-icon" aria-hidden="true">🔍</span>
+          <span class="search-icon" aria-hidden="true">
+            <GIcon name="search" size="xs" />
+          </span>
           <input
             v-model="filterQuery"
             type="search"
@@ -211,7 +225,7 @@ function specsBreakdown(bike: Bike): { known: number; unknown: number } {
             type="button"
             @click="filterQuery = ''"
           >
-            ✕
+            <GIcon name="close" size="xs" />
           </button>
         </div>
 
@@ -279,10 +293,12 @@ function specsBreakdown(bike: Bike): { known: number; unknown: number } {
               <!-- Card Action Buttons -->
               <div class="bike-card-actions">
                 <NuxtLink class="action-link action-link--secondary" :to="`/garage/${bike.id}`">
-                  🔧 Spesifikasi &amp; Servis
+                  <GIcon name="wrench" size="xs" />
+                  <span>Spesifikasi &amp; Servis</span>
                 </NuxtLink>
                 <NuxtLink class="action-link action-link--primary" :to="`/upgrade-lab?bike=${bike.id}`">
-                  ⚡ Cek Upgrade
+                  <GIcon name="upgrade" size="xs" filled />
+                  <span>Cek Upgrade</span>
                 </NuxtLink>
               </div>
             </div>
@@ -302,7 +318,8 @@ function specsBreakdown(bike: Bike): { known: number; unknown: number } {
             Daftarkan sepeda pertama Anda untuk mulai mencatat anatomi komponen, riwayat servis berkala, dan memeriksa kompatibilitas upgrade.
           </p>
           <NuxtLink class="cta-btn cta-btn--primary" to="/garage/new">
-            <span>＋ Daftarkan Sepeda Pertama</span>
+            <GIcon name="plus" size="xs" color="#17202A" />
+            <span>Daftarkan Sepeda Pertama</span>
             <span>→</span>
           </NuxtLink>
         </div>

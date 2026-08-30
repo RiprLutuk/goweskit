@@ -1,3 +1,12 @@
+export interface GooglePromptMomentNotification {
+  isNotDisplayed?: () => boolean;
+  getNotDisplayedReason?: () => string;
+  isSkippedMoment?: () => boolean;
+  getSkippedReason?: () => string;
+  isDismissedMoment?: () => boolean;
+  getDismissedReason?: () => string;
+}
+
 declare global {
   interface Window {
     google?: {
@@ -9,7 +18,11 @@ declare global {
             auto_select?: boolean;
             cancel_on_tap_outside?: boolean;
           }) => void;
-          prompt: (notification?: (notification: unknown) => void) => void;
+          prompt: (
+            notification?: (
+              notification: GooglePromptMomentNotification,
+            ) => void,
+          ) => void;
           renderButton?: (
             element: HTMLElement,
             options: Record<string, unknown>,
@@ -94,7 +107,7 @@ export function useGoogleAuth() {
         });
 
         // Trigger Google One-Tap / Account Selector
-        window.google!.accounts.id.prompt((notification: any) => {
+        window.google!.accounts.id.prompt((notification: GooglePromptMomentNotification) => {
           if (notification?.isNotDisplayed?.()) {
             const reason = notification.getNotDisplayedReason?.();
             console.warn('[Google Auth] Prompt not displayed reason:', reason);

@@ -104,30 +104,31 @@ function searchKindLabel(kind: LearnSearchResult['kind']): string {
   return 'Glosarium';
 }
 
-function categoryIcon(slug: string): string {
+function categoryIconName(slug: string): string {
   const iconMap: Record<string, string> = {
-    frame: '📐',
-    fork: '🍴',
-    rear_shock: '🔄',
-    wheel: '⭕',
-    hub: '⚙️',
-    tire: '🛞',
-    cassette: '⛓️',
-    chain: '🔗',
-    crank: '⚡',
-    bottom_bracket: '🔩',
-    rear_derailleur: '🕹️',
-    shifter: '🎮',
-    brake: '🛑',
-    rotor: '💿',
-    handlebar: '🛵',
-    stem: '📏',
-    seatpost: '🪑',
-    saddle: '🛋️',
-    pedal: '🦶',
-    folding_hinge: '🧲',
+    frame: 'frame',
+    fork: 'fork',
+    rear_shock: 'rear_shock',
+    wheel: 'wheel',
+    hub: 'hub',
+    tire: 'tire',
+    cassette: 'cassette',
+    chain: 'chain',
+    crank: 'crank',
+    bottom_bracket: 'bottom_bracket',
+    rear_derailleur: 'rear_derailleur',
+    shifter: 'shifter',
+    brake: 'disc_brake',
+    rotor: 'disc_brake',
+    headset: 'headset',
+    handlebar: 'bike-road',
+    stem: 'wrench',
+    seatpost: 'frame',
+    saddle: 'bike',
+    pedal: 'crank',
+    folding_hinge: 'bike-folding',
   };
-  return iconMap[slug] ?? '🚲';
+  return iconMap[slug] ?? 'wrench';
 }
 
 function bikeTypeSvg(slug: string): string {
@@ -242,7 +243,7 @@ function resetWizard(): void {
       <div class="learn-hero__inner">
         <!-- Eyebrow -->
         <div class="learn-badge">
-          <span class="learn-badge__dot"></span>
+          <span class="learn-badge__dot" />
           <span>Pusat Pengetahuan Gowes</span>
         </div>
 
@@ -255,7 +256,9 @@ function resetWizard(): void {
         <!-- Quick Action Tools Row -->
         <div class="learn-quick-actions">
           <NuxtLink to="/learn/diagnostics" class="action-pill action-pill--alert">
-            <span class="pill-icon">🔧</span>
+            <span class="pill-icon">
+              <GIcon name="wrench" size="xs" color="#EF4444" />
+            </span>
             <span>Diagnostik</span>
           </NuxtLink>
           <button
@@ -263,7 +266,9 @@ function resetWizard(): void {
             type="button"
             @click="showWizard = true"
           >
-            <span class="pill-icon">🧭</span>
+            <span class="pill-icon">
+              <GIcon name="radar" size="xs" color="#16A34A" />
+            </span>
             <span>Deteksi</span>
           </button>
           <button
@@ -271,14 +276,18 @@ function resetWizard(): void {
             type="button"
             @click="showAdminModal = true"
           >
-            <span class="pill-icon">➕</span>
+            <span class="pill-icon">
+              <GIcon name="plus" size="xs" color="#17202A" />
+            </span>
             <span>Tambah</span>
           </button>
         </div>
 
         <!-- Search Bar -->
         <form class="learn-search" @submit.prevent="searchLearn">
-          <span class="learn-search__icon" aria-hidden="true">🔍</span>
+          <span class="learn-search__icon" aria-hidden="true">
+            <GIcon name="search" size="xs" />
+          </span>
           <input
             v-model="searchQuery"
             type="search"
@@ -288,7 +297,9 @@ function resetWizard(): void {
             class="learn-search__input"
             @input="searchQuery ? null : clearSearch()"
           />
-          <button v-if="searchQuery" class="learn-search__clear" type="button" @click="clearSearch">✕</button>
+          <button v-if="searchQuery" class="learn-search__clear" type="button" @click="clearSearch">
+            <GIcon name="close" size="xs" />
+          </button>
           <button class="learn-search__submit" type="submit" :disabled="searching">
             {{ searching ? '…' : 'Cari' }}
           </button>
@@ -301,7 +312,9 @@ function resetWizard(): void {
       <div v-if="hasSearched" class="search-results-section">
         <div class="search-results-header">
           <span>Hasil Pencarian untuk <strong>"{{ searchQuery }}"</strong> ({{ searchResults.length }})</span>
-          <button class="clear-text-btn" type="button" @click="clearSearch">✕ Tutup Pencarian</button>
+          <button class="clear-text-btn" type="button" @click="clearSearch">
+            <GIcon name="close" size="xs" /> Tutup Pencarian
+          </button>
         </div>
 
         <p v-if="searchError" class="state-card state-card--error" role="alert">{{ searchError }}</p>
@@ -335,7 +348,9 @@ function resetWizard(): void {
             :aria-selected="activeTab === 'types'"
             @click="activeTab = 'types'"
           >
-            <span class="tab-btn__icon">🚲</span>
+            <span class="tab-btn__icon">
+              <GIcon name="bike" size="xs" />
+            </span>
             <span class="tab-btn__label">
               <span class="label-short">Sepeda</span>
               <span class="label-full">Tipe Sepeda</span>
@@ -351,7 +366,9 @@ function resetWizard(): void {
             :aria-selected="activeTab === 'components'"
             @click="activeTab = 'components'"
           >
-            <span class="tab-btn__icon">⚙️</span>
+            <span class="tab-btn__icon">
+              <GIcon name="cassette" size="xs" />
+            </span>
             <span class="tab-btn__label">
               <span class="label-short">Komponen</span>
               <span class="label-full">Komponen Anatomi</span>
@@ -367,7 +384,9 @@ function resetWizard(): void {
             :aria-selected="activeTab === 'glossary'"
             @click="activeTab = 'glossary'"
           >
-            <span class="tab-btn__icon">📖</span>
+            <span class="tab-btn__icon">
+              <GIcon name="passport" size="xs" />
+            </span>
             <span class="tab-btn__label">
               <span class="label-short">Glosarium</span>
               <span class="label-full">Kamus Glosarium</span>
@@ -377,10 +396,17 @@ function resetWizard(): void {
         </nav>
       </div>
 
-      <!-- Loading & Error States -->
-      <div v-if="loading" class="state-card state-card--loading" role="status">
-        <span class="loading-spinner"></span>
-        <span>Memuat ensiklopedia dan diagram sepeda…</span>
+      <!-- Loading Skeleton Shimmer Grid -->
+      <div v-if="loading" class="types-grid">
+        <div v-for="i in 4" :key="i" class="bike-type-card skeleton-card-box">
+          <div class="skeleton-shimmer" style="width: 100%; height: 10rem; border-radius: 0.85rem;" />
+          <div style="padding: 1rem; display: grid; gap: 0.65rem;">
+            <div class="skeleton-shimmer" style="width: 35%; height: 1.1rem; border-radius: 0.35rem;" />
+            <div class="skeleton-shimmer" style="width: 60%; height: 1.5rem; border-radius: 0.4rem;" />
+            <div class="skeleton-shimmer" style="width: 90%; height: 0.85rem; border-radius: 0.35rem;" />
+            <div class="skeleton-shimmer" style="width: 100%; height: 2.6rem; border-radius: 0.75rem; margin-top: 0.5rem;" />
+          </div>
+        </div>
       </div>
       <p v-else-if="errorMessage" class="state-card state-card--error" role="alert">{{ errorMessage }}</p>
 
@@ -459,7 +485,7 @@ function resetWizard(): void {
               class="component-card"
             >
               <div class="component-card__icon-box">
-                {{ categoryIcon(cat.slug) }}
+                <GIcon :name="categoryIconName(cat.slug)" size="lg" color="#17202A" />
               </div>
               <div class="component-card__details">
                 <h3 class="component-card__name">{{ cat.name }}</h3>
@@ -484,7 +510,8 @@ function resetWizard(): void {
               type="button"
               @click="showAdminModal = true"
             >
-              ➕ Tambah Istilah Baru
+              <GIcon name="plus" size="xs" color="#17202A" />
+              <span>Tambah Istilah Baru</span>
             </button>
           </div>
 
@@ -532,7 +559,9 @@ function resetWizard(): void {
             <span class="modal-step-badge">Langkah {{ wizardStep <= 3 ? `${wizardStep}/3` : 'Selesai' }}</span>
             <h2>Deteksi Tipe Sepeda Anda</h2>
           </div>
-          <button class="modal-close" type="button" aria-label="Tutup" @click="showWizard = false">✕</button>
+          <button class="modal-close" type="button" aria-label="Tutup" @click="showWizard = false">
+            <GIcon name="close" size="xs" />
+          </button>
         </div>
 
         <!-- Step 1 -->
@@ -544,7 +573,9 @@ function resetWizard(): void {
               type="button"
               @click="wizardTerrain = 'trail'; wizardStep = 2"
             >
-              <span class="btn-icon">🌲</span>
+              <div class="btn-icon-box">
+                <GIcon name="tree" size="md" color="#16A34A" />
+              </div>
               <div>
                 <strong>Jalur Tanah &amp; Bebatuan (Off-road)</strong>
                 <small>Singletrack, turunan bukit, tanah basah, dan bike park</small>
@@ -556,7 +587,9 @@ function resetWizard(): void {
               type="button"
               @click="wizardTerrain = 'paved'; wizardStep = 2"
             >
-              <span class="btn-icon">🛣️</span>
+              <div class="btn-icon-box">
+                <GIcon name="bike-road" size="md" color="#0284C7" />
+              </div>
               <div>
                 <strong>Jalan Aspal Mulus &amp; Perkotaan</strong>
                 <small>Jalan raya, rute komuter kota, dan putaran velodrome</small>
@@ -568,7 +601,9 @@ function resetWizard(): void {
               type="button"
               @click="wizardTerrain = 'gravel'; wizardStep = 2"
             >
-              <span class="btn-icon">🌾</span>
+              <div class="btn-icon-box">
+                <GIcon name="bike-gravel" size="md" color="#D97706" />
+              </div>
               <div>
                 <strong>Kombinasi Aspal &amp; Jalan Makadam / Kerikil</strong>
                 <small>Jalur pedesaan, perkebunan, dan rute jarak jauh all-road</small>
@@ -586,7 +621,9 @@ function resetWizard(): void {
               type="button"
               @click="wizardFolding = 'yes'; runWizardEvaluation()"
             >
-              <span class="btn-icon">🧲</span>
+              <div class="btn-icon-box">
+                <GIcon name="bike-folding" size="md" color="#7C3AED" />
+              </div>
               <div>
                 <strong>Ya, Sepeda Bisa Dilipat (Folding)</strong>
                 <small>Rangka berengsel, roda kecil (16–20 inci), mudah disimpan</small>
@@ -598,7 +635,9 @@ function resetWizard(): void {
               type="button"
               @click="wizardFolding = 'no'; wizardStep = 3"
             >
-              <span class="btn-icon">🚲</span>
+              <div class="btn-icon-box">
+                <GIcon name="bike" size="md" color="#17202A" />
+              </div>
               <div>
                 <strong>Tidak, Rangka Standar / Kaku (Rigid / Fixed)</strong>
                 <small>Rangka MTB, Road, Gravel, atau Hybrid standar</small>
@@ -616,7 +655,9 @@ function resetWizard(): void {
               type="button"
               @click="wizardHandlebar = 'flat'; runWizardEvaluation()"
             >
-              <span class="btn-icon">🛵</span>
+              <div class="btn-icon-box">
+                <GIcon name="bike-mtb" size="md" color="#059669" />
+              </div>
               <div>
                 <strong>Setang Lurus / Riser (Flat Bar)</strong>
                 <small>Posisi gowes tegak, kontrol stabil di medan off-road / kota</small>
@@ -628,7 +669,9 @@ function resetWizard(): void {
               type="button"
               @click="wizardHandlebar = 'drop'; runWizardEvaluation()"
             >
-              <span class="btn-icon">🏎️</span>
+              <div class="btn-icon-box">
+                <GIcon name="bike-road" size="md" color="#EA580C" />
+              </div>
               <div>
                 <strong>Setang Balap Melengkung (Drop Bar)</strong>
                 <small>Posisi gowes aerodinamis untuk kecepatan dan jarak jauh</small>

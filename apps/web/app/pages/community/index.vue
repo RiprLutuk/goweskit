@@ -37,11 +37,11 @@ const activeFilterCount = computed(() => {
 });
 
 const bikeFilterOptions = [
-  { value: 'all', label: 'Semua Tipe' },
-  { value: 'road', label: '🚴 Road Bike' },
-  { value: 'gravel', label: '🌾 Gravel Bike' },
-  { value: 'mtb_hardtail', label: '🏔️ MTB' },
-  { value: 'folding', label: '🚲 Sepeda Lipat' },
+  { value: 'all', label: 'Semua Tipe', icon: 'bike' },
+  { value: 'road', label: 'Road Bike', icon: 'bike-road' },
+  { value: 'gravel', label: 'Gravel Bike', icon: 'bike-gravel' },
+  { value: 'mtb_hardtail', label: 'MTB (Mountain Bike)', icon: 'bike-mtb' },
+  { value: 'folding', label: 'Sepeda Lipat', icon: 'bike-folding' },
 ];
 
 async function loadDirectory(): Promise<void> {
@@ -129,7 +129,8 @@ onMounted(() => {
       <div class="header-topline">
         <span class="native-eyebrow">Komunitas &amp; Event</span>
         <NuxtLink class="rep-pill" to="/community/reputation">
-          🏆 Kontributor
+          <GIcon name="trophy" size="xs" color="#EAB308" filled />
+          <span>Poin Kontributor</span>
         </NuxtLink>
       </div>
       <h1 class="native-title">Temukan Teman Gowes</h1>
@@ -176,9 +177,9 @@ onMounted(() => {
         title="Buka opsi filter & radius jarak"
         @click="showFilterModal = true"
       >
-        <span class="filter-pin">📍</span>
+        <GIcon name="pin" size="xs" />
         <span class="filter-loc-label">{{ radiusKm }}km</span>
-        <span class="filter-icon">🎚️</span>
+        <GIcon name="filter" size="xs" />
         <span v-if="activeFilterCount > 0" class="filter-badge">
           {{ activeFilterCount }}
         </span>
@@ -188,14 +189,22 @@ onMounted(() => {
     <p v-if="locationMessage" class="loc-toast" role="status">{{ locationMessage }}</p>
 
     <!-- Loading & Error States -->
-    <p v-if="loading" class="state-card" role="status">Memuat jadwal dan komunitas…</p>
+    <div v-if="loading" class="content-feed-stack">
+      <div class="feed-section">
+        <div class="feed-cards-list">
+          <div v-for="i in 3" :key="i" class="skeleton-shimmer" style="width: 100%; height: 6.5rem; border-radius: 1.15rem;" />
+        </div>
+      </div>
+    </div>
     <p v-else-if="errorMessage" class="state-card state-card--error" role="alert">{{ errorMessage }}</p>
 
     <div v-else class="content-feed-stack">
       <!-- 1. SCHEDULED RIDES / EVENTS -->
       <section v-if="activeView === 'all' || activeView === 'events'" class="feed-section">
         <div v-if="activeView === 'all'" class="feed-section-header">
-          <h2 class="feed-heading">📅 Jadwal Gowes Bersama</h2>
+          <h2 class="feed-heading">
+            <GIcon name="history" size="sm" /> Jadwal Gowes Bersama
+          </h2>
         </div>
 
         <p v-if="events.length === 0" class="empty-feed-card">
@@ -213,7 +222,9 @@ onMounted(() => {
       <!-- 2. COMMUNITIES DIRECTORY -->
       <section v-if="activeView === 'all' || activeView === 'communities'" class="feed-section">
         <div v-if="activeView === 'all'" class="feed-section-header">
-          <h2 class="feed-heading">👥 Komunitas &amp; Klub Sepeda</h2>
+          <h2 class="feed-heading">
+            <GIcon name="community" size="sm" /> Komunitas &amp; Klub Sepeda
+          </h2>
         </div>
 
         <p v-if="communities.length === 0" class="empty-feed-card">
@@ -241,7 +252,9 @@ onMounted(() => {
 
           <div class="sheet-header">
             <h3 id="filter-sheet-title" class="sheet-title">Filter &amp; Lokasi</h3>
-            <button class="sheet-close" type="button" @click="showFilterModal = false">✕</button>
+            <button class="sheet-close" type="button" @click="showFilterModal = false">
+              <GIcon name="close" size="xs" />
+            </button>
           </div>
 
           <div class="sheet-content">
@@ -249,14 +262,18 @@ onMounted(() => {
             <div class="filter-group">
               <label class="group-label">Pusat Pencarian</label>
               <div class="loc-action-box">
-                <span class="loc-current">📍 {{ centerLabel }}</span>
+                <span class="loc-current">
+                  <GIcon name="pin" size="xs" color="#EF4444" />
+                  <span>{{ centerLabel }}</span>
+                </span>
                 <button
                   class="loc-gps-btn"
                   type="button"
                   :disabled="locating"
                   @click="useMyLocation"
                 >
-                  {{ locating ? 'Mencari GPS…' : '⌖ Pakai Lokasi Saya' }}
+                  <GIcon name="radar" size="xs" color="#16A34A" />
+                  <span>{{ locating ? 'Mencari GPS…' : 'Gunakan GPS Saya' }}</span>
                 </button>
               </div>
             </div>
@@ -290,7 +307,8 @@ onMounted(() => {
                   type="button"
                   @click="bicycleType = opt.value"
                 >
-                  {{ opt.label }}
+                  <GIcon :name="opt.icon" size="xs" />
+                  <span>{{ opt.label }}</span>
                 </button>
               </div>
             </div>
@@ -317,7 +335,8 @@ onMounted(() => {
               Reset
             </button>
             <button class="action-btn action-btn--primary" type="button" @click="applyModalFilters">
-              Tampilkan {{ communities.length + events.length }} Hasil
+              <GIcon name="check" size="xs" />
+              <span>Tampilkan {{ communities.length + events.length }} Hasil</span>
             </button>
           </div>
         </div>

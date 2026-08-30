@@ -20,7 +20,9 @@ const permissionDenied = ref(false);
 const activeMembershipId = ref<string | null>(null);
 const actionMessage = ref('');
 
-const communityId = computed(() => String(route.params.id));
+const communityIdentifier = computed(() =>
+  String(route.params.slug || route.params.id),
+);
 
 async function loadQueue(): Promise<void> {
   loading.value = true;
@@ -30,9 +32,9 @@ async function loadQueue(): Promise<void> {
     if (!initialized.value) await refresh();
     if (!user.value) return;
     const [detailResponse, queueResponse] = await Promise.all([
-      api<CommunityDetailResponse>(`/communities/${communityId.value}`),
+      api<CommunityDetailResponse>(`/communities/${communityIdentifier.value}`),
       api<CommunityModerationQueueResponse>(
-        `/communities/${communityId.value}/moderation/requests`,
+        `/communities/${communityIdentifier.value}/moderation/requests`,
       ),
     ]);
     community.value = detailResponse;
@@ -54,13 +56,13 @@ async function decide(
   actionMessage.value = '';
   try {
     const response = await api<ModerateCommunityMembershipResponse>(
-      `/communities/${communityId.value}/moderation/requests/${item.membershipId}`,
+      `/communities/${communityIdentifier.value}/moderation/requests/${item.membershipId}`,
       { method: 'POST', body: { decision } },
     );
     requests.value = requests.value.filter(
       ({ membershipId }) => membershipId !== item.membershipId,
     );
-    actionMessage.value = `${item.requester.displayName}'s request was ${response.status === 'active' ? 'approved' : 'rejected'}.`;
+    actionMessage.value = `Permintaan ${item.requester.displayName} telah ${response.status === 'active' ? 'disetujui' : 'ditolak'}.`;
   } catch (error: unknown) {
     actionMessage.value = getApiErrorMessage(error);
   } finally {
@@ -73,47 +75,49 @@ onMounted(loadQueue);
 
 <template>
   <div class="page-stack moderation-page">
-    <NuxtLink class="back-link" :to="`/community/${communityId}`"
-      >← Community detail</NuxtLink
-    >
+    <NuxtLink class="back-link" :to="`/community/${community?.community.slug || communityIdentifier}`">
+      <GIcon name="chevron-left" size="xs" />
+      <span>Kembali ke Detail Komunitas</span>
+    </NuxtLink>
+
     <header class="page-heading">
-      <span class="status-chip status-chip--coral"
-        >Owner &amp; admin tools</span
-      >
-      <h1>Review join requests carefully.</h1>
+      <span class="status-chip status-chip--coral">
+        <GIcon name="shield" size="xs" color="#B91C1C" filled />
+        <span>Alat Pengurus &amp; Moderasi</span>
+      </span>
+      <h1>Tinjau Permintaan Gabung Komunitas</h1>
       <p>
-        Only the requester's display name and request time are shown. Every
-        decision is recorded in the moderation audit.
+        Setujui atau tolak calon anggota komunitas dengan seksama. Setiap keputusan tercatat secara transparan.
       </p>
     </header>
 
     <p v-if="loading" class="state-card" role="status">
-      Checking your permission and loading requests…
+      Memeriksa hak akses dan memuat antrean…
     </p>
     <section
       v-else-if="!user"
       class="permission-card"
       aria-labelledby="moderation-sign-in-title"
     >
-      <h2 id="moderation-sign-in-title">Sign in is required</h2>
-      <p>Only an active community owner or admin can open this queue.</p>
-      <NuxtLink class="button button--primary" to="/login">Sign in</NuxtLink>
+      <h2 id="moderation-sign-in-title">Masuk Akun Diperlukan</h2>
+      <p>Hanya pemilik atau pengurus aktif yang dapat membuka antrean moderasi ini.</p>
+      <NuxtLink class="button button--primary" to="/login">Masuk Akun</NuxtLink>
     </section>
     <section
       v-else-if="permissionDenied"
       class="permission-card permission-card--denied"
       role="alert"
     >
-      <h2>You do not have moderation access</h2>
+      <h2>Akses Moderasi Dibatasi</h2>
       <p>
-        This queue is limited to the community owner and admins. No requester
-        information was loaded.
+        Halaman antrean ini khusus diperuntukkan bagi pemilik atau admin komunitas terdaftar.
       </p>
       <NuxtLink
         class="button button--secondary"
-        :to="`/community/${communityId}`"
-        >Return to community</NuxtLink
+        :to="`/community/${community?.community.slug || communityIdentifier}`"
       >
+        Kembali ke Komunitas
+      </NuxtLink>
     </section>
     <div
       v-else-if="errorMessage"
@@ -122,14 +126,14 @@ onMounted(loadQueue);
     >
       <p>{{ errorMessage }}</p>
       <button class="button button--secondary" type="button" @click="loadQueue">
-        Try again
+        Coba Lagi
       </button>
     </div>
     <template v-else>
       <div class="section-heading">
         <div>
-          <p class="section-heading__eyebrow">Moderation queue</p>
-          <h2>{{ community?.community.name ?? 'Community' }}</h2>
+          <p class="section-heading__eyebrow">Antrean Permintaan Gabung</p>
+          <h2>{{ community?.community.name ?? 'Komunitas' }}</h2>
         </div>
         <span class="count-chip">{{ requests.length }}</span>
       </div>
@@ -137,16 +141,18 @@ onMounted(loadQueue);
         {{ actionMessage }}
       </p>
       <section v-if="requests.length === 0" class="queue-empty">
-        <span aria-hidden="true">✓</span>
+        <div class="queue-empty-icon">
+          <GIcon name="check" size="lg" color="#16A34A" filled />
+        </div>
         <div>
-          <h2>Queue clear</h2>
-          <p>There are no pending join requests to review.</p>
+          <h2>Antrean Bersih</h2>
+          <p>Tidak ada permintaan gabung baru yang menunggu persetujuan.</p>
         </div>
       </section>
       <ul
         v-else
         class="request-list"
-        aria-label="Pending community join requests"
+        aria-label="Daftar permintaan gabung komunitas"
       >
         <li
           v-for="request in requests"
@@ -158,9 +164,7 @@ onMounted(loadQueue);
           }}</span>
           <div class="request-card__copy">
             <strong>{{ request.requester.displayName }}</strong>
-            <span
-              >Requested {{ formatCommunityDate(request.requestedAt) }}</span
-            >
+            <span>Diajukan pada {{ formatCommunityDate(request.requestedAt) }}</span>
           </div>
           <div class="request-card__actions">
             <button
@@ -169,11 +173,8 @@ onMounted(loadQueue);
               :disabled="activeMembershipId !== null"
               @click="decide(request, 'approve')"
             >
-              {{
-                activeMembershipId === request.membershipId
-                  ? 'Saving…'
-                  : 'Approve'
-              }}
+              <GIcon name="check" size="xs" />
+              <span>{{ activeMembershipId === request.membershipId ? 'Menyimpan…' : 'Setujui' }}</span>
             </button>
             <button
               class="button button--secondary button--reject"
@@ -181,7 +182,8 @@ onMounted(loadQueue);
               :disabled="activeMembershipId !== null"
               @click="decide(request, 'reject')"
             >
-              Reject
+              <GIcon name="close" size="xs" />
+              <span>Tolak</span>
             </button>
           </div>
         </li>

@@ -744,7 +744,7 @@ async function shareToMedia() {
         <!-- Modal Top Bar -->
         <header class="modal-top-strip">
           <div class="modal-title-left">
-            <span class="live-dot-pulse"></span>
+            <span class="live-dot-pulse"/>
             <span id="modal-studio-title" class="modal-heading">RIDE PASS STUDIO</span>
           </div>
           <button
@@ -804,7 +804,7 @@ async function shareToMedia() {
                 <div class="m-hud-corner m-hud-tr">⌝</div>
                 <div class="m-hud-corner m-hud-bl">⌞</div>
                 <div class="m-hud-corner m-hud-br">⌟</div>
-                <div class="m-hud-grid-layer"></div>
+                <div class="m-hud-grid-layer"/>
               </template>
 
               <!-- Dynamic GPS Route Layer -->
@@ -830,7 +830,7 @@ async function shareToMedia() {
                 </svg>
               </div>
 
-              <div class="modal-poster-vignette"></div>
+              <div class="modal-poster-vignette"/>
 
               <!-- Official GowesKit Brand Chip -->
               <div class="modal-poster-top">
@@ -844,7 +844,7 @@ async function shareToMedia() {
                     </svg>
                   </div>
                   <span class="m-brand-text">
-                    <span class="text-white">Gowes</span><span class="text-lime">Kit</span><span class="m-brand-dot"></span>
+                    <span class="text-white">Gowes</span><span class="text-lime">Kit</span><span class="m-brand-dot"/>
                   </span>
                 </div>
 
@@ -1070,12 +1070,13 @@ async function shareToMedia() {
                 :class="{ active: rideForm.bgPreset === 'topo' }"
                 @click="rideForm.bgPreset = 'topo'"
               >
-                🗺️ Topo
+                <GIcon name="route" size="xs" /> Topo
               </button>
             </div>
             <label v-show="activeTab === 'backgrounds'" class="m-upload-cta">
               <input type="file" accept="image/*" class="sr-only" @change="handlePhotoUpload" />
-              <span>📸 Unggah Foto Sendiri dari HP</span>
+              <GIcon name="camera" size="xs" />
+              <span>Unggah Foto Sendiri dari HP</span>
             </label>
 
             <!-- Tab 3: Stickers -->
@@ -1087,7 +1088,7 @@ async function shareToMedia() {
                   :class="{ active: rideForm.activeSticker === 'kom' }"
                   @click="rideForm.activeSticker = 'kom'"
                 >
-                  👑 KOM Hunter
+                  <GIcon name="trophy" size="xs" color="#EAB308" filled /> KOM Hunter
                 </button>
                 <button
                   type="button"
@@ -1095,7 +1096,7 @@ async function shareToMedia() {
                   :class="{ active: rideForm.activeSticker === 'cafe' }"
                   @click="rideForm.activeSticker = 'cafe'"
                 >
-                  ☕ Coffee Approved
+                  <GIcon name="coffee" size="xs" color="#D97706" /> Coffee Approved
                 </button>
                 <button
                   type="button"
@@ -1103,7 +1104,7 @@ async function shareToMedia() {
                   :class="{ active: rideForm.activeSticker === 'beast' }"
                   @click="rideForm.activeSticker = 'beast'"
                 >
-                  ⛰️ Climb Beast
+                  <GIcon name="mountain" size="xs" color="#10B981" /> Climb Beast
                 </button>
                 <button
                   type="button"
@@ -1111,7 +1112,7 @@ async function shareToMedia() {
                   :class="{ active: rideForm.activeSticker === 'speed' }"
                   @click="rideForm.activeSticker = 'speed'"
                 >
-                  ⚡ Breakaway
+                  <GIcon name="bolt" size="xs" color="#C9F36A" filled /> Breakaway
                 </button>
                 <button
                   type="button"
@@ -1119,7 +1120,7 @@ async function shareToMedia() {
                   :class="{ active: rideForm.activeSticker === 'fuel' }"
                   @click="rideForm.activeSticker = 'fuel'"
                 >
-                  🍲 Sate Maranggi
+                  <GIcon name="water" size="xs" color="#3B82F6" /> Pitstop Fuel
                 </button>
                 <button
                   type="button"
@@ -1127,7 +1128,7 @@ async function shareToMedia() {
                   :class="{ active: rideForm.activeSticker === 'none' }"
                   @click="rideForm.activeSticker = 'none'"
                 >
-                  🚫 Polos
+                  <GIcon name="close" size="xs" /> Polos
                 </button>
               </div>
             </div>

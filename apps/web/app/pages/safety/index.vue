@@ -185,6 +185,8 @@ async function startRide(): Promise<void> {
     startForm.note = '';
     startForm.explicitLocationConsent = false;
     startForm.disclaimerAcknowledged = false;
+    // Auto-prompt and update GPS coordinates on session start
+    void updateLocation();
   } catch (error: unknown) {
     sessionError.value = getApiErrorMessage(error);
   } finally {
@@ -330,15 +332,15 @@ function formatDate(value: string | null): string {
 function statusBadge(status: SafetySession['status']): { label: string; class: string } {
   switch (status) {
     case 'active':
-      return { label: '🟢 Sedang Berlangsung', class: 'badge--green' };
+      return { label: 'Sedang Berlangsung', class: 'badge--green' };
     case 'sos':
-      return { label: '🚨 SOS Darurat Aktif', class: 'badge--red' };
+      return { label: 'SOS Darurat Aktif', class: 'badge--red' };
     case 'ended':
-      return { label: '✓ Selesai', class: 'badge--sand' };
+      return { label: 'Selesai', class: 'badge--sand' };
     case 'revoked':
-      return { label: '🚫 Akses Dicabut', class: 'badge--sand' };
+      return { label: 'Akses Dicabut', class: 'badge--sand' };
     case 'expired':
-      return { label: '⏱️ Kedaluwarsa', class: 'badge--sand' };
+      return { label: 'Kedaluwarsa', class: 'badge--sand' };
   }
 }
 </script>
@@ -363,12 +365,18 @@ function statusBadge(status: SafetySession['status']): { label: string; class: s
       </p>
     </header>
 
-    <p v-if="loading" class="state-card" role="status">Memuat data keselamatan…</p>
+    <!-- Skeleton Safety Shimmer during Loading -->
+    <div v-if="loading" style="display: grid; gap: 1rem;">
+      <div class="skeleton-shimmer" style="width: 100%; height: 7.5rem; border-radius: 1.15rem;" />
+      <div class="skeleton-shimmer" style="width: 100%; height: 12rem; border-radius: 1.15rem;" />
+    </div>
     <p v-else-if="pageError" class="state-card state-card--error" role="alert">{{ pageError }}</p>
 
     <!-- Signed-out state -->
     <div v-else-if="!user" class="native-guest-box">
-      <div class="guest-icon">🛡️</div>
+      <div class="guest-icon">
+        <GIcon name="shield" size="2xl" color="#FF8C75" filled />
+      </div>
       <h2>Aktifkan Ride Safety Beacon</h2>
       <p>Masuk ke akun GowesKit Anda untuk mendaftarkan kontak darurat dan memulai sesi pemantauan gowes solo.</p>
       <div class="guest-actions">
@@ -396,7 +404,9 @@ function statusBadge(status: SafetySession['status']): { label: string; class: s
             </h2>
           </div>
           <span class="beacon-status-tag" :class="activeSession.status === 'sos' ? 'tag-sos' : 'tag-active'">
-            {{ activeSession.status === 'sos' ? '🚨 SOS' : '🟢 AKTIF' }}
+            <GIcon v-if="activeSession.status === 'sos'" name="sos" size="xs" filled />
+            <GIcon v-else name="radar" size="xs" color="#16A34A" />
+            {{ activeSession.status === 'sos' ? 'SOS' : 'AKTIF' }}
           </span>
         </div>
 
@@ -425,7 +435,9 @@ function statusBadge(status: SafetySession['status']): { label: string; class: s
         <!-- Share URL Bar (If available) -->
         <div v-if="shareUrl" class="beacon-share-row">
           <div class="share-url-snippet" :title="shareUrl">
-            <span class="share-icon">🔗</span>
+            <span class="share-icon">
+              <GIcon name="route" size="xs" />
+            </span>
             <span class="share-url-text">{{ shareUrl }}</span>
           </div>
           <div class="share-action-buttons">
@@ -434,21 +446,21 @@ function statusBadge(status: SafetySession['status']): { label: string; class: s
               class="share-btn-flex"
               @click="showFlexModal = true"
             >
-              📸 Flex Pass
+              <GIcon name="camera" size="xs" /> Flex Pass
             </button>
             <button
               type="button"
               class="share-btn-copy"
               @click="copyShareLink"
             >
-              📋 Salin
+              <GIcon name="download" size="xs" /> Salin
             </button>
             <button
               type="button"
               class="share-btn-wa"
               @click="shareViaWhatsApp"
             >
-              💬 WhatsApp
+              <GIcon name="share" size="xs" /> WhatsApp
             </button>
           </div>
         </div>
@@ -461,6 +473,7 @@ function statusBadge(status: SafetySession['status']): { label: string; class: s
             class="sos-round-btn"
             :class="{ 'sos-round-btn--holding': holdingSos }"
             :disabled="actionPending !== null"
+            @click.prevent
             @mousedown="beginSosHold"
             @mouseup="cancelSosHold"
             @mouseleave="cancelSosHold"
@@ -469,7 +482,9 @@ function statusBadge(status: SafetySession['status']): { label: string; class: s
             @touchcancel="cancelSosHold"
           >
             <div class="sos-btn-content">
-              <span class="sos-btn-icon">🚨</span>
+              <span class="sos-btn-icon">
+                <GIcon name="sos" size="xl" filled />
+              </span>
               <strong class="sos-btn-title">{{ holdingSos ? 'Tahan...' : 'SOS' }}</strong>
               <span class="sos-btn-sub">Tahan 3 Detik</span>
             </div>
@@ -489,7 +504,9 @@ function statusBadge(status: SafetySession['status']): { label: string; class: s
             @click="updateLocation"
           >
             <span v-if="locationSaving">Memperbarui GPS…</span>
-            <span v-else>📍 Update Lokasi</span>
+            <span v-else>
+              <GIcon name="pin" size="xs" /> Update Lokasi
+            </span>
           </button>
 
           <button
@@ -499,7 +516,9 @@ function statusBadge(status: SafetySession['status']): { label: string; class: s
             @click="mutateSession('end')"
           >
             <span v-if="actionPending === 'end'">Menutup…</span>
-            <span v-else>⏹️ Selesaikan</span>
+            <span v-else>
+              <GIcon name="close" size="xs" /> Selesaikan
+            </span>
           </button>
         </div>
 
@@ -511,7 +530,7 @@ function statusBadge(status: SafetySession['status']): { label: string; class: s
             :disabled="actionPending !== null"
             @click="mutateSession('revoke')"
           >
-            🚫 Cabut Akses Tautan (Revoke Token)
+            <GIcon name="close" size="xs" color="#EF4444" /> Cabut Akses Tautan (Revoke Token)
           </button>
         </div>
 
@@ -523,7 +542,9 @@ function statusBadge(status: SafetySession['status']): { label: string; class: s
            ══════════════════════════════════════════════════════════ -->
       <section v-else class="start-session-card">
         <div class="card-heading">
-          <span class="section-icon">🛡️</span>
+          <div class="section-icon-box">
+            <GIcon name="shield" size="lg" color="#17202A" filled />
+          </div>
           <div>
             <h2>Mulai Sesi Gowes Aman</h2>
             <p>Pilih kontak darurat dan bagikan koordinat langsung secara privat.</p>
@@ -542,7 +563,8 @@ function statusBadge(status: SafetySession['status']): { label: string; class: s
           </label>
 
           <div v-if="contacts.length === 0" class="no-contact-warning">
-            <span>⚠️ Anda belum memiliki kontak darurat. Silakan tambahkan kontak di bawah terlebih dahulu.</span>
+            <GIcon name="shield" size="xs" color="#EF4444" filled />
+            <span>Anda belum memiliki kontak darurat. Silakan tambahkan kontak di bawah terlebih dahulu.</span>
           </div>
 
           <div class="form-grid-2">
@@ -583,7 +605,8 @@ function statusBadge(status: SafetySession['status']): { label: string; class: s
             type="submit"
             :disabled="sessionSaving || contacts.length === 0"
           >
-            {{ sessionSaving ? 'Memulai Sesi…' : '🛡️ Mulai Sesi Gowes Aman' }}
+            <GIcon name="shield" size="xs" color="#17202A" filled />
+            <span>{{ sessionSaving ? 'Memulai Sesi…' : 'Mulai Sesi Gowes Aman' }}</span>
           </button>
         </form>
 
@@ -604,7 +627,8 @@ function statusBadge(status: SafetySession['status']): { label: string; class: s
             type="button"
             @click="showAddContact = !showAddContact"
           >
-            {{ showAddContact ? 'Batal' : '＋ Tambah Kontak' }}
+            <GIcon :name="showAddContact ? 'close' : 'plus'" size="xs" />
+            <span>{{ showAddContact ? 'Batal' : 'Tambah Kontak' }}</span>
           </button>
         </div>
 
@@ -632,7 +656,8 @@ function statusBadge(status: SafetySession['status']): { label: string; class: s
             </label>
           </div>
           <button class="button button--primary" type="submit" :disabled="contactSaving">
-            {{ contactSaving ? 'Menyimpan…' : 'Simpan Kontak' }}
+            <GIcon name="check" size="xs" />
+            <span>{{ contactSaving ? 'Menyimpan…' : 'Simpan Kontak' }}</span>
           </button>
           <p v-if="contactError" class="state-card state-card--error" role="alert">{{ contactError }}</p>
         </form>
@@ -648,11 +673,19 @@ function statusBadge(status: SafetySession['status']): { label: string; class: s
             :key="contact.id"
             class="contact-item-row"
           >
-            <div class="contact-avatar-box">👤</div>
+            <div class="contact-avatar-box">
+              <GIcon name="users" size="sm" color="#17202A" />
+            </div>
             <div class="contact-body">
               <strong class="contact-name">{{ contact.name }}</strong>
-              <span v-if="contact.phone" class="contact-detail">📱 {{ contact.phone }}</span>
-              <span v-if="contact.email" class="contact-detail">✉️ {{ contact.email }}</span>
+              <span v-if="contact.phone" class="contact-detail">
+                <GIcon name="radar" size="xs" />
+                <span>{{ contact.phone }}</span>
+              </span>
+              <span v-if="contact.email" class="contact-detail">
+                <GIcon name="share" size="xs" />
+                <span>{{ contact.email }}</span>
+              </span>
               <small v-if="contact.note" class="contact-note">Catatan: {{ contact.note }}</small>
             </div>
             <button
@@ -661,7 +694,7 @@ function statusBadge(status: SafetySession['status']): { label: string; class: s
               title="Hapus kontak"
               @click="deleteContact(contact)"
             >
-              🗑️
+              <GIcon name="close" size="xs" color="#EF4444" />
             </button>
           </div>
         </div>
@@ -674,14 +707,17 @@ function statusBadge(status: SafetySession['status']): { label: string; class: s
         <div class="history-header-row">
           <h3 class="section-title">Riwayat Sesi Gowes</h3>
           <NuxtLink class="studio-shortcut-link" to="/ride-flex">
-            <span>✨ Buka AI Flex Studio</span>
+            <GIcon name="camera" size="xs" />
+            <span>Buka AI Flex Studio</span>
             <span>→</span>
           </NuxtLink>
         </div>
         <div class="history-feed">
           <div v-for="s in pastSessions" :key="s.id" class="history-card">
             <div class="history-top">
-              <span class="history-date">📅 {{ formatDate(s.startedAt) }}</span>
+              <span class="history-date">
+                <GIcon name="history" size="xs" /> {{ formatDate(s.startedAt) }}
+              </span>
               <span class="history-badge" :class="statusBadge(s.status).class">
                 {{ statusBadge(s.status).label }}
               </span>
@@ -693,7 +729,8 @@ function statusBadge(status: SafetySession['status']): { label: string; class: s
                 class="card-flex-btn"
                 :to="`/ride-flex?note=${encodeURIComponent(s.note || 'Gowes Solo')}`"
               >
-                <span>📸 Buat Poster AI</span>
+                <GIcon name="camera" size="xs" />
+                <span>Buat Poster AI</span>
               </NuxtLink>
             </div>
           </div>
@@ -704,7 +741,9 @@ function statusBadge(status: SafetySession['status']): { label: string; class: s
            5. EMERGENCY DISCLAIMER BANNER
            ══════════════════════════════════════════════════════════ -->
       <aside class="disclaimer-banner" aria-label="Disclaimer Layanan Darurat">
-        <span class="disclaimer-icon">⚠️</span>
+        <div class="disclaimer-icon-box">
+          <GIcon name="shield" size="sm" color="#FF8C75" filled />
+        </div>
         <div class="disclaimer-text">
           <strong>Pernyataan Privasi &amp; Batasan Layanan</strong>
           <p>

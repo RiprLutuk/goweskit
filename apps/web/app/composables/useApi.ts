@@ -14,9 +14,18 @@ export function useApi() {
     path: string,
     options?: ApiRequestOptions,
   ): Promise<T> {
+    const headers: Record<string, string> = {};
+    if (import.meta.server) {
+      const reqHeaders = useRequestHeaders(['cookie']);
+      if (reqHeaders.cookie) {
+        headers.cookie = reqHeaders.cookie;
+      }
+    }
+
     const baseOptions = {
       baseURL: config.public.apiBaseUrl,
       credentials: 'include' as const,
+      headers,
     };
 
     if (options === undefined) {

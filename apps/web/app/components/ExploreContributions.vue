@@ -260,7 +260,8 @@ onMounted(async () => {
         :aria-selected="activeTab === 'reviews'"
         @click="activeTab = 'reviews'"
       >
-        💬 {{ selectedItem ? 'Ulasan Tempat' : 'Info Komunitas' }}
+        <GIcon name="community" size="xs" />
+        <span>{{ selectedItem ? 'Ulasan' : 'Komunitas' }}</span>
       </button>
       <button
         class="seg-btn"
@@ -270,7 +271,8 @@ onMounted(async () => {
         :aria-selected="activeTab === 'hazard'"
         @click="activeTab = 'hazard'"
       >
-        ⚠️ Lapor Bahaya
+        <GIcon name="shield" size="xs" color="#EF4444" filled />
+        <span>Lapor Bahaya</span>
       </button>
       <button
         class="seg-btn"
@@ -280,7 +282,8 @@ onMounted(async () => {
         :aria-selected="activeTab === 'gpx'"
         @click="activeTab = 'gpx'"
       >
-        📁 File GPX
+        <GIcon name="route" size="xs" />
+        <span>File GPX</span>
       </button>
     </div>
 
@@ -431,10 +434,11 @@ onMounted(async () => {
                 :disabled="locatingHazard"
                 @click="useCurrentGpsForHazard"
               >
-                {{ locatingHazard ? 'Mengambil GPS…' : '📍 Gunakan Lokasi GPS Saya Saat Ini' }}
+                <GIcon name="pin" size="xs" />
+                <span>{{ locatingHazard ? 'Mengambil GPS…' : 'Gunakan Lokasi GPS Saya Saat Ini' }}</span>
               </button>
               <span v-if="props.selectedItem" class="selected-target-hint">
-                🔗 Terkait Rute: {{ props.selectedItem.name.replace(/^Demo\s+/i, '') }}
+                <GIcon name="route" size="xs" /> Terkait Rute: {{ props.selectedItem.name.replace(/^Demo\s+/i, '') }}
               </span>
             </div>
           </div>
@@ -495,8 +499,10 @@ onMounted(async () => {
               class="gpx-file-input"
               @change="chooseGpx"
             />
-            <div class="gpx-drop-content">
-              <span class="gpx-icon">🗺️</span>
+            <div class="gpx-dropzone-content">
+              <div class="gpx-icon-box">
+                <GIcon name="route" size="lg" color="#0F766E" />
+              </div>
               <span class="gpx-name">{{ gpxFileName || 'Pilih atau sentuh file GPX' }}</span>
               <span class="gpx-hint">Format .gpx hingga 10.000 titik koordinat</span>
             </div>

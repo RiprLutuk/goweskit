@@ -117,6 +117,18 @@ afterEach(async () => {
 });
 
 describe('Community routes', () => {
+  it('accepts a community slug as the public route identifier', async () => {
+    const response = await buildCommunityApp().inject({
+      method: 'GET',
+      url: '/api/v1/communities/demo-community',
+    });
+
+    expect(response.statusCode).toBe(200);
+    expect(response.json()).toMatchObject({
+      community: { id: communityId, slug: 'demo-community' },
+    });
+  });
+
   it('creates a validated ride event for an authenticated member', async () => {
     const response = await buildCommunityApp().inject({
       method: 'POST',

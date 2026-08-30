@@ -37,11 +37,11 @@ const timeLabel = computed(() =>
 const difficultyText = computed(() => {
   switch (props.event.difficulty) {
     case 'easy':
-      return '🟢 Santai';
+      return 'Santai';
     case 'moderate':
-      return '🟡 Sedang';
+      return 'Sedang';
     case 'hard':
-      return '🔴 Nanjak';
+      return 'Nanjak';
     default:
       return props.event.difficulty;
   }
@@ -61,28 +61,38 @@ const difficultyText = computed(() => {
     <div class="clean-card-body">
       <div class="card-topline">
         <span class="community-name">{{ event.community.name }}</span>
-        <span v-if="distance" class="dist-tag">📍 {{ distance }}</span>
+        <span v-if="distance" class="dist-tag">
+          <GIcon name="pin" size="xs" /> {{ distance }}
+        </span>
       </div>
 
       <h3 class="event-title">{{ event.title }}</h3>
 
       <p class="event-meta-line">
-        <span>⏰ {{ timeLabel }} WIB</span>
+        <span class="event-time-chip">
+          <GIcon name="history" size="xs" /> {{ timeLabel }} WIB
+        </span>
         <span class="dot-sep">·</span>
         <span class="meeting-loc">{{ event.meetingArea }}</span>
       </p>
 
       <div class="event-tags-row">
-        <span class="meta-tag meta-tag--diff">{{ difficultyText }}</span>
-        <span class="meta-tag">👥 {{ event.participantCount }}{{ event.capacity ? `/${event.capacity}` : '' }} Riders</span>
+        <span class="meta-tag meta-tag--diff">
+          <GIcon :name="event.difficulty === 'hard' ? 'mountain' : 'route'" size="xs" /> {{ difficultyText }}
+        </span>
+        <span class="meta-tag">
+          <GIcon name="users" size="xs" /> {{ event.participantCount }}{{ event.capacity ? `/${event.capacity}` : '' }} Riders
+        </span>
         <span v-if="event.bicycleTypes.length" class="meta-tag">
-          🚲 {{ event.bicycleTypes.slice(0, 2).map((t) => t.replaceAll('_', ' ')).join(', ') }}
+          <GIcon name="bike" size="xs" /> {{ event.bicycleTypes.slice(0, 2).map((t) => t.replaceAll('_', ' ')).join(', ') }}
         </span>
       </div>
     </div>
 
     <!-- Right: Subtle Navigation Chevron -->
-    <span class="card-chevron" aria-hidden="true">›</span>
+    <span class="card-chevron" aria-hidden="true">
+      <GIcon name="chevron-right" size="xs" color="#94A3B8" />
+    </span>
   </NuxtLink>
 </template>
 

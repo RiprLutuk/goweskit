@@ -267,12 +267,20 @@ export class DrizzleCommunityRepository implements CommunityRepository {
     );
   }
 
-  public async findCommunityById(id: string): Promise<PublicCommunity | null> {
+  public async findCommunityById(identifier: string): Promise<PublicCommunity | null> {
+    const isUuid =
+      /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i.test(
+        identifier,
+      );
+    const filter = isUuid
+      ? sql`c.id = ${identifier}::uuid OR c.slug = ${identifier}`
+      : sql`c.slug = ${identifier}`;
+
     const result = await this.database.execute(sql`
       SELECT ${communityColumns}
       FROM communities c
       LEFT JOIN community_memberships cm ON cm.community_id = c.id
-      WHERE c.id = ${id}
+      WHERE ${filter}
       GROUP BY c.id
       LIMIT 1
     `);

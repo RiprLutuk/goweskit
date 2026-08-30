@@ -138,27 +138,25 @@ function cleanDescription(rawDesc: string | null | undefined): string {
   return rawDesc.replace(/\s*\(Seed id:\s*[0-9a-f-]+\)\.?/i, '').trim();
 }
 
-function getItemIcon(item: ExploreItem): string {
-  if (item.kind === 'route') return '🚵';
+function getItemIconName(item: ExploreItem): string {
+  if (item.kind === 'route') return 'route';
   switch (item.type) {
     case 'workshop':
-      return '🔧';
+      return 'wrench';
     case 'store':
-      return '🚲';
+      return 'shop';
     case 'coffee':
-      return '☕';
+      return 'coffee';
     case 'water':
-      return '💧';
+      return 'water';
     case 'trailhead':
-      return '🌲';
+      return 'tree';
     case 'bike_park':
-      return '🚵';
+      return 'mountain';
     case 'meeting_point':
-      return '🏁';
-    case 'rest':
-      return '🛖';
+      return 'flag';
     default:
-      return '📍';
+      return 'pin';
   }
 }
 
@@ -252,7 +250,6 @@ function useMyLocation(): void {
 
 const { user } = useAuth();
 const {
-  savedRoutes: offlineRoutes,
   saveRouteOffline,
   isRouteSavedOffline,
   removeOfflineRoute,
@@ -474,12 +471,14 @@ onBeforeUnmount(() => {
             :title="isDesktopSidebarOpen ? 'Tutup sidebar' : 'Buka sidebar'"
             @click="isDesktopSidebarOpen = !isDesktopSidebarOpen"
           >
-            {{ isDesktopSidebarOpen ? '◀' : '▶' }}
+            <GIcon :name="isDesktopSidebarOpen ? 'chevron-left' : 'chevron-right'" size="xs" />
           </button>
         </div>
 
         <div class="panel-search-box">
-          <span class="search-icon" aria-hidden="true">🔍</span>
+          <span class="search-icon" aria-hidden="true">
+            <GIcon name="search" size="xs" />
+          </span>
           <input
             v-model="searchQuery"
             type="search"
@@ -492,7 +491,7 @@ onBeforeUnmount(() => {
             type="button"
             @click="searchQuery = ''"
           >
-            ✕
+            <GIcon name="close" size="xs" />
           </button>
           <button
             class="overlay-icon-btn"
@@ -502,7 +501,7 @@ onBeforeUnmount(() => {
             :disabled="locating"
             @click="useMyLocation"
           >
-            {{ locating ? '…' : '⌖' }}
+            <GIcon name="radar" size="xs" :color="userLocation !== null ? '#16A34A' : 'currentColor'" />
           </button>
           <button
             class="overlay-icon-btn"
@@ -510,7 +509,7 @@ onBeforeUnmount(() => {
             title="Filter & Radius"
             @click="showFilterModal = !showFilterModal"
           >
-            ⚙️
+            <GIcon name="filter" size="xs" />
           </button>
           <button
             class="overlay-icon-btn overlay-icon-btn--primary"
@@ -518,7 +517,7 @@ onBeforeUnmount(() => {
             title="Upload GPX atau Lapor Bahaya"
             @click="showContributionsModal = true"
           >
-            ➕
+            <GIcon name="plus" size="xs" color="#17202A" />
           </button>
         </div>
 
@@ -538,7 +537,7 @@ onBeforeUnmount(() => {
             type="button"
             @click="applyCategory('routes')"
           >
-            🚵 Rute
+            <GIcon name="route" size="xs" /> Rute
           </button>
           <button
             class="cat-chip"
@@ -546,7 +545,7 @@ onBeforeUnmount(() => {
             type="button"
             @click="applyCategory('workshop')"
           >
-            🔧 Bengkel
+            <GIcon name="wrench" size="xs" /> Bengkel
           </button>
           <button
             class="cat-chip"
@@ -554,7 +553,7 @@ onBeforeUnmount(() => {
             type="button"
             @click="applyCategory('store')"
           >
-            🚲 Toko
+            <GIcon name="shop" size="xs" /> Toko
           </button>
           <button
             class="cat-chip"
@@ -562,7 +561,7 @@ onBeforeUnmount(() => {
             type="button"
             @click="applyCategory('coffee')"
           >
-            ☕ Kopi
+            <GIcon name="coffee" size="xs" /> Kopi
           </button>
           <button
             class="cat-chip"
@@ -570,7 +569,7 @@ onBeforeUnmount(() => {
             type="button"
             @click="applyCategory('water')"
           >
-            💧 Air
+            <GIcon name="water" size="xs" /> Air
           </button>
           <button
             class="cat-chip"
@@ -578,7 +577,7 @@ onBeforeUnmount(() => {
             type="button"
             @click="applyCategory('trailhead')"
           >
-            🌲 Trail
+            <GIcon name="tree" size="xs" /> Trail
           </button>
         </div>
       </div>
@@ -626,21 +625,21 @@ onBeforeUnmount(() => {
 
           <div class="card-bottom-actions">
             <NuxtLink class="action-btn action-btn--primary" to="/safety">
-              Mulai Gowes 🚴
+              <GIcon name="bike" size="sm" /> Mulai Gowes
             </NuxtLink>
             <button
               class="action-btn action-btn--share"
               type="button"
               @click="shareSelectedItem(selectedItem)"
             >
-              <span>📲 Bagikan</span>
+              <GIcon name="share" size="sm" /> <span>Bagikan</span>
             </button>
             <NuxtLink
               v-if="selectedItem.kind === 'route'"
               class="action-btn action-btn--flex"
               :to="`/ride-flex?distance=${(selectedItem.distanceMeters / 1000).toFixed(1)}&elevation=${selectedItem.elevationGainMeters}&note=${encodeURIComponent(cleanName(selectedItem.name))}`"
             >
-              <span>📸 Poster AI</span>
+              <GIcon name="camera" size="sm" /> <span>Poster AI</span>
             </NuxtLink>
             <button
               v-if="selectedItem.kind === 'route'"
@@ -649,7 +648,8 @@ onBeforeUnmount(() => {
               type="button"
               @click="toggleOfflineRoute(selectedItem)"
             >
-              {{ isRouteSavedOffline(selectedItem.id) ? '💾 Offline ✓' : '💾 Simpan Offline' }}
+              <GIcon :name="isRouteSavedOffline(selectedItem.id) ? 'check' : 'download'" size="sm" />
+              <span>{{ isRouteSavedOffline(selectedItem.id) ? 'Offline ✓' : 'Simpan Offline' }}</span>
             </button>
             <button
               class="action-btn action-btn--bookmark"
@@ -658,7 +658,8 @@ onBeforeUnmount(() => {
               :disabled="savingItem"
               @click="saveSelectedItem(selectedItem)"
             >
-              {{ savedItems.has(selectedItem.id) ? '⭐ Tersimpan' : '☆ Simpan' }}
+              <GIcon :name="savedItems.has(selectedItem.id) ? 'bookmark-filled' : 'bookmark'" size="sm" />
+              <span>{{ savedItems.has(selectedItem.id) ? 'Tersimpan' : 'Simpan' }}</span>
             </button>
             <button class="action-btn action-btn--secondary" type="button" @click="showContributionsModal = true">
               Ulasan
@@ -670,11 +671,24 @@ onBeforeUnmount(() => {
         <div v-else class="desktop-feed-wrapper">
           <div class="desktop-feed-meta">
             <span>Ditemukan <strong>{{ allItems.length }}</strong> tempat &amp; rute</span>
-            <span v-if="loading">Memuat data…</span>
           </div>
 
-          <div class="desktop-feed-list">
-            <p v-if="allItems.length === 0 && !loading" class="empty-feed-hint">
+          <!-- Skeleton Shimmer Feed during Loading -->
+          <div v-if="loading" class="desktop-feed-list">
+            <div v-for="i in 4" :key="i" class="feed-card-row" style="pointer-events: none; border: 1px solid rgb(23 32 42 / 8%);">
+              <div class="skeleton-shimmer" style="width: 2.35rem; height: 2.35rem; border-radius: 0.65rem; flex-shrink: 0;" />
+              <div style="flex: 1; display: grid; gap: 0.35rem;">
+                <div style="display: flex; justify-content: space-between;">
+                  <div class="skeleton-shimmer" style="width: 55%; height: 1rem; border-radius: 0.3rem;" />
+                  <div class="skeleton-shimmer" style="width: 20%; height: 0.85rem; border-radius: 0.3rem;" />
+                </div>
+                <div class="skeleton-shimmer" style="width: 85%; height: 0.75rem; border-radius: 0.3rem;" />
+              </div>
+            </div>
+          </div>
+
+          <div v-else class="desktop-feed-list">
+            <p v-if="allItems.length === 0" class="empty-feed-hint">
               Tidak ada tempat atau rute yang cocok dengan filter.
             </p>
             <button
@@ -685,7 +699,7 @@ onBeforeUnmount(() => {
               @click="selectItem({ kind: item.kind, id: item.id })"
             >
               <div class="feed-card-icon">
-                {{ getItemIcon(item) }}
+                <GIcon :name="getItemIconName(item)" size="md" color="#17202A" />
               </div>
               <div class="feed-card-body">
                 <div class="feed-card-top">
@@ -703,7 +717,9 @@ onBeforeUnmount(() => {
     <!-- 3. MOBILE-ONLY TOP OVERLAY SEARCH -->
     <div class="mobile-top-overlay">
       <div class="search-pill-container">
-        <span class="search-icon" aria-hidden="true">🔍</span>
+        <span class="search-icon" aria-hidden="true">
+          <GIcon name="search" size="xs" />
+        </span>
         <input
           v-model="searchQuery"
           type="search"
@@ -716,7 +732,7 @@ onBeforeUnmount(() => {
           title="Upload GPX atau Lapor Hazard"
           @click="showContributionsModal = true"
         >
-          ➕
+          <GIcon name="plus" size="xs" color="#17202A" />
         </button>
         <button
           class="overlay-icon-btn"
@@ -726,7 +742,7 @@ onBeforeUnmount(() => {
           :disabled="locating"
           @click="useMyLocation"
         >
-          {{ locating ? '…' : '⌖' }}
+          <GIcon name="radar" size="xs" :color="userLocation !== null ? '#16A34A' : 'currentColor'" />
         </button>
         <button
           class="overlay-icon-btn"
@@ -734,7 +750,7 @@ onBeforeUnmount(() => {
           title="Rute Offline"
           @click="showOfflineModal = true"
         >
-          💾
+          <GIcon name="download" size="xs" />
         </button>
         <button
           class="overlay-icon-btn"
@@ -742,7 +758,7 @@ onBeforeUnmount(() => {
           title="Filter & Radius"
           @click="showFilterModal = !showFilterModal"
         >
-          ⚙️
+          <GIcon name="filter" size="xs" />
         </button>
       </div>
 
@@ -762,7 +778,7 @@ onBeforeUnmount(() => {
           type="button"
           @click="applyCategory('routes')"
         >
-          🚵 Rute
+          <GIcon name="route" size="xs" /> Rute
         </button>
         <button
           class="cat-chip"
@@ -770,7 +786,7 @@ onBeforeUnmount(() => {
           type="button"
           @click="applyCategory('workshop')"
         >
-          🔧 Bengkel
+          <GIcon name="wrench" size="xs" /> Bengkel
         </button>
         <button
           class="cat-chip"
@@ -778,7 +794,7 @@ onBeforeUnmount(() => {
           type="button"
           @click="applyCategory('store')"
         >
-          🚲 Toko
+          <GIcon name="shop" size="xs" /> Toko
         </button>
         <button
           class="cat-chip"
@@ -786,7 +802,7 @@ onBeforeUnmount(() => {
           type="button"
           @click="applyCategory('coffee')"
         >
-          ☕ Kopi
+          <GIcon name="coffee" size="xs" /> Kopi
         </button>
         <button
           class="cat-chip"
@@ -794,7 +810,7 @@ onBeforeUnmount(() => {
           type="button"
           @click="applyCategory('water')"
         >
-          💧 Air
+          <GIcon name="water" size="xs" /> Air
         </button>
         <button
           class="cat-chip"
@@ -802,7 +818,7 @@ onBeforeUnmount(() => {
           type="button"
           @click="applyCategory('trailhead')"
         >
-          🌲 Trail
+          <GIcon name="tree" size="xs" /> Trail
         </button>
       </div>
     </div>
@@ -871,21 +887,21 @@ onBeforeUnmount(() => {
 
         <div class="card-bottom-actions">
           <NuxtLink class="action-btn action-btn--primary" to="/safety">
-            Mulai Gowes 🚴
+            <GIcon name="bike" size="sm" /> Mulai Gowes
           </NuxtLink>
           <button
             class="action-btn action-btn--share"
             type="button"
             @click="shareSelectedItem(selectedItem)"
           >
-            <span>📲 Bagikan</span>
+            <GIcon name="share" size="sm" /> <span>Bagikan</span>
           </button>
           <NuxtLink
             v-if="selectedItem.kind === 'route'"
             class="action-btn action-btn--flex"
             :to="`/ride-flex?distance=${(selectedItem.distanceMeters / 1000).toFixed(1)}&elevation=${selectedItem.elevationGainMeters}&note=${encodeURIComponent(cleanName(selectedItem.name))}`"
           >
-            <span>📸 Poster AI</span>
+            <GIcon name="camera" size="sm" /> <span>Poster AI</span>
           </NuxtLink>
           <button
             v-if="selectedItem.kind === 'route'"
@@ -894,7 +910,8 @@ onBeforeUnmount(() => {
             type="button"
             @click="toggleOfflineRoute(selectedItem)"
           >
-            {{ isRouteSavedOffline(selectedItem.id) ? '💾 Offline ✓' : '💾 Simpan Offline' }}
+            <GIcon :name="isRouteSavedOffline(selectedItem.id) ? 'check' : 'download'" size="sm" />
+            <span>{{ isRouteSavedOffline(selectedItem.id) ? 'Offline ✓' : 'Simpan Offline' }}</span>
           </button>
           <button
             class="action-btn action-btn--bookmark"
@@ -903,7 +920,8 @@ onBeforeUnmount(() => {
             :disabled="savingItem"
             @click="saveSelectedItem(selectedItem)"
           >
-            {{ savedItems.has(selectedItem.id) ? '⭐ Tersimpan' : '☆ Simpan' }}
+            <GIcon :name="savedItems.has(selectedItem.id) ? 'bookmark-filled' : 'bookmark'" size="sm" />
+            <span>{{ savedItems.has(selectedItem.id) ? 'Tersimpan' : 'Simpan' }}</span>
           </button>
           <button class="action-btn action-btn--secondary" type="button" @click="showContributionsModal = true">
             Ulasan
@@ -935,7 +953,7 @@ onBeforeUnmount(() => {
             @click="selectItem({ kind: item.kind, id: item.id })"
           >
             <div class="feed-card-icon">
-              {{ getItemIcon(item) }}
+              <GIcon :name="getItemIconName(item)" size="md" color="#17202A" />
             </div>
             <div class="feed-card-body">
               <div class="feed-card-top">

@@ -109,7 +109,7 @@ onMounted(() => {
       ref="buttonContainer"
       class="google-rendered-target"
       :class="{ 'is-loading': loading }"
-    ></div>
+    />
 
     <!-- Fallback if client ID is missing -->
     <div v-if="!clientId" class="google-missing-warning">

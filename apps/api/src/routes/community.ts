@@ -26,10 +26,12 @@ import { parseInput } from '../http/validation.js';
 import type { AuthService } from '../services/auth-service.js';
 import type { CommunityService } from '../services/community-service.js';
 
-const communityParamsSchema = z.object({ communityId: z.uuid() });
+const communityParamsSchema = z.object({
+  communityId: z.string().trim().min(1).max(80),
+});
 const eventParamsSchema = z.object({ eventId: z.uuid() });
 const moderationParamsSchema = z.object({
-  communityId: z.uuid(),
+  communityId: z.string().trim().min(1).max(80),
   membershipId: z.uuid(),
 });
 

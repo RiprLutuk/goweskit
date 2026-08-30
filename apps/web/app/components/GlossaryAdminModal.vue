@@ -1,7 +1,7 @@
 <script setup lang="ts">
 import type { CreateGlossaryTermRequest, GlossaryTerm } from '@goweskit/contracts';
 
-const props = defineProps<{
+defineProps<{
   isOpen: boolean;
 }>();
 
@@ -109,7 +109,7 @@ async function handleSubmit(): Promise<void> {
             aria-label="Tutup Modal"
             @click="emit('close')"
           >
-            ✕
+            <GIcon name="close" size="xs" />
           </button>
         </div>
 
@@ -149,7 +149,7 @@ async function handleSubmit(): Promise<void> {
               rows="3"
               placeholder="Jelaskan fungsi komponen ini dalam bahasa sederhana yang mudah dimengerti goweser pemula…"
               required
-            ></textarea>
+            />
           </div>
 
           <div class="form-group">
@@ -160,7 +160,7 @@ async function handleSubmit(): Promise<void> {
               rows="3"
               placeholder="Standar dimensi, toleransi drat, rentang pitch, atau panduan mekanik presisi…"
               required
-            ></textarea>
+            />
           </div>
 
           <div class="form-group">

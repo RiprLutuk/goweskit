@@ -80,7 +80,7 @@ export class CommunityService {
     const viewerMembership =
       viewer === null
         ? null
-        : await this.repository.findMembership(communityId, viewer.id);
+        : await this.repository.findMembership(community.id, viewer.id);
     return { community, viewerMembership: mapMembership(viewerMembership) };
   }
 
@@ -89,7 +89,7 @@ export class CommunityService {
     user: User,
   ): Promise<JoinCommunityResponse> {
     const community = await this.getCommunity(communityId);
-    const existing = await this.repository.findMembership(communityId, user.id);
+    const existing = await this.repository.findMembership(community.id, user.id);
     const decision = decideCommunityJoin({
       visibility: community.visibility,
       joinMode: community.joinMode,
@@ -99,7 +99,7 @@ export class CommunityService {
       return { outcome: decision.outcome, membership: mapMembership(existing) };
     }
     const membership = await this.repository.saveMembership(
-      communityId,
+      community.id,
       user.id,
       decision.nextRole,
       decision.nextStatus,
@@ -124,9 +124,9 @@ export class CommunityService {
     user: User,
     input: CreateCommunityEventRequest,
   ): Promise<CreateCommunityEventResponse> {
-    await this.getCommunity(communityId);
+    const community = await this.getCommunity(communityId);
     const membership = await this.repository.findMembership(
-      communityId,
+      community.id,
       user.id,
     );
     if (membership?.status !== 'active') {
@@ -162,7 +162,7 @@ export class CommunityService {
     }
 
     return {
-      event: await this.repository.createEvent(communityId, user.id, input),
+      event: await this.repository.createEvent(community.id, user.id, input),
     };
   }
 
@@ -170,14 +170,14 @@ export class CommunityService {
     communityId: string,
     viewer: User | null,
   ): Promise<CommunityEventsResponse> {
-    await this.getCommunity(communityId);
+    const community = await this.getCommunity(communityId);
     const membership =
       viewer === null
         ? null
-        : await this.repository.findMembership(communityId, viewer.id);
+        : await this.repository.findMembership(community.id, viewer.id);
     return {
       events: await this.repository.listCommunityEvents(
-        communityId,
+        community.id,
         membership?.status === 'active',
       ),
     };
@@ -249,19 +249,19 @@ export class CommunityService {
     communityId: string,
     user: User,
   ): Promise<CommunityModerationQueueResponse> {
-    await this.assertManager(communityId, user);
+    const community = await this.assertManager(communityId, user);
     return {
-      requests: (await this.repository.listPendingMemberships(communityId)).map(
-        (request) => ({
-          membershipId: request.membershipId,
-          communityId: request.communityId,
-          requester: {
-            id: request.requesterId,
-            displayName: request.requesterDisplayName,
-          },
-          requestedAt: request.requestedAt.toISOString(),
-        }),
-      ),
+      requests: (
+        await this.repository.listPendingMemberships(community.id)
+      ).map((request) => ({
+        membershipId: request.membershipId,
+        communityId: request.communityId,
+        requester: {
+          id: request.requesterId,
+          displayName: request.requesterDisplayName,
+        },
+        requestedAt: request.requestedAt.toISOString(),
+      })),
     };
   }
 
@@ -271,9 +271,9 @@ export class CommunityService {
     user: User,
     input: ModerateCommunityMembershipRequest,
   ): Promise<ModerateCommunityMembershipResponse> {
-    await this.assertManager(communityId, user);
+    const community = await this.assertManager(communityId, user);
     const result = await this.repository.moderateMembership(
-      communityId,
+      community.id,
       membershipId,
       user.id,
       input.decision,
@@ -319,10 +319,10 @@ export class CommunityService {
     return community;
   }
 
-  private async assertManager(communityId: string, user: User): Promise<void> {
-    await this.getCommunity(communityId);
+  private async assertManager(communityId: string, user: User) {
+    const community = await this.getCommunity(communityId);
     const membership = await this.repository.findMembership(
-      communityId,
+      community.id,
       user.id,
     );
     if (!canManageCommunity(membership)) {
@@ -332,6 +332,7 @@ export class CommunityService {
         403,
       );
     }
+    return community;
   }
 
   private eventNotFound(): AppError {

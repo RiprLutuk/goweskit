@@ -197,7 +197,7 @@ async function renderCanvas(format: 'story' | 'post'): Promise<HTMLCanvasElement
     const img = new Image();
     img.crossOrigin = 'anonymous';
     const imgSrc = props.bike.photoUrl || bikeTypeSvg(props.bike.bicycleType.slug);
-    await new Promise((resolve, reject) => {
+    await new Promise((resolve) => {
       img.onload = resolve;
       img.onerror = resolve; // don't crash if image fails
       img.src = imgSrc;
@@ -374,7 +374,8 @@ async function shareToMedia() {
             :class="{ 'format-tab-btn--active': activeFormat === 'story' }"
             @click="activeFormat = 'story'"
           >
-            <span>📱 Story 9:16</span>
+            <GIcon name="camera" size="xs" />
+            <span>Story 9:16</span>
           </button>
           <button
             type="button"
@@ -382,7 +383,8 @@ async function shareToMedia() {
             :class="{ 'format-tab-btn--active': activeFormat === 'post' }"
             @click="activeFormat = 'post'"
           >
-            <span>🖼️ Post 1:1</span>
+            <GIcon name="sparkles" size="xs" />
+            <span>Post 1:1</span>
           </button>
           <button
             type="button"
@@ -390,7 +392,8 @@ async function shareToMedia() {
             :class="{ 'format-tab-btn--active': activeFormat === 'sheet' }"
             @click="activeFormat = 'sheet'"
           >
-            <span>📋 Lembar Spek</span>
+            <GIcon name="passport" size="xs" />
+            <span>Lembar Spek</span>
           </button>
         </div>
 
@@ -407,7 +410,7 @@ async function shareToMedia() {
             <!-- Poster Header -->
             <div class="flex-poster__header">
               <div class="brand-chip">
-                <span class="brand-dot"></span>
+                <span class="brand-dot"/>
                 <span>GOWESKIT WORKSHOP</span>
               </div>
               <span class="auth-serial">ID: {{ bike.id.slice(0, 8) }}</span>
@@ -533,7 +536,7 @@ async function shareToMedia() {
             :disabled="isGeneratingImage"
             @click="downloadStoryImage"
           >
-            <span>🖼️</span>
+            <GIcon name="download" size="xs" />
             <span>Unduh HD (PNG)</span>
           </button>
 
@@ -542,7 +545,7 @@ async function shareToMedia() {
             class="studio-btn studio-btn--copy"
             @click="copySpecSummary"
           >
-            <span>📋</span>
+            <GIcon name="share" size="xs" />
             <span>Salin Teks</span>
           </button>
 
@@ -552,7 +555,7 @@ async function shareToMedia() {
             class="studio-btn studio-btn--print"
             @click="handlePrint"
           >
-            <span>🖨️</span>
+            <GIcon name="passport" size="xs" />
             <span>Cetak PDF</span>
           </button>
         </div>

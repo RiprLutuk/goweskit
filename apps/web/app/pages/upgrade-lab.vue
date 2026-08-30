@@ -182,13 +182,20 @@ ${window.location.origin}/upgrade-lab
       </p>
     </header>
 
-    <p v-if="loading" class="state-card" role="status">Menyiapkan meja kerja laboratorium…</p>
+    <!-- Skeleton Lab Shimmer during Loading -->
+    <div v-if="loading" style="display: grid; gap: 1rem;">
+      <div class="skeleton-shimmer" style="width: 100%; height: 3.5rem; border-radius: 0.85rem;" />
+      <div class="skeleton-shimmer" style="width: 100%; height: 8rem; border-radius: 1.15rem;" />
+      <div class="skeleton-shimmer" style="width: 100%; height: 14rem; border-radius: 1.15rem;" />
+    </div>
 
     <!-- Signed-out state -->
     <div v-else-if="!user" class="native-guest-box">
-      <div class="guest-icon">⚡</div>
+      <div class="guest-icon">
+        <GIcon name="upgrade" size="xl" color="#17202A" filled />
+      </div>
       <h2>Uji Kompatibilitas Komponen</h2>
-      <p>Masuk ke akun GowesKit Anda untuk memilih sepeda dari garasi dan menguji sparepart baru.</p>
+      <p>Masuk ke akun GowesKit Anda untuk memilih sepeda dari garasi dan menguji suku cadang baru.</p>
       <div class="guest-actions">
         <NuxtLink class="button button--primary button--full" to="/login">Masuk ke Akun</NuxtLink>
         <NuxtLink class="button button--secondary button--full" to="/register">Daftar Akun Baru</NuxtLink>
@@ -198,57 +205,71 @@ ${window.location.origin}/upgrade-lab
           :disabled="demoLoggingIn"
           @click="quickDemoLogin"
         >
-          {{ demoLoggingIn ? 'Memuat Demo…' : '⚡ Buka Contoh Lab Demo (1-Klik)' }}
+          <GIcon name="bolt" size="xs" color="#D97706" filled />
+          <span>{{ demoLoggingIn ? 'Memuat Demo…' : 'Buka Contoh Lab Demo (1-Klik)' }}</span>
         </button>
       </div>
     </div>
 
     <div v-else-if="bikes.length === 0" class="native-empty-box">
-      <div class="empty-icon">🚲</div>
+      <div class="empty-icon">
+        <GIcon name="bike" size="xl" color="#17202A" />
+      </div>
       <h2>Daftarkan Sepeda Terlebih Dahulu</h2>
       <p>Anda memerlukan minimal 1 sepeda terdaftar di garasi untuk menguji suku cadang.</p>
-      <NuxtLink class="button button--primary" to="/garage/new">＋ Tambah Sepeda ke Garasi</NuxtLink>
+      <NuxtLink class="button button--primary" to="/garage/new">
+        <GIcon name="plus" size="xs" />
+        <span>Tambah Sepeda ke Garasi</span>
+      </NuxtLink>
     </div>
 
     <template v-else>
       <!-- Quick Test Scenario Presets -->
       <section class="preset-section">
-        <span class="preset-label">⚡ Skenario Cepat Uji Suku Cadang</span>
+        <span class="preset-label">
+          <GIcon name="bolt" size="xs" color="#D97706" filled />
+          <span>Skenario Cepat Uji Suku Cadang</span>
+        </span>
         <div class="preset-scroll-bar">
           <button
             class="preset-chip"
             type="button"
             @click="applyPreset('rear_axle', '12x148')"
           >
-            🏁 As Roda: 12×148 Boost
+            <GIcon name="hub" size="xs" />
+            <span>As Roda: 12×148 Boost</span>
           </button>
           <button
             class="preset-chip"
             type="button"
             @click="applyPreset('freehub_cassette', 'micro_spline')"
           >
-            ⛓️ Freehub: Micro Spline 12s
+            <GIcon name="cassette" size="xs" />
+            <span>Freehub: Micro Spline 12s</span>
           </button>
           <button
             class="preset-chip"
             type="button"
             @click="applyPreset('freehub_cassette', 'xdr')"
           >
-            ⚡ Freehub: SRAM XDR
+            <GIcon name="upgrade" size="xs" filled />
+            <span>Freehub: SRAM XDR</span>
           </button>
           <button
             class="preset-chip"
             type="button"
             @click="applyPreset('fork_steerer', 'tapered_1_1_8_to_1_1_2')"
           >
-            🍴 Fork: Tapered 1⅛–1½"
+            <GIcon name="fork" size="xs" />
+            <span>Fork: Tapered 1⅛–1½"</span>
           </button>
           <button
             class="preset-chip"
             type="button"
             @click="applyPreset('wheel_size', 'iso_622')"
           >
-            ⭕ Roda: ISO 622 (29" / 700c)
+            <GIcon name="wheel" size="xs" />
+            <span>Roda: ISO 622 (29" / 700c)</span>
           </button>
         </div>
       </section>
@@ -276,7 +297,10 @@ ${window.location.origin}/upgrade-lab
 
           <!-- Candidate Specification Detail -->
           <div class="candidate-spec-card">
-            <span class="spec-card-title">📦 Spesifikasi Suku Cadang Baru (Kandidat)</span>
+            <span class="spec-card-title">
+              <GIcon name="cassette" size="xs" />
+              <span>Spesifikasi Suku Cadang Baru (Kandidat)</span>
+            </span>
             <div class="knowledge-segmented">
               <button
                 class="seg-btn"
@@ -308,7 +332,8 @@ ${window.location.origin}/upgrade-lab
             </div>
 
             <div v-else class="unknown-guidance-pill">
-              <span>❓ GowesKit akan memandu Anda mencari info yang hilang tanpa membuat asumsi salah.</span>
+              <GIcon name="shield" size="xs" color="#0284C7" filled />
+              <span>GowesKit akan memandu Anda mencari info yang hilang tanpa membuat asumsi salah.</span>
             </div>
           </div>
 
@@ -317,7 +342,8 @@ ${window.location.origin}/upgrade-lab
             type="submit"
             :disabled="evaluating"
           >
-            {{ evaluating ? 'Menganalisis Standar…' : '⚡ Evaluasi Kecocokan Sekarang' }}
+            <GIcon name="upgrade" size="xs" />
+            <span>{{ evaluating ? 'Menganalisis Standar…' : 'Evaluasi Kecocokan Sekarang' }}</span>
           </button>
         </div>
       </form>
@@ -354,7 +380,10 @@ ${window.location.origin}/upgrade-lab
 
         <!-- Missing Info Guidance -->
         <div v-if="result.missingInformation && result.missingInformation.length" class="missing-info-box">
-          <strong>⚠️ Data yang Perlu Anda Pastikan:</strong>
+          <span class="missing-title">
+            <GIcon name="shield" size="xs" color="#EF4444" filled />
+            <span>Data yang Perlu Anda Pastikan:</span>
+          </span>
           <ul>
             <li v-for="info in result.missingInformation" :key="info">{{ info }}</li>
           </ul>
@@ -362,7 +391,10 @@ ${window.location.origin}/upgrade-lab
 
         <!-- Possible Fix / Guidance -->
         <div v-if="result.possibleFix" class="next-step-box">
-          <strong>🛠️ Solusi / Opsi Komponen:</strong>
+          <span class="next-step-title">
+            <GIcon name="wrench" size="xs" color="#15803D" />
+            <span>Solusi / Opsi Komponen:</span>
+          </span>
           <p>{{ result.possibleFix }}</p>
         </div>
 
@@ -373,7 +405,8 @@ ${window.location.origin}/upgrade-lab
             class="result-share-btn"
             @click="shareUpgradeResult"
           >
-            <span>📲 Bagikan Hasil Uji Lab</span>
+            <GIcon name="share" size="xs" />
+            <span>Bagikan Hasil Uji Lab</span>
             <span>→</span>
           </button>
         </div>

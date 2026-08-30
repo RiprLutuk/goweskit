@@ -209,7 +209,9 @@ async function submit(): Promise<void> {
     <form v-else class="form-stack" novalidate @submit.prevent="submit">
       <!-- Quick Presets Helper -->
       <div class="presets-banner">
-        <strong>⚡ Quick Presets (Optional)</strong>
+        <strong>
+          <GIcon name="sparkles" size="xs" color="#16A34A" /> Quick Presets (Optional)
+        </strong>
         <p>Pre-fill standard interfaces from common builds to save time:</p>
         <div class="preset-buttons-row">
           <button
@@ -217,21 +219,21 @@ async function submit(): Promise<void> {
             type="button"
             @click="applyPreset('mtb_boost')"
           >
-            🌲 29er Boost Hardtail
+            <GIcon name="bike-mtb" size="xs" /> 29er Boost Hardtail
           </button>
           <button
             class="button button--secondary button--sm"
             type="button"
             @click="applyPreset('folding_20')"
           >
-            🧲 20-inch Folding Bike
+            <GIcon name="bike-folding" size="xs" /> 20-inch Folding Bike
           </button>
           <button
             class="button button--secondary button--sm"
             type="button"
             @click="applyPreset('road_disc')"
           >
-            ⚡ Modern Road Disc
+            <GIcon name="bike-road" size="xs" /> Modern Road Disc
           </button>
         </div>
       </div>
@@ -249,7 +251,9 @@ async function submit(): Promise<void> {
               @input="errors.nickname = ''"
             />
           </label>
-          <span v-if="errors.nickname" class="field-error-msg">⚠️ {{ errors.nickname }}</span>
+          <span v-if="errors.nickname" class="field-error-msg">
+            <GIcon name="shield" size="xs" color="#EF4444" filled /> {{ errors.nickname }}
+          </span>
         </div>
 
         <div class="form-field">
@@ -270,7 +274,9 @@ async function submit(): Promise<void> {
               </option>
             </select>
           </label>
-          <span v-if="errors.bicycleTypeId" class="field-error-msg">⚠️ {{ errors.bicycleTypeId }}</span>
+          <span v-if="errors.bicycleTypeId" class="field-error-msg">
+            <GIcon name="shield" size="xs" color="#EF4444" filled /> {{ errors.bicycleTypeId }}
+          </span>
         </div>
 
         <label>

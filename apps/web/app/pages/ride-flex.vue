@@ -344,7 +344,7 @@ async function renderCanvas(aspectRatio: 'story' | 'post' | 'landscape'): Promis
     
     // Scale and center the route vector (path coordinates are in 400x350 box)
     const routeBoxW = 400;
-    const routeBoxH = 350;
+    const _routeBoxH = 350;
     const targetW = isStory ? 840 : (isLandscape ? 720 : 680);
     const scale = targetW / routeBoxW;
     const offsetX = (canvas.width - routeBoxW * scale) / 2;
@@ -863,7 +863,7 @@ async function shareToMedia() {
             <div class="hud-corner hud-tr">⌝</div>
             <div class="hud-corner hud-bl">⌞</div>
             <div class="hud-corner hud-br">⌟</div>
-            <div class="hud-grid-overlay"></div>
+            <div class="hud-grid-overlay" />
           </template>
 
           <!-- Dynamic GowesKit Signature GPS Route Ribbon Canvas / SVG Layer -->
@@ -922,7 +922,7 @@ async function shareToMedia() {
             <path d="M-50 440 C 110 350, 310 510, 450 380" stroke="rgba(201, 243, 106, 0.15)" stroke-width="2" />
           </svg>
 
-          <div class="poster-vignette-layer"></div>
+          <div class="poster-vignette-layer" />
 
           <!-- Official GowesKit Brand Pill & Achievement Sticker -->
           <div class="poster-card-top">
@@ -936,7 +936,7 @@ async function shareToMedia() {
                 </svg>
               </div>
               <span class="brand-text-mini">
-                <span class="brand-text-gowes">Gowes</span><span class="brand-text-kit">Kit</span><span class="brand-dot-mini"></span>
+                <span class="brand-text-gowes">Gowes</span><span class="brand-text-kit">Kit</span><span class="brand-dot-mini" />
               </span>
             </div>
 
@@ -1003,12 +1003,12 @@ async function shareToMedia() {
                 <span class="p-lbl">WAKTU</span>
                 <strong class="p-val">{{ formatDuration(rideForm.durationMinutes) }}</strong>
               </div>
-              <div class="p-div"></div>
+              <div class="p-div" />
               <div class="p-col">
                 <span class="p-lbl">SPEED</span>
                 <strong class="p-val" :class="rideForm.templateStyle === 'cafe_santai' ? 'text-amber' : (rideForm.templateStyle === 'rapha_editorial' ? 'text-coral' : 'text-lime')">{{ rideForm.avgSpeedKmH }} km/h</strong>
               </div>
-              <div class="p-div"></div>
+              <div class="p-div" />
               <div class="p-col">
                 <span class="p-lbl">KALORI</span>
                 <strong class="p-val text-coral">~{{ rideForm.caloriesKcal }} kcal</strong>
@@ -1279,13 +1279,14 @@ async function shareToMedia() {
                 title="Topo Neon"
                 @click="rideForm.bgPreset = 'topo'"
               >
-                <span>🗺️</span>
+                <GIcon name="route" size="xs" />
               </button>
             </div>
 
             <label class="btn-upload-clean">
               <input type="file" accept="image/*" class="sr-only" @change="handlePhotoUpload" />
-              <span>📸 Unggah Foto Jepretan Sendiri</span>
+              <GIcon name="camera" size="xs" />
+              <span>Unggah Foto Jepretan Sendiri</span>
             </label>
           </div>
 
@@ -1297,7 +1298,7 @@ async function shareToMedia() {
               :class="{ active: rideForm.activeSticker === 'kom' }"
               @click="rideForm.activeSticker = 'kom'"
             >
-              👑 KOM Hunter
+              <GIcon name="trophy" size="xs" color="#EAB308" filled /> KOM Hunter
             </button>
             <button
               type="button"
@@ -1305,7 +1306,7 @@ async function shareToMedia() {
               :class="{ active: rideForm.activeSticker === 'cafe' }"
               @click="rideForm.activeSticker = 'cafe'"
             >
-              ☕ Coffee Approved
+              <GIcon name="coffee" size="xs" color="#D97706" /> Coffee Approved
             </button>
             <button
               type="button"
@@ -1313,7 +1314,7 @@ async function shareToMedia() {
               :class="{ active: rideForm.activeSticker === 'beast' }"
               @click="rideForm.activeSticker = 'beast'"
             >
-              ⛰️ Climb Beast
+              <GIcon name="mountain" size="xs" color="#10B981" /> Climb Beast
             </button>
             <button
               type="button"
@@ -1321,7 +1322,7 @@ async function shareToMedia() {
               :class="{ active: rideForm.activeSticker === 'speed' }"
               @click="rideForm.activeSticker = 'speed'"
             >
-              ⚡ Breakaway
+              <GIcon name="bolt" size="xs" color="#C9F36A" filled /> Breakaway
             </button>
             <button
               type="button"
@@ -1329,7 +1330,7 @@ async function shareToMedia() {
               :class="{ active: rideForm.activeSticker === 'fuel' }"
               @click="rideForm.activeSticker = 'fuel'"
             >
-              🍲 Sate Maranggi
+              <GIcon name="water" size="xs" color="#3B82F6" /> Pitstop Fuel
             </button>
             <button
               type="button"
@@ -1337,7 +1338,7 @@ async function shareToMedia() {
               :class="{ active: rideForm.activeSticker === 'none' }"
               @click="rideForm.activeSticker = 'none'"
             >
-              🚫 Polos
+              <GIcon name="close" size="xs" /> Polos
             </button>
           </div>
 

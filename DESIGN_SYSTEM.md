@@ -36,11 +36,13 @@ Accessibility wins over aesthetics.
 
 ## Typography
 
-Suggested:
+GowesKit signature cycling typography system:
 
 ```text
-UI: Plus Jakarta Sans / Manrope
-Specs: Geist Mono / system monospace
+Headings & Aerodynamic UI: Outfit (Geometric, circular curves mirroring wheels & chainrings)
+Technical Route & Display: Space Grotesk (Precision engineering & route telemetry)
+Body UI & Guide Text: Plus Jakarta Sans (Clean, highly legible neo-grotesque)
+Component Specs & Numbers: JetBrains Mono (Precision tabular figures: 12×148 Boost, 50-34T, 700×28c)
 ```
 
 Technical values should be obvious:
@@ -51,6 +53,15 @@ Technical values should be obvious:
 29 × 2.35"
 1 × 12
 ```
+
+## Iconography — Signature Cycling Line System
+
+Replace generic emojis with GowesKit bespoke SVG icons (`<GIcon />`):
+
+- **Disciplines**: `bike` (Road), `bike-gravel` (Gravel), `bike-mtb` (Mountain), `bike-folding` (Folding).
+- **Navigation & Telemetry**: `route` (GPS topo ribbon), `radar` (Live beacon pulse), `pin` (Location mark), `mountain` (Climb summit), `tree` (Trail pine).
+- **Workshop & Anatomy**: `frame` (Diamond geo), `fork` (Suspension crown & stanchions), `rear_shock` (Damper), `wheel`, `hub` (Through-axle), `tire` (Knobby tread), `cassette`, `chain`, `crank`, `bottom_bracket`, `rear_derailleur`, `shifter`, `disc_brake`, `headset`, `wrench`.
+- **Social & Safety**: `community` (Peloton), `trophy` (KOM), `shield` (Safety beacon), `sos` (Emergency alert), `coffee` (Pitstop cafe), `water` (Hydration bidon).
 
 ## Shape language
 

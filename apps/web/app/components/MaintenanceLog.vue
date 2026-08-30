@@ -235,9 +235,11 @@ onMounted(loadEvents);
         </div>
 
         <div class="maintenance-card__meta">
-          <span class="meta-date">📅 {{ formatDate(event.performedAt) }}</span>
+          <span class="meta-date">
+            <GIcon name="history" size="xs" /> {{ formatDate(event.performedAt) }}
+          </span>
           <span v-if="event.performedAtDistanceKm !== null" class="meta-dist">
-            🛣️ Odometer: {{ event.performedAtDistanceKm.toLocaleString() }} km
+            <GIcon name="route" size="xs" /> Odometer: {{ event.performedAtDistanceKm.toLocaleString() }} km
           </span>
         </div>
 

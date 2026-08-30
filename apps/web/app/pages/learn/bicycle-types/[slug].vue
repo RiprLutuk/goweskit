@@ -54,10 +54,14 @@ function selectHotspot(index: number | null): void {
       </NuxtLink>
     </div>
 
-    <!-- Loading State -->
-    <div v-if="loading" class="state-card state-card--loading" role="status">
-      <span class="loading-spinner"></span>
-      <span>Menyiapkan diagram anatomi dan standar teknis…</span>
+    <!-- Skeleton Anatomy Shimmer during Loading -->
+    <div v-if="loading" style="display: grid; gap: 1rem;">
+      <div class="anatomy-hero" style="padding: 1.5rem; display: grid; gap: 0.85rem; border-radius: 1.25rem; background: var(--color-white); border: 1px solid rgb(23 32 42 / 8%);">
+        <div class="skeleton-shimmer" style="width: 30%; height: 1.1rem; border-radius: 0.35rem;" />
+        <div class="skeleton-shimmer" style="width: 60%; height: 2rem; border-radius: 0.5rem;" />
+        <div class="skeleton-shimmer" style="width: 85%; height: 1rem; border-radius: 0.35rem;" />
+      </div>
+      <div class="skeleton-shimmer" style="width: 100%; height: 16rem; border-radius: 1.25rem;" />
     </div>
 
     <!-- Error State -->
@@ -95,7 +99,7 @@ function selectHotspot(index: number | null): void {
         <div class="anatomy-hero__inner">
           <div class="anatomy-hero__top">
             <div class="category-badge">
-              <span class="badge-dot"></span>
+              <span class="badge-dot" />
               <span>ANATOMI &amp; STANDAR</span>
             </div>
             <span class="type-pill-tag">
@@ -137,7 +141,9 @@ function selectHotspot(index: number | null): void {
 
           <!-- Interactive Tip Banner -->
           <div class="diagram-tip-banner">
-            <span class="tip-icon">💡</span>
+            <span class="tip-icon">
+              <GIcon name="sparkles" size="sm" color="#EAB308" />
+            </span>
             <p>
               <strong>Petunjuk:</strong> Sentuh atau klik langsung pada bagian sepeda di atas untuk memeriksa spesifikasi teknisnya, atau pilih dari daftar komponen di bawah.
             </p>
@@ -167,7 +173,7 @@ function selectHotspot(index: number | null): void {
               aria-label="Tutup Inspektor"
               @click="activeHotspotIndex = null"
             >
-              ✕
+              <GIcon name="close" size="xs" />
             </button>
           </div>
 

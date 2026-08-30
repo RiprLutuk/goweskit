@@ -165,13 +165,15 @@ function closePopover(): void {
           <path d="M 720 400 A 122 122 0 0 1 760 365" fill="none" stroke="#c9f36a" stroke-width="5" />
           <!-- Spokes (32H Cross) -->
           <g stroke="#64748b" stroke-width="1.2" opacity="0.65">
-            <line v-for="deg in [0, 22.5, 45, 67.5, 90, 112.5, 135, 157.5, 180, 202.5, 225, 247.5, 270, 292.5, 315, 337.5]" :key="`r1-${deg}`"
+            <line
+v-for="deg in [0, 22.5, 45, 67.5, 90, 112.5, 135, 157.5, 180, 202.5, 225, 247.5, 270, 292.5, 315, 337.5]" :key="`r1-${deg}`"
               :x1="800 + 20 * Math.cos(deg * Math.PI / 180)"
               :y1="480 + 20 * Math.sin(deg * Math.PI / 180)"
               :x2="800 + 120 * Math.cos((deg + 30) * Math.PI / 180)"
               :y2="480 + 120 * Math.sin((deg + 30) * Math.PI / 180)"
             />
-            <line v-for="deg in [0, 22.5, 45, 67.5, 90, 112.5, 135, 157.5, 180, 202.5, 225, 247.5, 270, 292.5, 315, 337.5]" :key="`r2-${deg}`"
+            <line
+v-for="deg in [0, 22.5, 45, 67.5, 90, 112.5, 135, 157.5, 180, 202.5, 225, 247.5, 270, 292.5, 315, 337.5]" :key="`r2-${deg}`"
               :x1="800 + 20 * Math.cos(deg * Math.PI / 180)"
               :y1="480 + 20 * Math.sin(deg * Math.PI / 180)"
               :x2="800 + 120 * Math.cos((deg - 30) * Math.PI / 180)"
@@ -197,13 +199,15 @@ function closePopover(): void {
           <circle cx="240" cy="480" r="122" fill="none" stroke="#334155" stroke-width="8" />
           <path d="M 160 400 A 122 122 0 0 1 200 365" fill="none" stroke="#c9f36a" stroke-width="5" />
           <g stroke="#64748b" stroke-width="1.2" opacity="0.65">
-            <line v-for="deg in [0, 22.5, 45, 67.5, 90, 112.5, 135, 157.5, 180, 202.5, 225, 247.5, 270, 292.5, 315, 337.5]" :key="`fw1-${deg}`"
+            <line
+v-for="deg in [0, 22.5, 45, 67.5, 90, 112.5, 135, 157.5, 180, 202.5, 225, 247.5, 270, 292.5, 315, 337.5]" :key="`fw1-${deg}`"
               :x1="240 + 20 * Math.cos(deg * Math.PI / 180)"
               :y1="480 + 20 * Math.sin(deg * Math.PI / 180)"
               :x2="240 + 120 * Math.cos((deg + 30) * Math.PI / 180)"
               :y2="480 + 120 * Math.sin((deg + 30) * Math.PI / 180)"
             />
-            <line v-for="deg in [0, 22.5, 45, 67.5, 90, 112.5, 135, 157.5, 180, 202.5, 225, 247.5, 270, 292.5, 315, 337.5]" :key="`fw2-${deg}`"
+            <line
+v-for="deg in [0, 22.5, 45, 67.5, 90, 112.5, 135, 157.5, 180, 202.5, 225, 247.5, 270, 292.5, 315, 337.5]" :key="`fw2-${deg}`"
               :x1="240 + 20 * Math.cos(deg * Math.PI / 180)"
               :y1="480 + 20 * Math.sin(deg * Math.PI / 180)"
               :x2="240 + 120 * Math.cos((deg - 30) * Math.PI / 180)"
@@ -408,7 +412,8 @@ function closePopover(): void {
           <circle cx="790" cy="520" r="88" fill="none" stroke="#334155" stroke-width="8" />
           <path d="M 730 460 A 88 88 0 0 1 760 435" fill="none" stroke="#c9f36a" stroke-width="4" />
           <g stroke="#64748b" stroke-width="1.2" opacity="0.65">
-            <line v-for="deg in [0, 30, 60, 90, 120, 150, 180, 210, 240, 270, 300, 330]" :key="`flr-${deg}`"
+            <line
+v-for="deg in [0, 30, 60, 90, 120, 150, 180, 210, 240, 270, 300, 330]" :key="`flr-${deg}`"
               :x1="790 + 15 * Math.cos(deg * Math.PI / 180)"
               :y1="520 + 15 * Math.sin(deg * Math.PI / 180)"
               :x2="790 + 88 * Math.cos(deg * Math.PI / 180)"
@@ -433,7 +438,8 @@ function closePopover(): void {
           <circle cx="270" cy="520" r="88" fill="none" stroke="#334155" stroke-width="8" />
           <path d="M 210 460 A 88 88 0 0 1 240 435" fill="none" stroke="#c9f36a" stroke-width="4" />
           <g stroke="#64748b" stroke-width="1.2" opacity="0.65">
-            <line v-for="deg in [0, 30, 60, 90, 120, 150, 180, 210, 240, 270, 300, 330]" :key="`flf-${deg}`"
+            <line
+v-for="deg in [0, 30, 60, 90, 120, 150, 180, 210, 240, 270, 300, 330]" :key="`flf-${deg}`"
               :x1="270 + 15 * Math.cos(deg * Math.PI / 180)"
               :y1="520 + 15 * Math.sin(deg * Math.PI / 180)"
               :x2="270 + 88 * Math.cos(deg * Math.PI / 180)"
@@ -558,7 +564,8 @@ function closePopover(): void {
           <circle cx="800" cy="480" r="131" fill="none" stroke="#334155" stroke-width="16" />
           <path d="M 720 400 A 131 131 0 0 1 760 365" fill="none" stroke="#8eddf4" stroke-width="4" />
           <g stroke="#64748b" stroke-width="1.2" opacity="0.65">
-            <line v-for="deg in [0, 22.5, 45, 67.5, 90, 112.5, 135, 157.5, 180, 202.5, 225, 247.5, 270, 292.5, 315, 337.5]" :key="`rw-${deg}`"
+            <line
+v-for="deg in [0, 22.5, 45, 67.5, 90, 112.5, 135, 157.5, 180, 202.5, 225, 247.5, 270, 292.5, 315, 337.5]" :key="`rw-${deg}`"
               :x1="800 + 15 * Math.cos(deg * Math.PI / 180)"
               :y1="480 + 15 * Math.sin(deg * Math.PI / 180)"
               :x2="800 + 131 * Math.cos(deg * Math.PI / 180)"
@@ -582,7 +589,8 @@ function closePopover(): void {
           <circle cx="240" cy="480" r="131" fill="none" stroke="#334155" stroke-width="16" />
           <path d="M 160 400 A 131 131 0 0 1 200 365" fill="none" stroke="#8eddf4" stroke-width="4" />
           <g stroke="#64748b" stroke-width="1.2" opacity="0.65">
-            <line v-for="deg in [0, 22.5, 45, 67.5, 90, 112.5, 135, 157.5, 180, 202.5, 225, 247.5, 270, 292.5, 315, 337.5]" :key="`rfw-${deg}`"
+            <line
+v-for="deg in [0, 22.5, 45, 67.5, 90, 112.5, 135, 157.5, 180, 202.5, 225, 247.5, 270, 292.5, 315, 337.5]" :key="`rfw-${deg}`"
               :x1="240 + 15 * Math.cos(deg * Math.PI / 180)"
               :y1="480 + 15 * Math.sin(deg * Math.PI / 180)"
               :x2="240 + 131 * Math.cos(deg * Math.PI / 180)"

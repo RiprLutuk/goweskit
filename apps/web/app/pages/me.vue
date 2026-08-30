@@ -4,7 +4,6 @@ import type { TrustedContactListResponse } from '@goweskit/contracts/safety';
 
 const api = useApi();
 const { user, initialized, refresh, logout, login } = useAuth();
-const { loading: googleLoading, triggerGoogleSignIn } = useGoogleAuth();
 const { canInstall, isStandalone, isIOS, showInstallGuide, installApp, triggerHaptic } = usePwa();
 const { toast, alert } = useNotify();
 
@@ -153,9 +152,17 @@ async function quickDemoLogin(): Promise<void> {
       <p class="native-sub">Kelola garasi sepeda, kontak keselamatan solo, dan preferensi aplikasi GowesKit.</p>
     </header>
 
-    <p v-if="!initialized" class="state-card" role="status">
-      Memeriksa sesi akun…
-    </p>
+    <!-- Skeleton Profile Shimmer during Loading -->
+    <div v-if="!initialized" class="pro-rider-card" style="padding: 1.25rem; display: grid; gap: 1rem;">
+      <div style="display: flex; gap: 1rem; align-items: center;">
+        <div class="skeleton-shimmer" style="width: 3.5rem; height: 3.5rem; border-radius: 50%;" />
+        <div style="flex: 1; display: grid; gap: 0.4rem;">
+          <div class="skeleton-shimmer" style="width: 50%; height: 1.2rem; border-radius: 0.35rem;" />
+          <div class="skeleton-shimmer" style="width: 70%; height: 0.85rem; border-radius: 0.3rem;" />
+        </div>
+      </div>
+      <div class="skeleton-shimmer" style="width: 100%; height: 3.5rem; border-radius: 0.85rem;" />
+    </div>
 
     <!-- ══════════════════════════════════════════════════════════
          1. LOGGED IN STATE (RIDER COCKPIT)
@@ -170,7 +177,9 @@ async function quickDemoLogin(): Promise<void> {
           <div class="rider-info">
             <div class="rider-name-row">
               <h2>{{ user.displayName }}</h2>
-              <span class="rider-verified-badge" title="Rider Terverifikasi">✓</span>
+              <span class="rider-verified-badge" title="Rider Terverifikasi">
+                <GIcon name="check" size="xs" color="#15803D" filled />
+              </span>
             </div>
             <p class="rider-email">{{ user.email }}</p>
             <div class="rider-tags">
@@ -184,17 +193,23 @@ async function quickDemoLogin(): Promise<void> {
         <div class="rider-metrics-strip">
           <NuxtLink to="/garage" class="metric-col">
             <span class="metric-num">{{ bikeCount }}</span>
-            <span class="metric-label">🚲 Sepeda</span>
+            <span class="metric-label">
+              <GIcon name="bike" size="xs" /> Sepeda
+            </span>
           </NuxtLink>
           <div class="metric-divider" />
           <NuxtLink to="/safety" class="metric-col">
             <span class="metric-num">{{ contactCount }}</span>
-            <span class="metric-label">🛡️ Kontak</span>
+            <span class="metric-label">
+              <GIcon name="shield" size="xs" /> Kontak
+            </span>
           </NuxtLink>
           <div class="metric-divider" />
           <NuxtLink to="/community/reputation" class="metric-col">
             <span class="metric-num">{{ reputationScore }}</span>
-            <span class="metric-label">🏆 Poin</span>
+            <span class="metric-label">
+              <GIcon name="trophy" size="xs" /> Poin
+            </span>
           </NuxtLink>
         </div>
 
@@ -204,7 +219,8 @@ async function quickDemoLogin(): Promise<void> {
             class="rider-share-btn"
             @click="shareRiderProfile"
           >
-            <span>📸 Bagikan Rider Pass</span>
+            <GIcon name="share" size="xs" />
+            <span>Bagikan Rider Pass</span>
             <span>→</span>
           </button>
         </div>
@@ -215,39 +231,47 @@ async function quickDemoLogin(): Promise<void> {
         <h3 class="group-heading">Garasi &amp; Media</h3>
         <div class="inset-list">
           <NuxtLink to="/ride-flex" class="inset-item">
-            <div class="item-icon-box item-icon--lime">📸</div>
+            <div class="item-icon-box item-icon--lime">
+              <GIcon name="camera" size="sm" />
+            </div>
             <div class="item-body">
               <strong>Ride Flex Studio &amp; Poster AI</strong>
               <small>Buat poster Strava-killer HD &amp; caption medsos otomatis</small>
             </div>
-            <span class="item-chevron">›</span>
+            <GIcon name="chevron-right" size="xs" color="#94A3B8" />
           </NuxtLink>
 
           <NuxtLink to="/garage" class="inset-item">
-            <div class="item-icon-box item-icon--sand">🚲</div>
+            <div class="item-icon-box item-icon--sand">
+              <GIcon name="bike" size="sm" />
+            </div>
             <div class="item-body">
               <strong>My Garage</strong>
               <small>Kelola koleksi sepeda, foto, &amp; anatomi komponen</small>
             </div>
-            <span class="item-chevron">›</span>
+            <GIcon name="chevron-right" size="xs" color="#94A3B8" />
           </NuxtLink>
 
           <NuxtLink to="/upgrade-lab" class="inset-item">
-            <div class="item-icon-box item-icon--sky">⚡</div>
+            <div class="item-icon-box item-icon--sky">
+              <GIcon name="upgrade" size="sm" filled />
+            </div>
             <div class="item-body">
               <strong>Upgrade Lab</strong>
               <small>Simulasi kecocokan suku cadang &amp; standar as roda</small>
             </div>
-            <span class="item-chevron">›</span>
+            <GIcon name="chevron-right" size="xs" color="#94A3B8" />
           </NuxtLink>
 
           <NuxtLink to="/learn" class="inset-item">
-            <div class="item-icon-box item-icon--sand">📚</div>
+            <div class="item-icon-box item-icon--sand">
+              <GIcon name="passport" size="sm" />
+            </div>
             <div class="item-body">
               <strong>Ensiklopedia Anatomi Sepeda</strong>
               <small>Kamus standar BB, headset, axle, &amp; rantai</small>
             </div>
-            <span class="item-chevron">›</span>
+            <GIcon name="chevron-right" size="xs" color="#94A3B8" />
           </NuxtLink>
         </div>
       </section>
@@ -257,30 +281,36 @@ async function quickDemoLogin(): Promise<void> {
         <h3 class="group-heading">Keamanan &amp; Komunitas</h3>
         <div class="inset-list">
           <NuxtLink to="/safety" class="inset-item">
-            <div class="item-icon-box item-icon--coral">🛡️</div>
+            <div class="item-icon-box item-icon--coral">
+              <GIcon name="shield" size="sm" color="#FF8C75" filled />
+            </div>
             <div class="item-body">
               <strong>Ride Safety Beacon</strong>
               <small>Live tracking solo-ride, SOS darurat, &amp; kontak</small>
             </div>
-            <span class="item-chevron">›</span>
+            <GIcon name="chevron-right" size="xs" color="#94A3B8" />
           </NuxtLink>
 
           <NuxtLink to="/community" class="inset-item">
-            <div class="item-icon-box item-icon--lime">👥</div>
+            <div class="item-icon-box item-icon--lime">
+              <GIcon name="community" size="sm" color="#17202A" />
+            </div>
             <div class="item-body">
               <strong>Komunitas &amp; Jadwal Mabar</strong>
               <small>Grup gowes lokal, mabar bareng, &amp; event</small>
             </div>
-            <span class="item-chevron">›</span>
+            <GIcon name="chevron-right" size="xs" color="#94A3B8" />
           </NuxtLink>
 
           <NuxtLink to="/community/reputation" class="inset-item">
-            <div class="item-icon-box item-icon--amber">🏅</div>
+            <div class="item-icon-box item-icon--amber">
+              <GIcon name="trophy" size="sm" color="#D97706" filled />
+            </div>
             <div class="item-body">
               <strong>Skor &amp; Riwayat Kontribusi</strong>
               <small>Poin reputasi sharing rute &amp; review bengkel</small>
             </div>
-            <span class="item-chevron">›</span>
+            <GIcon name="chevron-right" size="xs" color="#94A3B8" />
           </NuxtLink>
         </div>
       </section>
@@ -290,7 +320,9 @@ async function quickDemoLogin(): Promise<void> {
         <h3 class="group-heading">Preferensi &amp; Display</h3>
         <div class="inset-list">
           <div class="inset-item inset-item--static">
-            <div class="item-icon-box item-icon--sand">📏</div>
+            <div class="item-icon-box item-icon--sand">
+              <GIcon name="route" size="sm" />
+            </div>
             <div class="item-body">
               <strong>Satuan Jarak</strong>
               <small>Format elevasi dan jarak tempuh rute</small>
@@ -302,7 +334,9 @@ async function quickDemoLogin(): Promise<void> {
           </div>
 
           <div class="inset-item inset-item--static">
-            <div class="item-icon-box item-icon--sand">📍</div>
+            <div class="item-icon-box item-icon--sand">
+              <GIcon name="pin" size="sm" />
+            </div>
             <div class="item-body">
               <strong>Auto GPS Location</strong>
               <small>Otomatis pusatkan peta &amp; cuaca di titik Anda</small>
@@ -311,7 +345,9 @@ async function quickDemoLogin(): Promise<void> {
           </div>
 
           <div class="inset-item inset-item--static">
-            <div class="item-icon-box item-icon--sand">🎨</div>
+            <div class="item-icon-box item-icon--sand">
+              <GIcon name="sparkles" size="sm" />
+            </div>
             <div class="item-body">
               <strong>Kontras Tinggi Anatomi</strong>
               <small>Pertegas garis diagram komponen sepeda</small>
@@ -326,7 +362,9 @@ async function quickDemoLogin(): Promise<void> {
         <h3 class="group-heading">Aplikasi Mobile &amp; PWA</h3>
         <div class="inset-list">
           <div class="inset-item inset-item--static">
-            <div class="item-icon-box item-icon--lime">📲</div>
+            <div class="item-icon-box item-icon--lime">
+              <GIcon name="radar" size="sm" color="#16A34A" />
+            </div>
             <div class="item-body">
               <strong>Status Aplikasi</strong>
               <small v-if="isStandalone">Telah terpasang sebagai Mobile App (PWA)</small>
@@ -344,16 +382,20 @@ async function quickDemoLogin(): Promise<void> {
             type="button"
             @click="isIOS ? (showInstallGuide = true) : installApp()"
           >
-            <div class="item-icon-box item-icon--lime">⚡</div>
+            <div class="item-icon-box item-icon--lime">
+              <GIcon name="upgrade" size="sm" filled />
+            </div>
             <div class="item-body">
               <strong class="text-accent">{{ isIOS ? 'Tambah ke Home Screen (Safari iOS)' : 'Install GowesKit ke HP' }}</strong>
               <small>Akses offline cepat dan tampilan layar penuh</small>
             </div>
-            <span class="item-chevron">›</span>
+            <GIcon name="chevron-right" size="xs" color="#94A3B8" />
           </button>
 
           <button class="inset-item" type="button" @click="testHaptic">
-            <div class="item-icon-box item-icon--sky">📳</div>
+            <div class="item-icon-box item-icon--sky">
+              <GIcon name="wind" size="sm" />
+            </div>
             <div class="item-body">
               <strong>Uji Respon Getar (Haptic)</strong>
               <small>{{ hapticFeedbackSent ? '✓ Berhasil Bergetar!' : 'Sentuhan tombol darurat SOS & navigasi' }}</small>
@@ -372,11 +414,13 @@ async function quickDemoLogin(): Promise<void> {
             :disabled="signingOut"
             @click="signOut"
           >
-            <div class="item-icon-box item-icon--danger">🚪</div>
+            <div class="item-icon-box item-icon--danger">
+              <GIcon name="close" size="sm" color="#EF4444" />
+            </div>
             <div class="item-body">
               <strong class="text-danger">{{ signingOut ? 'Keluar Akun…' : 'Keluar dari Akun' }}</strong>
             </div>
-            <span class="item-chevron">›</span>
+            <GIcon name="chevron-right" size="xs" color="#EF4444" />
           </button>
         </div>
       </section>
@@ -386,7 +430,9 @@ async function quickDemoLogin(): Promise<void> {
          2. GUEST STATE (PROMOTIONAL CLEAN HERO)
          ══════════════════════════════════════════════════════════ -->
     <div v-else class="pro-guest-card">
-      <div class="guest-badge-circle">🚲</div>
+      <div class="guest-badge-circle">
+        <GIcon name="bike" size="xl" color="#17202A" />
+      </div>
       <h2 class="guest-title">Buka Fitur Lengkap GowesKit</h2>
       <p class="guest-sub">
         Simpan sepeda di My Garage, verifikasi standar komponen, bagikan live tracking solo-ride, dan gabung mabar komunitas.
@@ -394,15 +440,15 @@ async function quickDemoLogin(): Promise<void> {
 
       <div class="guest-perks-list">
         <div class="perk-item">
-          <span class="perk-icon">✓</span>
+          <GIcon name="check" size="xs" color="#15803D" filled />
           <span>Garasi digital &amp; spek komponen terverifikasi</span>
         </div>
         <div class="perk-item">
-          <span class="perk-icon">✓</span>
+          <GIcon name="check" size="xs" color="#15803D" filled />
           <span>Live ride safety beacon dengan token kedaluwarsa</span>
         </div>
         <div class="perk-item">
-          <span class="perk-icon">✓</span>
+          <GIcon name="check" size="xs" color="#15803D" filled />
           <span>Jadwal gowes mabar &amp; discover rute GPX lokal</span>
         </div>
       </div>
@@ -426,7 +472,8 @@ async function quickDemoLogin(): Promise<void> {
           :disabled="demoLoggingIn"
           @click="quickDemoLogin"
         >
-          {{ demoLoggingIn ? 'Memuat Demo…' : '⚡ Jelajahi Akun Demo (1-Klik)' }}
+          <GIcon name="bolt" size="xs" color="#D97706" filled />
+          <span>{{ demoLoggingIn ? 'Memuat Demo…' : 'Jelajahi Akun Demo (1-Klik)' }}</span>
         </button>
       </div>
     </div>

@@ -176,7 +176,7 @@ withDefaults(
 .brand-title {
   display: inline-flex;
   align-items: baseline;
-  font-family: var(--font-ui);
+  font-family: var(--font-heading);
   font-weight: 900;
   letter-spacing: -0.04em;
   color: var(--color-ink);
@@ -209,6 +209,6 @@ withDefaults(
   letter-spacing: 0.08em;
   text-transform: uppercase;
   color: #64748B;
-  font-family: var(--font-ui);
+  font-family: var(--font-heading);
 }
 </style>

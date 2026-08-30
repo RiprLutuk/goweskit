@@ -1,6 +1,5 @@
 <script setup lang="ts">
 const { login } = useAuth();
-const { loading: googleLoading, triggerGoogleSignIn } = useGoogleAuth();
 const { toast, alert } = useNotify();
 
 const email = ref('');
@@ -69,11 +68,6 @@ async function quickDemoLogin(): Promise<void> {
     demoLoggingIn.value = false;
   }
 }
-
-async function continueWithGoogle(): Promise<void> {
-  errorMessage.value = '';
-  await triggerGoogleSignIn();
-}
 </script>
 
 <template>
@@ -110,7 +104,10 @@ async function continueWithGoogle(): Promise<void> {
               @input="errors.email = ''"
             />
           </label>
-          <span v-if="errors.email" class="field-error-msg">⚠️ {{ errors.email }}</span>
+          <span v-if="errors.email" class="field-error-msg">
+            <GIcon name="shield" size="xs" color="#EF4444" filled />
+            <span>{{ errors.email }}</span>
+          </span>
         </div>
 
         <div class="form-field">
@@ -127,7 +124,10 @@ async function continueWithGoogle(): Promise<void> {
               @input="errors.password = ''"
             />
           </label>
-          <span v-if="errors.password" class="field-error-msg">⚠️ {{ errors.password }}</span>
+          <span v-if="errors.password" class="field-error-msg">
+            <GIcon name="shield" size="xs" color="#EF4444" filled />
+            <span>{{ errors.password }}</span>
+          </span>
         </div>
 
         <button
@@ -144,7 +144,8 @@ async function continueWithGoogle(): Promise<void> {
           :disabled="demoLoggingIn"
           @click="quickDemoLogin"
         >
-          {{ demoLoggingIn ? 'Memuat Demo…' : '⚡ Masuk Akun Demo (1-Klik)' }}
+          <GIcon name="bolt" size="xs" color="#D97706" filled />
+          <span>{{ demoLoggingIn ? 'Memuat Demo…' : 'Masuk Akun Demo (1-Klik)' }}</span>
         </button>
       </form>
 

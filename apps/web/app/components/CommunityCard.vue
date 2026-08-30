@@ -28,7 +28,7 @@ const isVerified = computed(() =>
 <template>
   <NuxtLink
     class="clean-community-card"
-    :to="`/community/${community.id}`"
+    :to="`/community/${community.slug || community.id}`"
     :aria-label="`Buka komunitas ${community.name}`"
   >
     <!-- Left: Soft Initial Avatar -->
@@ -40,14 +40,20 @@ const isVerified = computed(() =>
     <div class="clean-card-body">
       <div class="card-title-row">
         <h3 class="community-title">{{ community.name }}</h3>
-        <span v-if="isVerified" class="verified-dot" title="Terverifikasi">✓</span>
-        <span v-if="distance" class="dist-tag">📍 {{ distance }}</span>
+        <span v-if="isVerified" class="verified-dot" title="Terverifikasi">
+          <GIcon name="check" size="xs" color="#15803d" />
+        </span>
+        <span v-if="distance" class="dist-tag">
+          <GIcon name="pin" size="xs" /> {{ distance }}
+        </span>
       </div>
 
       <p class="community-meta-line">
         <span>{{ community.locality }}</span>
         <span class="dot-sep">·</span>
-        <span>👥 {{ community.memberCount }} Anggota</span>
+        <span>
+          <GIcon name="community" size="xs" /> {{ community.memberCount }} Anggota
+        </span>
         <span class="dot-sep">·</span>
         <span>{{ community.joinMode === 'open' ? 'Publik' : 'Privat' }}</span>
       </p>
@@ -68,7 +74,9 @@ const isVerified = computed(() =>
     </div>
 
     <!-- Right: Subtle Navigation Chevron -->
-    <span class="card-chevron" aria-hidden="true">›</span>
+    <span class="card-chevron" aria-hidden="true">
+      <GIcon name="chevron-right" size="xs" color="#94A3B8" />
+    </span>
   </NuxtLink>
 </template>
 

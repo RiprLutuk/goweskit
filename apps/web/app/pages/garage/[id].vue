@@ -152,12 +152,12 @@ async function deleteBike(): Promise<void> {
   }
 }
 
-function bikeTypeIcon(slug: string): string {
-  if (slug === 'mtb_hardtail') return '🌲';
-  if (slug === 'folding') return '🧲';
-  if (slug === 'road') return '⚡';
-  if (slug === 'gravel') return '🌾';
-  return '🚲';
+function bikeTypeIconName(slug: string): string {
+  if (slug === 'mtb_hardtail') return 'bike-mtb';
+  if (slug === 'folding') return 'bike-folding';
+  if (slug === 'road') return 'bike-road';
+  if (slug === 'gravel') return 'bike-gravel';
+  return 'bike';
 }
 
 const filteredDefinitions = computed(() => {
@@ -179,9 +179,21 @@ function specStatus(code: string): 'known' | 'unknown' | 'missing' {
   <div class="page-stack bike-detail-page">
     <NuxtLink class="back-link" to="/garage">← Kembali ke My Garage</NuxtLink>
 
-    <p v-if="loading" class="state-card" role="status">
-      Memuat detail sepeda…
-    </p>
+    <!-- Skeleton Bike Detail Shimmer during Loading -->
+    <div v-if="loading" class="page-stack" style="gap: 1.25rem;">
+      <div class="bike-hero-rich skeleton-card-box" style="padding: 1.5rem; display: flex; gap: 1.25rem; align-items: center;">
+        <div class="skeleton-shimmer" style="width: 5.5rem; height: 5.5rem; border-radius: 1.25rem; flex-shrink: 0;" />
+        <div style="flex: 1; display: grid; gap: 0.5rem;">
+          <div class="skeleton-shimmer" style="width: 30%; height: 1.1rem; border-radius: 0.35rem;" />
+          <div class="skeleton-shimmer" style="width: 60%; height: 1.8rem; border-radius: 0.5rem;" />
+          <div class="skeleton-shimmer" style="width: 45%; height: 0.9rem; border-radius: 0.35rem;" />
+        </div>
+      </div>
+      <div class="content-card skeleton-card-box" style="padding: 1.5rem; display: grid; gap: 0.85rem;">
+        <div class="skeleton-shimmer" style="width: 40%; height: 1.4rem; border-radius: 0.4rem;" />
+        <div v-for="i in 4" :key="i" class="skeleton-shimmer" style="width: 100%; height: 2.8rem; border-radius: 0.65rem;" />
+      </div>
+    </div>
     <div v-else-if="!user" class="state-card signed-out-state">
       <p>Masuk akun untuk melihat sepeda Anda.</p>
       <NuxtLink class="button button--primary" to="/login">Sign in</NuxtLink>
@@ -212,9 +224,11 @@ function specStatus(code: string): 'known' | 'unknown' | 'missing' {
               class="bike-hero-photo"
             />
             <div v-else class="bike-hero-rich__icon" aria-hidden="true">
-              {{ bikeTypeIcon(bike.bicycleType.slug) }}
+              <GIcon :name="bikeTypeIconName(bike.bicycleType.slug)" size="2xl" color="#17202A" />
             </div>
-            <span class="photo-edit-badge" aria-hidden="true">📷</span>
+            <span class="photo-edit-badge" aria-hidden="true">
+              <GIcon name="camera" size="xs" color="#FFFFFF" />
+            </span>
           </div>
 
           <div class="bike-hero-rich__info">
@@ -234,19 +248,19 @@ function specStatus(code: string): 'known' | 'unknown' | 'missing' {
               type="button"
               @click="showPassportModal = true"
             >
-              📸 Flex / Paspor Sepeda
+              <GIcon name="camera" size="xs" /> Flex / Paspor Sepeda
             </button>
             <NuxtLink
               class="button button--secondary"
               :to="`/ride-flex?bike=${encodeURIComponent(bike.nickname)}`"
             >
-              ✨ AI Ride Flex Poster
+              <GIcon name="sparkles" size="xs" color="#16A34A" /> AI Ride Flex Poster
             </NuxtLink>
             <NuxtLink
               class="button button--primary"
               :to="`/upgrade-lab?bike=${bike.id}`"
             >
-              ⚡ Cek Upgrade Lab
+              <GIcon name="upgrade" size="xs" filled /> Cek Upgrade Lab
             </NuxtLink>
             <button
               class="text-button text-button--danger"
@@ -280,7 +294,8 @@ function specStatus(code: string): 'known' | 'unknown' | 'missing' {
           :aria-selected="activeTab === 'specs'"
           @click="activeTab = 'specs'"
         >
-          📏 Standar Teknis
+          <GIcon name="frame" size="xs" />
+          <span>Standar Teknis</span>
         </button>
         <button
           class="bike-tab"
@@ -290,7 +305,8 @@ function specStatus(code: string): 'known' | 'unknown' | 'missing' {
           :aria-selected="activeTab === 'components'"
           @click="activeTab = 'components'"
         >
-          🔩 Komponen Terpasang
+          <GIcon name="cassette" size="xs" />
+          <span>Komponen Terpasang</span>
         </button>
         <button
           class="bike-tab"
@@ -300,7 +316,8 @@ function specStatus(code: string): 'known' | 'unknown' | 'missing' {
           :aria-selected="activeTab === 'maintenance'"
           @click="activeTab = 'maintenance'"
         >
-          🔧 Riwayat Servis
+          <GIcon name="wrench" size="xs" />
+          <span>Riwayat Servis</span>
         </button>
       </nav>
 
@@ -427,7 +444,9 @@ function specStatus(code: string): 'known' | 'unknown' | 'missing' {
       <div class="native-modal-sheet">
         <div class="modal-header">
           <h2>Foto Sepeda</h2>
-          <button class="modal-close" type="button" @click="showPhotoModal = false">✕</button>
+          <button class="modal-close" type="button" @click="showPhotoModal = false">
+            <GIcon name="close" size="xs" />
+          </button>
         </div>
 
         <form class="clean-form" @submit.prevent="saveBikePhoto">

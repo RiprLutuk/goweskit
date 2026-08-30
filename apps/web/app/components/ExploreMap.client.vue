@@ -571,7 +571,10 @@ onBeforeUnmount(() => {
         :title="`Gaya Peta: ${currentTheme}`"
         @click="cycleTheme"
       >
-        {{ currentTheme === 'streets' ? '🗺️' : (currentTheme === 'satellite' ? '🛰️' : '⛰️') }}
+        <GIcon
+          :name="currentTheme === 'streets' ? 'map' : (currentTheme === 'satellite' ? 'radar' : 'mountain')"
+          size="sm"
+        />
       </button>
 
       <!-- 2. 3D / 2D Perspective Toggle -->

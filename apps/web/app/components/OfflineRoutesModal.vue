@@ -32,7 +32,7 @@ function formatDist(km: number): string {
         <div class="offline-modal__header">
           <div>
             <div class="offline-status-pill" :class="{ 'offline-status-pill--offline': !isOnline }">
-              <span class="status-dot"></span>
+              <span class="status-dot"/>
               {{ isOnline ? 'Tersambung Internet' : 'Mode Offline (Tanpa Sinyal)' }}
             </div>
             <h2 id="offline-modal-title" class="offline-title">Rute Tersimpan Offline</h2>
@@ -43,14 +43,16 @@ function formatDist(km: number): string {
             aria-label="Tutup"
             @click="emit('close')"
           >
-            ✕
+            <GIcon name="close" size="xs" />
           </button>
         </div>
 
         <!-- Body -->
         <div class="offline-modal__body">
           <div v-if="savedRoutes.length === 0" class="empty-offline-box">
-            <span class="empty-icon">🚵</span>
+            <div class="empty-icon-box">
+              <GIcon name="route" size="2xl" color="#94A3B8" />
+            </div>
             <h3>Belum Ada Rute Offline</h3>
             <p>
               Simpan rute favorit saat terhubung internet agar peta elevasi dan titik koordinat tetap bisa diakses di puncak bukit atau pegunungan.
@@ -75,7 +77,9 @@ function formatDist(km: number): string {
 
               <!-- Sparkline Elevation if exists -->
               <div v-if="route.elevationProfile && route.elevationProfile.length > 1" class="elevation-mini-preview">
-                <span class="elevation-label">📈 Profil Kontur Ketinggian Tersimpan</span>
+                <span class="elevation-label">
+                  <GIcon name="mountain" size="xs" /> Profil Kontur Ketinggian Tersimpan
+                </span>
               </div>
 
               <!-- Action Bar -->
@@ -86,7 +90,7 @@ function formatDist(km: number): string {
                   title="Unduh GPX untuk Head Unit"
                   @click="exportGpxFile(route)"
                 >
-                  📥 Export GPX
+                  <GIcon name="download" size="xs" /> Export GPX
                 </button>
                 <button
                   type="button"
@@ -94,7 +98,7 @@ function formatDist(km: number): string {
                   title="Hapus dari penyimpanan lokal"
                   @click="removeOfflineRoute(route.id)"
                 >
-                  🗑️ Hapus
+                  <GIcon name="trash" size="xs" /> Hapus
                 </button>
               </div>
             </div>

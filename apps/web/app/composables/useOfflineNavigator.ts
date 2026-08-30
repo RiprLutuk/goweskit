@@ -90,7 +90,7 @@ export function useOfflineNavigator() {
         `"${route.title}" siap diakses tanpa internet di medan gowes.`,
       );
       return true;
-    } catch (err: unknown) {
+    } catch {
       toast.error('Gagal Menyimpan', 'Penyimpanan lokal browser penuh.');
       return false;
     }

@@ -26,6 +26,7 @@ const userPillName = computed(() => {
     <!-- Client-Side PWA Utilities Container -->
     <div class="pwa-teleports">
       <ClientOnly>
+        <LocationPromptBanner />
         <OfflineBanner />
         <PwaInstallPrompt />
         <template #fallback>
