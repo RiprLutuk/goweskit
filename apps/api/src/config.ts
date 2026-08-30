@@ -24,7 +24,9 @@ const environmentSchema = z.object({
   BREVO_SENDER_NAME: optionalSecret,
   BREVO_SENDER_EMAIL: optionalEmail,
   DATABASE_URL: z.url().default('postgresql://lutuk@localhost:1921/goweskit'),
+  GEMINI_API_KEY: optionalSecret,
   GOOGLE_CLIENT_ID: optionalSecret,
+  OPENAI_API_KEY: optionalSecret,
   OTP_DEMO_ENABLED: z.enum(['true', 'false']).optional(),
   OTP_HMAC_SECRET: optionalSecret,
   R2_ACCOUNT_ID: z.string().trim().min(1),
@@ -52,6 +54,10 @@ const environmentSchema = z.object({
 });
 
 export interface AppConfig {
+  ai: {
+    geminiApiKey: string | null;
+    openaiApiKey: string | null;
+  };
   apiPort: number;
   databaseUrl: string;
   email: null | {
@@ -117,6 +123,10 @@ export function readConfig(
   }
 
   return {
+    ai: {
+      geminiApiKey: parsed.GEMINI_API_KEY ?? null,
+      openaiApiKey: parsed.OPENAI_API_KEY ?? null,
+    },
     apiPort: parsed.API_PORT,
     databaseUrl: parsed.DATABASE_URL,
     email:

@@ -14,6 +14,10 @@ const environment = {
 describe('API configuration', () => {
   it('reads and normalizes required R2 configuration', () => {
     expect(readConfig(environment)).toMatchObject({
+      ai: {
+        geminiApiKey: null,
+        openaiApiKey: null,
+      },
       email: null,
       environment: 'development',
       googleClientId: null,
@@ -28,6 +32,20 @@ describe('API configuration', () => {
         keyPrefix: 'goweskit/bike-photos',
       },
       trustProxyHops: 0,
+    });
+  });
+
+  it('reads optional Gemini and OpenAI API keys when present', () => {
+    const aiEnv = {
+      ...environment,
+      GEMINI_API_KEY: 'gemini-test-secret',
+      OPENAI_API_KEY: 'openai-test-secret',
+    };
+    expect(readConfig(aiEnv)).toMatchObject({
+      ai: {
+        geminiApiKey: 'gemini-test-secret',
+        openaiApiKey: 'openai-test-secret',
+      },
     });
   });
 

@@ -15,7 +15,7 @@ export function registerRideFlexRoutes(
     '/api/v1/ride-flex/generate-story',
     async (request) => {
       const input = parseInput(GenerateRideStoryRequestSchema, request.body);
-      return service.generateStory(input);
+      return await service.generateStory(input);
     },
   );
 }

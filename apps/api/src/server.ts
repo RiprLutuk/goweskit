@@ -121,7 +121,10 @@ const app = buildApp({
       new DrizzleMaintenanceRepository(databaseClient.database),
       garageService,
     ),
-    rideFlex: new RideFlexService(),
+    rideFlex: new RideFlexService({
+      geminiApiKey: config.ai.geminiApiKey,
+      openaiApiKey: config.ai.openaiApiKey,
+    }),
     safety: safetyService,
     savedItems: new SavedItemService(
       new DrizzleSavedItemRepository(databaseClient.database),
