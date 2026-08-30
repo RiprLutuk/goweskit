@@ -130,6 +130,14 @@ async function copyCaption(text: string) {
 }
 
 async function renderCanvas(aspectRatio: 'story' | 'post' | 'landscape'): Promise<HTMLCanvasElement> {
+  if (typeof document !== 'undefined' && document.fonts?.ready) {
+    try {
+      await document.fonts.ready;
+    } catch {
+      // ignore
+    }
+  }
+
   const canvas = document.createElement('canvas');
   const isStory = aspectRatio === 'story';
   const isLandscape = aspectRatio === 'landscape';
@@ -147,6 +155,10 @@ async function renderCanvas(aspectRatio: 'story' | 'post' | 'landscape'): Promis
 
   const ctx = canvas.getContext('2d');
   if (!ctx) throw new Error('Canvas 2D context not available');
+
+  const FONT_UI = '-apple-system, BlinkMacSystemFont, "Plus Jakarta Sans", "Inter", "Segoe UI", Roboto, sans-serif';
+  const FONT_MONO = '"SF Pro Text", "JetBrains Mono", "Geist Mono", "Courier New", monospace';
+  const FONT_SERIF = 'Georgia, "Playfair Display", "Times New Roman", serif';
 
   const bgGradients: Record<string, [string, string, string]> = {
     alpine: ['#0f2b48', '#081726', '#020617'],
@@ -185,69 +197,119 @@ async function renderCanvas(aspectRatio: 'story' | 'post' | 'landscape'): Promis
     }
   }
 
-  // Draw Topographic Background Curves
-  ctx.strokeStyle = 'rgba(201, 243, 106, 0.12)';
+  if (rideForm.templateStyle === 'cyber_hud') {
+    ctx.strokeStyle = 'rgba(56, 189, 248, 0.08)';
+    ctx.lineWidth = 1.5;
+    const gridSize = 60;
+    for (let gx = 0; gx < canvas.width; gx += gridSize) {
+      ctx.beginPath();
+      ctx.moveTo(gx, 0);
+      ctx.lineTo(gx, canvas.height);
+      ctx.stroke();
+    }
+    for (let gy = 0; gy < canvas.height; gy += gridSize) {
+      ctx.beginPath();
+      ctx.moveTo(0, gy);
+      ctx.lineTo(canvas.width, gy);
+      ctx.stroke();
+    }
+
+    ctx.strokeStyle = 'rgba(56, 189, 248, 0.8)';
+    ctx.lineWidth = 4;
+    const bLen = 40;
+    const bMargin = 40;
+
+    ctx.beginPath();
+    ctx.moveTo(bMargin, bMargin + bLen);
+    ctx.lineTo(bMargin, bMargin);
+    ctx.lineTo(bMargin + bLen, bMargin);
+    ctx.stroke();
+
+    ctx.beginPath();
+    ctx.moveTo(canvas.width - bMargin - bLen, bMargin);
+    ctx.lineTo(canvas.width - bMargin, bMargin);
+    ctx.lineTo(canvas.width - bMargin, bMargin + bLen);
+    ctx.stroke();
+
+    ctx.beginPath();
+    ctx.moveTo(bMargin, canvas.height - bMargin - bLen);
+    ctx.lineTo(bMargin, canvas.height - bMargin);
+    ctx.lineTo(bMargin + bLen, canvas.height - bMargin);
+    ctx.stroke();
+
+    ctx.beginPath();
+    ctx.moveTo(canvas.width - bMargin - bLen, canvas.height - bMargin);
+    ctx.lineTo(canvas.width - bMargin, canvas.height - bMargin);
+    ctx.lineTo(canvas.width - bMargin, canvas.height - bMargin - bLen);
+    ctx.stroke();
+  }
+
+  // Subtle Topo Lines
+  ctx.strokeStyle = 'rgba(201, 243, 106, 0.14)';
   ctx.lineWidth = 3;
   ctx.beginPath();
-  ctx.moveTo(0, canvas.height * 0.25);
-  ctx.bezierCurveTo(canvas.width * 0.3, canvas.height * 0.18, canvas.width * 0.7, canvas.height * 0.35, canvas.width, canvas.height * 0.22);
+  ctx.moveTo(0, canvas.height * 0.28);
+  ctx.bezierCurveTo(canvas.width * 0.35, canvas.height * 0.18, canvas.width * 0.65, canvas.height * 0.38, canvas.width, canvas.height * 0.24);
   ctx.stroke();
 
   // Dark Vignette
   const vignette = ctx.createLinearGradient(0, 0, 0, canvas.height);
-  vignette.addColorStop(0, 'rgba(6, 10, 18, 0.3)');
-  vignette.addColorStop(0.4, 'rgba(6, 10, 18, 0.1)');
-  vignette.addColorStop(0.75, 'rgba(6, 10, 18, 0.85)');
+  vignette.addColorStop(0, 'rgba(6, 10, 18, 0.4)');
+  vignette.addColorStop(0.35, 'rgba(6, 10, 18, 0.08)');
+  vignette.addColorStop(0.7, 'rgba(6, 10, 18, 0.85)');
   vignette.addColorStop(1, 'rgba(6, 10, 18, 0.98)');
   ctx.fillStyle = vignette;
   ctx.fillRect(0, 0, canvas.width, canvas.height);
 
-  // Official GowesKit Brand Pill
   const pillY = isStory ? 90 : 60;
+  const pillH = 68;
+  const pillW = 340;
+
   ctx.fillStyle = 'rgba(23, 32, 42, 0.94)';
-  ctx.strokeStyle = 'rgba(201, 243, 106, 0.4)';
+  ctx.strokeStyle = 'rgba(201, 243, 106, 0.45)';
   ctx.lineWidth = 2.5;
   ctx.beginPath();
-  ctx.roundRect(70, pillY, 320, 64, 32);
+  ctx.roundRect(70, pillY, pillW, pillH, 34);
   ctx.fill();
   ctx.stroke();
 
-  // Draw Mini Emblem Box
   ctx.fillStyle = '#0F172A';
   ctx.beginPath();
-  ctx.roundRect(82, pillY + 10, 44, 44, 12);
+  ctx.roundRect(82, pillY + 10, 48, 48, 14);
   ctx.fill();
 
-  // Draw G Wheel mark
   ctx.strokeStyle = '#C9F36A';
-  ctx.lineWidth = 3.5;
+  ctx.lineWidth = 4;
   ctx.lineCap = 'round';
   ctx.lineJoin = 'round';
   ctx.beginPath();
-  ctx.arc(104, pillY + 32, 12, 0.6 * Math.PI, 1.8 * Math.PI);
-  ctx.lineTo(104, pillY + 32);
+  ctx.arc(106, pillY + 34, 13, 0.6 * Math.PI, 1.8 * Math.PI);
+  ctx.lineTo(106, pillY + 34);
   ctx.stroke();
 
-  // Draw Arrow
   ctx.strokeStyle = '#8EDDF4';
-  ctx.lineWidth = 3;
+  ctx.lineWidth = 3.5;
   ctx.beginPath();
-  ctx.moveTo(108, pillY + 26);
-  ctx.lineTo(116, pillY + 32);
-  ctx.lineTo(108, pillY + 38);
+  ctx.moveTo(110, pillY + 28);
+  ctx.lineTo(119, pillY + 34);
+  ctx.lineTo(110, pillY + 40);
   ctx.stroke();
 
-  // Draw Wordmark
-  ctx.font = '900 32px sans-serif';
   ctx.fillStyle = '#FFFFFF';
-  ctx.fillText('Gowes', 140, pillY + 44);
-  ctx.fillStyle = '#C9F36A';
-  ctx.fillText('Kit', 255, pillY + 44);
+  ctx.beginPath();
+  ctx.arc(106, pillY + 34, 3, 0, 2 * Math.PI);
+  ctx.fill();
 
-  // Green Dot
+  ctx.font = `900 34px ${FONT_UI}`;
+  ctx.textBaseline = 'middle';
+  ctx.fillStyle = '#FFFFFF';
+  ctx.fillText('Gowes', 145, pillY + 35);
+  ctx.fillStyle = '#C9F36A';
+  ctx.fillText('Kit', 260, pillY + 35);
+
   ctx.fillStyle = '#C9F36A';
   ctx.beginPath();
-  ctx.arc(310, pillY + 41, 5, 0, 2 * Math.PI);
+  ctx.arc(316, pillY + 31, 5, 0, 2 * Math.PI);
   ctx.fill();
 
   if (rideForm.activeSticker !== 'none') {
@@ -261,126 +323,176 @@ async function renderCanvas(aspectRatio: 'story' | 'post' | 'landscape'): Promis
     }[rideForm.activeSticker];
 
     if (stickerText) {
+      const stickerW = 390;
       ctx.fillStyle = '#C9F36A';
       ctx.beginPath();
-      ctx.roundRect(canvas.width - 440, pillY, 370, 64, 32);
+      ctx.roundRect(canvas.width - stickerW - 70, pillY, stickerW, pillH, 34);
       ctx.fill();
 
-      ctx.fillStyle = '#0f172a';
-      ctx.font = '900 24px sans-serif';
-      ctx.fillText(stickerText, canvas.width - 415, pillY + 42);
+      ctx.fillStyle = '#080d19';
+      ctx.font = `900 24px ${FONT_UI}`;
+      ctx.textBaseline = 'middle';
+      ctx.fillText(stickerText, canvas.width - stickerW - 70 + 25, pillY + 35);
     }
   }
 
-  const heroY = isStory ? 1040 : (isLandscape ? 420 : 470);
-  
+  const heroY = isStory ? 1080 : (isLandscape ? 400 : 470);
+  ctx.textBaseline = 'alphabetic';
+
+  if (rideForm.templateStyle === 'rapha_editorial') {
+    ctx.fillStyle = '#FF8C75';
+    ctx.font = `900 26px ${FONT_MONO}`;
+    ctx.fillText('STAGE 01 · FINISHED ETAPPE', 70, heroY - 170);
+  } else if (rideForm.templateStyle === 'cyber_hud') {
+    ctx.fillStyle = '#00FF66';
+    ctx.font = `900 26px ${FONT_MONO}`;
+    ctx.fillText('GPS: LOCKED (14 SATS) · CAD: 88 RPM', 70, heroY - 170);
+  } else if (rideForm.templateStyle === 'cafe_santai') {
+    ctx.fillStyle = '#FDE68A';
+    ctx.font = `900 26px ${FONT_UI}`;
+    ctx.fillText('☕ RECOVERY MODE · KULINERAN', 70, heroY - 170);
+  }
+
+  const distNumberStr = `${rideForm.distanceKm}`;
+
   if (rideForm.templateStyle === 'rapha_editorial') {
     ctx.fillStyle = '#FFFFFF';
-    ctx.font = '900 135px serif';
-    ctx.fillText(`${rideForm.distanceKm}`, 70, heroY);
+    ctx.font = `900 160px ${FONT_SERIF}`;
+    ctx.fillText(distNumberStr, 70, heroY);
+
+    const numWidth = ctx.measureText(distNumberStr).width;
     ctx.fillStyle = '#FF8C75';
-    ctx.font = '700 48px serif';
-    ctx.fillText('KM', 70 + ctx.measureText(`${rideForm.distanceKm}`).width + 25, heroY - 45);
+    ctx.font = `800 54px ${FONT_SERIF}`;
+    ctx.fillText('KM', 70 + numWidth + 24, heroY - 55);
 
     ctx.fillStyle = '#FFFFFF';
-    ctx.font = '600 42px serif';
-    ctx.fillText(rideForm.title.slice(0, 32), 70, heroY + 65);
+    ctx.font = `700 46px ${FONT_SERIF}`;
+    ctx.fillText(rideForm.title.slice(0, 32), 70, heroY + 68);
 
     ctx.fillStyle = '#FFD1C9';
-    ctx.font = '500 26px serif';
-    ctx.fillText(`ETAPPE · ${rideForm.bikeName} · ${rideForm.temperatureC}°C`, 70, heroY + 115);
+    ctx.font = `500 28px ${FONT_SERIF}`;
+    ctx.fillText(`🚴 ${rideForm.bikeName} · ${rideForm.temperatureC}°C Cerah`, 70, heroY + 120);
   } else if (rideForm.templateStyle === 'cyber_hud') {
     ctx.fillStyle = '#38BDF8';
-    ctx.font = '900 145px monospace';
-    ctx.fillText(`${rideForm.distanceKm}`, 70, heroY);
-    ctx.fillStyle = '#00FF66';
-    ctx.font = '900 52px monospace';
-    ctx.fillText('KM_RAW', 70 + ctx.measureText(`${rideForm.distanceKm}`).width + 25, heroY - 50);
+    ctx.font = `900 160px ${FONT_MONO}`;
+    ctx.fillText(distNumberStr, 70, heroY);
 
-    ctx.fillStyle = '#FFFFFF';
-    ctx.font = '900 44px monospace';
-    ctx.fillText(`SYS.ROUTE > ${rideForm.title.slice(0, 26)}`, 70, heroY + 70);
+    const numWidth = ctx.measureText(distNumberStr).width;
+    ctx.fillStyle = '#00FF66';
+    ctx.font = `900 50px ${FONT_MONO}`;
+    ctx.fillText('KM', 70 + numWidth + 24, heroY - 55);
 
     ctx.fillStyle = '#38BDF8';
-    ctx.font = 'bold 26px monospace';
-    ctx.fillText(`[RIG: ${rideForm.bikeName}] · TEMP: ${rideForm.temperatureC}°C`, 70, heroY + 120);
+    ctx.font = `900 44px ${FONT_MONO}`;
+    ctx.fillText(`> ${rideForm.title.slice(0, 28)}`, 70, heroY + 68);
+
+    ctx.fillStyle = '#94A3B8';
+    ctx.font = `700 28px ${FONT_MONO}`;
+    ctx.fillText(`RIG: ${rideForm.bikeName} · ${rideForm.temperatureC}°C`, 70, heroY + 120);
   } else if (rideForm.templateStyle === 'cafe_santai') {
     ctx.fillStyle = '#F59E0B';
-    ctx.font = '900 145px monospace';
-    ctx.fillText(`${rideForm.distanceKm}`, 70, heroY);
+    ctx.font = `900 160px ${FONT_UI}`;
+    ctx.fillText(distNumberStr, 70, heroY);
+
+    const numWidth = ctx.measureText(distNumberStr).width;
     ctx.fillStyle = '#FDE68A';
-    ctx.font = '900 56px sans-serif';
-    ctx.fillText('KM', 70 + ctx.measureText(`${rideForm.distanceKm}`).width + 25, heroY - 50);
+    ctx.font = `900 54px ${FONT_UI}`;
+    ctx.fillText('KM', 70 + numWidth + 24, heroY - 55);
 
     ctx.fillStyle = '#FFFFFF';
-    ctx.font = '900 46px sans-serif';
-    ctx.fillText(`☕ ${rideForm.title.slice(0, 30)}`, 70, heroY + 70);
+    ctx.font = `900 48px ${FONT_UI}`;
+    ctx.fillText(rideForm.title.slice(0, 32), 70, heroY + 68);
 
     ctx.fillStyle = '#FDE68A';
-    ctx.font = 'bold 28px sans-serif';
+    ctx.font = `700 28px ${FONT_UI}`;
     ctx.fillText(`🍢 Sate Fuel · ${rideForm.bikeName} · ${rideForm.temperatureC}°C`, 70, heroY + 120);
   } else {
     ctx.fillStyle = '#C9F36A';
-    ctx.font = '900 145px monospace';
-    ctx.fillText(`${rideForm.distanceKm}`, 70, heroY);
+    ctx.font = `900 160px ${FONT_UI}`;
+    ctx.fillText(distNumberStr, 70, heroY);
+
+    const numWidth = ctx.measureText(distNumberStr).width;
     ctx.fillStyle = '#FFFFFF';
-    ctx.font = '900 56px sans-serif';
-    ctx.fillText('KM', 70 + ctx.measureText(`${rideForm.distanceKm}`).width + 25, heroY - 50);
+    ctx.font = `900 54px ${FONT_UI}`;
+    ctx.fillText('KM', 70 + numWidth + 24, heroY - 55);
 
     ctx.fillStyle = '#FFFFFF';
-    ctx.font = '900 46px sans-serif';
-    ctx.fillText(rideForm.title.slice(0, 32), 70, heroY + 70);
+    ctx.font = `900 48px ${FONT_UI}`;
+    ctx.fillText(rideForm.title.slice(0, 32), 70, heroY + 68);
 
     ctx.fillStyle = '#CBD5E1';
-    ctx.font = 'bold 28px sans-serif';
+    ctx.font = `700 28px ${FONT_UI}`;
     ctx.fillText(`🚴 ${rideForm.bikeName} · ${rideForm.temperatureC}°C Cerah`, 70, heroY + 120);
   }
 
-  const cardY = heroY + 155;
+  const cardY = heroY + 165;
   const cardH = isStory ? 480 : (isLandscape ? 340 : 360);
-  ctx.fillStyle = 'rgba(15, 23, 42, 0.92)';
+  const cardW = canvas.width - 140;
+
+  ctx.fillStyle = 'rgba(15, 23, 42, 0.94)';
   ctx.strokeStyle = rideForm.templateStyle === 'rapha_editorial' 
     ? 'rgba(255, 140, 117, 0.5)' 
     : (rideForm.templateStyle === 'cyber_hud' ? 'rgba(56, 189, 248, 0.6)' : (rideForm.templateStyle === 'cafe_santai' ? 'rgba(245, 158, 11, 0.5)' : 'rgba(201, 243, 106, 0.4)'));
   ctx.lineWidth = 3;
   ctx.beginPath();
-  ctx.roundRect(70, cardY, canvas.width - 140, cardH, 32);
+  ctx.roundRect(70, cardY, cardW, cardH, 36);
   ctx.fill();
   ctx.stroke();
 
-  ctx.strokeStyle = rideForm.templateStyle === 'cafe_santai' ? '#F59E0B' : '#38BDF8';
+  ctx.fillStyle = '#94A3B8';
+  ctx.font = `900 24px ${FONT_MONO}`;
+  ctx.fillText('ELEVASI PROFILE', 120, cardY + 55);
+
+  ctx.fillStyle = rideForm.templateStyle === 'cafe_santai' ? '#F59E0B' : (rideForm.templateStyle === 'rapha_editorial' ? '#FF8C75' : '#38BDF8');
+  ctx.font = `900 26px ${FONT_MONO}`;
+  ctx.fillText(`+${rideForm.elevationM}m Climb`, cardW - 140, cardY + 55);
+
+  const curveY = cardY + 105;
+  ctx.strokeStyle = rideForm.templateStyle === 'cafe_santai' ? '#F59E0B' : (rideForm.templateStyle === 'rapha_editorial' ? '#FF8C75' : '#38BDF8');
   ctx.lineWidth = 5;
   ctx.beginPath();
-  ctx.moveTo(120, cardY + 80);
-  ctx.bezierCurveTo(340, cardY + 20, 600, cardY + 75, canvas.width - 120, cardY + 40);
+  ctx.moveTo(120, curveY + 25);
+  ctx.bezierCurveTo(340, curveY + 10, 600, curveY + 35, cardW - 40, curveY - 5);
   ctx.stroke();
 
-  const cellW = (canvas.width - 140) / 2;
+  ctx.fillStyle = '#38BDF8';
+  ctx.beginPath();
+  ctx.arc(120, curveY + 25, 7, 0, 2 * Math.PI);
+  ctx.fill();
+
+  ctx.fillStyle = '#C9F36A';
+  ctx.beginPath();
+  ctx.arc(cardW - 40, curveY - 5, 9, 0, 2 * Math.PI);
+  ctx.fill();
+
+  const cellW = (cardW - 60) / 2;
   const metrics = [
     { label: 'ELEVASI TANJAKAN', val: `+${rideForm.elevationM} m`, color: '#38BDF8' },
     { label: 'WAKTU TEMPUH', val: formatDuration(rideForm.durationMinutes), color: '#FFFFFF' },
-    { label: 'RATA-RATA SPEED', val: `${rideForm.avgSpeedKmH} km/h`, color: rideForm.templateStyle === 'cafe_santai' ? '#F59E0B' : '#C9F36A' },
+    { label: 'RATA-RATA SPEED', val: `${rideForm.avgSpeedKmH} km/h`, color: rideForm.templateStyle === 'cafe_santai' ? '#F59E0B' : (rideForm.templateStyle === 'rapha_editorial' ? '#FF8C75' : '#C9F36A') },
     { label: 'KALORI TERBAKAR', val: `~${rideForm.caloriesKcal} kcal`, color: '#FF8C75' },
   ];
 
   metrics.forEach((m, idx) => {
     const col = idx % 2;
     const row = Math.floor(idx / 2);
-    const x = 120 + col * (cellW - 20);
-    const y = cardY + 140 + row * (isStory ? 170 : 115);
+    const x = 120 + col * cellW;
+    const y = cardY + 185 + row * (isStory ? 135 : 95);
 
     ctx.fillStyle = '#94A3B8';
-    ctx.font = 'bold 24px sans-serif';
+    ctx.font = `800 22px ${FONT_MONO}`;
     ctx.fillText(m.label, x, y);
 
     ctx.fillStyle = m.color;
-    ctx.font = '900 56px monospace';
-    ctx.fillText(m.val, x, y + 60);
+    ctx.font = `900 52px ${FONT_UI}`;
+    ctx.fillText(m.val, x, y + 55);
   });
 
   ctx.fillStyle = 'rgba(201, 243, 106, 0.85)';
-  ctx.font = 'bold 24px monospace';
-  ctx.fillText('⚡ VERIFIED BY GOWESKIT ENGINE · GOWESKIT.ID', 80, canvas.height - 45);
+  ctx.font = `900 24px ${FONT_MONO}`;
+  ctx.textAlign = 'center';
+  ctx.fillText('⚡ VERIFIED BY GOWESKIT ENGINE · GOWESKIT.ID', canvas.width / 2, canvas.height - 45);
+  ctx.textAlign = 'start';
 
   return canvas;
 }
@@ -610,7 +722,6 @@ async function shareToMedia() {
 
           <!-- Right / Bottom: Toolbox Tabs & Controls -->
           <div class="modal-controls-col">
-            <!-- Horizontally scrollable menu bar -->
             <nav class="m-tabs-nav">
               <button
                 type="button"
@@ -697,62 +808,60 @@ async function shareToMedia() {
             </div>
 
             <!-- Tab 2: Backgrounds -->
-            <div v-show="activeTab === 'backgrounds'" class="m-tab-panel">
-              <div class="m-bg-grid">
-                <button
-                  type="button"
-                  class="m-bg-btn bg--alpine"
-                  :class="{ active: rideForm.bgPreset === 'alpine' }"
-                  @click="rideForm.bgPreset = 'alpine'"
-                >
-                  🏔️ Alpine
-                </button>
-                <button
-                  type="button"
-                  class="m-bg-btn bg--gravel"
-                  :class="{ active: rideForm.bgPreset === 'gravel' }"
-                  @click="rideForm.bgPreset = 'gravel'"
-                >
-                  🌲 Gravel
-                </button>
-                <button
-                  type="button"
-                  class="m-bg-btn bg--sunset"
-                  :class="{ active: rideForm.bgPreset === 'sunset' }"
-                  @click="rideForm.bgPreset = 'sunset'"
-                >
-                  🌅 Sunset
-                </button>
-                <button
-                  type="button"
-                  class="m-bg-btn bg--crit"
-                  :class="{ active: rideForm.bgPreset === 'crit' }"
-                  @click="rideForm.bgPreset = 'crit'"
-                >
-                  ⚡ Crit
-                </button>
-                <button
-                  type="button"
-                  class="m-bg-btn bg--cafe"
-                  :class="{ active: rideForm.bgPreset === 'cafe' }"
-                  @click="rideForm.bgPreset = 'cafe'"
-                >
-                  ☕ Cafe
-                </button>
-                <button
-                  type="button"
-                  class="m-bg-btn bg--topo"
-                  :class="{ active: rideForm.bgPreset === 'topo' }"
-                  @click="rideForm.bgPreset = 'topo'"
-                >
-                  🗺️ Topo
-                </button>
-              </div>
-              <label class="m-upload-cta">
-                <input type="file" accept="image/*" class="sr-only" @change="handlePhotoUpload" />
-                <span>📸 Unggah Foto Sendiri dari HP</span>
-              </label>
+            <div v-show="activeTab === 'backgrounds'" class="m-bg-grid">
+              <button
+                type="button"
+                class="m-bg-btn bg--alpine"
+                :class="{ active: rideForm.bgPreset === 'alpine' }"
+                @click="rideForm.bgPreset = 'alpine'"
+              >
+                🏔️ Alpine
+              </button>
+              <button
+                type="button"
+                class="m-bg-btn bg--gravel"
+                :class="{ active: rideForm.bgPreset === 'gravel' }"
+                @click="rideForm.bgPreset = 'gravel'"
+              >
+                🌲 Gravel
+              </button>
+              <button
+                type="button"
+                class="m-bg-btn bg--sunset"
+                :class="{ active: rideForm.bgPreset === 'sunset' }"
+                @click="rideForm.bgPreset = 'sunset'"
+              >
+                🌅 Sunset
+              </button>
+              <button
+                type="button"
+                class="m-bg-btn bg--crit"
+                :class="{ active: rideForm.bgPreset === 'crit' }"
+                @click="rideForm.bgPreset = 'crit'"
+              >
+                ⚡ Crit
+              </button>
+              <button
+                type="button"
+                class="m-bg-btn bg--cafe"
+                :class="{ active: rideForm.bgPreset === 'cafe' }"
+                @click="rideForm.bgPreset = 'cafe'"
+              >
+                ☕ Cafe
+              </button>
+              <button
+                type="button"
+                class="m-bg-btn bg--topo"
+                :class="{ active: rideForm.bgPreset === 'topo' }"
+                @click="rideForm.bgPreset = 'topo'"
+              >
+                🗺️ Topo
+              </button>
             </div>
+            <label v-show="activeTab === 'backgrounds'" class="m-upload-cta">
+              <input type="file" accept="image/*" class="sr-only" @change="handlePhotoUpload" />
+              <span>📸 Unggah Foto Sendiri dari HP</span>
+            </label>
 
             <!-- Tab 3: Stickers -->
             <div v-show="activeTab === 'stickers'" class="m-tab-panel">
