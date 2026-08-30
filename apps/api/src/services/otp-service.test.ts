@@ -9,13 +9,14 @@ const workerConfig = {
   senderEmail: 'noreply@goweskit.test',
   senderName: 'GowesKit',
 };
+const hashSecret = 'test-otp-hmac-secret-with-at-least-32-characters';
 
 function createDemoService(): OtpService {
   return new OtpService({
     allowTestCode: true,
     enabled: true,
     exposeCode: true,
-    hashSecret: 'test-otp-hmac-secret',
+    hashSecret,
   });
 }
 
@@ -74,7 +75,7 @@ describe('OtpService', () => {
       emailWorker: new EmailWorker({ ...workerConfig, fetchFn }),
       enabled: true,
       exposeCode: false,
-      hashSecret: 'test-otp-hmac-secret',
+      hashSecret,
     });
 
     const result = await service.sendOtp({
@@ -102,7 +103,7 @@ describe('OtpService', () => {
       }),
       enabled: true,
       exposeCode: false,
-      hashSecret: 'test-otp-hmac-secret',
+      hashSecret,
     });
 
     await expect(
@@ -145,7 +146,7 @@ describe('OtpService', () => {
         fetchFn: () => Promise.resolve(new Response(null, { status: 201 })),
       }),
       enabled: true,
-      hashSecret: 'test-otp-hmac-secret',
+      hashSecret,
     });
 
     for (let sendCount = 0; sendCount < 5; sendCount += 1) {
@@ -159,5 +160,69 @@ describe('OtpService', () => {
     await expect(
       service.sendOtp({ email: 'quota@example.com', purpose: 'register' }),
     ).rejects.toMatchObject({ code: 'OTP_RATE_LIMITED', statusCode: 429 });
+  });
+
+  it('binds generated codes to their requested purpose', async () => {
+    const service = createDemoService();
+    const result = await service.sendOtp({
+      email: 'purpose@example.com',
+      purpose: 'register',
+    });
+    const code = result.demoOtp ?? '';
+
+    expect(() =>
+      service.verifyOtp('purpose@example.com', code, 'reset_password'),
+    ).toThrow(expect.objectContaining({ code: 'OTP_NOT_FOUND' }));
+    expect(service.verifyOtp('purpose@example.com', code, 'register')).toBe(
+      true,
+    );
+  });
+
+  it('invalidates a code on the fifth failed attempt', async () => {
+    const service = createDemoService();
+    const result = await service.sendOtp({
+      email: 'attempts@example.com',
+      purpose: 'register',
+    });
+
+    for (let attempt = 1; attempt < 5; attempt += 1) {
+      expect(() =>
+        service.verifyOtp('attempts@example.com', '000000', 'register'),
+      ).toThrow(expect.objectContaining({ code: 'OTP_INVALID' }));
+    }
+    expect(() =>
+      service.verifyOtp('attempts@example.com', '000000', 'register'),
+    ).toThrow(expect.objectContaining({ code: 'OTP_MAX_ATTEMPTS_EXCEEDED' }));
+    expect(() =>
+      service.verifyOtp(
+        'attempts@example.com',
+        result.demoOtp ?? '',
+        'register',
+      ),
+    ).toThrow(expect.objectContaining({ code: 'OTP_NOT_FOUND' }));
+  });
+
+  it('cleans expired bounded state before admitting a new recipient', async () => {
+    let now = Date.UTC(2026, 7, 29, 4, 0, 0);
+    vi.spyOn(Date, 'now').mockImplementation(() => now);
+    const service = new OtpService({
+      allowTestCode: true,
+      enabled: true,
+      exposeCode: true,
+      hashSecret,
+      maxRecords: 1,
+    });
+    await service.sendOtp({
+      email: 'first@example.com',
+      purpose: 'register',
+    });
+
+    now += 60 * 60 * 1000 + 1;
+    await expect(
+      service.sendOtp({
+        email: 'second@example.com',
+        purpose: 'register',
+      }),
+    ).resolves.toMatchObject({ success: true });
   });
 });

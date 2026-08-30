@@ -14,6 +14,11 @@ const optionalEmail = z.preprocess(
       : value,
   z.email().toLowerCase().optional(),
 );
+const optionalHmacSecret = z.preprocess(
+  (value) =>
+    typeof value === 'string' && value.trim().length === 0 ? undefined : value,
+  z.string().trim().min(32).optional(),
+);
 
 const environmentSchema = z.object({
   NODE_ENV: z
@@ -28,7 +33,7 @@ const environmentSchema = z.object({
   GOOGLE_CLIENT_ID: optionalSecret,
   OPENAI_API_KEY: optionalSecret,
   OTP_DEMO_ENABLED: z.enum(['true', 'false']).optional(),
-  OTP_HMAC_SECRET: optionalSecret,
+  OTP_HMAC_SECRET: optionalHmacSecret,
   R2_ACCOUNT_ID: z.string().trim().min(1),
   R2_ACCESS_KEY_ID: z.string().trim().min(1),
   R2_SECRET_ACCESS_KEY: z.string().trim().min(1),

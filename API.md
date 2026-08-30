@@ -32,7 +32,9 @@ Email OTP is delivered through Brevo when `BREVO_API_KEY` and a verified
 `BREVO_SENDER_EMAIL` are configured. The API waits for Brevo to accept the
 message before returning success, never returns the provider OTP, and discards
 the OTP if delivery fails. `OTP_DEMO_ENABLED=true` is local-only and is rejected
-in production. Password registration requires a valid `register` OTP. Codes are
+in production. Password registration requires a valid `register` OTP whenever
+email verification is enabled; deployments without an email provider keep
+password registration available without OTP. Codes are
 stored as purpose-bound HMACs and delivery is limited per IP and recipient.
 
 ## Learn

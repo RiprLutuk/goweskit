@@ -16,7 +16,8 @@ export const registerRequestSchema = z.object({
   otp: z
     .string()
     .trim()
-    .regex(/^\d{6}$/u, 'Kode OTP harus 6 digit angka'),
+    .regex(/^\d{6}$/u, 'Kode OTP harus 6 digit angka')
+    .optional(),
 });
 
 export type RegisterRequest = z.infer<typeof registerRequestSchema>;

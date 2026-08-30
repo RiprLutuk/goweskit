@@ -23,6 +23,7 @@ export const MAX_OTP_ATTEMPTS = 5;
 export const MAX_OTP_RECORDS = 10_000;
 export const MAX_RECIPIENT_SENDS_PER_HOUR = 5;
 const RECIPIENT_RATE_LIMIT_WINDOW_MS = 60 * 60 * 1000;
+type OtpPurpose = 'register' | 'reset_password';
 
 export interface OtpServiceOptions {
   allowTestCode?: boolean;
@@ -57,13 +58,21 @@ export class OtpService {
     if (this.enabled && this.hashSecret === undefined) {
       throw new Error('OTP hash secret is required when OTP is enabled.');
     }
+    if (this.hashSecret !== undefined && this.hashSecret.length < 32) {
+      throw new Error('OTP hash secret must contain at least 32 characters.');
+    }
+  }
+
+  public isEnabled(): boolean {
+    return this.enabled;
   }
 
   /** Generates, stores, and delivers a purpose-bound OTP before success. */
   public async sendOtp(input: SendOtpRequest): Promise<SendOtpResponse> {
     this.assertEnabled();
     const normalizedEmail = input.email.trim().toLowerCase();
-    const recordKey = this.recordKey(normalizedEmail, input.purpose);
+    const recipientKey = this.recipientKey(normalizedEmail);
+    const recordKey = this.recordKey(recipientKey, input.purpose);
     const now = Date.now();
     this.cleanupExpired(now);
 
@@ -82,7 +91,7 @@ export class OtpService {
       }
     }
 
-    this.consumeRecipientQuota(normalizedEmail, now);
+    this.consumeRecipientQuota(recipientKey, now);
     if (existing === undefined && this.store.size >= this.maxRecords) {
       throw new AppError(
         'OTP_RATE_LIMITED',
@@ -132,15 +141,13 @@ export class OtpService {
   }
 
   /** Verifies and consumes an OTP only for the requested purpose. */
-  public verifyOtp(
-    email: string,
-    code: string,
-    purpose: SendOtpRequest['purpose'],
-  ): boolean {
+  public verifyOtp(email: string, code: string, purpose: OtpPurpose): boolean {
     this.assertEnabled();
     const normalizedEmail = email.trim().toLowerCase();
     const trimmedCode = code.trim();
-    const recordKey = this.recordKey(normalizedEmail, purpose);
+    const recipientKey = this.recipientKey(normalizedEmail);
+    const recordKey = this.recordKey(recipientKey, purpose);
+    this.cleanupExpired(Date.now());
 
     if (this.allowTestCode && trimmedCode === '123456') {
       return true;
@@ -177,6 +184,14 @@ export class OtpService {
     if (!timingSafeEqual(record.codeHash, suppliedHash)) {
       record.attempts += 1;
       const remaining = MAX_OTP_ATTEMPTS - record.attempts;
+      if (remaining === 0) {
+        this.store.delete(recordKey);
+        throw new AppError(
+          'OTP_MAX_ATTEMPTS_EXCEEDED',
+          'Terlalu banyak percobaan salah. Silakan minta kode OTP baru.',
+          400,
+        );
+      }
       throw new AppError(
         'OTP_INVALID',
         `Kode OTP salah. Sisa ${String(remaining)} kesempatan percobaan.`,
@@ -207,8 +222,8 @@ export class OtpService {
     }
   }
 
-  private consumeRecipientQuota(email: string, now: number): void {
-    const current = this.recipientRateLimits.get(email);
+  private consumeRecipientQuota(recipientKey: string, now: number): void {
+    const current = this.recipientRateLimits.get(recipientKey);
     if (current !== undefined && now < current.resetsAt) {
       if (current.count >= MAX_RECIPIENT_SENDS_PER_HOUR) {
         throw new AppError(
@@ -228,7 +243,7 @@ export class OtpService {
         429,
       );
     }
-    this.recipientRateLimits.set(email, {
+    this.recipientRateLimits.set(recipientKey, {
       count: 1,
       resetsAt: now + RECIPIENT_RATE_LIMIT_WINDOW_MS,
     });
@@ -242,7 +257,14 @@ export class OtpService {
       .digest();
   }
 
-  private recordKey(email: string, purpose: SendOtpRequest['purpose']): string {
-    return `${purpose}:${email}`;
+  private recipientKey(email: string): string {
+    return createHmac('sha256', this.hashSecret ?? '')
+      .update('recipient:')
+      .update(email)
+      .digest('base64url');
+  }
+
+  private recordKey(recipientKey: string, purpose: OtpPurpose): string {
+    return `${purpose}:${recipientKey}`;
   }
 }

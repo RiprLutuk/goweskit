@@ -47,7 +47,16 @@ export function registerAuthRoutes(
     '/api/v1/auth/register',
     async (request, reply) => {
       const input = parseInput(registerRequestSchema, request.body);
-      otpService.verifyOtp(input.email, input.otp, 'register');
+      if (otpService.isEnabled()) {
+        if (input.otp === undefined) {
+          throw new AppError(
+            'INVALID_REQUEST',
+            'Kode OTP 6-digit wajib diisi untuk mendaftar.',
+            400,
+          );
+        }
+        otpService.verifyOtp(input.email, input.otp, 'register');
+      }
       const user = await options.authService.register(input);
       return reply.status(201).send({ user });
     },

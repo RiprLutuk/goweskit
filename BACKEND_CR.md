@@ -126,7 +126,7 @@ This document tracks all backend API Change Requests (CR), endpoint proposals, a
 ### CR-005: 6-Digit Email OTP Verification & 1-Tap Google Sign-In
 - **Endpoints**:
   - `POST /api/v1/auth/otp/send`: Request 6-digit numeric OTP with 5-min TTL and rate limiting cooldown.
-  - `POST /api/v1/auth/register`: Requires a valid `register` OTP before creating the user.
+  - `POST /api/v1/auth/register`: Requires a valid `register` OTP before creating the user when email verification is enabled.
   - `POST /api/v1/auth/google`: Accepts Google ID token credential for instant 1-tap sign in.
 - **Request Body for `POST /api/v1/auth/otp/send`**:
 ```json

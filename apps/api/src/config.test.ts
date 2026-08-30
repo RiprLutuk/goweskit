@@ -88,7 +88,7 @@ describe('API configuration', () => {
       SESSION_COOKIE_SECURE: 'true',
       TRUST_PROXY_HOPS: '1',
       WEB_ORIGIN: 'https://goweskit.example',
-      OTP_HMAC_SECRET: 'production-otp-hmac-secret',
+      OTP_HMAC_SECRET: 'production-otp-hmac-secret-with-32-characters',
     };
     expect(readConfig(production)).toMatchObject({
       environment: 'production',
@@ -116,5 +116,12 @@ describe('API configuration', () => {
         OTP_HMAC_SECRET: '',
       }),
     ).toThrow(/OTP_HMAC_SECRET/u);
+
+    expect(() =>
+      readConfig({
+        ...production,
+        OTP_HMAC_SECRET: 'too-short',
+      }),
+    ).toThrow();
   });
 });
