@@ -315,7 +315,7 @@ GowesKit dikembangkan secara independen dengan semangat *open-source* untuk mema
   <br />
   <a href="https://github.com/RiprLutuk/PasPapan/blob/main-vps/screenshots/donation-qr.jpeg" target="_blank" rel="noopener noreferrer">
     <img 
-      src="https://raw.githubusercontent.com/RiprLutuk/PasPapan/main-vps/screenshots/donation-qr.jpeg" 
+      src="./docs/donation-qr.jpeg" 
       alt="Donasi GowesKit via GoPay" 
       width="280" 
       style="border-radius: 16px; border: 2px solid #C9F36A; box-shadow: 0 12px 32px rgba(0,0,0,0.35);" 
@@ -323,6 +323,7 @@ GowesKit dikembangkan secara independen dengan semangat *open-source* untuk mema
   </a>
   <br /><br />
   <p><strong>📱 Scan QR di atas langsung menggunakan Aplikasi GoPay</strong></p>
+  <p>🔗 <a href="https://github.com/RiprLutuk/PasPapan/blob/main-vps/screenshots/donation-qr.jpeg" target="_blank">Buka Tautan Gambar Asli QR GoPay (PasPapan Repository)</a></p>
   <p><em>Terima kasih banyak atas dukungan goweser semua! Salam satu aspal, satu tanah! 🚲💨</em></p>
 </div>
 
