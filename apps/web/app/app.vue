@@ -34,8 +34,8 @@ const userPillName = computed(() => {
       </ClientOnly>
     </div>
 
-    <!-- 100% Full-Bleed Sticky Top App Bar (Hidden on /explore for full-screen map experience) -->
-    <header v-if="!route.path.startsWith('/explore')" class="site-header">
+    <!-- 100% Full-Bleed Sticky Top App Bar (Hidden on /explore and /ride-flex for full-screen experience) -->
+    <header v-if="!route.path.startsWith('/explore') && !route.path.startsWith('/ride-flex')" class="site-header">
       <div class="site-header__container">
         <!-- Left: Pro Cycling Brand Lockup -->
         <BrandLogo />
@@ -74,14 +74,14 @@ const userPillName = computed(() => {
     </header>
 
     <!-- Main Content Area -->
-    <div class="app-shell" :class="{ 'app-shell--explore': route.path.startsWith('/explore') }">
-      <main id="main-content" class="main-content" :class="{ 'main-content--explore': route.path.startsWith('/explore') }">
+    <div class="app-shell" :class="{ 'app-shell--explore': route.path.startsWith('/explore'), 'app-shell--ride-flex': route.path.startsWith('/ride-flex') }">
+      <main id="main-content" class="main-content" :class="{ 'main-content--explore': route.path.startsWith('/explore'), 'main-content--ride-flex': route.path.startsWith('/ride-flex') }">
         <NuxtPage />
       </main>
     </div>
 
-    <!-- Mobile-Only Bottom Docked Tab Bar (Hidden on Desktop) -->
-    <AppNavigation />
+    <!-- Mobile-Only Bottom Docked Tab Bar (Hidden on Desktop, /explore, and /ride-flex) -->
+    <AppNavigation v-if="!route.path.startsWith('/ride-flex')" />
   </div>
 </template>
 
@@ -215,15 +215,17 @@ const userPillName = computed(() => {
   font-weight: 900;
 }
 
-.app-shell--explore {
+.app-shell--explore,
+.app-shell--ride-flex {
   max-width: 100% !important;
   padding: 0 !important;
   margin: 0 !important;
 }
 
-.main-content--explore {
+.main-content--explore,
+.main-content--ride-flex {
   padding-top: 0 !important;
-  height: 100vh;
-  height: 100dvh;
+  min-height: 100vh;
+  min-height: 100dvh;
 }
 </style>

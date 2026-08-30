@@ -52,26 +52,6 @@ const aiRecap = ref({
 
 const isExporting = ref(false);
 
-// Verified High-Res Curated Cycling Photography
-const PRESET_BACKGROUNDS = {
-  alpine: 'https://images.unsplash.com/photo-1502744688674-c619d3864003?auto=format&fit=crop&w=1200&q=85',
-  gravel: 'https://images.unsplash.com/photo-1485965120184-e220f721d03e?auto=format&fit=crop&w=1200&q=85',
-  sunset: 'https://images.unsplash.com/photo-1507035895480-2b3156c31fc8?auto=format&fit=crop&w=1200&q=85',
-  crit: 'https://images.unsplash.com/photo-1517649763962-0c623266ddc0?auto=format&fit=crop&w=1200&q=85',
-  cafe: 'https://images.unsplash.com/photo-1501339847302-ac426a4a7cbb?auto=format&fit=crop&w=1200&q=85',
-  topo: 'data:image/svg+xml;utf8,<svg xmlns="http://www.w3.org/2000/svg" width="800" height="1200" viewBox="0 0 800 1200"><rect width="800" height="1200" fill="%230b1120"/><path d="M0 200 C 200 150, 400 350, 800 180" stroke="%23334155" stroke-width="2" fill="none" opacity="0.6"/><path d="M0 350 C 250 280, 500 450, 800 320" stroke="%23334155" stroke-width="2.5" fill="none" opacity="0.6"/><path d="M0 500 C 300 420, 600 600, 800 480" stroke="%23334155" stroke-width="2" fill="none" opacity="0.6"/><path d="M0 650 C 200 580, 500 780, 800 620" stroke="%23334155" stroke-width="2.5" fill="none" opacity="0.6"/><path d="M0 800 C 350 720, 450 950, 800 800" stroke="%23334155" stroke-width="2" fill="none" opacity="0.6"/><path d="M0 950 C 220 880, 550 1100, 800 950" stroke="%23334155" stroke-width="2" fill="none" opacity="0.6"/><path d="M 120 1080 Q 280 880, 400 620 T 680 180" stroke="%23c9f36a" stroke-width="6" stroke-dasharray="10 8" fill="none"/><circle cx="120" cy="1080" r="12" fill="%2338bdf8"/><circle cx="680" cy="180" r="14" fill="%23c9f36a"/></svg>',
-};
-
-const currentBackgroundSrc = computed(() => {
-  if (rideForm.bgPreset === 'custom' && rideForm.customPhotoUrl) {
-    return rideForm.customPhotoUrl;
-  }
-  return (
-    PRESET_BACKGROUNDS[rideForm.bgPreset as keyof typeof PRESET_BACKGROUNDS] ||
-    PRESET_BACKGROUNDS.alpine
-  );
-});
-
 function handlePhotoUpload(event: Event) {
   const input = event.target as HTMLInputElement;
   const file = input.files?.[0];
@@ -93,7 +73,7 @@ function formatDuration(mins: number): string {
   return h > 0 ? `${h}j ${m}m` : `${m}m`;
 }
 
-// 🤖 Agentic AI Generator (calls Backend API /api/v1/ride-flex/generate-story with fallback)
+// 🤖 Agentic AI Generator
 async function generateAiStory() {
   isAiGenerating.value = true;
   try {
@@ -125,7 +105,6 @@ async function generateAiStory() {
     };
     toast.success('✨ Cerita AI Dihasilkan!', 'Judul, analisis kalori, dan 3 persona caption siap digunakan.');
   } catch {
-    // Offline heuristic fallback
     const distance = rideForm.distanceKm;
     const elev = rideForm.elevationM;
     const speed = Number(
@@ -191,48 +170,80 @@ async function renderCanvas(aspectRatio: 'story' | 'post' | 'landscape'): Promis
   const ctx = canvas.getContext('2d');
   if (!ctx) throw new Error('Canvas 2D context not available');
 
-  // 1. Draw Background Image
-  try {
-    const img = new Image();
-    img.crossOrigin = 'anonymous';
-    img.src = currentBackgroundSrc.value;
-    await new Promise<void>((resolve, reject) => {
-      img.onload = () => resolve();
-      img.onerror = () => reject();
-    });
+  // Background Gradient Palette by Preset
+  const bgGradients: Record<string, [string, string, string]> = {
+    alpine: ['#0f2b48', '#081726', '#020617'],
+    gravel: ['#143823', '#0a2314', '#020a05'],
+    sunset: ['#581c10', '#3b0d06', '#0f0402'],
+    crit: ['#3b1154', '#210533', '#08010d'],
+    cafe: ['#3d2111', '#231106', '#0d0602'],
+    topo: ['#0c1527', '#080d19', '#03060a'],
+  };
 
-    const scale = Math.max(canvas.width / img.width, canvas.height / img.height);
-    const x = (canvas.width - img.width * scale) / 2;
-    const y = (canvas.height - img.height * scale) / 2;
-    ctx.drawImage(img, x, y, img.width * scale, img.height * scale);
-  } catch {
-    ctx.fillStyle = '#0f172a';
-    ctx.fillRect(0, 0, canvas.width, canvas.height);
-  }
-
-  // 2. Theme Specific Vignette & Overlays
-  const gradient = ctx.createLinearGradient(0, 0, 0, canvas.height);
-  gradient.addColorStop(0, 'rgba(11, 17, 32, 0.82)');
-  gradient.addColorStop(0.35, 'rgba(11, 17, 32, 0.25)');
-  gradient.addColorStop(0.65, 'rgba(11, 17, 32, 0.78)');
-  gradient.addColorStop(1, 'rgba(11, 17, 32, 0.98)');
-  ctx.fillStyle = gradient;
+  const defaultColors: [string, string, string] = ['#0f2b48', '#081726', '#020617'];
+  const currentColors = bgGradients[rideForm.bgPreset] ?? defaultColors;
+  const bgGrad = ctx.createLinearGradient(0, 0, 0, canvas.height);
+  bgGrad.addColorStop(0, currentColors[0]);
+  bgGrad.addColorStop(0.5, currentColors[1]);
+  bgGrad.addColorStop(1, currentColors[2]);
+  ctx.fillStyle = bgGrad;
   ctx.fillRect(0, 0, canvas.width, canvas.height);
 
-  // 3. Top Branding Pill
-  ctx.fillStyle = 'rgba(15, 23, 42, 0.9)';
+  // If custom photo uploaded, render it with smooth opacity
+  if (rideForm.bgPreset === 'custom' && rideForm.customPhotoUrl) {
+    try {
+      const img = new Image();
+      img.src = rideForm.customPhotoUrl;
+      await new Promise<void>((resolve, reject) => {
+        img.onload = () => resolve();
+        img.onerror = () => reject();
+      });
+      const scale = Math.max(canvas.width / img.width, canvas.height / img.height);
+      const x = (canvas.width - img.width * scale) / 2;
+      const y = (canvas.height - img.height * scale) / 2;
+      ctx.globalAlpha = 0.85;
+      ctx.drawImage(img, x, y, img.width * scale, img.height * scale);
+      ctx.globalAlpha = 1.0;
+    } catch {
+      // gradient fallback already drawn
+    }
+  }
+
+  // Draw Topographic Background Curves
+  ctx.strokeStyle = 'rgba(201, 243, 106, 0.12)';
+  ctx.lineWidth = 3;
+  ctx.beginPath();
+  ctx.moveTo(0, canvas.height * 0.25);
+  ctx.bezierCurveTo(canvas.width * 0.3, canvas.height * 0.18, canvas.width * 0.7, canvas.height * 0.35, canvas.width, canvas.height * 0.22);
+  ctx.moveTo(0, canvas.height * 0.45);
+  ctx.bezierCurveTo(canvas.width * 0.4, canvas.height * 0.38, canvas.width * 0.6, canvas.height * 0.55, canvas.width, canvas.height * 0.42);
+  ctx.moveTo(0, canvas.height * 0.65);
+  ctx.bezierCurveTo(canvas.width * 0.2, canvas.height * 0.58, canvas.width * 0.8, canvas.height * 0.75, canvas.width, canvas.height * 0.62);
+  ctx.stroke();
+
+  // Dark Vignette
+  const vignette = ctx.createLinearGradient(0, 0, 0, canvas.height);
+  vignette.addColorStop(0, 'rgba(6, 10, 18, 0.4)');
+  vignette.addColorStop(0.4, 'rgba(6, 10, 18, 0.1)');
+  vignette.addColorStop(0.75, 'rgba(6, 10, 18, 0.85)');
+  vignette.addColorStop(1, 'rgba(6, 10, 18, 0.98)');
+  ctx.fillStyle = vignette;
+  ctx.fillRect(0, 0, canvas.width, canvas.height);
+
+  // Top Branding Pill
+  ctx.fillStyle = 'rgba(15, 23, 42, 0.92)';
   ctx.strokeStyle = '#C9F36A';
   ctx.lineWidth = 3;
   ctx.beginPath();
-  ctx.roundRect(70, isStory ? 90 : 60, 360, 56, 28);
+  ctx.roundRect(70, isStory ? 90 : 60, 360, 58, 29);
   ctx.fill();
   ctx.stroke();
 
   ctx.fillStyle = '#C9F36A';
-  ctx.font = 'bold 24px monospace';
+  ctx.font = '900 24px monospace';
   ctx.fillText('⚡ GOWESKIT RIDE PASS', 95, isStory ? 128 : 98);
 
-  // 4. Sticker Badge if selected
+  // Sticker Badge if selected
   if (rideForm.activeSticker !== 'none') {
     const stickerText = {
       kom: '👑 KOM HUNTER',
@@ -246,83 +257,81 @@ async function renderCanvas(aspectRatio: 'story' | 'post' | 'landscape'): Promis
     if (stickerText) {
       ctx.fillStyle = '#C9F36A';
       ctx.beginPath();
-      ctx.roundRect(canvas.width - 440, isStory ? 90 : 60, 370, 56, 28);
+      ctx.roundRect(canvas.width - 440, isStory ? 90 : 60, 370, 58, 29);
       ctx.fill();
 
-      ctx.fillStyle = '#17202A';
+      ctx.fillStyle = '#0f172a';
       ctx.font = '900 22px sans-serif';
       ctx.fillText(stickerText, canvas.width - 415, isStory ? 128 : 98);
     }
   }
 
-  // 5. Main Hero Distance Callout
-  const heroY = isStory ? 1020 : (isLandscape ? 420 : 470);
+  // Hero Distance
+  const heroY = isStory ? 1040 : (isLandscape ? 420 : 470);
 
-  // Large Prominent Distance
   ctx.fillStyle = '#C9F36A';
-  ctx.font = '900 135px monospace';
+  ctx.font = '900 145px monospace';
   ctx.fillText(`${rideForm.distanceKm}`, 70, heroY);
   ctx.fillStyle = '#FFFFFF';
-  ctx.font = '900 52px sans-serif';
-  ctx.fillText('KM', 70 + ctx.measureText(`${rideForm.distanceKm}`).width + 25, heroY - 45);
+  ctx.font = '900 56px sans-serif';
+  ctx.fillText('KM', 70 + ctx.measureText(`${rideForm.distanceKm}`).width + 25, heroY - 50);
 
-  // Ride Title & Subtitle
+  // Title
   ctx.fillStyle = '#FFFFFF';
-  ctx.font = '900 44px sans-serif';
-  ctx.fillText(rideForm.title.slice(0, 32), 70, heroY + 65);
+  ctx.font = '900 46px sans-serif';
+  ctx.fillText(rideForm.title.slice(0, 32), 70, heroY + 70);
 
   ctx.fillStyle = '#CBD5E1';
-  ctx.font = 'bold 26px sans-serif';
-  ctx.fillText(`🚴 ${rideForm.bikeName} · ${rideForm.temperatureC}°C Cerah · ${aiRecap.value.climbGradeScore}`, 70, heroY + 110);
+  ctx.font = 'bold 28px sans-serif';
+  ctx.fillText(`🚴 ${rideForm.bikeName} · ${rideForm.temperatureC}°C Cerah · ${aiRecap.value.climbGradeScore}`, 70, heroY + 120);
 
-  // 6. Stats Grid Card
-  const cardY = heroY + 145;
+  // Stats Card
+  const cardY = heroY + 155;
   const cardH = isStory ? 480 : (isLandscape ? 340 : 360);
-  ctx.fillStyle = 'rgba(15, 23, 42, 0.88)';
-  ctx.strokeStyle = 'rgba(201, 243, 106, 0.35)';
-  ctx.lineWidth = 2.5;
+  ctx.fillStyle = 'rgba(15, 23, 42, 0.92)';
+  ctx.strokeStyle = 'rgba(201, 243, 106, 0.4)';
+  ctx.lineWidth = 3;
   ctx.beginPath();
-  ctx.roundRect(70, cardY, canvas.width - 140, cardH, 28);
+  ctx.roundRect(70, cardY, canvas.width - 140, cardH, 32);
   ctx.fill();
   ctx.stroke();
 
-  // Draw Elevation Sparkline inside stats card
+  // Elevation Sparkline
   ctx.strokeStyle = '#38BDF8';
-  ctx.lineWidth = 4;
+  ctx.lineWidth = 5;
   ctx.beginPath();
-  ctx.moveTo(110, cardY + 70);
-  ctx.quadraticCurveTo(300, cardY + 20, 500, cardY + 65);
-  ctx.quadraticCurveTo(700, cardY + 15, canvas.width - 110, cardY + 45);
+  ctx.moveTo(120, cardY + 80);
+  ctx.bezierCurveTo(340, cardY + 20, 600, cardY + 75, canvas.width - 120, cardY + 40);
   ctx.stroke();
 
-  // Metrics Rows
+  // Metrics Grid
   const cellW = (canvas.width - 140) / 2;
   const metrics = [
     { label: 'ELEVASI TANJAKAN', val: `+${rideForm.elevationM} m`, color: '#38BDF8' },
     { label: 'WAKTU TEMPUH', val: formatDuration(rideForm.durationMinutes), color: '#FFFFFF' },
-    { label: 'RATA-RATA SPEED', val: `${rideForm.avgSpeedKmH} km/h`, color: '#FDE047' },
+    { label: 'RATA-RATA SPEED', val: `${rideForm.avgSpeedKmH} km/h`, color: '#C9F36A' },
     { label: 'KALORI TERBAKAR', val: `~${rideForm.caloriesKcal} kcal`, color: '#FF8C75' },
   ];
 
   metrics.forEach((m, idx) => {
     const col = idx % 2;
     const row = Math.floor(idx / 2);
-    const x = 110 + col * (cellW - 20);
-    const y = cardY + 130 + row * (isStory ? 170 : 115);
+    const x = 120 + col * (cellW - 20);
+    const y = cardY + 140 + row * (isStory ? 170 : 115);
 
     ctx.fillStyle = '#94A3B8';
-    ctx.font = 'bold 22px sans-serif';
+    ctx.font = 'bold 24px sans-serif';
     ctx.fillText(m.label, x, y);
 
     ctx.fillStyle = m.color;
-    ctx.font = '900 52px monospace';
-    ctx.fillText(m.val, x, y + 55);
+    ctx.font = '900 56px monospace';
+    ctx.fillText(m.val, x, y + 60);
   });
 
-  // 7. Watermark Footer
+  // Provenance Footer
   ctx.fillStyle = 'rgba(201, 243, 106, 0.85)';
-  ctx.font = 'bold 22px monospace';
-  ctx.fillText('⚡ VERIFIED BY GOWESKIT ENGINE · GOWESKIT.ID', 80, canvas.height - 40);
+  ctx.font = 'bold 24px monospace';
+  ctx.fillText('⚡ VERIFIED BY GOWESKIT ENGINE · GOWESKIT.ID', 80, canvas.height - 45);
 
   return canvas;
 }
@@ -393,62 +402,34 @@ async function shareToMedia() {
 </script>
 
 <template>
-  <div class="ride-flex-studio-page">
-    <!-- Top Header Bar -->
-    <header class="studio-header-nav">
-      <div class="header-left">
-        <NuxtLink to="/safety" class="back-pill-btn">
-          <span>←</span>
-          <span>Kembali</span>
+  <div class="creator-studio-viewport">
+    <!-- Studio Header Navigation -->
+    <header class="creator-studio-nav">
+      <div class="nav-left">
+        <NuxtLink to="/safety" class="nav-back-button" aria-label="Kembali ke Dashboard">
+          <span class="nav-back-arrow">←</span>
+          <span class="nav-back-text">Kembali</span>
         </NuxtLink>
-        <div class="header-brand-title">
-          <span class="bolt-glow">⚡</span>
-          <h1>Ride Flex Studio</h1>
+        <div class="nav-brand-lockup">
+          <span class="brand-spark">⚡</span>
+          <h1 class="brand-title">Ride Flex Studio</h1>
         </div>
       </div>
 
-      <!-- Ratio Switcher in Header -->
-      <div class="header-ratio-group">
+      <!-- Action Buttons -->
+      <div class="nav-actions">
         <button
           type="button"
-          class="ratio-header-btn"
-          :class="{ active: rideForm.aspectRatio === 'story' }"
-          @click="rideForm.aspectRatio = 'story'"
-        >
-          📱 Story (9:16)
-        </button>
-        <button
-          type="button"
-          class="ratio-header-btn"
-          :class="{ active: rideForm.aspectRatio === 'post' }"
-          @click="rideForm.aspectRatio = 'post'"
-        >
-          🖼️ Square (1:1)
-        </button>
-        <button
-          type="button"
-          class="ratio-header-btn"
-          :class="{ active: rideForm.aspectRatio === 'landscape' }"
-          @click="rideForm.aspectRatio = 'landscape'"
-        >
-          🛣️ Banner (16:9)
-        </button>
-      </div>
-
-      <!-- Header Action Buttons -->
-      <div class="header-actions">
-        <button
-          type="button"
-          class="header-btn-download"
+          class="btn-nav-download"
           :disabled="isExporting"
           @click="downloadStoryImage"
         >
           <span>💾</span>
-          <span class="hide-mobile">Unduh PNG</span>
+          <span class="btn-text-full">Unduh HD</span>
         </button>
         <button
           type="button"
-          class="header-btn-share"
+          class="btn-nav-share"
           :disabled="isExporting"
           @click="shareToMedia"
         >
@@ -458,30 +439,69 @@ async function shareToMedia() {
       </div>
     </header>
 
-    <!-- Studio Main Body -->
-    <main class="studio-body-container">
-      <!-- LEFT / TOP: HERO POSTER SHOWCASE (STICKY) -->
-      <section class="poster-stage-column" aria-label="Live Poster Preview">
+    <!-- Ratio Selector Bar -->
+    <div class="studio-ratio-bar">
+      <div class="ratio-pills-wrap">
+        <button
+          type="button"
+          class="ratio-toggle-pill"
+          :class="{ active: rideForm.aspectRatio === 'story' }"
+          @click="rideForm.aspectRatio = 'story'"
+        >
+          📱 Story (9:16)
+        </button>
+        <button
+          type="button"
+          class="ratio-toggle-pill"
+          :class="{ active: rideForm.aspectRatio === 'post' }"
+          @click="rideForm.aspectRatio = 'post'"
+        >
+          🖼️ Square (1:1)
+        </button>
+        <button
+          type="button"
+          class="ratio-toggle-pill"
+          :class="{ active: rideForm.aspectRatio === 'landscape' }"
+          @click="rideForm.aspectRatio = 'landscape'"
+        >
+          🛣️ Banner (16:9)
+        </button>
+      </div>
+    </div>
+
+    <!-- Main Workspace -->
+    <main class="creator-workspace">
+      <!-- 1. LIVE POSTER STAGE (STICKY / TOP HERO) -->
+      <div class="poster-display-stage">
         <div
-          class="live-poster-card"
+          class="poster-canvas-frame"
           :class="[
-            `poster--${rideForm.aspectRatio}`,
+            `frame--${rideForm.aspectRatio}`,
+            `bg--${rideForm.bgPreset}`,
             `theme--${rideForm.templateStyle}`,
           ]"
-          :style="{ backgroundImage: `url(${currentBackgroundSrc})` }"
+          :style="rideForm.bgPreset === 'custom' && rideForm.customPhotoUrl ? { backgroundImage: `url(${rideForm.customPhotoUrl})` } : {}"
         >
-          <!-- Vignette Lighting Overlay -->
-          <div class="poster-card-vignette"></div>
+          <!-- Vector Topo Wave Overlay -->
+          <svg class="topo-bg-layer" viewBox="0 0 400 700" fill="none" aria-hidden="true">
+            <path d="M-50 120 C 80 80, 220 220, 450 100" stroke="rgba(201, 243, 106, 0.15)" stroke-width="2" />
+            <path d="M-50 250 C 120 180, 280 340, 450 220" stroke="rgba(201, 243, 106, 0.15)" stroke-width="2.5" />
+            <path d="M-50 400 C 100 320, 300 480, 450 360" stroke="rgba(201, 243, 106, 0.15)" stroke-width="2" />
+            <path d="M-50 560 C 150 480, 250 640, 450 520" stroke="rgba(201, 243, 106, 0.15)" stroke-width="2.5" />
+          </svg>
 
-          <!-- Poster Top Branding & Hologram Sticker -->
-          <div class="poster-card-topbar">
-            <div class="poster-chip-brand">
-              <span class="bolt-lime">⚡</span>
+          <!-- Lighting Vignette -->
+          <div class="poster-lighting-vignette"></div>
+
+          <!-- Top Header Strip inside Poster -->
+          <div class="poster-inner-header">
+            <div class="inner-brand-badge">
+              <span class="badge-bolt">⚡</span>
               <span>GOWESKIT</span>
             </div>
             <div
               v-if="rideForm.activeSticker !== 'none'"
-              class="poster-chip-sticker"
+              class="inner-sticker-badge"
             >
               {{
                 {
@@ -496,71 +516,70 @@ async function shareToMedia() {
             </div>
           </div>
 
-          <!-- Poster Mid Hero Metric: Big Kinetic Mileage -->
-          <div class="poster-card-hero">
-            <div class="hero-mileage-row">
-              <span class="hero-mileage-val">{{ rideForm.distanceKm }}</span>
-              <span class="hero-mileage-unit">KM</span>
+          <!-- Middle Hero Typography -->
+          <div class="poster-inner-hero">
+            <div class="hero-mileage-lockup">
+              <span class="hero-mileage-number">{{ rideForm.distanceKm }}</span>
+              <span class="hero-mileage-suffix">KM</span>
             </div>
-            <h2 class="hero-poster-title">{{ rideForm.title }}</h2>
-            <div class="hero-meta-strip">
+            <h2 class="hero-session-title">{{ rideForm.title }}</h2>
+            <div class="hero-session-meta">
               <span>🚴 {{ rideForm.bikeName }}</span>
               <span>·</span>
               <span>{{ rideForm.temperatureC }}°C Cerah</span>
             </div>
           </div>
 
-          <!-- Poster Bottom Telemetry Glass Card -->
-          <div class="poster-card-telemetry">
-            <div class="elevation-spark-row">
-              <span class="spark-title">ELEVASI PROFILE</span>
-              <strong class="spark-gain-text">+{{ rideForm.elevationM }}m Climb</strong>
+          <!-- Bottom Telemetry Glass Card -->
+          <div class="poster-inner-telemetry">
+            <div class="sparkline-row">
+              <span class="sparkline-label">ELEVASI PROFILE</span>
+              <span class="sparkline-gain">+{{ rideForm.elevationM }}m Climb</span>
             </div>
-            <svg viewBox="0 0 300 32" class="spark-elevation-svg" aria-hidden="true">
+            <svg viewBox="0 0 300 28" class="sparkline-svg" aria-hidden="true">
               <path
-                d="M0 28 Q 60 26, 120 14 T 220 8 L 300 4"
+                d="M0 24 Q 70 22, 140 10 T 260 6 L 300 3"
                 fill="none"
                 stroke="#38BDF8"
-                stroke-width="3.5"
+                stroke-width="3"
                 stroke-linecap="round"
               />
-              <circle cx="0" cy="28" r="3.5" fill="#38BDF8" />
-              <circle cx="300" cy="4" r="4.5" fill="#C9F36A" />
+              <circle cx="0" cy="24" r="3" fill="#38BDF8" />
+              <circle cx="300" cy="3" r="4" fill="#C9F36A" />
             </svg>
 
-            <!-- 3 Telemetry Pillars -->
-            <div class="telemetry-values-grid">
-              <div class="telemetry-col">
-                <span class="col-label">WAKTU</span>
-                <strong class="col-val">{{ formatDuration(rideForm.durationMinutes) }}</strong>
+            <div class="telemetry-triple-pillars">
+              <div class="pillar-item">
+                <span class="pillar-title">WAKTU</span>
+                <strong class="pillar-data">{{ formatDuration(rideForm.durationMinutes) }}</strong>
               </div>
-              <div class="col-divider"></div>
-              <div class="telemetry-col">
-                <span class="col-label">AVG SPEED</span>
-                <strong class="col-val text-lime">{{ rideForm.avgSpeedKmH }} km/h</strong>
+              <div class="pillar-divider"></div>
+              <div class="pillar-item">
+                <span class="pillar-title">AVG SPEED</span>
+                <strong class="pillar-data text-lime">{{ rideForm.avgSpeedKmH }} km/h</strong>
               </div>
-              <div class="col-divider"></div>
-              <div class="telemetry-col">
-                <span class="col-label">KALORI</span>
-                <strong class="col-val text-coral">~{{ rideForm.caloriesKcal }} kcal</strong>
+              <div class="pillar-divider"></div>
+              <div class="pillar-item">
+                <span class="pillar-title">KALORI</span>
+                <strong class="pillar-data text-coral">~{{ rideForm.caloriesKcal }} kcal</strong>
               </div>
             </div>
           </div>
 
-          <!-- Watermark -->
-          <div class="poster-card-watermark">
+          <!-- Provenance Stamp -->
+          <div class="poster-inner-footer">
             <span>⚡ VERIFIED BY GOWESKIT ENGINE · GOWESKIT.ID</span>
           </div>
         </div>
-      </section>
+      </div>
 
-      <!-- RIGHT / BOTTOM: STUDIO TOOLS & AI CONTROLS -->
-      <section class="tools-stage-column" aria-label="Studio Controls">
-        <!-- Modern Segmented Tool Tabs -->
-        <nav class="studio-segmented-tabs" aria-label="Tool Tabs">
+      <!-- 2. STUDIO TOOLS & CONTROLS -->
+      <div class="studio-toolbox-panel">
+        <!-- Segmented Tab Navigation -->
+        <nav class="toolbox-tab-nav" aria-label="Toolbox Tabs">
           <button
             type="button"
-            class="segmented-tab-btn"
+            class="tab-nav-item"
             :class="{ active: activeTab === 'templates' }"
             @click="activeTab = 'templates'"
           >
@@ -568,15 +587,15 @@ async function shareToMedia() {
           </button>
           <button
             type="button"
-            class="segmented-tab-btn"
+            class="tab-nav-item"
             :class="{ active: activeTab === 'backgrounds' }"
             @click="activeTab = 'backgrounds'"
           >
-            📸 Foto
+            🌄 Background
           </button>
           <button
             type="button"
-            class="segmented-tab-btn"
+            class="tab-nav-item"
             :class="{ active: activeTab === 'stickers' }"
             @click="activeTab = 'stickers'"
           >
@@ -584,7 +603,7 @@ async function shareToMedia() {
           </button>
           <button
             type="button"
-            class="segmented-tab-btn"
+            class="tab-nav-item"
             :class="{ active: activeTab === 'ai' }"
             @click="activeTab = 'ai'"
           >
@@ -592,7 +611,7 @@ async function shareToMedia() {
           </button>
           <button
             type="button"
-            class="segmented-tab-btn"
+            class="tab-nav-item"
             :class="{ active: activeTab === 'data' }"
             @click="activeTab = 'data'"
           >
@@ -600,295 +619,287 @@ async function shareToMedia() {
           </button>
         </nav>
 
-        <!-- TAB 1: TEMPLATE STYLES -->
-        <div v-show="activeTab === 'templates'" class="tab-pane-card">
-          <div class="tab-pane-header">
+        <!-- TAB 1: TEMPLATES -->
+        <div v-show="activeTab === 'templates'" class="toolbox-content-card">
+          <div class="toolbox-card-header">
             <h3>Pilih Gaya Template Poster</h3>
-            <p>Ubah atmosfer layout dan tipografi sesuai tema gowes Anda.</p>
+            <p>Pilih tema tipografi dan tata letak sesuai nuansa gowes Anda.</p>
           </div>
-          <div class="template-choices-grid">
+          <div class="template-cards-grid">
             <button
               type="button"
-              class="style-choice-card"
+              class="style-choice-item"
               :class="{ active: rideForm.templateStyle === 'strava_bold' }"
               @click="rideForm.templateStyle = 'strava_bold'"
             >
-              <span class="choice-badge">🔥 BOLD</span>
-              <strong class="choice-title">Strava Pro Neon</strong>
-              <p class="choice-desc">Tipografi kinetik tebal, angka raksasa, kontras tinggi.</p>
+              <span class="style-badge-pill">🔥 BOLD</span>
+              <strong class="style-title">Strava Pro Neon</strong>
+              <p class="style-subtitle">Tipografi kinetik tebal, angka besar kontras tinggi.</p>
             </button>
             <button
               type="button"
-              class="style-choice-card"
+              class="style-choice-item"
               :class="{ active: rideForm.templateStyle === 'rapha_editorial' }"
               @click="rideForm.templateStyle = 'rapha_editorial'"
             >
-              <span class="choice-badge">🏔️ CLASSIC</span>
-              <strong class="choice-title">Rapha Editorial</strong>
-              <p class="choice-desc">Gaya majalah sepeda Eropa dengan koordinat GPS.</p>
+              <span class="style-badge-pill">🏔️ CLASSIC</span>
+              <strong class="style-title">Rapha Editorial</strong>
+              <p class="style-subtitle">Nuansa majalah sepeda Eropa dengan koordinat GPS.</p>
             </button>
             <button
               type="button"
-              class="style-choice-card"
+              class="style-choice-item"
               :class="{ active: rideForm.templateStyle === 'cyber_hud' }"
               @click="rideForm.templateStyle = 'cyber_hud'"
             >
-              <span class="choice-badge">⚡ CYBER</span>
-              <strong class="choice-title">Cyber Telemetry</strong>
-              <p class="choice-desc">Dashboard sensor digital cyan &amp; lime futuristik.</p>
+              <span class="style-badge-pill">⚡ CYBER</span>
+              <strong class="style-title">Cyber Telemetry</strong>
+              <p class="style-subtitle">Dashboard sensor digital cyan &amp; lime futuristik.</p>
             </button>
             <button
               type="button"
-              class="style-choice-card"
+              class="style-choice-item"
               :class="{ active: rideForm.templateStyle === 'cafe_santai' }"
               @click="rideForm.templateStyle = 'cafe_santai'"
             >
-              <span class="choice-badge">☕ COFFEE</span>
-              <strong class="choice-title">Kopi &amp; Sate Maranggi</strong>
-              <p class="choice-desc">Nuansa hangat santai dengan callout kuliner lokal.</p>
+              <span class="style-badge-pill">☕ COFFEE</span>
+              <strong class="style-title">Kopi &amp; Sate Maranggi</strong>
+              <p class="style-subtitle">Nuansa hangat santai dengan callout kuliner lokal.</p>
             </button>
           </div>
         </div>
 
-        <!-- TAB 2: BACKGROUND PHOTOS -->
-        <div v-show="activeTab === 'backgrounds'" class="tab-pane-card">
-          <div class="tab-pane-header">
+        <!-- TAB 2: BACKGROUNDS -->
+        <div v-show="activeTab === 'backgrounds'" class="toolbox-content-card">
+          <div class="toolbox-card-header">
             <h3>Pilihan Latar Belakang Estetis</h3>
-            <p>Pilih foto panorama sepeda atau unggah hasil jepretan Anda sendiri.</p>
+            <p>Pilih palet panorama alam atau pasang foto jepretan Anda sendiri.</p>
           </div>
-
-          <!-- Real Visual Cards -->
-          <div class="photo-cards-grid">
+          <div class="bg-presets-grid">
             <button
               type="button"
-              class="photo-select-card"
+              class="bg-preset-box bg-preset-box--alpine"
               :class="{ active: rideForm.bgPreset === 'alpine' }"
-              :style="{ backgroundImage: `url(${PRESET_BACKGROUNDS.alpine})` }"
               @click="rideForm.bgPreset = 'alpine'"
             >
-              <span class="photo-card-tag">🏔️ Alpine Pass</span>
+              <span class="preset-label">🏔️ Alpine Pass</span>
             </button>
             <button
               type="button"
-              class="photo-select-card"
+              class="bg-preset-box bg-preset-box--gravel"
               :class="{ active: rideForm.bgPreset === 'gravel' }"
-              :style="{ backgroundImage: `url(${PRESET_BACKGROUNDS.gravel})` }"
               @click="rideForm.bgPreset = 'gravel'"
             >
-              <span class="photo-card-tag">🌲 Gravel Pine</span>
+              <span class="preset-label">🌲 Gravel Pine</span>
             </button>
             <button
               type="button"
-              class="photo-select-card"
+              class="bg-preset-box bg-preset-box--sunset"
               :class="{ active: rideForm.bgPreset === 'sunset' }"
-              :style="{ backgroundImage: `url(${PRESET_BACKGROUNDS.sunset})` }"
               @click="rideForm.bgPreset = 'sunset'"
             >
-              <span class="photo-card-tag">🌅 Sunset Coast</span>
+              <span class="preset-label">🌅 Sunset Coast</span>
             </button>
             <button
               type="button"
-              class="photo-select-card"
+              class="bg-preset-box bg-preset-box--crit"
               :class="{ active: rideForm.bgPreset === 'crit' }"
-              :style="{ backgroundImage: `url(${PRESET_BACKGROUNDS.crit})` }"
               @click="rideForm.bgPreset = 'crit'"
             >
-              <span class="photo-card-tag">⚡ Speed Crit</span>
+              <span class="preset-label">⚡ Speed Crit</span>
             </button>
             <button
               type="button"
-              class="photo-select-card"
+              class="bg-preset-box bg-preset-box--cafe"
               :class="{ active: rideForm.bgPreset === 'cafe' }"
-              :style="{ backgroundImage: `url(${PRESET_BACKGROUNDS.cafe})` }"
               @click="rideForm.bgPreset = 'cafe'"
             >
-              <span class="photo-card-tag">☕ Coffee Stop</span>
+              <span class="preset-label">☕ Coffee Stop</span>
             </button>
             <button
               type="button"
-              class="photo-select-card photo-select-card--topo"
+              class="bg-preset-box bg-preset-box--topo"
               :class="{ active: rideForm.bgPreset === 'topo' }"
               @click="rideForm.bgPreset = 'topo'"
             >
-              <span class="photo-card-tag">🗺️ Topo Neon Vektor</span>
+              <span class="preset-label">🗺️ Topo Neon</span>
             </button>
           </div>
 
-          <!-- Upload Own Photo -->
-          <label class="photo-upload-banner">
+          <!-- Custom Photo Upload CTA -->
+          <label class="custom-photo-uploader">
             <input
               type="file"
               accept="image/*"
               class="sr-only"
               @change="handlePhotoUpload"
             />
-            <span class="upload-icon-large">📸</span>
-            <div class="upload-copy">
-              <strong>Unggah Foto Sendiri dari Galeri / Kamera</strong>
-              <small>Format JPG, PNG, WebP otomatis dipasang ke poster</small>
+            <span class="upload-icon">📸</span>
+            <div class="upload-texts">
+              <strong>Gunakan Foto Jepretan Sendiri</strong>
+              <small>Ambil langsung dari galeri HP atau jepretan kamera</small>
             </div>
           </label>
         </div>
 
         <!-- TAB 3: STICKERS -->
-        <div v-show="activeTab === 'stickers'" class="tab-pane-card">
-          <div class="tab-pane-header">
-            <h3>Stiker Flexing &amp; Badge</h3>
-            <p>Sematkan lencana pencapaian di sudut poster Anda.</p>
+        <div v-show="activeTab === 'stickers'" class="toolbox-content-card">
+          <div class="toolbox-card-header">
+            <h3>Stiker &amp; Badge Pencapaian</h3>
+            <p>Sematkan lencana flexing di sudut kanan atas poster.</p>
           </div>
-          <div class="stickers-choice-deck">
+          <div class="sticker-grid-wrap">
             <button
               type="button"
-              class="sticker-badge-card"
+              class="sticker-item-btn"
               :class="{ active: rideForm.activeSticker === 'kom' }"
               @click="rideForm.activeSticker = 'kom'"
             >
-              <span class="sticker-emoji">👑</span>
-              <div class="sticker-info">
+              <span class="s-icon">👑</span>
+              <div class="s-info">
                 <strong>KOM / PR Hunter</strong>
-                <small>Raja Tanjakan &amp; Rekor Pribadi</small>
+                <small>Raja Tanjakan &amp; Rekor Baru</small>
               </div>
             </button>
             <button
               type="button"
-              class="sticker-badge-card"
+              class="sticker-item-btn"
               :class="{ active: rideForm.activeSticker === 'cafe' }"
               @click="rideForm.activeSticker = 'cafe'"
             >
-              <span class="sticker-emoji">☕</span>
-              <div class="sticker-info">
+              <span class="s-icon">☕</span>
+              <div class="s-info">
                 <strong>Coffee Approved</strong>
                 <small>Sesi Gowes Santai &amp; Ngopi</small>
               </div>
             </button>
             <button
               type="button"
-              class="sticker-badge-card"
+              class="sticker-item-btn"
               :class="{ active: rideForm.activeSticker === 'beast' }"
               @click="rideForm.activeSticker = 'beast'"
             >
-              <span class="sticker-emoji">⛰️</span>
-              <div class="sticker-info">
+              <span class="s-icon">⛰️</span>
+              <div class="s-info">
                 <strong>Climb Beast</strong>
-                <small>Penakluk Elevasi Berat</small>
+                <small>Penakluk Elevasi Ekstrem</small>
               </div>
             </button>
             <button
               type="button"
-              class="sticker-badge-card"
+              class="sticker-item-btn"
               :class="{ active: rideForm.activeSticker === 'speed' }"
               @click="rideForm.activeSticker = 'speed'"
             >
-              <span class="sticker-emoji">⚡</span>
-              <div class="sticker-info">
+              <span class="s-icon">⚡</span>
+              <div class="s-info">
                 <strong>Breakaway Pace</strong>
                 <small>Kecepatan Rata-Rata Tinggi</small>
               </div>
             </button>
             <button
               type="button"
-              class="sticker-badge-card"
+              class="sticker-item-btn"
               :class="{ active: rideForm.activeSticker === 'fuel' }"
               @click="rideForm.activeSticker = 'fuel'"
             >
-              <span class="sticker-emoji">🍲</span>
-              <div class="sticker-info">
+              <span class="s-icon">🍲</span>
+              <div class="s-info">
                 <strong>Sate Maranggi Fuel</strong>
-                <small>Kalori Terbakar Setara Porsi Kuliner</small>
+                <small>Bakar Kalori Setara Kuliner</small>
               </div>
             </button>
             <button
               type="button"
-              class="sticker-badge-card"
+              class="sticker-item-btn"
               :class="{ active: rideForm.activeSticker === 'none' }"
               @click="rideForm.activeSticker = 'none'"
             >
-              <span class="sticker-emoji">🚫</span>
-              <div class="sticker-info">
+              <span class="s-icon">🚫</span>
+              <div class="s-info">
                 <strong>Tanpa Stiker</strong>
-                <small>Tampilan Bersih &amp; Minimalis</small>
+                <small>Tampilan Bersih &amp; Polos</small>
               </div>
             </button>
           </div>
         </div>
 
-        <!-- TAB 4: AGENTIC AI STORYTELLER & CAPTIONS -->
-        <div v-show="activeTab === 'ai'" class="tab-pane-card">
-          <div class="ai-header-strip">
-            <div class="ai-tag-group">
-              <span class="magic-spark-glow">✨</span>
+        <!-- TAB 4: AI STORYTELLER -->
+        <div v-show="activeTab === 'ai'" class="toolbox-content-card">
+          <div class="ai-strip-head">
+            <div class="ai-strip-title">
+              <span class="ai-spark-icon">✨</span>
               <div>
-                <h3 class="ai-strip-heading">Agentic AI Ride Coach &amp; Storyteller</h3>
-                <p class="ai-strip-sub">Buat caption flexing, analisa bakar kalori, dan tips mekanik otomatis.</p>
+                <h4>Agentic AI Ride Storyteller</h4>
+                <p>Caption media sosial cerdas &amp; analisa performa otomatis.</p>
               </div>
             </div>
             <button
               type="button"
-              class="generate-ai-magic-btn"
+              class="btn-magic-generate"
               :disabled="isAiGenerating"
               @click="generateAiStory"
             >
-              <span v-if="isAiGenerating" class="spin-icon">⏳</span>
-              <span v-else>🪄</span>
-              <span>{{ isAiGenerating ? 'Meracik AI...' : 'Generate Cerita Baru' }}</span>
+              <span>🪄</span>
+              <span>{{ isAiGenerating ? 'Meracik AI...' : 'Generate Baru' }}</span>
             </button>
           </div>
 
-          <!-- Indonesian Food Equivalency Banner -->
-          <div class="fuel-callout-box">
-            <div class="fuel-badge-pill">🍢 FUEL EQUIVALENCY</div>
-            <strong class="fuel-title">{{ aiRecap.foodEquivalency }}</strong>
-            <small class="fuel-desc">Membakar energi ~{{ rideForm.caloriesKcal }} kcal di tanjakan {{ aiRecap.climbGradeScore }}</small>
+          <!-- Culinary Fuel Banner -->
+          <div class="culinary-box">
+            <span class="culinary-tag">🍢 INDONESIAN CYCLING FUEL EQUIVALENCY</span>
+            <strong class="culinary-val">{{ aiRecap.foodEquivalency }}</strong>
+            <small class="culinary-sub">Membakar energi ~{{ rideForm.caloriesKcal }} kcal di tanjakan {{ aiRecap.climbGradeScore }}</small>
           </div>
 
-          <!-- Persona Tabs -->
-          <div class="persona-selector-deck">
+          <!-- Persona Selector -->
+          <div class="persona-deck">
             <button
               type="button"
-              class="persona-deck-btn"
+              class="persona-btn"
               :class="{ active: selectedPersona === 'athlete' }"
               @click="selectedPersona = 'athlete'"
             >
-              <span class="p-icon">🏆</span>
-              <div class="p-text">
+              <span class="persona-ico">🏆</span>
+              <div class="persona-desc">
                 <strong>Gaya Atlet</strong>
                 <small>Power &amp; Pacing</small>
               </div>
             </button>
             <button
               type="button"
-              class="persona-deck-btn"
+              class="persona-btn"
               :class="{ active: selectedPersona === 'humor' }"
               @click="selectedPersona = 'humor'"
             >
-              <span class="p-icon">😂</span>
-              <div class="p-text">
+              <span class="persona-ico">😂</span>
+              <div class="persona-desc">
                 <strong>Humor Santai</strong>
                 <small>Niat Tipis Kopi</small>
               </div>
             </button>
             <button
               type="button"
-              class="persona-deck-btn"
+              class="persona-btn"
               :class="{ active: selectedPersona === 'technical' }"
               @click="selectedPersona = 'technical'"
             >
-              <span class="p-icon">⚙️</span>
-              <div class="p-text">
+              <span class="persona-ico">⚙️</span>
+              <div class="persona-desc">
                 <strong>Tech Geek</strong>
                 <small>Drivetrain &amp; Spek</small>
               </div>
             </button>
           </div>
 
-          <!-- Live Caption Box -->
-          <div class="caption-card-box">
-            <p class="caption-text-body">{{ aiRecap.captions[selectedPersona] }}</p>
-            <div class="caption-card-action">
-              <span class="caption-length-tag">{{ aiRecap.captions[selectedPersona].length }} Karakter</span>
+          <!-- Caption Preview -->
+          <div class="caption-display-card">
+            <p class="caption-body">{{ aiRecap.captions[selectedPersona] }}</p>
+            <div class="caption-action-bar">
+              <span class="caption-len">{{ aiRecap.captions[selectedPersona].length }} Karakter</span>
               <button
                 type="button"
-                class="copy-caption-pill"
+                class="btn-copy-caption"
                 @click="copyCaption(aiRecap.captions[selectedPersona])"
               >
                 📋 Salin Caption &amp; Tagar
@@ -896,86 +907,88 @@ async function shareToMedia() {
             </div>
           </div>
 
-          <!-- AI Mechanic Preventive Advice -->
-          <div class="ai-mechanic-alert">
-            <span class="alert-icon">🔧</span>
-            <p class="alert-text">{{ aiRecap.mechanicTip }}</p>
+          <!-- Mechanic Advice -->
+          <div class="mechanic-alert-card">
+            <span class="m-icon">🔧</span>
+            <p class="m-text">{{ aiRecap.mechanicTip }}</p>
           </div>
         </div>
 
-        <!-- TAB 5: TELEMETRY DATA INPUTS -->
-        <div v-show="activeTab === 'data'" class="tab-pane-card">
-          <div class="tab-pane-header">
-            <h3>Sesuaikan Data Telemetri Gowes</h3>
-            <p>Ubah nilai metrik untuk disesuaikan pada poster secara langsung.</p>
+        <!-- TAB 5: DATA INPUTS -->
+        <div v-show="activeTab === 'data'" class="toolbox-content-card">
+          <div class="toolbox-card-header">
+            <h3>Sesuaikan Data Telemetri</h3>
+            <p>Ubah angka untuk disesuaikan secara langsung pada poster.</p>
           </div>
-          <div class="inputs-grid-layout">
-            <div class="input-field-box">
+          <div class="telemetry-form-grid">
+            <div class="form-row">
               <label>Judul Sesi Gowes</label>
               <input v-model="rideForm.title" type="text" />
             </div>
-            <div class="input-field-box">
+            <div class="form-row">
               <label>Nama Sepeda</label>
               <input v-model="rideForm.bikeName" type="text" />
             </div>
-            <div class="input-field-box">
+            <div class="form-row">
               <label>Jarak Tempuh (km)</label>
               <input v-model.number="rideForm.distanceKm" type="number" step="0.1" />
             </div>
-            <div class="input-field-box">
+            <div class="form-row">
               <label>Elevasi Tanjakan (m)</label>
               <input v-model.number="rideForm.elevationM" type="number" />
             </div>
-            <div class="input-field-box">
+            <div class="form-row">
               <label>Durasi Total (Menit)</label>
               <input v-model.number="rideForm.durationMinutes" type="number" />
             </div>
-            <div class="input-field-box">
+            <div class="form-row">
               <label>Suhu Udara (°C)</label>
               <input v-model.number="rideForm.temperatureC" type="number" />
             </div>
           </div>
         </div>
-      </section>
+      </div>
     </main>
   </div>
 </template>
 
 <style scoped>
-/* Studio Page Layout */
-.ride-flex-studio-page {
+/* Main Viewport Shell */
+.creator-studio-viewport {
   min-height: 100vh;
-  background: #090e1a;
+  min-height: 100dvh;
+  background: #080d19;
   color: #f8fafc;
   display: flex;
   flex-direction: column;
 }
 
-/* Header Navbar */
-.studio-header-nav {
+/* 1. Header Navigation Bar */
+.creator-studio-nav {
   display: flex;
   align-items: center;
   justify-content: space-between;
-  padding: 0.85rem 1.5rem;
-  background: #060a12;
+  padding: 0.75rem 1.25rem;
+  background: #050811;
   border-bottom: 1px solid rgba(255, 255, 255, 0.08);
   position: sticky;
   top: 0;
-  z-index: 50;
-  gap: 1rem;
+  z-index: 40;
+  gap: 0.75rem;
 }
 
-.header-left {
+.nav-left {
   display: flex;
   align-items: center;
-  gap: 1rem;
+  gap: 0.75rem;
+  min-width: 0;
 }
 
-.back-pill-btn {
+.nav-back-button {
   display: inline-flex;
   align-items: center;
   gap: 0.35rem;
-  padding: 0.45rem 0.85rem;
+  padding: 0.4rem 0.75rem;
   border-radius: 9999px;
   background: rgba(255, 255, 255, 0.08);
   border: 1px solid rgba(255, 255, 255, 0.12);
@@ -983,47 +996,117 @@ async function shareToMedia() {
   font-size: 0.78rem;
   font-weight: 800;
   text-decoration: none;
+  flex-shrink: 0;
   transition: all 120ms ease;
 }
 
-.back-pill-btn:hover {
+.nav-back-button:hover {
   background: rgba(255, 255, 255, 0.16);
   color: #ffffff;
 }
 
-.header-brand-title {
+.nav-brand-lockup {
   display: flex;
   align-items: center;
-  gap: 0.45rem;
+  gap: 0.35rem;
+  min-width: 0;
 }
 
-.bolt-glow {
-  font-size: 1.25rem;
+.brand-spark {
   color: var(--color-chain-lime);
+  font-size: 1.15rem;
+  flex-shrink: 0;
 }
 
-.header-brand-title h1 {
+.brand-title {
   margin: 0;
-  font-size: 1.1rem;
+  font-size: 1rem;
   font-weight: 900;
   color: #ffffff;
   letter-spacing: -0.02em;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
 }
 
-/* Header Ratio Selector */
-.header-ratio-group {
+.nav-actions {
   display: flex;
-  gap: 0.25rem;
-  background: rgba(255, 255, 255, 0.06);
+  align-items: center;
+  gap: 0.5rem;
+  flex-shrink: 0;
+}
+
+.btn-nav-download {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.35rem;
+  padding: 0.45rem 0.85rem;
+  border-radius: 0.75rem;
+  background: rgba(255, 255, 255, 0.08);
+  border: 1.5px solid rgba(255, 255, 255, 0.15);
+  color: #ffffff;
+  font-size: 0.78rem;
+  font-weight: 850;
+  cursor: pointer;
+  transition: all 120ms ease;
+}
+
+.btn-nav-download:hover:not(:disabled) {
+  background: rgba(255, 255, 255, 0.18);
+}
+
+.btn-nav-share {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.35rem;
+  padding: 0.45rem 0.95rem;
+  border-radius: 0.75rem;
+  background: var(--color-chain-lime);
+  color: #080d19;
+  border: none;
+  font-size: 0.8rem;
+  font-weight: 900;
+  cursor: pointer;
+  box-shadow: 0 4px 14px rgba(201, 243, 106, 0.35);
+  transition: all 120ms ease;
+}
+
+.btn-nav-share:hover:not(:disabled) {
+  transform: translateY(-1px);
+  box-shadow: 0 6px 18px rgba(201, 243, 106, 0.5);
+}
+
+@media (max-width: 520px) {
+  .btn-text-full {
+    display: none;
+  }
+}
+
+/* 2. Ratio Selector Bar */
+.studio-ratio-bar {
+  background: #060a13;
+  border-bottom: 1px solid rgba(255, 255, 255, 0.06);
+  padding: 0.5rem 1rem;
+  display: flex;
+  justify-content: center;
+}
+
+.ratio-pills-wrap {
+  display: flex;
+  gap: 0.35rem;
+  background: rgba(255, 255, 255, 0.05);
   padding: 0.25rem;
   border-radius: 0.75rem;
+  max-width: 22rem;
+  width: 100%;
 }
 
-.ratio-header-btn {
+.ratio-toggle-pill {
+  flex: 1;
   background: transparent;
   border: none;
-  padding: 0.4rem 0.75rem;
-  font-size: 0.74rem;
+  padding: 0.4rem 0.25rem;
+  font-size: 0.72rem;
   font-weight: 850;
   color: #94a3b8;
   border-radius: 0.55rem;
@@ -1032,128 +1115,138 @@ async function shareToMedia() {
   white-space: nowrap;
 }
 
-.ratio-header-btn.active {
+.ratio-toggle-pill.active {
   background: #1e293b;
   color: var(--color-chain-lime);
   box-shadow: 0 2px 8px rgba(0, 0, 0, 0.4);
 }
 
-/* Header Actions */
-.header-actions {
-  display: flex;
-  align-items: center;
-  gap: 0.65rem;
-}
-
-.header-btn-download {
-  display: inline-flex;
-  align-items: center;
-  gap: 0.4rem;
-  padding: 0.55rem 1rem;
-  border-radius: 0.75rem;
-  background: rgba(255, 255, 255, 0.08);
-  border: 1.5px solid rgba(255, 255, 255, 0.15);
-  color: #ffffff;
-  font-size: 0.8rem;
-  font-weight: 850;
-  cursor: pointer;
-  transition: all 120ms ease;
-}
-
-.header-btn-download:hover:not(:disabled) {
-  background: rgba(255, 255, 255, 0.16);
-}
-
-.header-btn-share {
-  display: inline-flex;
-  align-items: center;
-  gap: 0.4rem;
-  padding: 0.55rem 1.15rem;
-  border-radius: 0.75rem;
-  background: var(--color-chain-lime);
-  color: #0f172a;
-  border: none;
-  font-size: 0.82rem;
-  font-weight: 900;
-  cursor: pointer;
-  box-shadow: 0 4px 14px rgba(201, 243, 106, 0.35);
-  transition: all 120ms ease;
-}
-
-.header-btn-share:hover:not(:disabled) {
-  transform: translateY(-1px);
-  box-shadow: 0 6px 18px rgba(201, 243, 106, 0.5);
-}
-
-/* Studio Body Grid Layout */
-.studio-body-container {
+/* 3. Main Workspace Grid */
+.creator-workspace {
   display: grid;
-  grid-template-columns: 24rem 1fr;
-  gap: 2rem;
-  max-width: 78rem;
+  grid-template-columns: 22rem 1fr;
+  gap: 1.75rem;
+  max-width: 72rem;
   margin: 0 auto;
   width: 100%;
-  padding: 2rem 1.5rem;
+  padding: 1.5rem 1.25rem 3rem;
   align-items: start;
 }
 
-@media (max-width: 960px) {
-  .studio-body-container {
+@media (max-width: 860px) {
+  .creator-workspace {
     grid-template-columns: 1fr;
-    gap: 1.5rem;
-    padding: 1rem;
+    gap: 1.25rem;
+    padding: 1rem 0.75rem 2.5rem;
   }
 }
 
-/* LEFT POSTER STAGE */
-.poster-stage-column {
+/* 4. POSTER DISPLAY STAGE */
+.poster-display-stage {
   display: flex;
   justify-content: center;
   position: sticky;
-  top: 4.5rem;
+  top: 6.5rem;
+  z-index: 10;
 }
 
-.live-poster-card {
+.poster-canvas-frame {
   width: 100%;
-  max-width: 22rem;
+  max-width: 20.5rem;
   aspect-ratio: 9 / 16;
   border-radius: 1.5rem;
-  background-size: cover;
-  background-position: center;
   position: relative;
   overflow: hidden;
   display: flex;
   flex-direction: column;
   justify-content: space-between;
-  padding: 1.35rem;
-  box-shadow: 0 25px 60px -10px rgba(0, 0, 0, 0.8), 0 0 40px rgba(201, 243, 106, 0.08);
+  padding: 1.25rem;
+  box-shadow: 0 25px 60px -10px rgba(0, 0, 0, 0.8), 0 0 35px rgba(201, 243, 106, 0.08);
   border: 1.5px solid rgba(255, 255, 255, 0.2);
-  transition: all 200ms ease;
+  transition: all 180ms ease;
+  background-size: cover;
+  background-position: center;
 }
 
-.poster--post {
-  aspect-ratio: 1 / 1;
+@media (max-width: 860px) {
+  .poster-canvas-frame {
+    max-height: min(44vh, 320px);
+    aspect-ratio: auto;
+    height: 300px;
+    padding: 1rem;
+    border-radius: 1.25rem;
+  }
 }
 
-.poster--landscape {
-  aspect-ratio: 16 / 9;
+.frame--post {
+  aspect-ratio: 1 / 1 !important;
 }
 
-.poster-card-vignette {
+.frame--landscape {
+  aspect-ratio: 16 / 9 !important;
+}
+
+/* Palette Presets for Canvas */
+.bg--alpine {
+  background: linear-gradient(180deg, rgba(8, 23, 38, 0.8) 0%, rgba(2, 6, 23, 0.96) 100%),
+              radial-gradient(circle at 50% 15%, rgba(56, 189, 248, 0.3) 0%, transparent 60%),
+              #0f2b48;
+}
+
+.bg--gravel {
+  background: linear-gradient(180deg, rgba(10, 35, 20, 0.8) 0%, rgba(2, 10, 5, 0.96) 100%),
+              radial-gradient(circle at 50% 15%, rgba(201, 243, 106, 0.25) 0%, transparent 60%),
+              #143823;
+}
+
+.bg--sunset {
+  background: linear-gradient(180deg, rgba(59, 13, 6, 0.8) 0%, rgba(15, 4, 2, 0.96) 100%),
+              radial-gradient(circle at 50% 20%, rgba(251, 146, 60, 0.4) 0%, transparent 65%),
+              #581c10;
+}
+
+.bg--crit {
+  background: linear-gradient(180deg, rgba(33, 5, 51, 0.8) 0%, rgba(8, 1, 13, 0.96) 100%),
+              radial-gradient(circle at 50% 15%, rgba(168, 85, 247, 0.35) 0%, transparent 60%),
+              #3b1154;
+}
+
+.bg--cafe {
+  background: linear-gradient(180deg, rgba(35, 17, 6, 0.8) 0%, rgba(13, 6, 2, 0.96) 100%),
+              radial-gradient(circle at 50% 20%, rgba(217, 119, 6, 0.3) 0%, transparent 60%),
+              #3d2111;
+}
+
+.bg--topo {
+  background: linear-gradient(180deg, rgba(8, 13, 25, 0.8) 0%, rgba(3, 6, 10, 0.96) 100%),
+              radial-gradient(circle at 50% 15%, rgba(201, 243, 106, 0.18) 0%, transparent 60%),
+              #0c1527;
+}
+
+.topo-bg-layer {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  pointer-events: none;
+  opacity: 0.6;
+}
+
+.poster-lighting-vignette {
   position: absolute;
   inset: 0;
   background: linear-gradient(
     180deg,
-    rgba(11, 17, 32, 0.82) 0%,
-    rgba(11, 17, 32, 0.2) 35%,
-    rgba(11, 17, 32, 0.78) 70%,
-    rgba(11, 17, 32, 0.98) 100%
+    rgba(6, 10, 18, 0.3) 0%,
+    transparent 35%,
+    rgba(6, 10, 18, 0.8) 75%,
+    rgba(6, 10, 18, 0.98) 100%
   );
   z-index: 1;
 }
 
-/* Top Bar Inside Poster */
-.poster-card-topbar {
+/* Poster Inner Header */
+.poster-inner-header {
   position: relative;
   z-index: 2;
   display: flex;
@@ -1162,155 +1255,155 @@ async function shareToMedia() {
   gap: 0.5rem;
 }
 
-.poster-chip-brand {
+.inner-brand-badge {
   display: inline-flex;
   align-items: center;
-  gap: 0.35rem;
-  padding: 0.3rem 0.7rem;
+  gap: 0.3rem;
+  padding: 0.25rem 0.65rem;
   border-radius: 9999px;
   background: rgba(15, 23, 42, 0.92);
   border: 1.5px solid var(--color-chain-lime);
   font-family: var(--font-mono);
-  font-size: 0.65rem;
+  font-size: 0.62rem;
   font-weight: 900;
   color: var(--color-chain-lime);
-  box-shadow: 0 3px 12px rgba(0, 0, 0, 0.6);
+  box-shadow: 0 3px 10px rgba(0, 0, 0, 0.6);
 }
 
-.bolt-lime {
+.badge-bolt {
   color: var(--color-chain-lime);
 }
 
-.poster-chip-sticker {
-  padding: 0.3rem 0.75rem;
+.inner-sticker-badge {
+  padding: 0.25rem 0.7rem;
   border-radius: 9999px;
   background: var(--color-chain-lime);
-  color: #0f172a;
-  font-size: 0.65rem;
+  color: #080d19;
+  font-size: 0.62rem;
   font-weight: 900;
-  box-shadow: 0 4px 14px rgba(201, 243, 106, 0.4);
+  box-shadow: 0 3px 12px rgba(201, 243, 106, 0.4);
 }
 
-/* Mid Hero Mileage Inside Poster */
-.poster-card-hero {
+/* Poster Inner Hero */
+.poster-inner-hero {
   position: relative;
   z-index: 2;
   margin-top: auto;
-  margin-bottom: 0.75rem;
+  margin-bottom: 0.65rem;
   display: flex;
   flex-direction: column;
   gap: 0.15rem;
 }
 
-.hero-mileage-row {
+.hero-mileage-lockup {
   display: flex;
   align-items: baseline;
-  gap: 0.4rem;
+  gap: 0.35rem;
   line-height: 0.92;
 }
 
-.hero-mileage-val {
+.hero-mileage-number {
   font-family: var(--font-mono);
-  font-size: 3.4rem;
+  font-size: 2.85rem;
   font-weight: 900;
   color: var(--color-chain-lime);
   letter-spacing: -0.05em;
-  text-shadow: 0 4px 24px rgba(0, 0, 0, 0.9);
+  text-shadow: 0 4px 20px rgba(0, 0, 0, 0.9);
 }
 
-.hero-mileage-unit {
-  font-size: 1.3rem;
+.hero-mileage-suffix {
+  font-size: 1.15rem;
   font-weight: 900;
   color: #ffffff;
 }
 
-.hero-poster-title {
+.hero-session-title {
   margin: 0;
-  font-size: 1.05rem;
+  font-size: 0.95rem;
   font-weight: 850;
   color: #ffffff;
   letter-spacing: -0.02em;
-  text-shadow: 0 2px 10px rgba(0, 0, 0, 0.9);
+  text-shadow: 0 2px 8px rgba(0, 0, 0, 0.9);
   white-space: nowrap;
   overflow: hidden;
   text-overflow: ellipsis;
 }
 
-.hero-meta-strip {
+.hero-session-meta {
   display: flex;
   align-items: center;
   gap: 0.35rem;
-  font-size: 0.72rem;
+  font-size: 0.68rem;
   color: #cbd5e1;
 }
 
-/* Telemetry Card Inside Poster */
-.poster-card-telemetry {
+/* Poster Inner Telemetry */
+.poster-inner-telemetry {
   position: relative;
   z-index: 2;
-  background: rgba(15, 23, 42, 0.88);
+  background: rgba(15, 23, 42, 0.9);
   border: 1.5px solid rgba(201, 243, 106, 0.35);
-  border-radius: 1.15rem;
-  padding: 0.85rem 1rem;
+  border-radius: 1rem;
+  padding: 0.75rem 0.85rem;
   display: flex;
   flex-direction: column;
-  gap: 0.55rem;
+  gap: 0.45rem;
   backdrop-filter: blur(12px);
 }
 
-.elevation-spark-row {
+.sparkline-row {
   display: flex;
   justify-content: space-between;
   align-items: center;
   font-family: var(--font-mono);
-  font-size: 0.62rem;
+  font-size: 0.58rem;
   font-weight: 850;
 }
 
-.spark-title {
+.sparkline-label {
   color: #94a3b8;
 }
 
-.spark-gain-text {
+.sparkline-gain {
   color: #38bdf8;
 }
 
-.spark-elevation-svg {
+.sparkline-svg {
   width: 100%;
-  height: 1.5rem;
+  height: 1.35rem;
 }
 
-.telemetry-values-grid {
+.telemetry-triple-pillars {
   display: flex;
   align-items: center;
   justify-content: space-between;
   border-top: 1px solid rgba(255, 255, 255, 0.08);
-  padding-top: 0.5rem;
+  padding-top: 0.45rem;
 }
 
-.telemetry-col {
+.pillar-item {
   display: flex;
   flex-direction: column;
   align-items: center;
   flex: 1;
 }
 
-.col-divider {
+.pillar-divider {
   width: 1px;
-  height: 1.6rem;
+  height: 1.5rem;
   background: rgba(255, 255, 255, 0.1);
 }
 
-.col-label {
+.pillar-title {
   font-family: var(--font-mono);
-  font-size: 0.55rem;
+  font-size: 0.52rem;
   font-weight: 800;
   color: #94a3b8;
 }
 
-.col-val {
+.pillar-data {
   font-family: var(--font-mono);
-  font-size: 0.88rem;
+  font-size: 0.82rem;
   font-weight: 900;
   color: #f8fafc;
 }
@@ -1318,41 +1411,45 @@ async function shareToMedia() {
 .text-lime { color: var(--color-chain-lime); }
 .text-coral { color: #ff8c75; }
 
-.poster-card-watermark {
+.poster-inner-footer {
   position: relative;
   z-index: 2;
   text-align: center;
   font-family: var(--font-mono);
-  font-size: 0.58rem;
+  font-size: 0.55rem;
   font-weight: 800;
   color: rgba(201, 243, 106, 0.8);
-  margin-top: 0.35rem;
+  margin-top: 0.3rem;
 }
 
-/* RIGHT TOOLS PANE */
-.tools-stage-column {
+/* 5. TOOLBOX CONTROLS PANEL */
+.studio-toolbox-panel {
   display: flex;
   flex-direction: column;
   gap: 1.25rem;
 }
 
-/* Segmented Tabs */
-.studio-segmented-tabs {
+.toolbox-tab-nav {
   display: flex;
-  gap: 0.4rem;
-  background: #060a12;
+  gap: 0.35rem;
+  background: #050811;
   padding: 0.35rem;
   border-radius: 1rem;
   border: 1px solid rgba(255, 255, 255, 0.08);
   overflow-x: auto;
+  scrollbar-width: none;
 }
 
-.segmented-tab-btn {
+.toolbox-tab-nav::-webkit-scrollbar {
+  display: none;
+}
+
+.tab-nav-item {
   flex: 1;
   background: transparent;
   border: none;
-  padding: 0.65rem 0.5rem;
-  font-size: 0.8rem;
+  padding: 0.6rem 0.45rem;
+  font-size: 0.78rem;
   font-weight: 850;
   color: #94a3b8;
   border-radius: 0.75rem;
@@ -1361,57 +1458,56 @@ async function shareToMedia() {
   white-space: nowrap;
 }
 
-.segmented-tab-btn.active {
+.tab-nav-item.active {
   background: #1e293b;
   color: var(--color-chain-lime);
   box-shadow: 0 4px 12px rgba(0, 0, 0, 0.4);
 }
 
-/* Tab Panes */
-.tab-pane-card {
-  background: #0d1527;
+.toolbox-content-card {
+  background: #0c1426;
   border: 1px solid rgba(255, 255, 255, 0.1);
   border-radius: 1.35rem;
-  padding: 1.5rem;
+  padding: 1.35rem;
   display: flex;
   flex-direction: column;
-  gap: 1.25rem;
+  gap: 1.15rem;
   box-shadow: 0 15px 35px rgba(0, 0, 0, 0.4);
 }
 
-.tab-pane-header h3 {
+.toolbox-card-header h3 {
   margin: 0;
-  font-size: 1.05rem;
+  font-size: 1rem;
   font-weight: 900;
   color: #ffffff;
 }
 
-.tab-pane-header p {
+.toolbox-card-header p {
   margin: 0.2rem 0 0;
-  font-size: 0.78rem;
+  font-size: 0.76rem;
   color: #94a3b8;
 }
 
-/* Template Choices Grid */
-.template-choices-grid {
+/* Template Styles Grid */
+.template-cards-grid {
   display: grid;
   grid-template-columns: repeat(2, 1fr);
-  gap: 0.85rem;
+  gap: 0.75rem;
 }
 
-@media (max-width: 640px) {
-  .template-choices-grid {
+@media (max-width: 580px) {
+  .template-cards-grid {
     grid-template-columns: 1fr;
   }
 }
 
-.style-choice-card {
+.style-choice-item {
   display: flex;
   flex-direction: column;
   align-items: flex-start;
-  gap: 0.35rem;
-  padding: 1.15rem;
-  border-radius: 1.15rem;
+  gap: 0.3rem;
+  padding: 1rem;
+  border-radius: 1rem;
   background: rgba(30, 41, 59, 0.5);
   border: 1.5px solid rgba(255, 255, 255, 0.08);
   color: #f8fafc;
@@ -1420,142 +1516,151 @@ async function shareToMedia() {
   transition: all 120ms ease;
 }
 
-.style-choice-card:hover {
+.style-choice-item:hover {
   border-color: rgba(201, 243, 106, 0.4);
-  background: rgba(30, 41, 59, 0.8);
 }
 
-.style-choice-card.active {
+.style-choice-item.active {
   background: rgba(201, 243, 106, 0.1);
   border-color: var(--color-chain-lime);
-  box-shadow: 0 0 20px rgba(201, 243, 106, 0.15);
+  box-shadow: 0 0 18px rgba(201, 243, 106, 0.15);
 }
 
-.choice-badge {
+.style-badge-pill {
   font-family: var(--font-mono);
-  font-size: 0.65rem;
+  font-size: 0.62rem;
   font-weight: 900;
   color: var(--color-chain-lime);
 }
 
-.choice-title {
-  font-size: 0.95rem;
+.style-title {
+  font-size: 0.9rem;
   font-weight: 850;
   color: #ffffff;
 }
 
-.choice-desc {
+.style-subtitle {
   margin: 0;
-  font-size: 0.75rem;
+  font-size: 0.72rem;
   color: #94a3b8;
   line-height: 1.35;
 }
 
-/* Visual Photo Cards Grid */
-.photo-cards-grid {
+/* Background Presets */
+.bg-presets-grid {
   display: grid;
   grid-template-columns: repeat(3, 1fr);
-  gap: 0.75rem;
+  gap: 0.65rem;
 }
 
-@media (max-width: 640px) {
-  .photo-cards-grid {
+@media (max-width: 580px) {
+  .bg-presets-grid {
     grid-template-columns: repeat(2, 1fr);
   }
 }
 
-.photo-select-card {
-  height: 5.5rem;
-  border-radius: 1rem;
-  background-size: cover;
-  background-position: center;
+.bg-preset-box {
+  height: 4.8rem;
+  border-radius: 0.85rem;
   border: 2px solid rgba(255, 255, 255, 0.1);
   display: flex;
   align-items: flex-end;
-  padding: 0.55rem;
+  padding: 0.45rem;
   cursor: pointer;
   position: relative;
   overflow: hidden;
   transition: all 120ms ease;
 }
 
-.photo-select-card::before {
-  content: '';
-  position: absolute;
-  inset: 0;
-  background: linear-gradient(180deg, transparent 30%, rgba(11, 17, 32, 0.9) 100%);
-}
-
-.photo-select-card.active {
+.bg-preset-box.active {
   border-color: var(--color-chain-lime);
-  box-shadow: 0 0 16px rgba(201, 243, 106, 0.4);
+  box-shadow: 0 0 15px rgba(201, 243, 106, 0.4);
 }
 
-.photo-select-card--topo {
-  background: #0b1120;
+.bg-preset-box--alpine {
+  background: linear-gradient(135deg, #1e3a8a, #0f172a);
 }
 
-.photo-card-tag {
+.bg-preset-box--gravel {
+  background: linear-gradient(135deg, #14532d, #0f172a);
+}
+
+.bg-preset-box--sunset {
+  background: linear-gradient(135deg, #9a3412, #0f172a);
+}
+
+.bg-preset-box--crit {
+  background: linear-gradient(135deg, #6b21a8, #0b0f19);
+}
+
+.bg-preset-box--cafe {
+  background: linear-gradient(135deg, #78350f, #0f172a);
+}
+
+.bg-preset-box--topo {
+  background: linear-gradient(135deg, #0b1120, #020617);
+}
+
+.preset-label {
   position: relative;
   z-index: 1;
-  font-size: 0.72rem;
+  font-size: 0.7rem;
   font-weight: 900;
   color: #ffffff;
-  text-shadow: 0 1px 4px rgba(0, 0, 0, 0.9);
+  text-shadow: 0 1px 3px rgba(0, 0, 0, 0.9);
 }
 
-/* Upload Photo Banner */
-.photo-upload-banner {
+.custom-photo-uploader {
   display: flex;
   align-items: center;
-  gap: 1rem;
-  padding: 1rem 1.25rem;
-  border-radius: 1.15rem;
+  gap: 0.85rem;
+  padding: 0.85rem 1.15rem;
+  border-radius: 1rem;
   border: 2px dashed rgba(201, 243, 106, 0.4);
   background: rgba(201, 243, 106, 0.05);
   cursor: pointer;
   transition: all 120ms ease;
 }
 
-.photo-upload-banner:hover {
+.custom-photo-uploader:hover {
   background: rgba(201, 243, 106, 0.1);
   border-color: var(--color-chain-lime);
 }
 
-.upload-icon-large {
-  font-size: 1.75rem;
+.upload-icon {
+  font-size: 1.5rem;
 }
 
-.upload-copy strong {
+.upload-texts strong {
   display: block;
-  font-size: 0.88rem;
+  font-size: 0.84rem;
   color: var(--color-chain-lime);
 }
 
-.upload-copy small {
-  font-size: 0.74rem;
+.upload-texts small {
+  font-size: 0.72rem;
   color: #94a3b8;
 }
 
-/* Stickers Deck */
-.stickers-choice-deck {
+/* Sticker Grid */
+.sticker-grid-wrap {
   display: grid;
   grid-template-columns: repeat(2, 1fr);
-  gap: 0.75rem;
+  gap: 0.65rem;
 }
 
-@media (max-width: 640px) {
-  .stickers-choice-deck {
+@media (max-width: 580px) {
+  .sticker-grid-wrap {
     grid-template-columns: 1fr;
   }
 }
 
-.sticker-badge-card {
+.sticker-item-btn {
   display: flex;
   align-items: center;
-  gap: 0.75rem;
-  padding: 0.85rem 1rem;
-  border-radius: 1rem;
+  gap: 0.65rem;
+  padding: 0.75rem 0.85rem;
+  border-radius: 0.85rem;
   background: rgba(30, 41, 59, 0.5);
   border: 1.5px solid rgba(255, 255, 255, 0.08);
   color: #cbd5e1;
@@ -1564,133 +1669,133 @@ async function shareToMedia() {
   transition: all 120ms ease;
 }
 
-.sticker-badge-card.active {
+.sticker-item-btn.active {
   background: rgba(201, 243, 106, 0.12);
   border-color: var(--color-chain-lime);
   color: #ffffff;
 }
 
-.sticker-emoji {
-  font-size: 1.5rem;
+.s-icon {
+  font-size: 1.35rem;
 }
 
-.sticker-info strong {
+.s-info strong {
   display: block;
-  font-size: 0.85rem;
+  font-size: 0.82rem;
   color: #ffffff;
 }
 
-.sticker-info small {
-  font-size: 0.7rem;
+.s-info small {
+  font-size: 0.68rem;
   color: #94a3b8;
 }
 
-/* AI Studio Tab Panel */
-.ai-header-strip {
+/* AI Storyteller Tab */
+.ai-strip-head {
   display: flex;
   align-items: center;
   justify-content: space-between;
-  gap: 1rem;
+  gap: 0.75rem;
 }
 
-@media (max-width: 640px) {
-  .ai-header-strip {
+@media (max-width: 580px) {
+  .ai-strip-head {
     flex-direction: column;
     align-items: stretch;
   }
 }
 
-.ai-tag-group {
+.ai-strip-title {
   display: flex;
   align-items: center;
-  gap: 0.75rem;
+  gap: 0.65rem;
 }
 
-.magic-spark-glow {
-  font-size: 1.75rem;
+.ai-spark-icon {
+  font-size: 1.5rem;
 }
 
-.ai-strip-heading {
+.ai-strip-title h4 {
   margin: 0;
-  font-size: 1.05rem;
+  font-size: 0.95rem;
   font-weight: 900;
   color: #ffffff;
 }
 
-.ai-strip-sub {
-  margin: 0.15rem 0 0;
-  font-size: 0.75rem;
+.ai-strip-title p {
+  margin: 0.1rem 0 0;
+  font-size: 0.72rem;
   color: #94a3b8;
 }
 
-.generate-ai-magic-btn {
+.btn-magic-generate {
   display: inline-flex;
   align-items: center;
   justify-content: center;
-  gap: 0.45rem;
-  padding: 0.65rem 1.15rem;
-  border-radius: 0.85rem;
+  gap: 0.35rem;
+  padding: 0.55rem 1rem;
+  border-radius: 0.75rem;
   background: var(--color-chain-lime);
-  color: #0f172a;
+  color: #080d19;
   border: none;
-  font-size: 0.82rem;
+  font-size: 0.8rem;
   font-weight: 900;
   cursor: pointer;
-  box-shadow: 0 4px 16px rgba(201, 243, 106, 0.35);
+  box-shadow: 0 4px 14px rgba(201, 243, 106, 0.35);
   transition: all 120ms ease;
   white-space: nowrap;
 }
 
-.generate-ai-magic-btn:hover:not(:disabled) {
-  transform: translateY(-2px);
-  box-shadow: 0 6px 20px rgba(201, 243, 106, 0.5);
+.btn-magic-generate:hover:not(:disabled) {
+  transform: translateY(-1px);
+  box-shadow: 0 6px 18px rgba(201, 243, 106, 0.5);
 }
 
-.fuel-callout-box {
+.culinary-box {
   display: flex;
   flex-direction: column;
-  gap: 0.25rem;
-  padding: 0.85rem 1.15rem;
-  border-radius: 1rem;
+  gap: 0.2rem;
+  padding: 0.75rem 1rem;
+  border-radius: 0.85rem;
   background: rgba(255, 140, 117, 0.1);
   border: 1.5px solid rgba(255, 140, 117, 0.3);
 }
 
-.fuel-badge-pill {
+.culinary-tag {
   font-family: var(--font-mono);
-  font-size: 0.62rem;
+  font-size: 0.6rem;
   font-weight: 900;
   color: #ff8c75;
 }
 
-.fuel-title {
-  font-size: 0.98rem;
+.culinary-val {
+  font-size: 0.92rem;
   color: #ffffff;
 }
 
-.fuel-desc {
-  font-size: 0.74rem;
+.culinary-sub {
+  font-size: 0.72rem;
   color: #cbd5e1;
 }
 
-.persona-selector-deck {
+.persona-deck {
   display: grid;
   grid-template-columns: repeat(3, 1fr);
-  gap: 0.65rem;
+  gap: 0.5rem;
 }
 
-@media (max-width: 640px) {
-  .persona-selector-deck {
+@media (max-width: 580px) {
+  .persona-deck {
     grid-template-columns: 1fr;
   }
 }
 
-.persona-deck-btn {
+.persona-btn {
   display: flex;
   align-items: center;
-  gap: 0.65rem;
-  padding: 0.75rem 0.85rem;
-  border-radius: 1rem;
+  gap: 0.55rem;
+  padding: 0.65rem 0.75rem;
+  border-radius: 0.85rem;
   background: rgba(15, 23, 42, 0.7);
   border: 1.5px solid rgba(255, 255, 255, 0.08);
   color: #cbd5e1;
@@ -1699,147 +1804,134 @@ async function shareToMedia() {
   transition: all 120ms ease;
 }
 
-.persona-deck-btn.active {
+.persona-btn.active {
   background: #1e293b;
   border-color: var(--color-chain-lime);
   color: #ffffff;
 }
 
-.p-icon {
-  font-size: 1.4rem;
+.persona-ico {
+  font-size: 1.25rem;
 }
 
-.p-text strong {
+.persona-desc strong {
   display: block;
-  font-size: 0.85rem;
+  font-size: 0.8rem;
   color: #ffffff;
 }
 
-.p-text small {
-  font-size: 0.68rem;
+.persona-desc small {
+  font-size: 0.65rem;
   color: #94a3b8;
 }
 
-.caption-card-box {
+.caption-display-card {
   display: flex;
   flex-direction: column;
-  gap: 0.85rem;
-  padding: 1.15rem;
-  border-radius: 1.15rem;
-  background: rgba(11, 17, 32, 0.7);
+  gap: 0.75rem;
+  padding: 1rem;
+  border-radius: 1rem;
+  background: rgba(8, 13, 25, 0.7);
   border: 1px solid rgba(255, 255, 255, 0.1);
 }
 
-.caption-text-body {
+.caption-body {
   margin: 0;
-  font-size: 0.88rem;
+  font-size: 0.86rem;
   line-height: 1.6;
   color: #f1f5f9;
 }
 
-.caption-card-action {
+.caption-action-bar {
   display: flex;
   align-items: center;
   justify-content: space-between;
   border-top: 1px solid rgba(255, 255, 255, 0.08);
-  padding-top: 0.75rem;
+  padding-top: 0.65rem;
 }
 
-.caption-length-tag {
+.caption-len {
   font-family: var(--font-mono);
-  font-size: 0.7rem;
+  font-size: 0.68rem;
   color: #64748b;
 }
 
-.copy-caption-pill {
+.btn-copy-caption {
   background: rgba(201, 243, 106, 0.15);
   border: 1.5px solid var(--color-chain-lime);
   color: var(--color-chain-lime);
-  padding: 0.45rem 0.95rem;
-  border-radius: 0.75rem;
-  font-size: 0.78rem;
+  padding: 0.4rem 0.85rem;
+  border-radius: 0.65rem;
+  font-size: 0.76rem;
   font-weight: 900;
   cursor: pointer;
   transition: all 120ms ease;
 }
 
-.copy-caption-pill:hover {
+.btn-copy-caption:hover {
   background: var(--color-chain-lime);
-  color: #0f172a;
+  color: #080d19;
 }
 
-.ai-mechanic-alert {
+.mechanic-alert-card {
   display: flex;
   align-items: flex-start;
-  gap: 0.65rem;
-  padding: 0.75rem 1rem;
-  border-radius: 0.85rem;
+  gap: 0.55rem;
+  padding: 0.65rem 0.85rem;
+  border-radius: 0.75rem;
   background: rgba(56, 189, 248, 0.1);
   border: 1px solid rgba(56, 189, 248, 0.25);
 }
 
-.alert-icon {
-  font-size: 1.1rem;
+.m-icon {
+  font-size: 1rem;
 }
 
-.alert-text {
+.m-text {
   margin: 0;
-  font-size: 0.78rem;
+  font-size: 0.76rem;
   color: #bae6fd;
-  line-height: 1.45;
+  line-height: 1.4;
 }
 
-/* Data Inputs Grid */
-.inputs-grid-layout {
+/* Telemetry Inputs */
+.telemetry-form-grid {
   display: grid;
   grid-template-columns: repeat(2, 1fr);
-  gap: 0.85rem;
+  gap: 0.75rem;
 }
 
-@media (max-width: 640px) {
-  .inputs-grid-layout {
+@media (max-width: 580px) {
+  .telemetry-form-grid {
     grid-template-columns: 1fr;
   }
 }
 
-.input-field-box {
+.form-row {
   display: flex;
   flex-direction: column;
-  gap: 0.35rem;
+  gap: 0.25rem;
 }
 
-.input-field-box label {
-  font-size: 0.74rem;
+.form-row label {
+  font-size: 0.72rem;
   font-weight: 800;
   color: #94a3b8;
 }
 
-.input-field-box input {
+.form-row input {
   background: rgba(15, 23, 42, 0.85);
   border: 1px solid rgba(255, 255, 255, 0.15);
-  border-radius: 0.85rem;
-  padding: 0.65rem 0.85rem;
+  border-radius: 0.75rem;
+  padding: 0.55rem 0.75rem;
   color: #ffffff;
-  font-size: 0.86rem;
+  font-size: 0.84rem;
   font-weight: 750;
 }
 
-.input-field-box input:focus {
+.form-row input:focus {
   outline: none;
   border-color: var(--color-chain-lime);
-}
-
-.hide-mobile {
-  display: inline;
-}
-
-@media (max-width: 640px) {
-  .hide-mobile {
-    display: none;
-  }
-  .header-ratio-group {
-    display: none;
-  }
 }
 
 .sr-only {
@@ -1851,14 +1943,5 @@ async function shareToMedia() {
   overflow: hidden;
   clip: rect(0, 0, 0, 0);
   border: 0;
-}
-
-.spin-icon {
-  display: inline-block;
-  animation: spin 1s infinite linear;
-}
-
-@keyframes spin {
-  100% { transform: rotate(360deg); }
 }
 </style>
