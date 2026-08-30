@@ -294,12 +294,12 @@ async function renderCanvas(aspectRatio: 'story' | 'post' | 'landscape'): Promis
   }
 
   const ctx = canvas.getContext('2d');
-  if (!ctx) throw new Error('Canvas context not available');
+  if (!ctx) throw new Error('Canvas 2D context not available');
 
   const FONT_UI = '-apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif';
   const FONT_SERIF = 'Georgia, "Playfair Display", "Times New Roman", serif';
 
-  // 1. Background Gradient Base
+  // 1. Background Gradient / Custom Image
   const bgGradients: Record<string, [string, string, string]> = {
     alpine: ['#0f2b48', '#081726', '#020617'],
     gravel: ['#143823', '#0a2314', '#020a05'],
@@ -318,7 +318,6 @@ async function renderCanvas(aspectRatio: 'story' | 'post' | 'landscape'): Promis
   ctx.fillStyle = bgGrad;
   ctx.fillRect(0, 0, canvas.width, canvas.height);
 
-  // 2. Custom Photo Layer
   if (rideForm.bgPreset === 'custom' && rideForm.customPhotoUrl) {
     try {
       const img = new Image();
@@ -338,35 +337,54 @@ async function renderCanvas(aspectRatio: 'story' | 'post' | 'landscape'): Promis
     }
   }
 
-  // 3. GPS Route Track Artwork (Upper/Center Canvas)
+  // 2. Cyber HUD Grid & Corner Overlays
+  if (rideForm.templateStyle === 'cyber_hud') {
+    ctx.strokeStyle = 'rgba(56, 189, 248, 0.08)';
+    ctx.lineWidth = 1;
+    const gridSpacing = 60;
+    for (let x = 0; x < canvas.width; x += gridSpacing) {
+      ctx.beginPath();
+      ctx.moveTo(x, 0);
+      ctx.lineTo(x, canvas.height);
+      ctx.stroke();
+    }
+    for (let y = 0; y < canvas.height; y += gridSpacing) {
+      ctx.beginPath();
+      ctx.moveTo(0, y);
+      ctx.lineTo(canvas.width, y);
+      ctx.stroke();
+    }
+
+    // Corner Brackets
+    ctx.font = `800 48px ${FONT_UI}`;
+    ctx.fillStyle = 'rgba(0, 255, 102, 0.85)';
+    ctx.textBaseline = 'top';
+    ctx.textAlign = 'left';
+    ctx.fillText('⌜', 35, 35);
+    ctx.textAlign = 'right';
+    ctx.fillText('⌝', canvas.width - 35, 35);
+    ctx.textBaseline = 'bottom';
+    ctx.textAlign = 'left';
+    ctx.fillText('⌞', 35, canvas.height - 35);
+    ctx.textAlign = 'right';
+    ctx.fillText('⌟', canvas.width - 35, canvas.height - 35);
+  }
+
+  // 3. Dynamic GPS Route Layer
   if (rideForm.showGpsRoute && currentRoute.value) {
     ctx.save();
-    
-    // Scale and center the route vector (path coordinates are in 400x350 box)
     const routeBoxW = 400;
-    const _routeBoxH = 350;
-    const targetW = isStory ? 840 : (isLandscape ? 720 : 680);
+    const targetW = isStory ? 840 : (isLandscape ? 740 : 660);
     const scale = targetW / routeBoxW;
-    const offsetX = (canvas.width - routeBoxW * scale) / 2;
-    const offsetY = isStory ? 280 : (isLandscape ? 120 : 110);
+    const offsetX = isLandscape ? 80 : (canvas.width - routeBoxW * scale) / 2;
+    const offsetY = isStory ? 280 : (isLandscape ? 200 : 150);
 
     ctx.translate(offsetX, offsetY);
     ctx.scale(scale, scale);
 
-    // Topo Radar Grid (if topo radar style)
-    if (rideForm.routeRenderStyle === 'topo_radar' || rideForm.templateStyle === 'cyber_hud') {
-      ctx.strokeStyle = 'rgba(56, 189, 248, 0.08)';
-      ctx.lineWidth = 1;
-      for (let r = 50; r <= 350; r += 50) {
-        ctx.beginPath();
-        ctx.arc(200, 175, r, 0, 2 * Math.PI);
-        ctx.stroke();
-      }
-    }
-
     const routePath = new Path2D(currentRoute.value.pathD);
 
-    // Outer Glow Track
+    // Glow Track
     ctx.shadowBlur = 24;
     ctx.shadowColor = rideForm.routeRenderStyle === 'kinetic_neon' ? '#C9F36A' : '#38BDF8';
     ctx.lineWidth = 14;
@@ -374,15 +392,15 @@ async function renderCanvas(aspectRatio: 'story' | 'post' | 'landscape'): Promis
     ctx.lineCap = 'round';
     ctx.lineJoin = 'round';
     ctx.stroke(routePath);
-    ctx.shadowBlur = 0; // reset shadow
+    ctx.shadowBlur = 0;
 
-    // Inner Crisp Route Gradient Stroke
+    // Core Route Gradient
     const routeGrad = ctx.createLinearGradient(50, 50, 350, 300);
     if (rideForm.routeRenderStyle === 'spectrum_elevation') {
-      routeGrad.addColorStop(0, '#C9F36A'); // Flat Start (Lime)
-      routeGrad.addColorStop(0.35, '#8EDDF4'); // Flow Downhill (Sky)
-      routeGrad.addColorStop(0.7, '#F59E0B'); // Mid Climb (Amber)
-      routeGrad.addColorStop(1, '#FF8C75'); // Summit Peak (Coral)
+      routeGrad.addColorStop(0, '#C9F36A');
+      routeGrad.addColorStop(0.35, '#8EDDF4');
+      routeGrad.addColorStop(0.7, '#F59E0B');
+      routeGrad.addColorStop(1, '#FF8C75');
     } else if (rideForm.routeRenderStyle === 'kinetic_neon') {
       routeGrad.addColorStop(0, '#C9F36A');
       routeGrad.addColorStop(1, '#A3E635');
@@ -394,15 +412,13 @@ async function renderCanvas(aspectRatio: 'story' | 'post' | 'landscape'): Promis
       routeGrad.addColorStop(1, '#00FF66');
     }
 
-    ctx.lineWidth = 7;
+    ctx.lineWidth = 6;
     ctx.strokeStyle = routeGrad;
     ctx.stroke(routePath);
 
-    // Draw Waypoints on Route
     if (rideForm.showWaypoints && currentRoute.value.waypoints) {
       currentRoute.value.waypoints.forEach((wp) => {
-        // Outer pulsing ring
-        ctx.fillStyle = 'rgba(15, 23, 42, 0.9)';
+        ctx.fillStyle = '#0F172A';
         ctx.strokeStyle = wp.type === 'climb' ? '#FF8C75' : (wp.type === 'coffee' ? '#F59E0B' : '#C9F36A');
         ctx.lineWidth = 2.5;
         ctx.beginPath();
@@ -410,13 +426,11 @@ async function renderCanvas(aspectRatio: 'story' | 'post' | 'landscape'): Promis
         ctx.fill();
         ctx.stroke();
 
-        // Icon Text
         ctx.font = '14px sans-serif';
         ctx.textAlign = 'center';
         ctx.textBaseline = 'middle';
         ctx.fillText(wp.icon, wp.x, wp.y + 1);
 
-        // Mini Label Pill below waypoint
         ctx.font = `800 10px ${FONT_UI}`;
         ctx.fillStyle = '#FFFFFF';
         ctx.fillText(wp.name, wp.x, wp.y + 24);
@@ -426,92 +440,46 @@ async function renderCanvas(aspectRatio: 'story' | 'post' | 'landscape'): Promis
     ctx.restore();
   }
 
-  // 4. Subtle Topo Lines & Cyber HUD Overlays
-  if (rideForm.templateStyle === 'cyber_hud') {
-    ctx.strokeStyle = 'rgba(56, 189, 248, 0.08)';
-    ctx.lineWidth = 1.5;
-    const gridSize = 60;
-    for (let gx = 0; gx < canvas.width; gx += gridSize) {
-      ctx.beginPath();
-      ctx.moveTo(gx, 0);
-      ctx.lineTo(gx, canvas.height);
-      ctx.stroke();
-    }
-    for (let gy = 0; gy < canvas.height; gy += gridSize) {
-      ctx.beginPath();
-      ctx.moveTo(0, gy);
-      ctx.lineTo(canvas.width, gy);
-      ctx.stroke();
-    }
-
-    ctx.strokeStyle = 'rgba(56, 189, 248, 0.8)';
-    ctx.lineWidth = 4;
-    const bLen = 40;
-    const bMargin = 40;
-
-    // HUD Corner Brackets
-    ctx.beginPath();
-    ctx.moveTo(bMargin, bMargin + bLen);
-    ctx.lineTo(bMargin, bMargin);
-    ctx.lineTo(bMargin + bLen, bMargin);
-    ctx.stroke();
-
-    ctx.beginPath();
-    ctx.moveTo(canvas.width - bMargin - bLen, bMargin);
-    ctx.lineTo(canvas.width - bMargin, bMargin);
-    ctx.lineTo(canvas.width - bMargin, bMargin + bLen);
-    ctx.stroke();
-
-    ctx.beginPath();
-    ctx.moveTo(bMargin, canvas.height - bMargin - bLen);
-    ctx.lineTo(bMargin, canvas.height - bMargin);
-    ctx.lineTo(bMargin + bLen, canvas.height - bMargin);
-    ctx.stroke();
-
-    ctx.beginPath();
-    ctx.moveTo(canvas.width - bMargin - bLen, canvas.height - bMargin);
-    ctx.lineTo(canvas.width - bMargin, canvas.height - bMargin);
-    ctx.lineTo(canvas.width - bMargin, canvas.height - bMargin - bLen);
-    ctx.stroke();
-  }
-
-  // 5. Dark Vignette
+  // 4. Dark Vignette Layer
   const vignette = ctx.createLinearGradient(0, 0, 0, canvas.height);
   vignette.addColorStop(0, 'rgba(6, 10, 18, 0.45)');
-  vignette.addColorStop(0.3, 'rgba(6, 10, 18, 0.05)');
+  vignette.addColorStop(0.35, 'rgba(6, 10, 18, 0.05)');
   vignette.addColorStop(0.65, 'rgba(6, 10, 18, 0.85)');
   vignette.addColorStop(1, 'rgba(6, 10, 18, 0.98)');
   ctx.fillStyle = vignette;
   ctx.fillRect(0, 0, canvas.width, canvas.height);
 
-  // 6. Header Strip: Official GowesKit Brand Pill & Snug Achievement Sticker
-  const pillY = isStory ? 100 : 60;
-  const pillH = 64;
+  // 5. Official GowesKit Brand Pill & Sticker (Top Bar)
+  const pillY = isStory ? 80 : 50;
+  const pillH = 58;
 
-  ctx.font = `900 32px ${FONT_UI}`;
+  ctx.font = `900 28px ${FONT_UI}`;
   const gowesTextW = ctx.measureText('Gowes').width;
   const kitTextW = ctx.measureText('Kit').width;
-  const brandPillW = 16 + 46 + 14 + gowesTextW + kitTextW + 36;
+  const brandPillW = 16 + 38 + 12 + gowesTextW + kitTextW + 32;
 
-  ctx.fillStyle = 'rgba(23, 32, 42, 0.94)';
+  ctx.fillStyle = 'rgba(23, 32, 42, 0.92)';
   ctx.strokeStyle = 'rgba(201, 243, 106, 0.45)';
-  ctx.lineWidth = 2.5;
+  ctx.lineWidth = 2;
   ctx.beginPath();
-  ctx.roundRect(70, pillY, brandPillW, pillH, pillH / 2);
+  ctx.roundRect(isLandscape ? 80 : 60, pillY, brandPillW, pillH, pillH / 2);
   ctx.fill();
   ctx.stroke();
 
+  // Draw Brand Icon
+  const iconBoxX = (isLandscape ? 80 : 60) + 12;
+  const iconBoxY = pillY + 10;
   ctx.save();
-  ctx.translate(86, pillY + 11);
+  ctx.translate(iconBoxX, iconBoxY);
   ctx.fillStyle = '#0F172A';
   ctx.beginPath();
-  ctx.roundRect(0, 0, 42, 42, 12);
+  ctx.roundRect(0, 0, 38, 38, 10);
   ctx.fill();
 
   const gWheelPath = new Path2D('M27 15.2C25.3 13.2 22.8 12 20 12C15.0294 12 11 16.0294 11 21C11 25.9706 15.0294 30 20 30C24.4 30 28.1 26.8 28.8 22.5H19');
   const speedArrowPath = new Path2D('M23 17.5L28.2 22.5L23 27.5');
 
-  ctx.scale(42 / 40, 42 / 40);
+  ctx.scale(38 / 40, 38 / 40);
   ctx.strokeStyle = '#C9F36A';
   ctx.lineWidth = 3.5;
   ctx.lineCap = 'round';
@@ -524,40 +492,42 @@ async function renderCanvas(aspectRatio: 'story' | 'post' | 'landscape'): Promis
 
   ctx.fillStyle = '#FFFFFF';
   ctx.beginPath();
-  ctx.arc(20, 21, 2.5, 0, 2 * Math.PI);
+  ctx.arc(20, 21, 2.2, 0, 2 * Math.PI);
   ctx.fill();
   ctx.restore();
 
-  const textStartX = 86 + 42 + 14;
-  ctx.font = `900 32px ${FONT_UI}`;
+  // Draw Brand Text
+  const brandTextStartX = iconBoxX + 38 + 12;
+  ctx.font = `900 28px ${FONT_UI}`;
   ctx.textBaseline = 'middle';
   ctx.textAlign = 'left';
   ctx.fillStyle = '#FFFFFF';
-  ctx.fillText('Gowes', textStartX, pillY + pillH / 2);
+  ctx.fillText('Gowes', brandTextStartX, pillY + pillH / 2);
   ctx.fillStyle = '#C9F36A';
-  ctx.fillText('Kit', textStartX + gowesTextW, pillY + pillH / 2);
+  ctx.fillText('Kit', brandTextStartX + gowesTextW, pillY + pillH / 2);
 
   ctx.fillStyle = '#C9F36A';
   ctx.beginPath();
-  ctx.arc(textStartX + gowesTextW + kitTextW + 10, pillY + pillH / 2 - 3, 4.5, 0, 2 * Math.PI);
+  ctx.arc(brandTextStartX + gowesTextW + kitTextW + 8, pillY + pillH / 2 - 2, 4, 0, 2 * Math.PI);
   ctx.fill();
 
+  // Sticker Chip
   if (rideForm.activeSticker !== 'none') {
     const stickerText = {
       kom: '👑 KOM HUNTER',
       cafe: '☕ COFFEE APPROVED',
       beast: '⛰️ CLIMB BEAST',
-      speed: '⚡ 26+ KM/H PACE',
-      fuel: '🍲 FUEL SATE MARANGGI',
+      speed: '⚡ 26+ KM/H',
+      fuel: '🍲 FUEL SATE',
       podium: '🏁 PODIUM FINISHER',
     }[rideForm.activeSticker];
 
     if (stickerText) {
-      ctx.font = `900 24px ${FONT_UI}`;
+      ctx.font = `900 22px ${FONT_UI}`;
       const stickerTextW = ctx.measureText(stickerText).width;
-      const stickerPad = 26;
+      const stickerPad = 22;
       const stickerPillW = stickerTextW + stickerPad * 2;
-      const stickerX = canvas.width - 70 - stickerPillW;
+      const stickerX = canvas.width - (isLandscape ? 80 : 60) - stickerPillW;
 
       ctx.fillStyle = '#C9F36A';
       ctx.beginPath();
@@ -565,177 +535,167 @@ async function renderCanvas(aspectRatio: 'story' | 'post' | 'landscape'): Promis
       ctx.fill();
 
       ctx.fillStyle = '#080d19';
-      ctx.font = `900 24px ${FONT_UI}`;
+      ctx.font = `900 22px ${FONT_UI}`;
       ctx.textBaseline = 'middle';
       ctx.textAlign = 'left';
       ctx.fillText(stickerText, stickerX + stickerPad, pillY + pillH / 2);
     }
   }
 
-  // 7. Hero Section Typography & Balanced Vertical Layout
-  const heroY = isStory ? 1020 : (isLandscape ? 400 : 470);
+  // 6. Center Hero Typography (Mileage, Title, Specs)
+  const heroX = isLandscape ? 980 : 60;
+  const heroY = isStory ? 1080 : (isLandscape ? 360 : 540);
   ctx.textBaseline = 'alphabetic';
   ctx.textAlign = 'left';
 
+  // Eyebrow Tag
   if (rideForm.templateStyle === 'rapha_editorial') {
     ctx.fillStyle = '#FF8C75';
-    ctx.font = `900 24px ${FONT_UI}`;
-    ctx.fillText('STAGE 01 · FINISHED ETAPPE', 70, heroY - 170);
+    ctx.font = `900 22px ${FONT_UI}`;
+    ctx.fillText('STAGE 01 · FINISHED ETAPPE', heroX, heroY - 140);
   } else if (rideForm.templateStyle === 'cyber_hud') {
     ctx.fillStyle = '#00FF66';
-    ctx.font = `900 24px ${FONT_UI}`;
-    ctx.fillText('GPS: LOCKED (14 SATS) · CAD: 88 RPM', 70, heroY - 170);
+    ctx.font = `900 22px ${FONT_UI}`;
+    ctx.fillText('GPS: LOCKED (14 SATS) · CAD: 88 RPM', heroX, heroY - 140);
   } else if (rideForm.templateStyle === 'cafe_santai') {
     ctx.fillStyle = '#FDE68A';
-    ctx.font = `900 24px ${FONT_UI}`;
-    ctx.fillText('☕ RECOVERY MODE · KULINERAN', 70, heroY - 170);
+    ctx.font = `900 22px ${FONT_UI}`;
+    ctx.fillText('☕ RECOVERY MODE · KULINERAN', heroX, heroY - 140);
   }
 
   const distNumberStr = `${rideForm.distanceKm}`;
+  const isSerif = rideForm.templateStyle === 'rapha_editorial';
+  const numFont = isStory ? (isSerif ? `900 150px ${FONT_SERIF}` : `900 150px ${FONT_UI}`) : `900 110px ${FONT_UI}`;
 
-  if (rideForm.templateStyle === 'rapha_editorial') {
-    ctx.fillStyle = '#FFFFFF';
-    ctx.font = `900 160px ${FONT_SERIF}`;
-    ctx.fillText(distNumberStr, 70, heroY);
-
-    const numWidth = ctx.measureText(distNumberStr).width;
-    ctx.fillStyle = '#FF8C75';
-    ctx.font = `800 54px ${FONT_SERIF}`;
-    ctx.fillText('KM', 70 + numWidth + 24, heroY - 55);
-
-    ctx.fillStyle = '#FFFFFF';
-    ctx.font = `700 46px ${FONT_SERIF}`;
-    ctx.fillText(rideForm.title.slice(0, 32), 70, heroY + 68);
-
-    ctx.fillStyle = '#FFD1C9';
-    ctx.font = `500 28px ${FONT_SERIF}`;
-    ctx.fillText(`🚴 ${rideForm.bikeName} · ${rideForm.temperatureC}°C Cerah`, 70, heroY + 120);
-  } else if (rideForm.templateStyle === 'cyber_hud') {
+  // Mileage Value
+  if (rideForm.templateStyle === 'cyber_hud') {
     ctx.fillStyle = '#38BDF8';
-    ctx.font = `900 160px ${FONT_UI}`;
-    ctx.fillText(distNumberStr, 70, heroY);
-
-    const numWidth = ctx.measureText(distNumberStr).width;
-    ctx.fillStyle = '#00FF66';
-    ctx.font = `900 50px ${FONT_UI}`;
-    ctx.fillText('KM', 70 + numWidth + 24, heroY - 55);
-
-    ctx.fillStyle = '#38BDF8';
-    ctx.font = `900 44px ${FONT_UI}`;
-    ctx.fillText(`> ${rideForm.title.slice(0, 28)}`, 70, heroY + 68);
-
-    ctx.fillStyle = '#94A3B8';
-    ctx.font = `700 28px ${FONT_UI}`;
-    ctx.fillText(`RIG: ${rideForm.bikeName} · ${rideForm.temperatureC}°C`, 70, heroY + 120);
   } else if (rideForm.templateStyle === 'cafe_santai') {
     ctx.fillStyle = '#F59E0B';
-    ctx.font = `900 160px ${FONT_UI}`;
-    ctx.fillText(distNumberStr, 70, heroY);
-
-    const numWidth = ctx.measureText(distNumberStr).width;
-    ctx.fillStyle = '#FDE68A';
-    ctx.font = `900 54px ${FONT_UI}`;
-    ctx.fillText('KM', 70 + numWidth + 24, heroY - 55);
-
+  } else if (rideForm.templateStyle === 'rapha_editorial') {
     ctx.fillStyle = '#FFFFFF';
-    ctx.font = `900 48px ${FONT_UI}`;
-    ctx.fillText(rideForm.title.slice(0, 32), 70, heroY + 68);
-
-    ctx.fillStyle = '#FDE68A';
-    ctx.font = `700 28px ${FONT_UI}`;
-    ctx.fillText(`🍢 Sate Fuel · ${rideForm.bikeName} · ${rideForm.temperatureC}°C`, 70, heroY + 120);
   } else {
     ctx.fillStyle = '#C9F36A';
-    ctx.font = `900 160px ${FONT_UI}`;
-    ctx.fillText(distNumberStr, 70, heroY);
-
-    const numWidth = ctx.measureText(distNumberStr).width;
-    ctx.fillStyle = '#FFFFFF';
-    ctx.font = `900 54px ${FONT_UI}`;
-    ctx.fillText('KM', 70 + numWidth + 24, heroY - 55);
-
-    ctx.fillStyle = '#FFFFFF';
-    ctx.font = `900 48px ${FONT_UI}`;
-    ctx.fillText(rideForm.title.slice(0, 32), 70, heroY + 68);
-
-    ctx.fillStyle = '#CBD5E1';
-    ctx.font = `700 28px ${FONT_UI}`;
-    ctx.fillText(`🚴 ${rideForm.bikeName} · ${rideForm.temperatureC}°C Cerah`, 70, heroY + 120);
   }
 
-  // 8. Telemetry Glass Card
-  const cardY = heroY + 165;
-  const cardH = isStory ? 520 : (isLandscape ? 340 : 360);
-  const cardW = canvas.width - 140;
+  ctx.font = numFont;
+  ctx.fillText(distNumberStr, heroX, heroY);
+
+  const numWidth = ctx.measureText(distNumberStr).width;
+  ctx.font = isStory ? `900 48px ${FONT_UI}` : `900 36px ${FONT_UI}`;
+  ctx.fillStyle = rideForm.templateStyle === 'cyber_hud' ? '#00FF66' : (rideForm.templateStyle === 'cafe_santai' ? '#FDE68A' : (rideForm.templateStyle === 'rapha_editorial' ? '#FF8C75' : '#FFFFFF'));
+  ctx.fillText('KM', heroX + numWidth + 18, heroY - (isStory ? 45 : 30));
+
+  // Session Title
+  ctx.fillStyle = '#FFFFFF';
+  ctx.font = isStory ? `850 42px ${FONT_UI}` : `850 34px ${FONT_UI}`;
+  const titleText = rideForm.title.length > 32 ? `${rideForm.title.slice(0, 30)}…` : rideForm.title;
+  ctx.fillText(titleText, heroX, heroY + (isStory ? 58 : 46));
+
+  // Session Specs
+  ctx.fillStyle = rideForm.templateStyle === 'cafe_santai' ? '#FDE68A' : (rideForm.templateStyle === 'rapha_editorial' ? '#FFD1C9' : '#CBD5E1');
+  ctx.font = isStory ? `600 24px ${FONT_UI}` : `600 20px ${FONT_UI}`;
+  ctx.fillText(`🚴 ${rideForm.bikeName} · ${rideForm.temperatureC}°C Cerah`, heroX, heroY + (isStory ? 104 : 82));
+
+  // 7. Bottom Glass Telemetry Card (Matching 3-Column Preview EXACTLY!)
+  const cardX = isLandscape ? 980 : 60;
+  const cardW = isLandscape ? (canvas.width - 980 - 80) : (canvas.width - 120);
+  const cardY = isStory ? 1340 : (isLandscape ? 580 : 720);
+  const cardH = isStory ? 380 : (isLandscape ? 340 : 250);
 
   ctx.fillStyle = 'rgba(15, 23, 42, 0.94)';
-  ctx.strokeStyle = rideForm.templateStyle === 'rapha_editorial' 
-    ? 'rgba(255, 140, 117, 0.5)' 
-    : (rideForm.templateStyle === 'cyber_hud' ? 'rgba(56, 189, 248, 0.6)' : (rideForm.templateStyle === 'cafe_santai' ? 'rgba(245, 158, 11, 0.5)' : 'rgba(201, 243, 106, 0.4)'));
-  ctx.lineWidth = 3;
+  ctx.strokeStyle = rideForm.templateStyle === 'rapha_editorial'
+    ? 'rgba(255, 140, 117, 0.45)'
+    : (rideForm.templateStyle === 'cyber_hud' ? 'rgba(56, 189, 248, 0.5)' : (rideForm.templateStyle === 'cafe_santai' ? 'rgba(245, 158, 11, 0.45)' : 'rgba(201, 243, 106, 0.4)'));
+  ctx.lineWidth = 2.5;
   ctx.beginPath();
-  ctx.roundRect(70, cardY, cardW, cardH, 36);
+  ctx.roundRect(cardX, cardY, cardW, cardH, 32);
   ctx.fill();
   ctx.stroke();
 
-  // Elevation Header Strip inside card
+  // Elev Strip Top Row
+  const elevRowY = cardY + (isStory ? 55 : 42);
+  ctx.font = `800 ${isStory ? 20 : 16}px ${FONT_UI}`;
   ctx.fillStyle = '#94A3B8';
-  ctx.font = `800 22px ${FONT_UI}`;
-  ctx.fillText('ELEVASI PROFILE', 120, cardY + 60);
+  ctx.fillText('ELEVASI PROFILE', cardX + 36, elevRowY);
 
-  ctx.fillStyle = rideForm.templateStyle === 'cafe_santai' ? '#F59E0B' : (rideForm.templateStyle === 'rapha_editorial' ? '#FF8C75' : '#38BDF8');
-  ctx.font = `900 26px ${FONT_UI}`;
+  ctx.font = `900 ${isStory ? 22 : 18}px ${FONT_UI}`;
+  ctx.fillStyle = '#38BDF8';
   ctx.textAlign = 'right';
-  ctx.fillText(`+${rideForm.elevationM}m Climb`, 70 + cardW - 50, cardY + 60);
+  ctx.fillText(`+${rideForm.elevationM}m Climb`, cardX + cardW - 36, elevRowY);
   ctx.textAlign = 'left';
 
-  const curveY = cardY + 115;
+  // Elevation Smooth Wave
+  const curveStartX = cardX + 36;
+  const curveEndX = cardX + cardW - 36;
+  const curveY = elevRowY + (isStory ? 45 : 32);
+
   ctx.strokeStyle = rideForm.templateStyle === 'cafe_santai' ? '#F59E0B' : (rideForm.templateStyle === 'rapha_editorial' ? '#FF8C75' : '#38BDF8');
-  ctx.lineWidth = 5;
+  ctx.lineWidth = 3.5;
   ctx.beginPath();
-  ctx.moveTo(120, curveY + 25);
-  ctx.bezierCurveTo(340, curveY + 10, 600, curveY + 35, 70 + cardW - 50, curveY - 5);
+  ctx.moveTo(curveStartX, curveY + 12);
+  ctx.bezierCurveTo(
+    curveStartX + (curveEndX - curveStartX) * 0.35, curveY + 8,
+    curveStartX + (curveEndX - curveStartX) * 0.65, curveY - 4,
+    curveEndX, curveY - 8
+  );
   ctx.stroke();
 
-  ctx.fillStyle = '#38BDF8';
+  // Wave dots
+  ctx.fillStyle = rideForm.templateStyle === 'cafe_santai' ? '#F59E0B' : '#38BDF8';
   ctx.beginPath();
-  ctx.arc(120, curveY + 25, 7, 0, 2 * Math.PI);
+  ctx.arc(curveStartX, curveY + 12, 5, 0, 2 * Math.PI);
   ctx.fill();
 
-  ctx.fillStyle = '#C9F36A';
+  ctx.fillStyle = rideForm.templateStyle === 'cafe_santai' ? '#FDE68A' : (rideForm.templateStyle === 'rapha_editorial' ? '#FFD1C9' : '#C9F36A');
   ctx.beginPath();
-  ctx.arc(70 + cardW - 50, curveY - 5, 9, 0, 2 * Math.PI);
+  ctx.arc(curveEndX, curveY - 8, 6, 0, 2 * Math.PI);
   ctx.fill();
 
-  // 4 Metrics Grid
-  const cellW = (cardW - 60) / 2;
-  const metrics = [
-    { label: 'ELEVASI TANJAKAN', val: `+${rideForm.elevationM} m`, color: '#38BDF8' },
-    { label: 'WAKTU TEMPUH', val: formatDuration(rideForm.durationMinutes), color: '#FFFFFF' },
-    { label: 'RATA-RATA SPEED', val: `${rideForm.avgSpeedKmH} km/h`, color: rideForm.templateStyle === 'cafe_santai' ? '#F59E0B' : (rideForm.templateStyle === 'rapha_editorial' ? '#FF8C75' : '#C9F36A') },
-    { label: 'KALORI TERBAKAR', val: `~${rideForm.caloriesKcal} kcal`, color: '#FF8C75' },
+  // 3 Pillars: Waktu, Speed, Kalori
+  const pillarsY = curveY + (isStory ? 65 : 45);
+  const colWidth = (cardW - 72) / 3;
+
+  const statsList = [
+    { label: 'WAKTU', val: formatDuration(rideForm.durationMinutes), color: '#FFFFFF' },
+    {
+      label: 'SPEED',
+      val: `${rideForm.avgSpeedKmH} km/h`,
+      color: rideForm.templateStyle === 'cafe_santai' ? '#F59E0B' : (rideForm.templateStyle === 'rapha_editorial' ? '#FF8C75' : '#C9F36A'),
+    },
+    { label: 'KALORI', val: `~${rideForm.caloriesKcal} kcal`, color: '#FF8C75' },
   ];
 
-  metrics.forEach((m, idx) => {
-    const col = idx % 2;
-    const row = Math.floor(idx / 2);
-    const x = 120 + col * cellW;
-    const y = cardY + 210 + row * (isStory ? 145 : 100);
+  statsList.forEach((stat, idx) => {
+    const colX = cardX + 36 + idx * colWidth;
 
+    // Label
     ctx.fillStyle = '#94A3B8';
-    ctx.font = `800 22px ${FONT_UI}`;
-    ctx.fillText(m.label, x, y);
+    ctx.font = `800 ${isStory ? 18 : 14}px ${FONT_UI}`;
+    ctx.fillText(stat.label, colX + 12, pillarsY);
 
-    ctx.fillStyle = m.color;
-    ctx.font = `900 54px ${FONT_UI}`;
-    ctx.fillText(m.val, x, y + 60);
+    // Value
+    ctx.fillStyle = stat.color;
+    ctx.font = `900 ${isStory ? 38 : 28}px ${FONT_UI}`;
+    ctx.fillText(stat.val, colX + 12, pillarsY + (isStory ? 52 : 38));
+
+    // Vertical Divider (between col 0-1 and 1-2)
+    if (idx < 2) {
+      const divX = colX + colWidth;
+      ctx.strokeStyle = 'rgba(255, 255, 255, 0.12)';
+      ctx.lineWidth = 1.5;
+      ctx.beginPath();
+      ctx.moveTo(divX, pillarsY - 6);
+      ctx.lineTo(divX, pillarsY + (isStory ? 60 : 44));
+      ctx.stroke();
+    }
   });
 
-  // 9. Watermark Footer
+  // 8. Watermark Footer
   ctx.fillStyle = 'rgba(201, 243, 106, 0.85)';
-  ctx.font = `900 24px ${FONT_UI}`;
+  ctx.font = `900 ${isStory ? 20 : 16}px ${FONT_UI}`;
   ctx.textAlign = 'center';
-  ctx.fillText('⚡ VERIFIED BY GOWESKIT ENGINE · GOWESKIT.ID', canvas.width / 2, canvas.height - 45);
+  ctx.fillText('⚡ VERIFIED BY GOWESKIT ENGINE · GOWESKIT.ID', canvas.width / 2, canvas.height - (isStory ? 35 : 25));
   ctx.textAlign = 'left';
 
   return canvas;
