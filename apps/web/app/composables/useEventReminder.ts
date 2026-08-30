@@ -153,7 +153,7 @@ export function useEventReminder() {
     }
 
     const diffHours = Math.floor(diffMs / (1000 * 60 * 60));
-    const diffDays = Math.floor(diffHours / 24);
+    const diffDays = Math.round(diffMs / (1000 * 60 * 60 * 24));
 
     if (diffHours < 24) {
       return {
@@ -164,7 +164,7 @@ export function useEventReminder() {
       };
     }
 
-    if (diffDays === 1) {
+    if (diffDays <= 1) {
       return { label: 'Besok', isUrgent: true, isToday: false, isPast: false };
     }
 
