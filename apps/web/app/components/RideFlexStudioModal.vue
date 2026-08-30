@@ -195,25 +195,60 @@ async function renderCanvas(aspectRatio: 'story' | 'post' | 'landscape'): Promis
 
   // Dark Vignette
   const vignette = ctx.createLinearGradient(0, 0, 0, canvas.height);
-  vignette.addColorStop(0, 'rgba(6, 10, 18, 0.4)');
+  vignette.addColorStop(0, 'rgba(6, 10, 18, 0.3)');
   vignette.addColorStop(0.4, 'rgba(6, 10, 18, 0.1)');
   vignette.addColorStop(0.75, 'rgba(6, 10, 18, 0.85)');
   vignette.addColorStop(1, 'rgba(6, 10, 18, 0.98)');
   ctx.fillStyle = vignette;
   ctx.fillRect(0, 0, canvas.width, canvas.height);
 
-  // Top Branding Pill
-  ctx.fillStyle = 'rgba(15, 23, 42, 0.92)';
-  ctx.strokeStyle = '#C9F36A';
-  ctx.lineWidth = 3;
+  // Official GowesKit Brand Pill
+  const pillY = isStory ? 90 : 60;
+  ctx.fillStyle = 'rgba(23, 32, 42, 0.94)';
+  ctx.strokeStyle = 'rgba(201, 243, 106, 0.4)';
+  ctx.lineWidth = 2.5;
   ctx.beginPath();
-  ctx.roundRect(70, isStory ? 90 : 60, 360, 58, 29);
+  ctx.roundRect(70, pillY, 320, 64, 32);
   ctx.fill();
   ctx.stroke();
 
+  // Draw Mini Emblem Box
+  ctx.fillStyle = '#0F172A';
+  ctx.beginPath();
+  ctx.roundRect(82, pillY + 10, 44, 44, 12);
+  ctx.fill();
+
+  // Draw G Wheel mark
+  ctx.strokeStyle = '#C9F36A';
+  ctx.lineWidth = 3.5;
+  ctx.lineCap = 'round';
+  ctx.lineJoin = 'round';
+  ctx.beginPath();
+  ctx.arc(104, pillY + 32, 12, 0.6 * Math.PI, 1.8 * Math.PI);
+  ctx.lineTo(104, pillY + 32);
+  ctx.stroke();
+
+  // Draw Arrow
+  ctx.strokeStyle = '#8EDDF4';
+  ctx.lineWidth = 3;
+  ctx.beginPath();
+  ctx.moveTo(108, pillY + 26);
+  ctx.lineTo(116, pillY + 32);
+  ctx.lineTo(108, pillY + 38);
+  ctx.stroke();
+
+  // Draw Wordmark
+  ctx.font = '900 32px sans-serif';
+  ctx.fillStyle = '#FFFFFF';
+  ctx.fillText('Gowes', 140, pillY + 44);
   ctx.fillStyle = '#C9F36A';
-  ctx.font = '900 24px monospace';
-  ctx.fillText('⚡ GOWESKIT RIDE PASS', 95, isStory ? 128 : 98);
+  ctx.fillText('Kit', 255, pillY + 44);
+
+  // Green Dot
+  ctx.fillStyle = '#C9F36A';
+  ctx.beginPath();
+  ctx.arc(310, pillY + 41, 5, 0, 2 * Math.PI);
+  ctx.fill();
 
   if (rideForm.activeSticker !== 'none') {
     const stickerText = {
@@ -228,12 +263,12 @@ async function renderCanvas(aspectRatio: 'story' | 'post' | 'landscape'): Promis
     if (stickerText) {
       ctx.fillStyle = '#C9F36A';
       ctx.beginPath();
-      ctx.roundRect(canvas.width - 440, isStory ? 90 : 60, 370, 58, 29);
+      ctx.roundRect(canvas.width - 440, pillY, 370, 64, 32);
       ctx.fill();
 
       ctx.fillStyle = '#0f172a';
-      ctx.font = '900 22px sans-serif';
-      ctx.fillText(stickerText, canvas.width - 415, isStory ? 128 : 98);
+      ctx.font = '900 24px sans-serif';
+      ctx.fillText(stickerText, canvas.width - 415, pillY + 42);
     }
   }
 
@@ -435,8 +470,22 @@ async function shareToMedia() {
             >
               <div class="modal-poster-vignette"></div>
 
+              <!-- Official GowesKit Brand Chip -->
               <div class="modal-poster-top">
-                <div class="m-brand-badge">⚡ GOWESKIT</div>
+                <div class="m-brand-chip">
+                  <div class="m-brand-mark-box">
+                    <svg viewBox="0 0 40 40" fill="none" width="16" height="16" aria-hidden="true">
+                      <rect width="40" height="40" rx="10" fill="#17202A" />
+                      <path d="M27 15.2C25.3 13.2 22.8 12 20 12C15.0294 12 11 16.0294 11 21C11 25.9706 15.0294 30 20 30C24.4 30 28.1 26.8 28.8 22.5H19" stroke="#C9F36A" stroke-width="3.5" stroke-linecap="round" stroke-linejoin="round" />
+                      <path d="M23 17.5L28.2 22.5L23 27.5" stroke="#8EDDF4" stroke-width="3" stroke-linecap="round" stroke-linejoin="round" />
+                      <circle cx="20" cy="21" r="2.2" fill="#FFFFFF" />
+                    </svg>
+                  </div>
+                  <span class="m-brand-text">
+                    <span class="text-white">Gowes</span><span class="text-lime">Kit</span><span class="m-brand-dot"></span>
+                  </span>
+                </div>
+
                 <div v-if="rideForm.activeSticker !== 'none'" class="m-sticker-badge">
                   {{
                     {
@@ -911,15 +960,43 @@ async function shareToMedia() {
   justify-content: space-between;
 }
 
-.m-brand-badge {
-  font-family: var(--font-mono);
-  font-size: 0.6rem;
-  font-weight: 900;
-  color: var(--color-chain-lime);
-  background: rgba(15, 23, 42, 0.9);
-  padding: 0.2rem 0.55rem;
+.m-brand-chip {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.35rem;
+  background: rgba(23, 32, 42, 0.92);
+  border: 1.2px solid rgba(201, 243, 106, 0.4);
+  padding: 0.2rem 0.55rem 0.2rem 0.3rem;
   border-radius: 9999px;
-  border: 1px solid var(--color-chain-lime);
+}
+
+.m-brand-mark-box {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.m-brand-text {
+  display: inline-flex;
+  align-items: baseline;
+  font-family: var(--font-ui);
+  font-size: 0.65rem;
+  font-weight: 900;
+  letter-spacing: -0.03em;
+  line-height: 1;
+}
+
+.text-white { color: #FFFFFF; }
+.text-lime { color: var(--color-chain-lime); }
+
+.m-brand-dot {
+  display: inline-block;
+  width: 0.35em;
+  height: 0.35em;
+  border-radius: 50%;
+  background: var(--color-chain-lime);
+  margin-left: 0.15em;
+  transform: translateY(-0.05em);
 }
 
 .m-sticker-badge {

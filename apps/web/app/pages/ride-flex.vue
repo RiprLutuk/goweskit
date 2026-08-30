@@ -190,19 +190,55 @@ async function renderCanvas(aspectRatio: 'story' | 'post' | 'landscape'): Promis
   ctx.fillStyle = vignette;
   ctx.fillRect(0, 0, canvas.width, canvas.height);
 
-  // Top Branding Pill
-  ctx.fillStyle = 'rgba(15, 23, 42, 0.92)';
-  ctx.strokeStyle = '#C9F36A';
-  ctx.lineWidth = 3;
+  // Official GowesKit Brand Pill
+  const pillY = isStory ? 90 : 60;
+  ctx.fillStyle = 'rgba(23, 32, 42, 0.94)';
+  ctx.strokeStyle = 'rgba(201, 243, 106, 0.4)';
+  ctx.lineWidth = 2.5;
   ctx.beginPath();
-  ctx.roundRect(70, isStory ? 90 : 60, 360, 58, 29);
+  ctx.roundRect(70, pillY, 320, 64, 32);
   ctx.fill();
   ctx.stroke();
 
-  ctx.fillStyle = '#C9F36A';
-  ctx.font = '900 24px monospace';
-  ctx.fillText('⚡ GOWESKIT RIDE PASS', 95, isStory ? 128 : 98);
+  // Draw Mini Emblem Box
+  ctx.fillStyle = '#0F172A';
+  ctx.beginPath();
+  ctx.roundRect(82, pillY + 10, 44, 44, 12);
+  ctx.fill();
 
+  // Draw G Wheel mark
+  ctx.strokeStyle = '#C9F36A';
+  ctx.lineWidth = 3.5;
+  ctx.lineCap = 'round';
+  ctx.lineJoin = 'round';
+  ctx.beginPath();
+  ctx.arc(104, pillY + 32, 12, 0.6 * Math.PI, 1.8 * Math.PI);
+  ctx.lineTo(104, pillY + 32);
+  ctx.stroke();
+
+  // Draw Arrow
+  ctx.strokeStyle = '#8EDDF4';
+  ctx.lineWidth = 3;
+  ctx.beginPath();
+  ctx.moveTo(108, pillY + 26);
+  ctx.lineTo(116, pillY + 32);
+  ctx.lineTo(108, pillY + 38);
+  ctx.stroke();
+
+  // Draw Wordmark
+  ctx.font = '900 32px sans-serif';
+  ctx.fillStyle = '#FFFFFF';
+  ctx.fillText('Gowes', 140, pillY + 44);
+  ctx.fillStyle = '#C9F36A';
+  ctx.fillText('Kit', 255, pillY + 44);
+
+  // Green Dot
+  ctx.fillStyle = '#C9F36A';
+  ctx.beginPath();
+  ctx.arc(310, pillY + 41, 5, 0, 2 * Math.PI);
+  ctx.fill();
+
+  // Sticker Badge if selected
   if (rideForm.activeSticker !== 'none') {
     const stickerText = {
       kom: '👑 KOM HUNTER',
@@ -216,15 +252,16 @@ async function renderCanvas(aspectRatio: 'story' | 'post' | 'landscape'): Promis
     if (stickerText) {
       ctx.fillStyle = '#C9F36A';
       ctx.beginPath();
-      ctx.roundRect(canvas.width - 440, isStory ? 90 : 60, 370, 58, 29);
+      ctx.roundRect(canvas.width - 440, pillY, 370, 64, 32);
       ctx.fill();
 
       ctx.fillStyle = '#0f172a';
-      ctx.font = '900 22px sans-serif';
-      ctx.fillText(stickerText, canvas.width - 415, isStory ? 128 : 98);
+      ctx.font = '900 24px sans-serif';
+      ctx.fillText(stickerText, canvas.width - 415, pillY + 42);
     }
   }
 
+  // Hero Distance
   const heroY = isStory ? 1040 : (isLandscape ? 420 : 470);
   ctx.fillStyle = '#C9F36A';
   ctx.font = '900 145px monospace';
@@ -413,9 +450,22 @@ async function shareToMedia() {
 
           <div class="poster-vignette-layer"></div>
 
-          <!-- Poster Top Badge Strip -->
+          <!-- Official GowesKit Brand Pill & Achievement Sticker -->
           <div class="poster-card-top">
-            <div class="brand-chip">⚡ GOWESKIT</div>
+            <div class="brand-chip">
+              <div class="brand-mark-mini">
+                <svg viewBox="0 0 40 40" fill="none" width="16" height="16" aria-hidden="true">
+                  <rect width="40" height="40" rx="10" fill="#17202A" />
+                  <path d="M27 15.2C25.3 13.2 22.8 12 20 12C15.0294 12 11 16.0294 11 21C11 25.9706 15.0294 30 20 30C24.4 30 28.1 26.8 28.8 22.5H19" stroke="#C9F36A" stroke-width="3.5" stroke-linecap="round" stroke-linejoin="round" />
+                  <path d="M23 17.5L28.2 22.5L23 27.5" stroke="#8EDDF4" stroke-width="3" stroke-linecap="round" stroke-linejoin="round" />
+                  <circle cx="20" cy="21" r="2.2" fill="#FFFFFF" />
+                </svg>
+              </div>
+              <span class="brand-text-mini">
+                <span class="brand-text-gowes">Gowes</span><span class="brand-text-kit">Kit</span><span class="brand-dot-mini"></span>
+              </span>
+            </div>
+
             <div
               v-if="rideForm.activeSticker !== 'none'"
               class="sticker-chip"
@@ -934,7 +984,7 @@ async function shareToMedia() {
   padding: 0.95rem 1.15rem 0.85rem !important;
 }
 
-/* When landscape, adjust layout to be side-by-side */
+/* When landscape, adjust layout */
 .aspect--landscape .poster-card-center {
   margin-top: 0.2rem !important;
   margin-bottom: 0.2rem !important;
@@ -1007,7 +1057,7 @@ async function shareToMedia() {
   z-index: 1;
 }
 
-/* Poster Card Header */
+/* Official Brand Chip */
 .poster-card-top {
   position: relative;
   z-index: 2;
@@ -1017,14 +1067,48 @@ async function shareToMedia() {
 }
 
 .brand-chip {
-  font-family: var(--font-mono);
-  font-size: 0.6rem;
-  font-weight: 900;
-  color: var(--color-chain-lime);
-  background: rgba(15, 23, 42, 0.9);
-  padding: 0.2rem 0.55rem;
+  display: inline-flex;
+  align-items: center;
+  gap: 0.4rem;
+  background: rgba(23, 32, 42, 0.92);
+  border: 1.2px solid rgba(201, 243, 106, 0.4);
+  padding: 0.25rem 0.65rem 0.25rem 0.35rem;
   border-radius: 9999px;
-  border: 1px solid var(--color-chain-lime);
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.5);
+}
+
+.brand-mark-mini {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.brand-text-mini {
+  display: inline-flex;
+  align-items: baseline;
+  font-family: var(--font-ui);
+  font-size: 0.72rem;
+  font-weight: 900;
+  letter-spacing: -0.03em;
+  line-height: 1;
+}
+
+.brand-text-gowes {
+  color: #FFFFFF;
+}
+
+.brand-text-kit {
+  color: var(--color-chain-lime);
+}
+
+.brand-dot-mini {
+  display: inline-block;
+  width: 0.35em;
+  height: 0.35em;
+  border-radius: 50%;
+  background: var(--color-chain-lime);
+  margin-left: 0.15em;
+  transform: translateY(-0.05em);
 }
 
 .sticker-chip {
@@ -1032,8 +1116,9 @@ async function shareToMedia() {
   font-weight: 900;
   color: #080d19;
   background: var(--color-chain-lime);
-  padding: 0.2rem 0.6rem;
+  padding: 0.25rem 0.65rem;
   border-radius: 9999px;
+  box-shadow: 0 2px 8px rgba(201, 243, 106, 0.35);
 }
 
 /* Poster Center Hero Typography */
