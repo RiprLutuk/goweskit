@@ -10,3 +10,4 @@ export * from './installed-components.js';
 export * from './maintenance.js';
 export * from './safety.js';
 export * from './saved-items.js';
+export * from './ride-flex.js';

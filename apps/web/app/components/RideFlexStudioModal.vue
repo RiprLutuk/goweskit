@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import type { Bike } from '@goweskit/contracts';
+import type { Bike, GenerateRideStoryResponse } from '@goweskit/contracts';
 
 const props = withDefaults(
   defineProps<{
@@ -23,6 +23,7 @@ const emit = defineEmits<{
   (e: 'close'): void;
 }>();
 
+const api = useApi();
 const { toast } = useNotify();
 
 // Form & Telemetry State
@@ -94,38 +95,67 @@ function formatDuration(mins: number): string {
   return h > 0 ? `${h}j ${m}m` : `${m}m`;
 }
 
-// 🤖 Agentic AI Generator simulation (generates context-aware titles, recaps, and captions)
+// 🤖 Agentic AI Generator (calls Backend API /api/v1/ride-flex/generate-story with offline fallback)
 async function generateAiStory() {
   isAiGenerating.value = true;
-  await new Promise((r) => setTimeout(r, 600));
+  try {
+    const res = await api<GenerateRideStoryResponse>(
+      '/ride-flex/generate-story',
+      {
+        method: 'POST',
+        body: {
+          distanceKm: rideForm.distanceKm,
+          elevationGainMeters: rideForm.elevationM,
+          durationMinutes: rideForm.durationMinutes,
+          bikeName: rideForm.bikeName || undefined,
+          weatherTempC: rideForm.temperatureC || undefined,
+        },
+      },
+    );
 
-  const distance = rideForm.distanceKm;
-  const elev = rideForm.elevationM;
-  const speed = (distance / (rideForm.durationMinutes / 60)).toFixed(1);
-  rideForm.avgSpeedKmH = Number(speed);
+    rideForm.title = res.title;
+    rideForm.avgSpeedKmH = res.averageSpeedKmh;
+    rideForm.caloriesKcal = res.estimatedCaloriesKcal;
+    aiRecap.value = {
+      title: res.title,
+      highlight: `${res.highlight} Estimasi bakar kalori ~${res.estimatedCaloriesKcal} kcal (${res.foodEquivalency}).`,
+      captions: res.captions,
+      mechanicTip: `💡 Rekomendasi Mekanik AI (${res.climbGradeScore}): ${res.mechanicTip}`,
+    };
+    toast.success('✨ AI Recap Dihasilkan!', 'Judul, analisis kalori, dan caption gowes siap digunakan.');
+  } catch {
+    // Offline/heuristic fallback
+    const distance = rideForm.distanceKm;
+    const elev = rideForm.elevationM;
+    const speed = Number(
+      (distance / Math.max(rideForm.durationMinutes / 60, 0.05)).toFixed(1),
+    );
+    rideForm.avgSpeedKmH = speed;
 
-  const titles = [
-    `Epic ${distance}km: Menaklukkan Tanjakan & Kopi Gowes`,
-    `Pagi Santai Tapi Rantai Menjerit · ${distance}km`,
-    `Gravel Dust Odyssey: +${elev}m Elevation Rush`,
-    `Menolak Wacana: ${distance}km Loop Terlampaui ⚡`,
-  ];
-  const randomTitle = titles[Math.floor(Math.random() * titles.length)] ?? titles[0]!;
-  rideForm.title = randomTitle;
+    const titles = [
+      `Epic ${distance}km: Menaklukkan Tanjakan & Kopi Gowes`,
+      `Pagi Santai Tapi Rantai Menjerit · ${distance}km`,
+      `Gravel Dust Odyssey: +${elev}m Elevation Rush`,
+      `Menolak Wacana: ${distance}km Loop Terlampaui ⚡`,
+    ];
+    const randomTitle =
+      titles[Math.floor(Math.random() * titles.length)] ?? titles[0]!;
+    rideForm.title = randomTitle;
 
-  aiRecap.value = {
-    title: randomTitle,
-    highlight: `Kamu membakar ~${rideForm.caloriesKcal} kalori dan menaklukkan elevasi +${elev}m dengan kecepatan rata-rata ${speed} km/jam! Output tenaga luar biasa solid.`,
-    captions: {
-      athlete: `Pushed the limits today: ${distance}km • +${elev}m elevation gain • ${speed} km/h avg pace. Building power one pedal stroke at a time. ⚡🚴 #GowesKit #NoExcuses`,
-      humor: `Katanya gowes tipis-tipis cari sarapan, nyatanya disiksa tanjakan +${elev}m. Yang penting outfit matching dan foto Instagram aman! ☕🚴‍♂️ #GowesSantai`,
-      technical: `Gowes ${distance}km menempuh medan tanjakan. Tekanan ban dan gearing 1x12 bekerja optimal tanpa kendala mekanis. ⚙️ #GowesKitSpecs`,
-    },
-    mechanicTip: `💡 Rekomendasi Mekanik AI: Rantai telah bekerja keras di elevasi +${elev}m. Bersihkan debu dan lumasi sebelum gowes berikutnya.`,
-  };
-
-  isAiGenerating.value = false;
-  toast.success('✨ AI Recap Dihasilkan!', 'Judul, statistik, dan caption gowes siap digunakan.');
+    aiRecap.value = {
+      title: randomTitle,
+      highlight: `Kamu membakar ~${rideForm.caloriesKcal} kalori dan menaklukkan elevasi +${elev}m dengan kecepatan rata-rata ${speed} km/jam! Output tenaga luar biasa solid.`,
+      captions: {
+        athlete: `Pushed the limits today: ${distance}km • +${elev}m elevation gain • ${speed} km/h avg pace. Building power one pedal stroke at a time. ⚡🚴 #GowesKit #NoExcuses`,
+        humor: `Katanya gowes tipis-tipis cari sarapan, nyatanya disiksa tanjakan +${elev}m. Yang penting outfit matching dan foto Instagram aman! ☕🚴‍♂️ #GowesSantai`,
+        technical: `Gowes ${distance}km menempuh medan tanjakan. Tekanan ban dan gearing 1x12 bekerja optimal tanpa kendala mekanis. ⚙️ #GowesKitSpecs`,
+      },
+      mechanicTip: `💡 Rekomendasi Mekanik AI: Rantai telah bekerja keras di elevasi +${elev}m. Bersihkan debu dan lumasi sebelum gowes berikutnya.`,
+    };
+    toast.success('✨ AI Recap Dihasilkan!', 'Judul dan caption gowes siap digunakan.');
+  } finally {
+    isAiGenerating.value = false;
+  }
 }
 
 async function copyCaption(text: string) {

@@ -28,6 +28,7 @@ import { registerGarageRoutes } from './routes/garage.js';
 import { registerInstalledComponentRoutes } from './routes/installed-components.js';
 import { registerLearnRoutes } from './routes/learn.js';
 import { registerMaintenanceRoutes } from './routes/maintenance.js';
+import { registerRideFlexRoutes } from './routes/ride-flex.js';
 import { registerSafetyRoutes } from './routes/safety.js';
 import { registerSavedItemRoutes } from './routes/saved-items.js';
 import type { SafetyService } from './safety/service.js';
@@ -39,6 +40,7 @@ import type { ExploreService } from './services/explore-service.js';
 import type { GarageService } from './services/garage-service.js';
 import type { InstalledComponentService } from './services/installed-component-service.js';
 import type { MaintenanceService } from './services/maintenance-service.js';
+import { RideFlexService } from './services/ride-flex-service.js';
 import type { SavedItemService } from './services/saved-item-service.js';
 import type { OtpService } from './services/otp-service.js';
 
@@ -62,6 +64,7 @@ export interface AppServices {
   garage: GarageService;
   installedComponents: InstalledComponentService;
   maintenance: MaintenanceService;
+  rideFlex?: RideFlexService;
   safety?: SafetyService;
   savedItems?: SavedItemService;
   exploreContributions?: {
@@ -278,6 +281,10 @@ export function buildApp(options: BuildAppOptions = {}): FastifyInstance {
         options.services.savedItems,
       );
     }
+    registerRideFlexRoutes(
+      app,
+      options.services.rideFlex ?? new RideFlexService(),
+    );
   }
 
   return app;

@@ -39,6 +39,7 @@ import { GarageService } from './services/garage-service.js';
 import { InstalledComponentService } from './services/installed-component-service.js';
 import { MaintenanceService } from './services/maintenance-service.js';
 import { OtpService } from './services/otp-service.js';
+import { RideFlexService } from './services/ride-flex-service.js';
 import { SavedItemService } from './services/saved-item-service.js';
 import { R2BikePhotoStorage } from './storage/bike-photo-storage.js';
 
@@ -120,6 +121,7 @@ const app = buildApp({
       new DrizzleMaintenanceRepository(databaseClient.database),
       garageService,
     ),
+    rideFlex: new RideFlexService(),
     safety: safetyService,
     savedItems: new SavedItemService(
       new DrizzleSavedItemRepository(databaseClient.database),
