@@ -5,18 +5,19 @@ const route = useRoute();
 const api = useApi();
 const { toast } = useNotify();
 
-// Initial parameters from query string or defaults
+// Initial parameters
 const initialDistance = Number(route.query.distance) || 45.8;
 const initialElevation = Number(route.query.elevation) || 580;
 const initialDuration = Number(route.query.duration) || 105;
 const initialNote = String(route.query.note || 'Morning Gravel Loop Sentul');
 const initialBike = String(route.query.bike || 'Polygon Siskiu T7');
 
-// Studio State
-const activeTab = ref<'templates' | 'backgrounds' | 'stickers' | 'ai' | 'data'>('templates');
+// Active studio mode
+const activeTool = ref<'style' | 'backdrop' | 'stickers' | 'ai' | 'edit'>('style');
 
+// Form state
 const rideForm = reactive({
-  title: initialNote || 'Morning Gravel & Hills Rush',
+  title: initialNote,
   distanceKm: initialDistance,
   elevationM: initialElevation,
   durationMinutes: initialDuration,
@@ -31,26 +32,23 @@ const rideForm = reactive({
   customPhotoUrl: '',
 });
 
-// Selected Persona for Social Media Caption
 const selectedPersona = ref<'athlete' | 'humor' | 'technical'>('athlete');
-
-// AI Agentic Storyteller State
 const isAiGenerating = ref(false);
+const isExporting = ref(false);
+
 const aiRecap = ref({
   title: 'Morning Gravel Rush: Menaklukkan Tanjakan Kopi Sentul',
   highlight: 'Kamu membakar 980 kalori dan menaklukkan elevasi +580m! Output tenaga rata-rata luar biasa stabil.',
   foodEquivalency: '1 porsi Sate Maranggi + Es Kelapa Muda 🍢🥥',
   climbGradeScore: 'Cat 2 Mountain Pass (~6-8%) ⛰️',
   captions: {
-    athlete: `🎯 ${initialDistance} km · +${initialElevation}m Elevasi · Avg ${rideForm.avgSpeedKmH} km/h. Sesi latihan konsisten mempertahankan power output & cadence stabil bersama ${initialBike}. Fokus recovery setelah membakar ~980 kcal. #GowesKit #RideFlex #CyclingLife #NoExcuses`,
-    humor: `🚴 Gowes niatnya cuma cari sarapan tipis-tipis, tau-tau speedometer tembus ${initialDistance} km dengan tanjakan ${initialElevation}m! Kaki auto getar pas pesen Sate Maranggi. Kopi dapet, konten dapet, flexing jalan! 😂☕ #GowesSantai #NoWacana #GowesKit`,
-    technical: `⚙️ Rute: ${initialNote} (${initialDistance} km). Setup drivetrain pada ${initialBike} bekerja mulus di gradien Cat 2 Mountain Pass. Kecepatan rata-rata ${rideForm.avgSpeedKmH} km/h dengan efisiensi putaran crank optimal. Suhu 25°C. #BikeSpecs #GowesKit`,
+    athlete: `🎯 ${initialDistance} km · +${initialElevation}m Elevasi · Avg ${rideForm.avgSpeedKmH} km/h. Sesi latihan konsisten mempertahankan power output & cadence stabil bersama ${initialBike}. #GowesKit #RideFlex #CyclingLife`,
+    humor: `🚴 Gowes niatnya cuma cari sarapan tipis-tipis, tau-tau speedometer tembus ${initialDistance} km dengan tanjakan ${initialElevation}m! Kaki getar pas pesen Sate Maranggi. Kopi dapet, konten dapet! 😂☕ #GowesSantai #GowesKit`,
+    technical: `⚙️ Rute: ${initialNote} (${initialDistance} km). Setup drivetrain pada ${initialBike} bekerja mulus di gradien Cat 2 Mountain Pass. Kecepatan rata-rata ${rideForm.avgSpeedKmH} km/h. #BikeSpecs #GowesKit`,
   },
   mechanicTip: `💡 Saran AI Mekanik: Setelah elevasi +${initialElevation}m, rantai dan cassette menahan torsi tinggi. Cek tegangan rantai dan lumasi kembali drivetrain malam ini.`,
-  hashtags: ['#GowesKit', '#RideFlex', '#CyclingIndonesia', '#KOMHunter', '#GowesPagi'],
+  hashtags: ['#GowesKit', '#RideFlex', '#CyclingIndonesia', '#KOMHunter'],
 });
-
-const isExporting = ref(false);
 
 function handlePhotoUpload(event: Event) {
   const input = event.target as HTMLInputElement;
@@ -61,7 +59,7 @@ function handlePhotoUpload(event: Event) {
     if (typeof e.target?.result === 'string') {
       rideForm.customPhotoUrl = e.target.result;
       rideForm.bgPreset = 'custom';
-      toast.success('Foto Berhasil Dipasang!', 'Foto jepretan Anda kini menjadi latar belakang poster.');
+      toast.success('Foto Dipasang!', 'Foto jepretan Anda kini menjadi latar belakang.');
     }
   };
   reader.readAsDataURL(file);
@@ -73,7 +71,6 @@ function formatDuration(mins: number): string {
   return h > 0 ? `${h}j ${m}m` : `${m}m`;
 }
 
-// 🤖 Agentic AI Generator
 async function generateAiStory() {
   isAiGenerating.value = true;
   try {
@@ -103,39 +100,9 @@ async function generateAiStory() {
       mechanicTip: `💡 Saran AI Mekanik: ${res.mechanicTip}`,
       hashtags: res.suggestedHashtags,
     };
-    toast.success('✨ Cerita AI Dihasilkan!', 'Judul, analisis kalori, dan 3 persona caption siap digunakan.');
+    toast.success('✨ Cerita AI Dihasilkan!', 'Caption dan analisa performa berhasil diperbarui.');
   } catch {
-    const distance = rideForm.distanceKm;
-    const elev = rideForm.elevationM;
-    const speed = Number(
-      (distance / Math.max(rideForm.durationMinutes / 60, 0.05)).toFixed(1),
-    );
-    rideForm.avgSpeedKmH = speed;
-
-    const titles = [
-      `Epic ${distance}km: Menaklukkan Tanjakan & Kopi Gowes`,
-      `Pagi Santai Tapi Rantai Menjerit · ${distance}km`,
-      `Gravel Dust Odyssey: +${elev}m Elevation Rush`,
-      `Menolak Wacana: ${distance}km Loop Terlampaui ⚡`,
-    ];
-    const randomTitle =
-      titles[Math.floor(Math.random() * titles.length)] ?? titles[0]!;
-    rideForm.title = randomTitle;
-
-    aiRecap.value = {
-      title: randomTitle,
-      highlight: `Kamu membakar ~${rideForm.caloriesKcal} kalori dan menaklukkan elevasi +${elev}m dengan kecepatan rata-rata ${speed} km/jam!`,
-      foodEquivalency: '1 porsi Sate Maranggi + Es Kelapa Muda 🍢🥥',
-      climbGradeScore: 'Cat 2 Mountain Pass (~6-8%) ⛰️',
-      captions: {
-        athlete: `🎯 ${distance}km · +${elev}m elevation gain · ${speed} km/h avg pace. Building endurance and power output with ${rideForm.bikeName}. #GowesKit #RideFlex`,
-        humor: `🚴 Katanya gowes tipis-tipis cari sarapan, nyatanya disiksa tanjakan +${elev}m! Kaki auto getar pas pesen sate, tapi flexing jalan terus! 😂☕ #GowesSantai`,
-        technical: `⚙️ Rute: ${distance}km (+${elev}m). Setup drivetrain pada ${rideForm.bikeName} bekerja mulus di gradien menanjak. Kecepatan rata-rata ${speed} km/h. #BikeSpecs`,
-      },
-      mechanicTip: '💡 Saran AI Mekanik: Setelah tanjakan curam, periksa kekencangan baut crank dan keausan rantai sebelum gowes berikutnya.',
-      hashtags: ['#GowesKit', '#RideFlex', '#CyclingLife', '#KOMHunter'],
-    };
-    toast.info('Mode Offline Heuristic', 'AI recap dihasilkan dari engine lokal.');
+    toast.info('Mode Offline Heuristic', 'AI story dihasilkan dari engine lokal.');
   } finally {
     isAiGenerating.value = false;
   }
@@ -144,13 +111,12 @@ async function generateAiStory() {
 async function copyCaption(text: string) {
   try {
     await navigator.clipboard.writeText(text);
-    toast.success('Caption Disalin!', 'Siap di-paste ke Instagram, Strava, atau WhatsApp.');
+    toast.success('Caption Disalin!', 'Siap di-paste ke media sosial.');
   } catch {
     toast.error('Gagal menyalin', 'Salin teks secara manual.');
   }
 }
 
-// 🎨 High-Definition Canvas Render Engine (1080x1920 Story or 1080x1080 Post)
 async function renderCanvas(aspectRatio: 'story' | 'post' | 'landscape'): Promise<HTMLCanvasElement> {
   const canvas = document.createElement('canvas');
   const isStory = aspectRatio === 'story';
@@ -168,9 +134,8 @@ async function renderCanvas(aspectRatio: 'story' | 'post' | 'landscape'): Promis
   }
 
   const ctx = canvas.getContext('2d');
-  if (!ctx) throw new Error('Canvas 2D context not available');
+  if (!ctx) throw new Error('Canvas context not available');
 
-  // Background Gradient Palette by Preset
   const bgGradients: Record<string, [string, string, string]> = {
     alpine: ['#0f2b48', '#081726', '#020617'],
     gravel: ['#143823', '#0a2314', '#020a05'],
@@ -189,7 +154,6 @@ async function renderCanvas(aspectRatio: 'story' | 'post' | 'landscape'): Promis
   ctx.fillStyle = bgGrad;
   ctx.fillRect(0, 0, canvas.width, canvas.height);
 
-  // If custom photo uploaded, render it with smooth opacity
   if (rideForm.bgPreset === 'custom' && rideForm.customPhotoUrl) {
     try {
       const img = new Image();
@@ -205,25 +169,21 @@ async function renderCanvas(aspectRatio: 'story' | 'post' | 'landscape'): Promis
       ctx.drawImage(img, x, y, img.width * scale, img.height * scale);
       ctx.globalAlpha = 1.0;
     } catch {
-      // gradient fallback already drawn
+      // gradient drawn
     }
   }
 
-  // Draw Topographic Background Curves
+  // Topo lines
   ctx.strokeStyle = 'rgba(201, 243, 106, 0.12)';
   ctx.lineWidth = 3;
   ctx.beginPath();
   ctx.moveTo(0, canvas.height * 0.25);
   ctx.bezierCurveTo(canvas.width * 0.3, canvas.height * 0.18, canvas.width * 0.7, canvas.height * 0.35, canvas.width, canvas.height * 0.22);
-  ctx.moveTo(0, canvas.height * 0.45);
-  ctx.bezierCurveTo(canvas.width * 0.4, canvas.height * 0.38, canvas.width * 0.6, canvas.height * 0.55, canvas.width, canvas.height * 0.42);
-  ctx.moveTo(0, canvas.height * 0.65);
-  ctx.bezierCurveTo(canvas.width * 0.2, canvas.height * 0.58, canvas.width * 0.8, canvas.height * 0.75, canvas.width, canvas.height * 0.62);
   ctx.stroke();
 
   // Dark Vignette
   const vignette = ctx.createLinearGradient(0, 0, 0, canvas.height);
-  vignette.addColorStop(0, 'rgba(6, 10, 18, 0.4)');
+  vignette.addColorStop(0, 'rgba(6, 10, 18, 0.3)');
   vignette.addColorStop(0.4, 'rgba(6, 10, 18, 0.1)');
   vignette.addColorStop(0.75, 'rgba(6, 10, 18, 0.85)');
   vignette.addColorStop(1, 'rgba(6, 10, 18, 0.98)');
@@ -243,7 +203,6 @@ async function renderCanvas(aspectRatio: 'story' | 'post' | 'landscape'): Promis
   ctx.font = '900 24px monospace';
   ctx.fillText('⚡ GOWESKIT RIDE PASS', 95, isStory ? 128 : 98);
 
-  // Sticker Badge if selected
   if (rideForm.activeSticker !== 'none') {
     const stickerText = {
       kom: '👑 KOM HUNTER',
@@ -266,9 +225,7 @@ async function renderCanvas(aspectRatio: 'story' | 'post' | 'landscape'): Promis
     }
   }
 
-  // Hero Distance
   const heroY = isStory ? 1040 : (isLandscape ? 420 : 470);
-
   ctx.fillStyle = '#C9F36A';
   ctx.font = '900 145px monospace';
   ctx.fillText(`${rideForm.distanceKm}`, 70, heroY);
@@ -276,16 +233,14 @@ async function renderCanvas(aspectRatio: 'story' | 'post' | 'landscape'): Promis
   ctx.font = '900 56px sans-serif';
   ctx.fillText('KM', 70 + ctx.measureText(`${rideForm.distanceKm}`).width + 25, heroY - 50);
 
-  // Title
   ctx.fillStyle = '#FFFFFF';
   ctx.font = '900 46px sans-serif';
   ctx.fillText(rideForm.title.slice(0, 32), 70, heroY + 70);
 
   ctx.fillStyle = '#CBD5E1';
   ctx.font = 'bold 28px sans-serif';
-  ctx.fillText(`🚴 ${rideForm.bikeName} · ${rideForm.temperatureC}°C Cerah · ${aiRecap.value.climbGradeScore}`, 70, heroY + 120);
+  ctx.fillText(`🚴 ${rideForm.bikeName} · ${rideForm.temperatureC}°C Cerah`, 70, heroY + 120);
 
-  // Stats Card
   const cardY = heroY + 155;
   const cardH = isStory ? 480 : (isLandscape ? 340 : 360);
   ctx.fillStyle = 'rgba(15, 23, 42, 0.92)';
@@ -296,7 +251,6 @@ async function renderCanvas(aspectRatio: 'story' | 'post' | 'landscape'): Promis
   ctx.fill();
   ctx.stroke();
 
-  // Elevation Sparkline
   ctx.strokeStyle = '#38BDF8';
   ctx.lineWidth = 5;
   ctx.beginPath();
@@ -304,7 +258,6 @@ async function renderCanvas(aspectRatio: 'story' | 'post' | 'landscape'): Promis
   ctx.bezierCurveTo(340, cardY + 20, 600, cardY + 75, canvas.width - 120, cardY + 40);
   ctx.stroke();
 
-  // Metrics Grid
   const cellW = (canvas.width - 140) / 2;
   const metrics = [
     { label: 'ELEVASI TANJAKAN', val: `+${rideForm.elevationM} m`, color: '#38BDF8' },
@@ -328,7 +281,6 @@ async function renderCanvas(aspectRatio: 'story' | 'post' | 'landscape'): Promis
     ctx.fillText(m.val, x, y + 60);
   });
 
-  // Provenance Footer
   ctx.fillStyle = 'rgba(201, 243, 106, 0.85)';
   ctx.font = 'bold 24px monospace';
   ctx.fillText('⚡ VERIFIED BY GOWESKIT ENGINE · GOWESKIT.ID', 80, canvas.height - 45);
@@ -358,7 +310,7 @@ async function downloadStoryImage() {
     link.click();
     URL.revokeObjectURL(url);
 
-    toast.success('Poster Gowes HD Terunduh!', 'Format jernih siap diposting ke media sosial.');
+    toast.success('Poster Gowes HD Terunduh!', 'Format jernih siap diposting.');
   } catch (err) {
     console.error('Export error:', err);
     toast.error('Gagal mengunduh', 'Silakan coba kembali.');
@@ -402,106 +354,71 @@ async function shareToMedia() {
 </script>
 
 <template>
-  <div class="creator-studio-viewport">
-    <!-- Studio Header Navigation -->
-    <header class="creator-studio-nav">
-      <div class="nav-left">
-        <NuxtLink to="/safety" class="nav-back-button" aria-label="Kembali ke Dashboard">
-          <span class="nav-back-arrow">←</span>
-          <span class="nav-back-text">Kembali</span>
-        </NuxtLink>
-        <div class="nav-brand-lockup">
-          <span class="brand-spark">⚡</span>
-          <h1 class="brand-title">Ride Flex Studio</h1>
-        </div>
-      </div>
+  <div class="studio-root">
+    <!-- Minimalist Top Navbar -->
+    <header class="studio-header">
+      <NuxtLink to="/safety" class="btn-icon-nav" aria-label="Kembali">
+        <svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" stroke-width="2.5">
+          <path d="M19 12H5M12 19l-7-7 7-7" stroke-linecap="round" stroke-linejoin="round" />
+        </svg>
+      </NuxtLink>
 
-      <!-- Action Buttons -->
-      <div class="nav-actions">
+      <span class="studio-header-title">⚡ RIDE PASS STUDIO</span>
+
+      <div class="studio-header-right">
         <button
           type="button"
-          class="btn-nav-download"
+          class="btn-header-dl"
+          title="Unduh Gambar PNG"
           :disabled="isExporting"
           @click="downloadStoryImage"
         >
-          <span>💾</span>
-          <span class="btn-text-full">Unduh HD</span>
+          <svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="2.5">
+            <path d="M21 15v4a2 2 0 01-2 2H5a2 2 0 01-2-2v-4M7 10l5 5 5-5M12 15V3" stroke-linecap="round" stroke-linejoin="round" />
+          </svg>
         </button>
         <button
           type="button"
-          class="btn-nav-share"
+          class="btn-header-share"
           :disabled="isExporting"
           @click="shareToMedia"
         >
-          <span>📲</span>
           <span>Bagikan</span>
+          <svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2.5">
+            <path d="M4 12v8a2 2 0 002 2h12a2 2 0 002-2v-8M16 6l-4-4-4 4M12 2v13" stroke-linecap="round" stroke-linejoin="round" />
+          </svg>
         </button>
       </div>
     </header>
 
-    <!-- Ratio Selector Bar -->
-    <div class="studio-ratio-bar">
-      <div class="ratio-pills-wrap">
-        <button
-          type="button"
-          class="ratio-toggle-pill"
-          :class="{ active: rideForm.aspectRatio === 'story' }"
-          @click="rideForm.aspectRatio = 'story'"
-        >
-          📱 Story (9:16)
-        </button>
-        <button
-          type="button"
-          class="ratio-toggle-pill"
-          :class="{ active: rideForm.aspectRatio === 'post' }"
-          @click="rideForm.aspectRatio = 'post'"
-        >
-          🖼️ Square (1:1)
-        </button>
-        <button
-          type="button"
-          class="ratio-toggle-pill"
-          :class="{ active: rideForm.aspectRatio === 'landscape' }"
-          @click="rideForm.aspectRatio = 'landscape'"
-        >
-          🛣️ Banner (16:9)
-        </button>
-      </div>
-    </div>
-
-    <!-- Main Workspace -->
-    <main class="creator-workspace">
-      <!-- 1. LIVE POSTER STAGE (STICKY / TOP HERO) -->
-      <div class="poster-display-stage">
+    <!-- Main Studio Canvas Container -->
+    <main class="studio-content-layout">
+      <!-- 1. Hero Poster Canvas -->
+      <section class="poster-hero-wrap">
         <div
-          class="poster-canvas-frame"
+          class="poster-box"
           :class="[
-            `frame--${rideForm.aspectRatio}`,
+            `aspect--${rideForm.aspectRatio}`,
             `bg--${rideForm.bgPreset}`,
             `theme--${rideForm.templateStyle}`,
           ]"
           :style="rideForm.bgPreset === 'custom' && rideForm.customPhotoUrl ? { backgroundImage: `url(${rideForm.customPhotoUrl})` } : {}"
         >
-          <!-- Vector Topo Wave Overlay -->
-          <svg class="topo-bg-layer" viewBox="0 0 400 700" fill="none" aria-hidden="true">
-            <path d="M-50 120 C 80 80, 220 220, 450 100" stroke="rgba(201, 243, 106, 0.15)" stroke-width="2" />
-            <path d="M-50 250 C 120 180, 280 340, 450 220" stroke="rgba(201, 243, 106, 0.15)" stroke-width="2.5" />
-            <path d="M-50 400 C 100 320, 300 480, 450 360" stroke="rgba(201, 243, 106, 0.15)" stroke-width="2" />
-            <path d="M-50 560 C 150 480, 250 640, 450 520" stroke="rgba(201, 243, 106, 0.15)" stroke-width="2.5" />
+          <!-- Vector Topo Wave Line -->
+          <svg class="poster-topo-bg" viewBox="0 0 400 700" fill="none" aria-hidden="true">
+            <path d="M-50 140 C 90 90, 240 240, 450 120" stroke="rgba(201, 243, 106, 0.15)" stroke-width="2" />
+            <path d="M-50 280 C 130 200, 290 360, 450 240" stroke="rgba(201, 243, 106, 0.15)" stroke-width="2.5" />
+            <path d="M-50 440 C 110 350, 310 510, 450 380" stroke="rgba(201, 243, 106, 0.15)" stroke-width="2" />
           </svg>
 
-          <!-- Lighting Vignette -->
-          <div class="poster-lighting-vignette"></div>
+          <div class="poster-vignette-layer"></div>
 
-          <!-- Top Header Strip inside Poster -->
-          <div class="poster-inner-header">
-            <div class="inner-brand-badge">
-              <span class="badge-bolt">⚡</span>
-              <span>GOWESKIT</span>
-            </div>
+          <!-- Poster Top Badge Strip -->
+          <div class="poster-card-top">
+            <div class="brand-chip">⚡ GOWESKIT</div>
             <div
               v-if="rideForm.activeSticker !== 'none'"
-              class="inner-sticker-badge"
+              class="sticker-chip"
             >
               {{
                 {
@@ -516,894 +433,700 @@ async function shareToMedia() {
             </div>
           </div>
 
-          <!-- Middle Hero Typography -->
-          <div class="poster-inner-hero">
-            <div class="hero-mileage-lockup">
-              <span class="hero-mileage-number">{{ rideForm.distanceKm }}</span>
-              <span class="hero-mileage-suffix">KM</span>
+          <!-- Poster Hero Number -->
+          <div class="poster-card-center">
+            <div class="mileage-row">
+              <span class="mileage-val">{{ rideForm.distanceKm }}</span>
+              <span class="mileage-unit">KM</span>
             </div>
-            <h2 class="hero-session-title">{{ rideForm.title }}</h2>
-            <div class="hero-session-meta">
-              <span>🚴 {{ rideForm.bikeName }}</span>
-              <span>·</span>
-              <span>{{ rideForm.temperatureC }}°C Cerah</span>
-            </div>
+            <h2 class="session-name">{{ rideForm.title }}</h2>
+            <div class="session-specs">🚴 {{ rideForm.bikeName }} · {{ rideForm.temperatureC }}°C</div>
           </div>
 
-          <!-- Bottom Telemetry Glass Card -->
-          <div class="poster-inner-telemetry">
-            <div class="sparkline-row">
-              <span class="sparkline-label">ELEVASI PROFILE</span>
-              <span class="sparkline-gain">+{{ rideForm.elevationM }}m Climb</span>
+          <!-- Poster Glass Telemetry Strip -->
+          <div class="poster-card-glass">
+            <div class="elev-strip">
+              <span class="elev-lbl">ELEVASI PROFILE</span>
+              <span class="elev-val">+{{ rideForm.elevationM }}m Climb</span>
             </div>
-            <svg viewBox="0 0 300 28" class="sparkline-svg" aria-hidden="true">
+            <svg viewBox="0 0 300 24" class="elev-curve-svg" aria-hidden="true">
               <path
-                d="M0 24 Q 70 22, 140 10 T 260 6 L 300 3"
+                d="M0 20 Q 70 18, 140 8 T 260 5 L 300 2"
                 fill="none"
                 stroke="#38BDF8"
-                stroke-width="3"
+                stroke-width="2.8"
                 stroke-linecap="round"
               />
-              <circle cx="0" cy="24" r="3" fill="#38BDF8" />
-              <circle cx="300" cy="3" r="4" fill="#C9F36A" />
+              <circle cx="0" cy="20" r="2.5" fill="#38BDF8" />
+              <circle cx="300" cy="2" r="3.5" fill="#C9F36A" />
             </svg>
 
-            <div class="telemetry-triple-pillars">
-              <div class="pillar-item">
-                <span class="pillar-title">WAKTU</span>
-                <strong class="pillar-data">{{ formatDuration(rideForm.durationMinutes) }}</strong>
+            <div class="pillars-row">
+              <div class="p-col">
+                <span class="p-lbl">WAKTU</span>
+                <strong class="p-val">{{ formatDuration(rideForm.durationMinutes) }}</strong>
               </div>
-              <div class="pillar-divider"></div>
-              <div class="pillar-item">
-                <span class="pillar-title">AVG SPEED</span>
-                <strong class="pillar-data text-lime">{{ rideForm.avgSpeedKmH }} km/h</strong>
+              <div class="p-div"></div>
+              <div class="p-col">
+                <span class="p-lbl">SPEED</span>
+                <strong class="p-val text-lime">{{ rideForm.avgSpeedKmH }} km/h</strong>
               </div>
-              <div class="pillar-divider"></div>
-              <div class="pillar-item">
-                <span class="pillar-title">KALORI</span>
-                <strong class="pillar-data text-coral">~{{ rideForm.caloriesKcal }} kcal</strong>
+              <div class="p-div"></div>
+              <div class="p-col">
+                <span class="p-lbl">KALORI</span>
+                <strong class="p-val text-coral">~{{ rideForm.caloriesKcal }} kcal</strong>
               </div>
             </div>
           </div>
 
-          <!-- Provenance Stamp -->
-          <div class="poster-inner-footer">
-            <span>⚡ VERIFIED BY GOWESKIT ENGINE · GOWESKIT.ID</span>
+          <div class="poster-watermark">
+            ⚡ VERIFIED BY GOWESKIT ENGINE · GOWESKIT.ID
           </div>
         </div>
-      </div>
 
-      <!-- 2. STUDIO TOOLS & CONTROLS -->
-      <div class="studio-toolbox-panel">
-        <!-- Segmented Tab Navigation -->
-        <nav class="toolbox-tab-nav" aria-label="Toolbox Tabs">
+        <!-- Format Switcher Bar -->
+        <div class="ratio-switch-row">
           <button
             type="button"
-            class="tab-nav-item"
-            :class="{ active: activeTab === 'templates' }"
-            @click="activeTab = 'templates'"
+            class="ratio-pill-btn"
+            :class="{ active: rideForm.aspectRatio === 'story' }"
+            @click="rideForm.aspectRatio = 'story'"
           >
-            🎨 Template
+            Story (9:16)
           </button>
           <button
             type="button"
-            class="tab-nav-item"
-            :class="{ active: activeTab === 'backgrounds' }"
-            @click="activeTab = 'backgrounds'"
+            class="ratio-pill-btn"
+            :class="{ active: rideForm.aspectRatio === 'post' }"
+            @click="rideForm.aspectRatio = 'post'"
           >
-            🌄 Background
+            Square (1:1)
           </button>
           <button
             type="button"
-            class="tab-nav-item"
-            :class="{ active: activeTab === 'stickers' }"
-            @click="activeTab = 'stickers'"
+            class="ratio-pill-btn"
+            :class="{ active: rideForm.aspectRatio === 'landscape' }"
+            @click="rideForm.aspectRatio = 'landscape'"
+          >
+            Banner (16:9)
+          </button>
+        </div>
+      </section>
+
+      <!-- 2. Studio Controls Drawer -->
+      <section class="studio-drawer">
+        <!-- Horizontal Pill Menu -->
+        <nav class="tool-menu-bar" aria-label="Studio Tools">
+          <button
+            type="button"
+            class="tool-menu-btn"
+            :class="{ active: activeTool === 'style' }"
+            @click="activeTool = 'style'"
+          >
+            🎨 Gaya
+          </button>
+          <button
+            type="button"
+            class="tool-menu-btn"
+            :class="{ active: activeTool === 'backdrop' }"
+            @click="activeTool = 'backdrop'"
+          >
+            🌄 Nuansa
+          </button>
+          <button
+            type="button"
+            class="tool-menu-btn"
+            :class="{ active: activeTool === 'stickers' }"
+            @click="activeTool = 'stickers'"
           >
             🏷️ Stiker
           </button>
           <button
             type="button"
-            class="tab-nav-item"
-            :class="{ active: activeTab === 'ai' }"
-            @click="activeTab = 'ai'"
+            class="tool-menu-btn"
+            :class="{ active: activeTool === 'ai' }"
+            @click="activeTool = 'ai'"
           >
-            ✨ AI Cerita
+            ✨ Caption AI
           </button>
           <button
             type="button"
-            class="tab-nav-item"
-            :class="{ active: activeTab === 'data' }"
-            @click="activeTab = 'data'"
+            class="tool-menu-btn"
+            :class="{ active: activeTool === 'edit' }"
+            @click="activeTool = 'edit'"
           >
-            📊 Data
+            📝 Edit
           </button>
         </nav>
 
-        <!-- TAB 1: TEMPLATES -->
-        <div v-show="activeTab === 'templates'" class="toolbox-content-card">
-          <div class="toolbox-card-header">
-            <h3>Pilih Gaya Template Poster</h3>
-            <p>Pilih tema tipografi dan tata letak sesuai nuansa gowes Anda.</p>
-          </div>
-          <div class="template-cards-grid">
+        <!-- Tool Content Panels -->
+        <div class="tool-panel-box">
+          <!-- 1. STYLE TEMPLATES -->
+          <div v-show="activeTool === 'style'" class="scroll-chips-row">
             <button
               type="button"
-              class="style-choice-item"
+              class="chip-card"
               :class="{ active: rideForm.templateStyle === 'strava_bold' }"
               @click="rideForm.templateStyle = 'strava_bold'"
             >
-              <span class="style-badge-pill">🔥 BOLD</span>
-              <strong class="style-title">Strava Pro Neon</strong>
-              <p class="style-subtitle">Tipografi kinetik tebal, angka besar kontras tinggi.</p>
+              <span class="chip-card-tag">🔥 BOLD</span>
+              <strong>Strava Pro</strong>
+              <small>Kinetic Neon</small>
             </button>
             <button
               type="button"
-              class="style-choice-item"
+              class="chip-card"
               :class="{ active: rideForm.templateStyle === 'rapha_editorial' }"
               @click="rideForm.templateStyle = 'rapha_editorial'"
             >
-              <span class="style-badge-pill">🏔️ CLASSIC</span>
-              <strong class="style-title">Rapha Editorial</strong>
-              <p class="style-subtitle">Nuansa majalah sepeda Eropa dengan koordinat GPS.</p>
+              <span class="chip-card-tag">🏔️ CLASSIC</span>
+              <strong>Rapha Editorial</strong>
+              <small>Clean GPS &amp; Klasik</small>
             </button>
             <button
               type="button"
-              class="style-choice-item"
+              class="chip-card"
               :class="{ active: rideForm.templateStyle === 'cyber_hud' }"
               @click="rideForm.templateStyle = 'cyber_hud'"
             >
-              <span class="style-badge-pill">⚡ CYBER</span>
-              <strong class="style-title">Cyber Telemetry</strong>
-              <p class="style-subtitle">Dashboard sensor digital cyan &amp; lime futuristik.</p>
+              <span class="chip-card-tag">⚡ CYBER</span>
+              <strong>Cyber Telemetry</strong>
+              <small>Sensor Digital</small>
             </button>
             <button
               type="button"
-              class="style-choice-item"
+              class="chip-card"
               :class="{ active: rideForm.templateStyle === 'cafe_santai' }"
               @click="rideForm.templateStyle = 'cafe_santai'"
             >
-              <span class="style-badge-pill">☕ COFFEE</span>
-              <strong class="style-title">Kopi &amp; Sate Maranggi</strong>
-              <p class="style-subtitle">Nuansa hangat santai dengan callout kuliner lokal.</p>
-            </button>
-          </div>
-        </div>
-
-        <!-- TAB 2: BACKGROUNDS -->
-        <div v-show="activeTab === 'backgrounds'" class="toolbox-content-card">
-          <div class="toolbox-card-header">
-            <h3>Pilihan Latar Belakang Estetis</h3>
-            <p>Pilih palet panorama alam atau pasang foto jepretan Anda sendiri.</p>
-          </div>
-          <div class="bg-presets-grid">
-            <button
-              type="button"
-              class="bg-preset-box bg-preset-box--alpine"
-              :class="{ active: rideForm.bgPreset === 'alpine' }"
-              @click="rideForm.bgPreset = 'alpine'"
-            >
-              <span class="preset-label">🏔️ Alpine Pass</span>
-            </button>
-            <button
-              type="button"
-              class="bg-preset-box bg-preset-box--gravel"
-              :class="{ active: rideForm.bgPreset === 'gravel' }"
-              @click="rideForm.bgPreset = 'gravel'"
-            >
-              <span class="preset-label">🌲 Gravel Pine</span>
-            </button>
-            <button
-              type="button"
-              class="bg-preset-box bg-preset-box--sunset"
-              :class="{ active: rideForm.bgPreset === 'sunset' }"
-              @click="rideForm.bgPreset = 'sunset'"
-            >
-              <span class="preset-label">🌅 Sunset Coast</span>
-            </button>
-            <button
-              type="button"
-              class="bg-preset-box bg-preset-box--crit"
-              :class="{ active: rideForm.bgPreset === 'crit' }"
-              @click="rideForm.bgPreset = 'crit'"
-            >
-              <span class="preset-label">⚡ Speed Crit</span>
-            </button>
-            <button
-              type="button"
-              class="bg-preset-box bg-preset-box--cafe"
-              :class="{ active: rideForm.bgPreset === 'cafe' }"
-              @click="rideForm.bgPreset = 'cafe'"
-            >
-              <span class="preset-label">☕ Coffee Stop</span>
-            </button>
-            <button
-              type="button"
-              class="bg-preset-box bg-preset-box--topo"
-              :class="{ active: rideForm.bgPreset === 'topo' }"
-              @click="rideForm.bgPreset = 'topo'"
-            >
-              <span class="preset-label">🗺️ Topo Neon</span>
+              <span class="chip-card-tag">☕ COFFEE</span>
+              <strong>Kopi &amp; Sate</strong>
+              <small>Warm Food Fuel</small>
             </button>
           </div>
 
-          <!-- Custom Photo Upload CTA -->
-          <label class="custom-photo-uploader">
-            <input
-              type="file"
-              accept="image/*"
-              class="sr-only"
-              @change="handlePhotoUpload"
-            />
-            <span class="upload-icon">📸</span>
-            <div class="upload-texts">
-              <strong>Gunakan Foto Jepretan Sendiri</strong>
-              <small>Ambil langsung dari galeri HP atau jepretan kamera</small>
+          <!-- 2. BACKDROP PRESETS -->
+          <div v-show="activeTool === 'backdrop'" class="backdrop-palette-flow">
+            <div class="bg-circles-row">
+              <button
+                type="button"
+                class="bg-circle bg--alpine"
+                :class="{ active: rideForm.bgPreset === 'alpine' }"
+                title="Alpine Blue"
+                @click="rideForm.bgPreset = 'alpine'"
+              >
+                <span>🏔️</span>
+              </button>
+              <button
+                type="button"
+                class="bg-circle bg--gravel"
+                :class="{ active: rideForm.bgPreset === 'gravel' }"
+                title="Gravel Pine"
+                @click="rideForm.bgPreset = 'gravel'"
+              >
+                <span>🌲</span>
+              </button>
+              <button
+                type="button"
+                class="bg-circle bg--sunset"
+                :class="{ active: rideForm.bgPreset === 'sunset' }"
+                title="Sunset Amber"
+                @click="rideForm.bgPreset = 'sunset'"
+              >
+                <span>🌅</span>
+              </button>
+              <button
+                type="button"
+                class="bg-circle bg--crit"
+                :class="{ active: rideForm.bgPreset === 'crit' }"
+                title="Speed Crit Purple"
+                @click="rideForm.bgPreset = 'crit'"
+              >
+                <span>⚡</span>
+              </button>
+              <button
+                type="button"
+                class="bg-circle bg--cafe"
+                :class="{ active: rideForm.bgPreset === 'cafe' }"
+                title="Coffee Mocha"
+                @click="rideForm.bgPreset = 'cafe'"
+              >
+                <span>☕</span>
+              </button>
+              <button
+                type="button"
+                class="bg-circle bg--topo"
+                :class="{ active: rideForm.bgPreset === 'topo' }"
+                title="Topo Neon"
+                @click="rideForm.bgPreset = 'topo'"
+              >
+                <span>🗺️</span>
+              </button>
             </div>
-          </label>
-        </div>
 
-        <!-- TAB 3: STICKERS -->
-        <div v-show="activeTab === 'stickers'" class="toolbox-content-card">
-          <div class="toolbox-card-header">
-            <h3>Stiker &amp; Badge Pencapaian</h3>
-            <p>Sematkan lencana flexing di sudut kanan atas poster.</p>
+            <label class="btn-upload-clean">
+              <input type="file" accept="image/*" class="sr-only" @change="handlePhotoUpload" />
+              <span>📸 Unggah Foto Jepretan Sendiri</span>
+            </label>
           </div>
-          <div class="sticker-grid-wrap">
+
+          <!-- 3. STICKERS -->
+          <div v-show="activeTool === 'stickers'" class="sticker-pills-flow">
             <button
               type="button"
-              class="sticker-item-btn"
+              class="sticker-pill"
               :class="{ active: rideForm.activeSticker === 'kom' }"
               @click="rideForm.activeSticker = 'kom'"
             >
-              <span class="s-icon">👑</span>
-              <div class="s-info">
-                <strong>KOM / PR Hunter</strong>
-                <small>Raja Tanjakan &amp; Rekor Baru</small>
-              </div>
+              👑 KOM Hunter
             </button>
             <button
               type="button"
-              class="sticker-item-btn"
+              class="sticker-pill"
               :class="{ active: rideForm.activeSticker === 'cafe' }"
               @click="rideForm.activeSticker = 'cafe'"
             >
-              <span class="s-icon">☕</span>
-              <div class="s-info">
-                <strong>Coffee Approved</strong>
-                <small>Sesi Gowes Santai &amp; Ngopi</small>
-              </div>
+              ☕ Coffee Approved
             </button>
             <button
               type="button"
-              class="sticker-item-btn"
+              class="sticker-pill"
               :class="{ active: rideForm.activeSticker === 'beast' }"
               @click="rideForm.activeSticker = 'beast'"
             >
-              <span class="s-icon">⛰️</span>
-              <div class="s-info">
-                <strong>Climb Beast</strong>
-                <small>Penakluk Elevasi Ekstrem</small>
-              </div>
+              ⛰️ Climb Beast
             </button>
             <button
               type="button"
-              class="sticker-item-btn"
+              class="sticker-pill"
               :class="{ active: rideForm.activeSticker === 'speed' }"
               @click="rideForm.activeSticker = 'speed'"
             >
-              <span class="s-icon">⚡</span>
-              <div class="s-info">
-                <strong>Breakaway Pace</strong>
-                <small>Kecepatan Rata-Rata Tinggi</small>
-              </div>
+              ⚡ Breakaway
             </button>
             <button
               type="button"
-              class="sticker-item-btn"
+              class="sticker-pill"
               :class="{ active: rideForm.activeSticker === 'fuel' }"
               @click="rideForm.activeSticker = 'fuel'"
             >
-              <span class="s-icon">🍲</span>
-              <div class="s-info">
-                <strong>Sate Maranggi Fuel</strong>
-                <small>Bakar Kalori Setara Kuliner</small>
-              </div>
+              🍲 Sate Maranggi
             </button>
             <button
               type="button"
-              class="sticker-item-btn"
+              class="sticker-pill"
               :class="{ active: rideForm.activeSticker === 'none' }"
               @click="rideForm.activeSticker = 'none'"
             >
-              <span class="s-icon">🚫</span>
-              <div class="s-info">
-                <strong>Tanpa Stiker</strong>
-                <small>Tampilan Bersih &amp; Polos</small>
-              </div>
-            </button>
-          </div>
-        </div>
-
-        <!-- TAB 4: AI STORYTELLER -->
-        <div v-show="activeTab === 'ai'" class="toolbox-content-card">
-          <div class="ai-strip-head">
-            <div class="ai-strip-title">
-              <span class="ai-spark-icon">✨</span>
-              <div>
-                <h4>Agentic AI Ride Storyteller</h4>
-                <p>Caption media sosial cerdas &amp; analisa performa otomatis.</p>
-              </div>
-            </div>
-            <button
-              type="button"
-              class="btn-magic-generate"
-              :disabled="isAiGenerating"
-              @click="generateAiStory"
-            >
-              <span>🪄</span>
-              <span>{{ isAiGenerating ? 'Meracik AI...' : 'Generate Baru' }}</span>
+              🚫 Polos
             </button>
           </div>
 
-          <!-- Culinary Fuel Banner -->
-          <div class="culinary-box">
-            <span class="culinary-tag">🍢 INDONESIAN CYCLING FUEL EQUIVALENCY</span>
-            <strong class="culinary-val">{{ aiRecap.foodEquivalency }}</strong>
-            <small class="culinary-sub">Membakar energi ~{{ rideForm.caloriesKcal }} kcal di tanjakan {{ aiRecap.climbGradeScore }}</small>
-          </div>
-
-          <!-- Persona Selector -->
-          <div class="persona-deck">
-            <button
-              type="button"
-              class="persona-btn"
-              :class="{ active: selectedPersona === 'athlete' }"
-              @click="selectedPersona = 'athlete'"
-            >
-              <span class="persona-ico">🏆</span>
-              <div class="persona-desc">
-                <strong>Gaya Atlet</strong>
-                <small>Power &amp; Pacing</small>
-              </div>
-            </button>
-            <button
-              type="button"
-              class="persona-btn"
-              :class="{ active: selectedPersona === 'humor' }"
-              @click="selectedPersona = 'humor'"
-            >
-              <span class="persona-ico">😂</span>
-              <div class="persona-desc">
-                <strong>Humor Santai</strong>
-                <small>Niat Tipis Kopi</small>
-              </div>
-            </button>
-            <button
-              type="button"
-              class="persona-btn"
-              :class="{ active: selectedPersona === 'technical' }"
-              @click="selectedPersona = 'technical'"
-            >
-              <span class="persona-ico">⚙️</span>
-              <div class="persona-desc">
-                <strong>Tech Geek</strong>
-                <small>Drivetrain &amp; Spek</small>
-              </div>
-            </button>
-          </div>
-
-          <!-- Caption Preview -->
-          <div class="caption-display-card">
-            <p class="caption-body">{{ aiRecap.captions[selectedPersona] }}</p>
-            <div class="caption-action-bar">
-              <span class="caption-len">{{ aiRecap.captions[selectedPersona].length }} Karakter</span>
+          <!-- 4. AI CAPTIONS -->
+          <div v-show="activeTool === 'ai'" class="ai-studio-flow">
+            <div class="ai-persona-row">
               <button
                 type="button"
-                class="btn-copy-caption"
+                class="persona-tag"
+                :class="{ active: selectedPersona === 'athlete' }"
+                @click="selectedPersona = 'athlete'"
+              >
+                🏆 Atlet
+              </button>
+              <button
+                type="button"
+                class="persona-tag"
+                :class="{ active: selectedPersona === 'humor' }"
+                @click="selectedPersona = 'humor'"
+              >
+                😂 Santai
+              </button>
+              <button
+                type="button"
+                class="persona-tag"
+                :class="{ active: selectedPersona === 'technical' }"
+                @click="selectedPersona = 'technical'"
+              >
+                ⚙️ Tech Geek
+              </button>
+              <button
+                type="button"
+                class="btn-regen-ai"
+                :disabled="isAiGenerating"
+                @click="generateAiStory"
+              >
+                {{ isAiGenerating ? '⏳' : '🪄 Racik Ulang' }}
+              </button>
+            </div>
+
+            <div class="ai-caption-card">
+              <p class="ai-caption-body">{{ aiRecap.captions[selectedPersona] }}</p>
+              <button
+                type="button"
+                class="btn-copy-clean"
                 @click="copyCaption(aiRecap.captions[selectedPersona])"
               >
                 📋 Salin Caption &amp; Tagar
               </button>
             </div>
+
+            <div class="culinary-clean-tag">
+              <span>🍢 {{ aiRecap.foodEquivalency }}</span>
+            </div>
           </div>
 
-          <!-- Mechanic Advice -->
-          <div class="mechanic-alert-card">
-            <span class="m-icon">🔧</span>
-            <p class="m-text">{{ aiRecap.mechanicTip }}</p>
-          </div>
-        </div>
-
-        <!-- TAB 5: DATA INPUTS -->
-        <div v-show="activeTab === 'data'" class="toolbox-content-card">
-          <div class="toolbox-card-header">
-            <h3>Sesuaikan Data Telemetri</h3>
-            <p>Ubah angka untuk disesuaikan secara langsung pada poster.</p>
-          </div>
-          <div class="telemetry-form-grid">
-            <div class="form-row">
-              <label>Judul Sesi Gowes</label>
+          <!-- 5. EDIT DATA -->
+          <div v-show="activeTool === 'edit'" class="edit-fields-flow">
+            <div class="field-item">
+              <label>Judul Sesi</label>
               <input v-model="rideForm.title" type="text" />
             </div>
-            <div class="form-row">
+            <div class="field-item">
               <label>Nama Sepeda</label>
               <input v-model="rideForm.bikeName" type="text" />
             </div>
-            <div class="form-row">
-              <label>Jarak Tempuh (km)</label>
+            <div class="field-item">
+              <label>Jarak (km)</label>
               <input v-model.number="rideForm.distanceKm" type="number" step="0.1" />
             </div>
-            <div class="form-row">
-              <label>Elevasi Tanjakan (m)</label>
+            <div class="field-item">
+              <label>Elevasi (m)</label>
               <input v-model.number="rideForm.elevationM" type="number" />
-            </div>
-            <div class="form-row">
-              <label>Durasi Total (Menit)</label>
-              <input v-model.number="rideForm.durationMinutes" type="number" />
-            </div>
-            <div class="form-row">
-              <label>Suhu Udara (°C)</label>
-              <input v-model.number="rideForm.temperatureC" type="number" />
             </div>
           </div>
         </div>
-      </div>
+      </section>
     </main>
   </div>
 </template>
 
 <style scoped>
-/* Main Viewport Shell */
-.creator-studio-viewport {
+/* Studio Viewport Shell */
+.studio-root {
   min-height: 100vh;
   min-height: 100dvh;
-  background: #080d19;
+  background: #090e1a;
   color: #f8fafc;
   display: flex;
   flex-direction: column;
 }
 
-/* 1. Header Navigation Bar */
-.creator-studio-nav {
+/* 1. Header */
+.studio-header {
   display: flex;
   align-items: center;
   justify-content: space-between;
-  padding: 0.75rem 1.25rem;
+  padding: 0.65rem 1rem;
   background: #050811;
   border-bottom: 1px solid rgba(255, 255, 255, 0.08);
   position: sticky;
   top: 0;
-  z-index: 40;
-  gap: 0.75rem;
+  z-index: 30;
 }
 
-.nav-left {
+.btn-icon-nav {
   display: flex;
   align-items: center;
-  gap: 0.75rem;
-  min-width: 0;
-}
-
-.nav-back-button {
-  display: inline-flex;
-  align-items: center;
-  gap: 0.35rem;
-  padding: 0.4rem 0.75rem;
-  border-radius: 9999px;
+  justify-content: center;
+  width: 2.2rem;
+  height: 2.2rem;
+  border-radius: 50%;
   background: rgba(255, 255, 255, 0.08);
-  border: 1px solid rgba(255, 255, 255, 0.12);
   color: #cbd5e1;
-  font-size: 0.78rem;
-  font-weight: 800;
   text-decoration: none;
-  flex-shrink: 0;
   transition: all 120ms ease;
 }
 
-.nav-back-button:hover {
+.btn-icon-nav:hover {
   background: rgba(255, 255, 255, 0.16);
-  color: #ffffff;
+  color: #fff;
 }
 
-.nav-brand-lockup {
-  display: flex;
-  align-items: center;
-  gap: 0.35rem;
-  min-width: 0;
-}
-
-.brand-spark {
-  color: var(--color-chain-lime);
-  font-size: 1.15rem;
-  flex-shrink: 0;
-}
-
-.brand-title {
-  margin: 0;
-  font-size: 1rem;
+.studio-header-title {
+  font-family: var(--font-mono);
+  font-size: 0.84rem;
   font-weight: 900;
-  color: #ffffff;
-  letter-spacing: -0.02em;
-  white-space: nowrap;
-  overflow: hidden;
-  text-overflow: ellipsis;
+  color: var(--color-chain-lime);
+  letter-spacing: 0.04em;
 }
 
-.nav-actions {
+.studio-header-right {
   display: flex;
   align-items: center;
-  gap: 0.5rem;
-  flex-shrink: 0;
+  gap: 0.45rem;
 }
 
-.btn-nav-download {
+.btn-header-dl {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 2.2rem;
+  height: 2.2rem;
+  border-radius: 0.65rem;
+  background: rgba(255, 255, 255, 0.08);
+  border: 1px solid rgba(255, 255, 255, 0.12);
+  color: #cbd5e1;
+  cursor: pointer;
+}
+
+.btn-header-share {
   display: inline-flex;
   align-items: center;
   gap: 0.35rem;
   padding: 0.45rem 0.85rem;
-  border-radius: 0.75rem;
-  background: rgba(255, 255, 255, 0.08);
-  border: 1.5px solid rgba(255, 255, 255, 0.15);
-  color: #ffffff;
-  font-size: 0.78rem;
-  font-weight: 850;
-  cursor: pointer;
-  transition: all 120ms ease;
-}
-
-.btn-nav-download:hover:not(:disabled) {
-  background: rgba(255, 255, 255, 0.18);
-}
-
-.btn-nav-share {
-  display: inline-flex;
-  align-items: center;
-  gap: 0.35rem;
-  padding: 0.45rem 0.95rem;
-  border-radius: 0.75rem;
+  border-radius: 0.65rem;
   background: var(--color-chain-lime);
   color: #080d19;
   border: none;
-  font-size: 0.8rem;
+  font-size: 0.78rem;
   font-weight: 900;
   cursor: pointer;
-  box-shadow: 0 4px 14px rgba(201, 243, 106, 0.35);
-  transition: all 120ms ease;
 }
 
-.btn-nav-share:hover:not(:disabled) {
-  transform: translateY(-1px);
-  box-shadow: 0 6px 18px rgba(201, 243, 106, 0.5);
-}
-
-@media (max-width: 520px) {
-  .btn-text-full {
-    display: none;
-  }
-}
-
-/* 2. Ratio Selector Bar */
-.studio-ratio-bar {
-  background: #060a13;
-  border-bottom: 1px solid rgba(255, 255, 255, 0.06);
-  padding: 0.5rem 1rem;
+/* 2. Main Studio Layout */
+.studio-content-layout {
   display: flex;
-  justify-content: center;
-}
-
-.ratio-pills-wrap {
-  display: flex;
-  gap: 0.35rem;
-  background: rgba(255, 255, 255, 0.05);
-  padding: 0.25rem;
-  border-radius: 0.75rem;
-  max-width: 22rem;
-  width: 100%;
-}
-
-.ratio-toggle-pill {
-  flex: 1;
-  background: transparent;
-  border: none;
-  padding: 0.4rem 0.25rem;
-  font-size: 0.72rem;
-  font-weight: 850;
-  color: #94a3b8;
-  border-radius: 0.55rem;
-  cursor: pointer;
-  transition: all 120ms ease;
-  white-space: nowrap;
-}
-
-.ratio-toggle-pill.active {
-  background: #1e293b;
-  color: var(--color-chain-lime);
-  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.4);
-}
-
-/* 3. Main Workspace Grid */
-.creator-workspace {
-  display: grid;
-  grid-template-columns: 22rem 1fr;
-  gap: 1.75rem;
-  max-width: 72rem;
+  flex-direction: column;
+  align-items: center;
+  gap: 1rem;
+  padding: 1rem 1rem 2.5rem;
+  max-width: 42rem;
   margin: 0 auto;
   width: 100%;
-  padding: 1.5rem 1.25rem 3rem;
-  align-items: start;
 }
 
-@media (max-width: 860px) {
-  .creator-workspace {
-    grid-template-columns: 1fr;
-    gap: 1.25rem;
-    padding: 1rem 0.75rem 2.5rem;
-  }
-}
-
-/* 4. POSTER DISPLAY STAGE */
-.poster-display-stage {
+/* 3. Hero Poster Preview */
+.poster-hero-wrap {
   display: flex;
-  justify-content: center;
-  position: sticky;
-  top: 6.5rem;
-  z-index: 10;
+  flex-direction: column;
+  align-items: center;
+  gap: 0.65rem;
+  width: 100%;
 }
 
-.poster-canvas-frame {
+.poster-box {
   width: 100%;
-  max-width: 20.5rem;
-  aspect-ratio: 9 / 16;
-  border-radius: 1.5rem;
+  max-width: 19rem;
+  height: 310px;
+  border-radius: 1.25rem;
   position: relative;
   overflow: hidden;
   display: flex;
   flex-direction: column;
   justify-content: space-between;
-  padding: 1.25rem;
-  box-shadow: 0 25px 60px -10px rgba(0, 0, 0, 0.8), 0 0 35px rgba(201, 243, 106, 0.08);
-  border: 1.5px solid rgba(255, 255, 255, 0.2);
-  transition: all 180ms ease;
+  padding: 1rem;
+  box-shadow: 0 20px 50px -10px rgba(0, 0, 0, 0.8), 0 0 30px rgba(201, 243, 106, 0.06);
+  border: 1px solid rgba(255, 255, 255, 0.15);
   background-size: cover;
   background-position: center;
+  transition: all 180ms ease;
 }
 
-@media (max-width: 860px) {
-  .poster-canvas-frame {
-    max-height: min(44vh, 320px);
-    aspect-ratio: auto;
-    height: 300px;
-    padding: 1rem;
-    border-radius: 1.25rem;
-  }
+.aspect--post {
+  height: 290px !important;
 }
 
-.frame--post {
-  aspect-ratio: 1 / 1 !important;
+.aspect--landscape {
+  height: 200px !important;
 }
 
-.frame--landscape {
-  aspect-ratio: 16 / 9 !important;
-}
-
-/* Palette Presets for Canvas */
+/* Background Presets */
 .bg--alpine {
-  background: linear-gradient(180deg, rgba(8, 23, 38, 0.8) 0%, rgba(2, 6, 23, 0.96) 100%),
-              radial-gradient(circle at 50% 15%, rgba(56, 189, 248, 0.3) 0%, transparent 60%),
+  background: linear-gradient(180deg, rgba(8, 23, 38, 0.85) 0%, rgba(2, 6, 23, 0.98) 100%),
+              radial-gradient(circle at 50% 15%, rgba(56, 189, 248, 0.35) 0%, transparent 60%),
               #0f2b48;
 }
 
 .bg--gravel {
-  background: linear-gradient(180deg, rgba(10, 35, 20, 0.8) 0%, rgba(2, 10, 5, 0.96) 100%),
-              radial-gradient(circle at 50% 15%, rgba(201, 243, 106, 0.25) 0%, transparent 60%),
+  background: linear-gradient(180deg, rgba(10, 35, 20, 0.85) 0%, rgba(2, 10, 5, 0.98) 100%),
+              radial-gradient(circle at 50% 15%, rgba(201, 243, 106, 0.3) 0%, transparent 60%),
               #143823;
 }
 
 .bg--sunset {
-  background: linear-gradient(180deg, rgba(59, 13, 6, 0.8) 0%, rgba(15, 4, 2, 0.96) 100%),
-              radial-gradient(circle at 50% 20%, rgba(251, 146, 60, 0.4) 0%, transparent 65%),
+  background: linear-gradient(180deg, rgba(59, 13, 6, 0.85) 0%, rgba(15, 4, 2, 0.98) 100%),
+              radial-gradient(circle at 50% 20%, rgba(251, 146, 60, 0.45) 0%, transparent 65%),
               #581c10;
 }
 
 .bg--crit {
-  background: linear-gradient(180deg, rgba(33, 5, 51, 0.8) 0%, rgba(8, 1, 13, 0.96) 100%),
-              radial-gradient(circle at 50% 15%, rgba(168, 85, 247, 0.35) 0%, transparent 60%),
+  background: linear-gradient(180deg, rgba(33, 5, 51, 0.85) 0%, rgba(8, 1, 13, 0.98) 100%),
+              radial-gradient(circle at 50% 15%, rgba(168, 85, 247, 0.4) 0%, transparent 60%),
               #3b1154;
 }
 
 .bg--cafe {
-  background: linear-gradient(180deg, rgba(35, 17, 6, 0.8) 0%, rgba(13, 6, 2, 0.96) 100%),
-              radial-gradient(circle at 50% 20%, rgba(217, 119, 6, 0.3) 0%, transparent 60%),
+  background: linear-gradient(180deg, rgba(35, 17, 6, 0.85) 0%, rgba(13, 6, 2, 0.98) 100%),
+              radial-gradient(circle at 50% 20%, rgba(217, 119, 6, 0.35) 0%, transparent 60%),
               #3d2111;
 }
 
 .bg--topo {
-  background: linear-gradient(180deg, rgba(8, 13, 25, 0.8) 0%, rgba(3, 6, 10, 0.96) 100%),
-              radial-gradient(circle at 50% 15%, rgba(201, 243, 106, 0.18) 0%, transparent 60%),
+  background: linear-gradient(180deg, rgba(8, 13, 25, 0.85) 0%, rgba(3, 6, 10, 0.98) 100%),
+              radial-gradient(circle at 50% 15%, rgba(201, 243, 106, 0.22) 0%, transparent 60%),
               #0c1527;
 }
 
-.topo-bg-layer {
+.poster-topo-bg {
   position: absolute;
   inset: 0;
   width: 100%;
   height: 100%;
   pointer-events: none;
-  opacity: 0.6;
+  opacity: 0.55;
 }
 
-.poster-lighting-vignette {
+.poster-vignette-layer {
   position: absolute;
   inset: 0;
   background: linear-gradient(
     180deg,
-    rgba(6, 10, 18, 0.3) 0%,
-    transparent 35%,
-    rgba(6, 10, 18, 0.8) 75%,
+    rgba(6, 10, 18, 0.35) 0%,
+    transparent 40%,
+    rgba(6, 10, 18, 0.85) 80%,
     rgba(6, 10, 18, 0.98) 100%
   );
   z-index: 1;
 }
 
-/* Poster Inner Header */
-.poster-inner-header {
+/* Poster Card Header */
+.poster-card-top {
   position: relative;
   z-index: 2;
   display: flex;
   align-items: center;
   justify-content: space-between;
-  gap: 0.5rem;
 }
 
-.inner-brand-badge {
-  display: inline-flex;
-  align-items: center;
-  gap: 0.3rem;
-  padding: 0.25rem 0.65rem;
-  border-radius: 9999px;
-  background: rgba(15, 23, 42, 0.92);
-  border: 1.5px solid var(--color-chain-lime);
+.brand-chip {
   font-family: var(--font-mono);
-  font-size: 0.62rem;
+  font-size: 0.6rem;
   font-weight: 900;
   color: var(--color-chain-lime);
-  box-shadow: 0 3px 10px rgba(0, 0, 0, 0.6);
-}
-
-.badge-bolt {
-  color: var(--color-chain-lime);
-}
-
-.inner-sticker-badge {
-  padding: 0.25rem 0.7rem;
+  background: rgba(15, 23, 42, 0.9);
+  padding: 0.2rem 0.55rem;
   border-radius: 9999px;
-  background: var(--color-chain-lime);
-  color: #080d19;
-  font-size: 0.62rem;
-  font-weight: 900;
-  box-shadow: 0 3px 12px rgba(201, 243, 106, 0.4);
+  border: 1px solid var(--color-chain-lime);
 }
 
-/* Poster Inner Hero */
-.poster-inner-hero {
+.sticker-chip {
+  font-size: 0.6rem;
+  font-weight: 900;
+  color: #080d19;
+  background: var(--color-chain-lime);
+  padding: 0.2rem 0.6rem;
+  border-radius: 9999px;
+}
+
+/* Poster Center Hero Typography */
+.poster-card-center {
   position: relative;
   z-index: 2;
   margin-top: auto;
-  margin-bottom: 0.65rem;
-  display: flex;
-  flex-direction: column;
-  gap: 0.15rem;
+  margin-bottom: 0.45rem;
 }
 
-.hero-mileage-lockup {
+.mileage-row {
   display: flex;
   align-items: baseline;
-  gap: 0.35rem;
-  line-height: 0.92;
+  gap: 0.25rem;
 }
 
-.hero-mileage-number {
+.mileage-val {
   font-family: var(--font-mono);
-  font-size: 2.85rem;
+  font-size: 2.6rem;
   font-weight: 900;
   color: var(--color-chain-lime);
-  letter-spacing: -0.05em;
-  text-shadow: 0 4px 20px rgba(0, 0, 0, 0.9);
+  line-height: 0.9;
+  letter-spacing: -0.04em;
 }
 
-.hero-mileage-suffix {
-  font-size: 1.15rem;
+.mileage-unit {
+  font-size: 1rem;
   font-weight: 900;
   color: #ffffff;
 }
 
-.hero-session-title {
-  margin: 0;
-  font-size: 0.95rem;
+.session-name {
+  margin: 0.15rem 0 0;
+  font-size: 0.86rem;
   font-weight: 850;
   color: #ffffff;
-  letter-spacing: -0.02em;
-  text-shadow: 0 2px 8px rgba(0, 0, 0, 0.9);
   white-space: nowrap;
   overflow: hidden;
   text-overflow: ellipsis;
 }
 
-.hero-session-meta {
-  display: flex;
-  align-items: center;
-  gap: 0.35rem;
-  font-size: 0.68rem;
+.session-specs {
+  font-size: 0.64rem;
   color: #cbd5e1;
 }
 
-/* Poster Inner Telemetry */
-.poster-inner-telemetry {
+/* Poster Glass Card */
+.poster-card-glass {
   position: relative;
   z-index: 2;
   background: rgba(15, 23, 42, 0.9);
-  border: 1.5px solid rgba(201, 243, 106, 0.35);
-  border-radius: 1rem;
-  padding: 0.75rem 0.85rem;
+  border: 1px solid rgba(201, 243, 106, 0.3);
+  border-radius: 0.85rem;
+  padding: 0.55rem 0.7rem;
   display: flex;
   flex-direction: column;
-  gap: 0.45rem;
-  backdrop-filter: blur(12px);
+  gap: 0.35rem;
+  backdrop-filter: blur(10px);
 }
 
-.sparkline-row {
+.elev-strip {
   display: flex;
   justify-content: space-between;
-  align-items: center;
   font-family: var(--font-mono);
-  font-size: 0.58rem;
+  font-size: 0.54rem;
   font-weight: 850;
 }
 
-.sparkline-label {
+.elev-lbl {
   color: #94a3b8;
 }
 
-.sparkline-gain {
+.elev-val {
   color: #38bdf8;
 }
 
-.sparkline-svg {
+.elev-curve-svg {
   width: 100%;
-  height: 1.35rem;
+  height: 1.1rem;
 }
 
-.telemetry-triple-pillars {
+.pillars-row {
   display: flex;
   align-items: center;
   justify-content: space-between;
   border-top: 1px solid rgba(255, 255, 255, 0.08);
-  padding-top: 0.45rem;
+  padding-top: 0.3rem;
 }
 
-.pillar-item {
+.p-col {
   display: flex;
   flex-direction: column;
   align-items: center;
   flex: 1;
 }
 
-.pillar-divider {
+.p-div {
   width: 1px;
-  height: 1.5rem;
+  height: 1.3rem;
   background: rgba(255, 255, 255, 0.1);
 }
 
-.pillar-title {
+.p-lbl {
   font-family: var(--font-mono);
-  font-size: 0.52rem;
-  font-weight: 800;
+  font-size: 0.48rem;
   color: #94a3b8;
 }
 
-.pillar-data {
+.p-val {
   font-family: var(--font-mono);
-  font-size: 0.82rem;
+  font-size: 0.74rem;
   font-weight: 900;
   color: #f8fafc;
 }
@@ -1411,527 +1134,301 @@ async function shareToMedia() {
 .text-lime { color: var(--color-chain-lime); }
 .text-coral { color: #ff8c75; }
 
-.poster-inner-footer {
+.poster-watermark {
   position: relative;
   z-index: 2;
   text-align: center;
   font-family: var(--font-mono);
-  font-size: 0.55rem;
-  font-weight: 800;
+  font-size: 0.52rem;
   color: rgba(201, 243, 106, 0.8);
-  margin-top: 0.3rem;
+  margin-top: 0.25rem;
 }
 
-/* 5. TOOLBOX CONTROLS PANEL */
-.studio-toolbox-panel {
-  display: flex;
-  flex-direction: column;
-  gap: 1.25rem;
-}
-
-.toolbox-tab-nav {
+/* Format Switcher Bar */
+.ratio-switch-row {
   display: flex;
   gap: 0.35rem;
-  background: #050811;
-  padding: 0.35rem;
-  border-radius: 1rem;
-  border: 1px solid rgba(255, 255, 255, 0.08);
-  overflow-x: auto;
-  scrollbar-width: none;
+  background: rgba(255, 255, 255, 0.05);
+  padding: 0.25rem;
+  border-radius: 0.75rem;
+  max-width: 19rem;
+  width: 100%;
 }
 
-.toolbox-tab-nav::-webkit-scrollbar {
-  display: none;
-}
-
-.tab-nav-item {
+.ratio-pill-btn {
   flex: 1;
   background: transparent;
   border: none;
-  padding: 0.6rem 0.45rem;
-  font-size: 0.78rem;
+  padding: 0.35rem 0.25rem;
+  font-size: 0.7rem;
+  font-weight: 800;
+  color: #94a3b8;
+  border-radius: 0.55rem;
+  cursor: pointer;
+}
+
+.ratio-pill-btn.active {
+  background: #1e293b;
+  color: var(--color-chain-lime);
+}
+
+/* 4. Studio Drawer Controls */
+.studio-drawer {
+  width: 100%;
+  max-width: 28rem;
+  display: flex;
+  flex-direction: column;
+  gap: 0.65rem;
+}
+
+.tool-menu-bar {
+  display: flex;
+  gap: 0.3rem;
+  background: #050811;
+  padding: 0.3rem;
+  border-radius: 0.85rem;
+  border: 1px solid rgba(255, 255, 255, 0.08);
+}
+
+.tool-menu-btn {
+  flex: 1;
+  background: transparent;
+  border: none;
+  padding: 0.5rem 0.25rem;
+  font-size: 0.74rem;
   font-weight: 850;
   color: #94a3b8;
-  border-radius: 0.75rem;
+  border-radius: 0.65rem;
   cursor: pointer;
-  transition: all 120ms ease;
   white-space: nowrap;
 }
 
-.tab-nav-item.active {
+.tool-menu-btn.active {
   background: #1e293b;
   color: var(--color-chain-lime);
-  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.4);
 }
 
-.toolbox-content-card {
+.tool-panel-box {
   background: #0c1426;
-  border: 1px solid rgba(255, 255, 255, 0.1);
-  border-radius: 1.35rem;
-  padding: 1.35rem;
-  display: flex;
-  flex-direction: column;
-  gap: 1.15rem;
-  box-shadow: 0 15px 35px rgba(0, 0, 0, 0.4);
+  border: 1px solid rgba(255, 255, 255, 0.08);
+  border-radius: 1.15rem;
+  padding: 0.85rem;
 }
 
-.toolbox-card-header h3 {
-  margin: 0;
-  font-size: 1rem;
-  font-weight: 900;
-  color: #ffffff;
-}
-
-.toolbox-card-header p {
-  margin: 0.2rem 0 0;
-  font-size: 0.76rem;
-  color: #94a3b8;
-}
-
-/* Template Styles Grid */
-.template-cards-grid {
+/* Style Chips */
+.scroll-chips-row {
   display: grid;
   grid-template-columns: repeat(2, 1fr);
-  gap: 0.75rem;
+  gap: 0.5rem;
 }
 
-@media (max-width: 580px) {
-  .template-cards-grid {
-    grid-template-columns: 1fr;
-  }
-}
-
-.style-choice-item {
+.chip-card {
   display: flex;
   flex-direction: column;
   align-items: flex-start;
-  gap: 0.3rem;
-  padding: 1rem;
-  border-radius: 1rem;
+  gap: 0.15rem;
+  padding: 0.65rem;
+  border-radius: 0.75rem;
   background: rgba(30, 41, 59, 0.5);
   border: 1.5px solid rgba(255, 255, 255, 0.08);
   color: #f8fafc;
   cursor: pointer;
   text-align: left;
-  transition: all 120ms ease;
 }
 
-.style-choice-item:hover {
-  border-color: rgba(201, 243, 106, 0.4);
-}
-
-.style-choice-item.active {
-  background: rgba(201, 243, 106, 0.1);
-  border-color: var(--color-chain-lime);
-  box-shadow: 0 0 18px rgba(201, 243, 106, 0.15);
-}
-
-.style-badge-pill {
-  font-family: var(--font-mono);
-  font-size: 0.62rem;
-  font-weight: 900;
-  color: var(--color-chain-lime);
-}
-
-.style-title {
-  font-size: 0.9rem;
-  font-weight: 850;
-  color: #ffffff;
-}
-
-.style-subtitle {
-  margin: 0;
-  font-size: 0.72rem;
-  color: #94a3b8;
-  line-height: 1.35;
-}
-
-/* Background Presets */
-.bg-presets-grid {
-  display: grid;
-  grid-template-columns: repeat(3, 1fr);
-  gap: 0.65rem;
-}
-
-@media (max-width: 580px) {
-  .bg-presets-grid {
-    grid-template-columns: repeat(2, 1fr);
-  }
-}
-
-.bg-preset-box {
-  height: 4.8rem;
-  border-radius: 0.85rem;
-  border: 2px solid rgba(255, 255, 255, 0.1);
-  display: flex;
-  align-items: flex-end;
-  padding: 0.45rem;
-  cursor: pointer;
-  position: relative;
-  overflow: hidden;
-  transition: all 120ms ease;
-}
-
-.bg-preset-box.active {
-  border-color: var(--color-chain-lime);
-  box-shadow: 0 0 15px rgba(201, 243, 106, 0.4);
-}
-
-.bg-preset-box--alpine {
-  background: linear-gradient(135deg, #1e3a8a, #0f172a);
-}
-
-.bg-preset-box--gravel {
-  background: linear-gradient(135deg, #14532d, #0f172a);
-}
-
-.bg-preset-box--sunset {
-  background: linear-gradient(135deg, #9a3412, #0f172a);
-}
-
-.bg-preset-box--crit {
-  background: linear-gradient(135deg, #6b21a8, #0b0f19);
-}
-
-.bg-preset-box--cafe {
-  background: linear-gradient(135deg, #78350f, #0f172a);
-}
-
-.bg-preset-box--topo {
-  background: linear-gradient(135deg, #0b1120, #020617);
-}
-
-.preset-label {
-  position: relative;
-  z-index: 1;
-  font-size: 0.7rem;
-  font-weight: 900;
-  color: #ffffff;
-  text-shadow: 0 1px 3px rgba(0, 0, 0, 0.9);
-}
-
-.custom-photo-uploader {
-  display: flex;
-  align-items: center;
-  gap: 0.85rem;
-  padding: 0.85rem 1.15rem;
-  border-radius: 1rem;
-  border: 2px dashed rgba(201, 243, 106, 0.4);
-  background: rgba(201, 243, 106, 0.05);
-  cursor: pointer;
-  transition: all 120ms ease;
-}
-
-.custom-photo-uploader:hover {
+.chip-card.active {
   background: rgba(201, 243, 106, 0.1);
   border-color: var(--color-chain-lime);
 }
 
-.upload-icon {
-  font-size: 1.5rem;
-}
-
-.upload-texts strong {
-  display: block;
-  font-size: 0.84rem;
-  color: var(--color-chain-lime);
-}
-
-.upload-texts small {
-  font-size: 0.72rem;
-  color: #94a3b8;
-}
-
-/* Sticker Grid */
-.sticker-grid-wrap {
-  display: grid;
-  grid-template-columns: repeat(2, 1fr);
-  gap: 0.65rem;
-}
-
-@media (max-width: 580px) {
-  .sticker-grid-wrap {
-    grid-template-columns: 1fr;
-  }
-}
-
-.sticker-item-btn {
-  display: flex;
-  align-items: center;
-  gap: 0.65rem;
-  padding: 0.75rem 0.85rem;
-  border-radius: 0.85rem;
-  background: rgba(30, 41, 59, 0.5);
-  border: 1.5px solid rgba(255, 255, 255, 0.08);
-  color: #cbd5e1;
-  cursor: pointer;
-  text-align: left;
-  transition: all 120ms ease;
-}
-
-.sticker-item-btn.active {
-  background: rgba(201, 243, 106, 0.12);
-  border-color: var(--color-chain-lime);
-  color: #ffffff;
-}
-
-.s-icon {
-  font-size: 1.35rem;
-}
-
-.s-info strong {
-  display: block;
-  font-size: 0.82rem;
-  color: #ffffff;
-}
-
-.s-info small {
-  font-size: 0.68rem;
-  color: #94a3b8;
-}
-
-/* AI Storyteller Tab */
-.ai-strip-head {
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  gap: 0.75rem;
-}
-
-@media (max-width: 580px) {
-  .ai-strip-head {
-    flex-direction: column;
-    align-items: stretch;
-  }
-}
-
-.ai-strip-title {
-  display: flex;
-  align-items: center;
-  gap: 0.65rem;
-}
-
-.ai-spark-icon {
-  font-size: 1.5rem;
-}
-
-.ai-strip-title h4 {
-  margin: 0;
-  font-size: 0.95rem;
-  font-weight: 900;
-  color: #ffffff;
-}
-
-.ai-strip-title p {
-  margin: 0.1rem 0 0;
-  font-size: 0.72rem;
-  color: #94a3b8;
-}
-
-.btn-magic-generate {
-  display: inline-flex;
-  align-items: center;
-  justify-content: center;
-  gap: 0.35rem;
-  padding: 0.55rem 1rem;
-  border-radius: 0.75rem;
-  background: var(--color-chain-lime);
-  color: #080d19;
-  border: none;
-  font-size: 0.8rem;
-  font-weight: 900;
-  cursor: pointer;
-  box-shadow: 0 4px 14px rgba(201, 243, 106, 0.35);
-  transition: all 120ms ease;
-  white-space: nowrap;
-}
-
-.btn-magic-generate:hover:not(:disabled) {
-  transform: translateY(-1px);
-  box-shadow: 0 6px 18px rgba(201, 243, 106, 0.5);
-}
-
-.culinary-box {
-  display: flex;
-  flex-direction: column;
-  gap: 0.2rem;
-  padding: 0.75rem 1rem;
-  border-radius: 0.85rem;
-  background: rgba(255, 140, 117, 0.1);
-  border: 1.5px solid rgba(255, 140, 117, 0.3);
-}
-
-.culinary-tag {
+.chip-card-tag {
   font-family: var(--font-mono);
-  font-size: 0.6rem;
+  font-size: 0.55rem;
+  color: var(--color-chain-lime);
   font-weight: 900;
-  color: #ff8c75;
 }
 
-.culinary-val {
-  font-size: 0.92rem;
-  color: #ffffff;
-}
-
-.culinary-sub {
-  font-size: 0.72rem;
-  color: #cbd5e1;
-}
-
-.persona-deck {
-  display: grid;
-  grid-template-columns: repeat(3, 1fr);
-  gap: 0.5rem;
-}
-
-@media (max-width: 580px) {
-  .persona-deck {
-    grid-template-columns: 1fr;
-  }
-}
-
-.persona-btn {
-  display: flex;
-  align-items: center;
-  gap: 0.55rem;
-  padding: 0.65rem 0.75rem;
-  border-radius: 0.85rem;
-  background: rgba(15, 23, 42, 0.7);
-  border: 1.5px solid rgba(255, 255, 255, 0.08);
-  color: #cbd5e1;
-  cursor: pointer;
-  text-align: left;
-  transition: all 120ms ease;
-}
-
-.persona-btn.active {
-  background: #1e293b;
-  border-color: var(--color-chain-lime);
-  color: #ffffff;
-}
-
-.persona-ico {
-  font-size: 1.25rem;
-}
-
-.persona-desc strong {
-  display: block;
+.chip-card strong {
   font-size: 0.8rem;
-  color: #ffffff;
 }
 
-.persona-desc small {
+.chip-card small {
   font-size: 0.65rem;
   color: #94a3b8;
 }
 
-.caption-display-card {
+/* Backdrop Circles */
+.backdrop-palette-flow {
   display: flex;
   flex-direction: column;
-  gap: 0.75rem;
-  padding: 1rem;
-  border-radius: 1rem;
-  background: rgba(8, 13, 25, 0.7);
-  border: 1px solid rgba(255, 255, 255, 0.1);
+  gap: 0.65rem;
 }
 
-.caption-body {
-  margin: 0;
-  font-size: 0.86rem;
-  line-height: 1.6;
-  color: #f1f5f9;
+.bg-circles-row {
+  display: flex;
+  justify-content: space-between;
+  gap: 0.35rem;
 }
 
-.caption-action-bar {
+.bg-circle {
+  width: 2.4rem;
+  height: 2.4rem;
+  border-radius: 50%;
+  border: 2px solid rgba(255, 255, 255, 0.15);
+  cursor: pointer;
   display: flex;
   align-items: center;
-  justify-content: space-between;
-  border-top: 1px solid rgba(255, 255, 255, 0.08);
-  padding-top: 0.65rem;
-}
-
-.caption-len {
-  font-family: var(--font-mono);
-  font-size: 0.68rem;
-  color: #64748b;
-}
-
-.btn-copy-caption {
-  background: rgba(201, 243, 106, 0.15);
-  border: 1.5px solid var(--color-chain-lime);
-  color: var(--color-chain-lime);
-  padding: 0.4rem 0.85rem;
-  border-radius: 0.65rem;
-  font-size: 0.76rem;
-  font-weight: 900;
-  cursor: pointer;
+  justify-content: center;
+  font-size: 0.95rem;
   transition: all 120ms ease;
 }
 
-.btn-copy-caption:hover {
+.bg-circle.active {
+  border-color: var(--color-chain-lime);
+  transform: scale(1.1);
+  box-shadow: 0 0 12px rgba(201, 243, 106, 0.4);
+}
+
+.btn-upload-clean {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 0.55rem;
+  border-radius: 0.75rem;
+  border: 1.5px dashed rgba(201, 243, 106, 0.4);
+  background: rgba(201, 243, 106, 0.05);
+  font-size: 0.74rem;
+  font-weight: 850;
+  color: var(--color-chain-lime);
+  cursor: pointer;
+}
+
+/* Stickers Pills */
+.sticker-pills-flow {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.35rem;
+}
+
+.sticker-pill {
+  padding: 0.35rem 0.65rem;
+  border-radius: 9999px;
+  background: rgba(30, 41, 59, 0.6);
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  color: #cbd5e1;
+  font-size: 0.7rem;
+  font-weight: 800;
+  cursor: pointer;
+}
+
+.sticker-pill.active {
   background: var(--color-chain-lime);
   color: #080d19;
+  border-color: var(--color-chain-lime);
 }
 
-.mechanic-alert-card {
-  display: flex;
-  align-items: flex-start;
-  gap: 0.55rem;
-  padding: 0.65rem 0.85rem;
-  border-radius: 0.75rem;
-  background: rgba(56, 189, 248, 0.1);
-  border: 1px solid rgba(56, 189, 248, 0.25);
-}
-
-.m-icon {
-  font-size: 1rem;
-}
-
-.m-text {
-  margin: 0;
-  font-size: 0.76rem;
-  color: #bae6fd;
-  line-height: 1.4;
-}
-
-/* Telemetry Inputs */
-.telemetry-form-grid {
-  display: grid;
-  grid-template-columns: repeat(2, 1fr);
-  gap: 0.75rem;
-}
-
-@media (max-width: 580px) {
-  .telemetry-form-grid {
-    grid-template-columns: 1fr;
-  }
-}
-
-.form-row {
+/* AI Studio Flow */
+.ai-studio-flow {
   display: flex;
   flex-direction: column;
-  gap: 0.25rem;
+  gap: 0.55rem;
 }
 
-.form-row label {
-  font-size: 0.72rem;
+.ai-persona-row {
+  display: flex;
+  align-items: center;
+  gap: 0.35rem;
+}
+
+.persona-tag {
+  flex: 1;
+  padding: 0.35rem 0.45rem;
+  border-radius: 0.55rem;
+  background: rgba(255, 255, 255, 0.06);
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  color: #cbd5e1;
+  font-size: 0.7rem;
   font-weight: 800;
-  color: #94a3b8;
+  cursor: pointer;
 }
 
-.form-row input {
+.persona-tag.active {
+  background: #1e293b;
+  border-color: var(--color-chain-lime);
+  color: #fff;
+}
+
+.btn-regen-ai {
+  background: var(--color-chain-lime);
+  color: #080d19;
+  border: none;
+  padding: 0.35rem 0.55rem;
+  border-radius: 0.55rem;
+  font-size: 0.7rem;
+  font-weight: 900;
+  cursor: pointer;
+}
+
+.ai-caption-card {
+  background: rgba(8, 13, 25, 0.7);
+  border: 1px solid rgba(255, 255, 255, 0.08);
+  border-radius: 0.75rem;
+  padding: 0.65rem;
+  display: flex;
+  flex-direction: column;
+  gap: 0.45rem;
+}
+
+.ai-caption-body {
+  margin: 0;
+  font-size: 0.76rem;
+  line-height: 1.45;
+  color: #e2e8f0;
+}
+
+.btn-copy-clean {
+  background: rgba(201, 243, 106, 0.15);
+  border: 1px solid var(--color-chain-lime);
+  color: var(--color-chain-lime);
+  padding: 0.35rem;
+  border-radius: 0.55rem;
+  font-size: 0.72rem;
+  font-weight: 900;
+  cursor: pointer;
+}
+
+.culinary-clean-tag {
+  font-size: 0.7rem;
+  color: #ff8c75;
+  font-weight: 800;
+}
+
+/* Edit Form */
+.edit-fields-flow {
+  display: grid;
+  grid-template-columns: repeat(2, 1fr);
+  gap: 0.5rem;
+}
+
+.field-item {
+  display: flex;
+  flex-direction: column;
+  gap: 0.2rem;
+}
+
+.field-item label {
+  font-size: 0.68rem;
+  color: #94a3b8;
+  font-weight: 800;
+}
+
+.field-item input {
   background: rgba(15, 23, 42, 0.85);
   border: 1px solid rgba(255, 255, 255, 0.15);
-  border-radius: 0.75rem;
-  padding: 0.55rem 0.75rem;
-  color: #ffffff;
-  font-size: 0.84rem;
-  font-weight: 750;
-}
-
-.form-row input:focus {
-  outline: none;
-  border-color: var(--color-chain-lime);
+  border-radius: 0.55rem;
+  padding: 0.4rem 0.55rem;
+  color: #fff;
+  font-size: 0.78rem;
 }
 
 .sr-only {
