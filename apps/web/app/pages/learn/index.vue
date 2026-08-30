@@ -349,7 +349,7 @@ function resetWizard(): void {
             @click="activeTab = 'components'"
           >
             <span class="tab-btn__icon">⚙️</span>
-            <span class="tab-btn__label">Komponen</span>
+            <span class="tab-btn__label">Komponen Anatomi</span>
             <span class="tab-btn__badge">{{ componentCategories.length }}</span>
           </button>
 
@@ -362,7 +362,7 @@ function resetWizard(): void {
             @click="activeTab = 'glossary'"
           >
             <span class="tab-btn__icon">📖</span>
-            <span class="tab-btn__label">Glosarium</span>
+            <span class="tab-btn__label">Kamus Glosarium</span>
             <span class="tab-btn__badge">{{ glossaryTerms.length }}</span>
           </button>
         </nav>
@@ -744,20 +744,29 @@ function resetWizard(): void {
   max-width: 44rem;
 }
 
-/* Quick Tools Row (Clean responsive chips) */
+/* Quick Tools Row (Clean horizontally scrollable chips on mobile) */
 .learn-quick-actions {
   display: flex;
   align-items: center;
-  gap: 0.45rem;
-  flex-wrap: wrap;
-  padding-top: 0.15rem;
+  gap: 0.5rem;
+  overflow-x: auto;
+  -webkit-overflow-scrolling: touch;
+  scrollbar-width: none;
+  padding: 0.15rem 0.15rem 0.35rem;
+  margin: 0 -0.5rem;
+  padding-left: 0.5rem;
+  padding-right: 0.5rem;
+}
+
+.learn-quick-actions::-webkit-scrollbar {
+  display: none;
 }
 
 .action-pill {
   display: inline-flex;
   align-items: center;
   gap: 0.35rem;
-  padding: 0.35rem 0.75rem;
+  padding: 0.4rem 0.85rem;
   border-radius: 9999px;
   font-size: 0.76rem;
   font-weight: 850;
@@ -767,6 +776,7 @@ function resetWizard(): void {
   box-shadow: 0 2px 0 var(--color-ink);
   transition: transform 90ms ease, box-shadow 90ms ease;
   white-space: nowrap;
+  flex-shrink: 0;
 }
 
 .action-pill:active {
@@ -856,7 +866,7 @@ function resetWizard(): void {
 }
 
 /* ══════════════════════════════════════════════════════════
-   SEGMENTED NAVIGATION TABS (NO TEXT OVERLAPPING)
+   SEGMENTED NAVIGATION TABS (HORIZONTALLY SCROLLABLE)
    ══════════════════════════════════════════════════════════ */
 .learn-content-container {
   display: flex;
@@ -869,55 +879,58 @@ function resetWizard(): void {
 
 .segmented-tabs-wrapper {
   width: 100%;
-  display: flex;
-  justify-content: center;
+  overflow-x: auto;
+  -webkit-overflow-scrolling: touch;
+  scrollbar-width: none;
+  padding: 0.15rem 0.25rem;
+}
+
+.segmented-tabs-wrapper::-webkit-scrollbar {
+  display: none;
 }
 
 .segmented-tabs {
-  display: grid;
-  grid-template-columns: repeat(3, 1fr);
+  display: inline-flex;
+  align-items: center;
   gap: 0.35rem;
   padding: 0.35rem;
-  border-radius: 1.15rem;
+  border-radius: 9999px;
   background: var(--color-sand);
-  width: 100%;
-  max-width: 38rem;
+  min-width: max-content;
 }
 
 .tab-btn {
-  display: flex;
+  display: inline-flex;
   align-items: center;
-  justify-content: center;
-  gap: 0.35rem;
-  padding: 0.55rem 0.5rem;
-  border-radius: 0.85rem;
+  gap: 0.45rem;
+  padding: 0.55rem 0.95rem;
+  border-radius: 9999px;
   border: none;
   background: transparent;
   color: var(--color-asphalt);
-  font-size: 0.78rem;
+  font-size: 0.82rem;
   font-weight: 850;
   cursor: pointer;
   transition: all 120ms ease;
-  min-width: 0;
+  white-space: nowrap;
+  flex-shrink: 0;
 }
 
 .tab-btn--active {
   background: var(--color-white);
   color: var(--color-ink);
-  box-shadow: 0 2px 6px rgba(23, 32, 42, 0.08);
+  box-shadow: 0 2px 8px rgba(23, 32, 42, 0.08);
 }
 
 .tab-btn__label {
-  overflow: hidden;
-  text-overflow: ellipsis;
   white-space: nowrap;
 }
 
 .tab-btn__badge {
   font-family: var(--font-mono);
-  font-size: 0.65rem;
+  font-size: 0.68rem;
   font-weight: 850;
-  padding: 0.1rem 0.4rem;
+  padding: 0.15rem 0.45rem;
   border-radius: 9999px;
   background: rgba(23, 32, 42, 0.08);
   color: var(--color-ink);
