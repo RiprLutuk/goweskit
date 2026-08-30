@@ -317,6 +317,10 @@ onMounted(loadCommunity);
                 <GIcon name="users" size="xs" />
                 <span>{{ detail.community.memberCount }} Anggota</span>
               </span>
+              <span v-if="isActiveMember" class="member-pill">
+                <GIcon name="check" size="xs" color="#15803D" filled />
+                <span>Member</span>
+              </span>
               <span v-if="isVerified" class="verified-pill">
                 <GIcon name="check" size="xs" color="#15803D" filled />
                 <span>Terverifikasi</span>
@@ -363,24 +367,15 @@ onMounted(loadCommunity);
           </span>
         </div>
 
-        <!-- Membership Action / Status -->
-        <!-- Case 1: Already Member -->
-        <div v-if="isActiveMember" class="member-active-bar">
-          <div class="active-status-left">
-            <GIcon name="check" size="xs" color="#15803D" filled />
-            <span>Anda adalah <strong>{{ detail.viewerMembership?.role?.toUpperCase() }}</strong> di komunitas ini</span>
-          </div>
-          <span class="active-status-tag">Anggota Aktif</span>
-        </div>
-
-        <!-- Case 2: Requested / Pending -->
-        <div v-else-if="detail.viewerMembership?.status === 'requested'" class="member-pending-bar">
+        <!-- Membership Action / Status (Only shown if NOT already an active member) -->
+        <!-- Case 1: Requested / Pending Approval -->
+        <div v-if="detail.viewerMembership?.status === 'requested'" class="member-pending-bar">
           <GIcon name="history" size="xs" color="#D97706" />
           <span>Permintaan bergabung telah dikirim dan menunggu persetujuan pengurus.</span>
         </div>
 
-        <!-- Case 3: Not Joined Yet (Join CTA) -->
-        <div v-else class="membership-join-box">
+        <!-- Case 2: Not Joined Yet (Show Join CTA) -->
+        <div v-else-if="!isActiveMember" class="membership-join-box">
           <button
             class="button button--primary join-action-btn"
             type="button"
@@ -733,6 +728,18 @@ onMounted(loadCommunity);
   display: inline-flex;
   align-items: center;
   gap: 0.2rem;
+}
+
+.member-pill {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.2rem;
+  font-size: 0.68rem;
+  font-weight: 850;
+  color: #15803D;
+  background: rgba(22, 163, 74, 0.15);
+  padding: 0.1rem 0.45rem;
+  border-radius: 9999px;
 }
 
 .verified-pill {

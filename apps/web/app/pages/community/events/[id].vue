@@ -288,22 +288,19 @@ onMounted(loadEvent);
           </div>
 
           <div class="event-join-actions">
+            <div v-if="isJoined" class="joined-badge">
+              <GIcon name="check" size="xs" color="#15803D" filled />
+              <span>Anda Terdaftar</span>
+            </div>
             <button
+              v-else
               class="button button--primary join-btn"
               type="button"
-              :disabled="joining || isJoined"
+              :disabled="joining"
               @click="joinEvent"
             >
-              <GIcon :name="isJoined ? 'check' : 'bike'" size="xs" />
-              <span>
-                {{
-                  joining
-                    ? 'Mendaftarkan…'
-                    : isJoined
-                      ? 'Anda Terdaftar'
-                      : 'Gabung Mabar'
-                }}
-              </span>
+              <GIcon name="bike" size="xs" />
+              <span>{{ joining ? 'Mendaftarkan…' : 'Gabung Mabar' }}</span>
             </button>
             <button
               class="button button--secondary share-invite-btn"
@@ -585,6 +582,19 @@ onMounted(loadEvent);
   font-weight: 850;
 }
 
+.joined-badge {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.35rem;
+  padding: 0.45rem 0.85rem;
+  font-size: 0.78rem;
+  font-weight: 850;
+  color: #15803D;
+  background: rgba(22, 163, 74, 0.12);
+  border: 1px solid rgba(22, 163, 74, 0.25);
+  border-radius: 0.65rem;
+}
+
 .share-invite-btn {
   display: inline-flex;
   align-items: center;
@@ -596,6 +606,7 @@ onMounted(loadEvent);
   border: 1px solid var(--color-ink);
   color: var(--color-ink);
   cursor: pointer;
+  border-radius: 0.65rem;
 }
 
 .permission-note {
