@@ -1,5 +1,7 @@
 import { afterEach, describe, expect, it } from 'vitest';
-import { buildApp } from '../app.js';
+import { GenerateRideStoryResponseSchema } from '@goweskit/contracts';
+
+import { buildApp, type AppServices } from '../app.js';
 import { RideFlexService } from '../services/ride-flex-service.js';
 
 const openApps: ReturnType<typeof buildApp>[] = [];
@@ -8,14 +10,14 @@ function buildRideFlexApp() {
   const app = buildApp({
     logger: false,
     services: {
-      auth: {} as any,
-      catalog: {} as any,
-      compatibility: {} as any,
-      community: {} as any,
-      explore: {} as any,
-      garage: {} as any,
-      installedComponents: {} as any,
-      maintenance: {} as any,
+      auth: {} as AppServices['auth'],
+      catalog: {} as AppServices['catalog'],
+      compatibility: {} as AppServices['compatibility'],
+      community: {} as AppServices['community'],
+      explore: {} as AppServices['explore'],
+      garage: {} as AppServices['garage'],
+      installedComponents: {} as AppServices['installedComponents'],
+      maintenance: {} as AppServices['maintenance'],
       rideFlex: new RideFlexService(),
     },
   });
@@ -43,7 +45,7 @@ describe('Ride Flex routes', () => {
     });
 
     expect(response.statusCode).toBe(200);
-    const body = response.json();
+    const body = GenerateRideStoryResponseSchema.parse(response.json());
     expect(body.effortRating).toBe('hard');
     expect(body.averageSpeedKmh).toBe(23.3);
     expect(body.title).toContain('Lembang Peak');

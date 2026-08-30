@@ -56,7 +56,11 @@ export class RideFlexService {
       effortRating = 'legendary';
     } else if (distanceKm >= 75 || elevationGainMeters >= 900) {
       effortRating = 'epic';
-    } else if (distanceKm >= 40 || elevationGainMeters >= 400 || avgSpeed >= 28) {
+    } else if (
+      distanceKm >= 40 ||
+      elevationGainMeters >= 400 ||
+      avgSpeed >= 28
+    ) {
       effortRating = 'hard';
     }
 
@@ -118,41 +122,43 @@ export class RideFlexService {
     ];
 
     // 6. Default Deterministic Story & Captions
-    let title = routeName
-      ? `${routeName} (${distanceKm}km)`
-      : `Gowes Pagi Bersama ${bikeName}`;
+    let title: string;
     if (effortRating === 'legendary') {
       title = routeName
-        ? `⚔️ ${routeName}: Ekspedisi ${distanceKm}km Legendaris!`
-        : `⚔️ Ekspedisi Legendaris: ${distanceKm}km Penakluk Elevasi!`;
+        ? `⚔️ ${routeName}: Ekspedisi ${String(distanceKm)}km Legendaris!`
+        : `⚔️ Ekspedisi Legendaris: ${String(distanceKm)}km Penakluk Elevasi!`;
     } else if (effortRating === 'epic') {
       title = routeName
-        ? `🔥 ${routeName}: +${elevationGainMeters}m Elevasi Tuntas!`
-        : `🔥 Epic Century Mission: +${elevationGainMeters}m Elevasi Tuntas!`;
+        ? `🔥 ${routeName}: +${String(elevationGainMeters)}m Elevasi Tuntas!`
+        : `🔥 Epic Century Mission: +${String(elevationGainMeters)}m Elevasi Tuntas!`;
     } else if (effortRating === 'hard') {
       title = routeName
-        ? `⚡ ${routeName}: ${avgSpeed} km/h Fast Pace!`
-        : `⚡ Fast Tempo Run: ${avgSpeed} km/h Tanpa Ampun!`;
+        ? `⚡ ${routeName}: ${String(avgSpeed)} km/h Fast Pace!`
+        : `⚡ Fast Tempo Run: ${String(avgSpeed)} km/h Tanpa Ampun!`;
     } else if (effortRating === 'recovery') {
       title = routeName
         ? `☕ ${routeName}: Recovery Ride Santai`
         : `☕ Recovery Ride Santai: Putaran Tipis Menikmati Pagi`;
     } else {
       title = routeName
-        ? `🚴 ${routeName}: ${distanceKm}km Rolling Pace`
-        : `🚴 Morning Rolling Loop: ${distanceKm}km Solid Pace`;
+        ? `🚴 ${routeName}: ${String(distanceKm)}km Rolling Pace`
+        : `🚴 Morning Rolling Loop: ${String(distanceKm)}km Solid Pace`;
     }
 
     const highlight =
       elevationGainMeters > 300
-        ? `Berhasil melibas tanjakan +${elevationGainMeters}m dengan rata-rata kecepatan ${avgSpeed} km/h.`
-        : `Menyelesaikan rute sejauh ${distanceKm} km dalam waktu ${durationMinutes} menit dengan ritme stabil.`;
+        ? `Berhasil melibas tanjakan +${String(elevationGainMeters)}m dengan rata-rata kecepatan ${String(avgSpeed)} km/h.`
+        : `Menyelesaikan rute sejauh ${String(distanceKm)} km dalam waktu ${String(durationMinutes)} menit dengan ritme stabil.`;
 
-    const athleteCaption = `🎯 ${distanceKm} km · +${elevationGainMeters}m Elevasi · Avg ${avgSpeed} km/h. Sesi latihan konsisten mempertahankan power output & cadence stabil bersama ${bikeName}. Fokus pada recovery dan nutrisi setelah membakar estimasi ~${estimatedCaloriesKcal} kcal.`;
+    const athleteCaption = `🎯 ${String(distanceKm)} km · +${String(elevationGainMeters)}m Elevasi · Avg ${String(avgSpeed)} km/h. Sesi latihan konsisten mempertahankan power output & cadence stabil bersama ${bikeName}. Fokus pada recovery dan nutrisi setelah membakar estimasi ~${String(estimatedCaloriesKcal)} kcal.`;
 
-    const humorCaption = `🚴 Gowes niatnya cuma cari sarapan tipis-tipis, tau-tau speedometer tembus ${distanceKm} km dengan tanjakan ${elevationGainMeters}m! Kaki auto bergetar pas pesen ${foodEquivalency}. Yang penting kopi dapet, konten dapet, flexing jalan! 😂☕`;
+    const humorCaption = `🚴 Gowes niatnya cuma cari sarapan tipis-tipis, tau-tau speedometer tembus ${String(distanceKm)} km dengan tanjakan ${String(elevationGainMeters)}m! Kaki auto bergetar pas pesen ${foodEquivalency}. Yang penting kopi dapet, konten dapet, flexing jalan! 😂☕`;
 
-    const technicalCaption = `⚙️ Rute: ${routeName || 'City to Hills'} (${distanceKm} km). Setup drivetrain pada ${bikeName} bekerja mulus di gradien ${climbGradeScore}. Kecepatan rata-rata ${avgSpeed} km/h dengan efisiensi putaran crank optimal.${weatherTempC ? ` Suhu udara sekitar ${weatherTempC}°C.` : ''}`;
+    const routeLabel =
+      routeName === undefined || routeName.length === 0
+        ? 'City to Hills'
+        : routeName;
+    const technicalCaption = `⚙️ Rute: ${routeLabel} (${String(distanceKm)} km). Setup drivetrain pada ${bikeName} bekerja mulus di gradien ${climbGradeScore}. Kecepatan rata-rata ${String(avgSpeed)} km/h dengan efisiensi putaran crank optimal.${weatherTempC ? ` Suhu udara sekitar ${String(weatherTempC)}°C.` : ''}`;
 
     let finalTitle = title;
     let finalHighlight = highlight;
@@ -176,9 +182,11 @@ export class RideFlexService {
 
       if (llmResult?.title) finalTitle = llmResult.title;
       if (llmResult?.highlight) finalHighlight = llmResult.highlight;
-      if (llmResult?.captions?.athlete) finalAthlete = llmResult.captions.athlete;
+      if (llmResult?.captions?.athlete)
+        finalAthlete = llmResult.captions.athlete;
       if (llmResult?.captions?.humor) finalHumor = llmResult.captions.humor;
-      if (llmResult?.captions?.technical) finalTechnical = llmResult.captions.technical;
+      if (llmResult?.captions?.technical)
+        finalTechnical = llmResult.captions.technical;
     }
 
     return {
@@ -206,19 +214,23 @@ export class RideFlexService {
     durationMinutes: number;
     avgSpeed: number;
     bikeName: string;
-    routeName?: string;
+    routeName: string | undefined;
     effortRating: string;
     foodEquivalency: string;
     climbGradeScore: string;
   }): Promise<LlmStoryOutput | null> {
     try {
+      const promptRouteName =
+        params.routeName === undefined || params.routeName.length === 0
+          ? 'Rute Eksplorasi'
+          : params.routeName;
       const prompt = `Anda adalah Agentic AI Ride Coach & Storyteller GowesKit (platform sepeda Indonesia).
 Buat caption sosial media & flexing ride sinematik dalam bahasa Indonesia yang seru dan natural berdasarkan data:
-- Jarak: ${params.distanceKm} km
-- Elevasi: +${params.elevationGainMeters} m (${params.climbGradeScore})
-- Durasi: ${params.durationMinutes} menit (Avg ${params.avgSpeed} km/h)
+- Jarak: ${String(params.distanceKm)} km
+- Elevasi: +${String(params.elevationGainMeters)} m (${params.climbGradeScore})
+- Durasi: ${String(params.durationMinutes)} menit (Avg ${String(params.avgSpeed)} km/h)
 - Sepeda: ${params.bikeName}
-- Rute: ${params.routeName || 'Rute Eksplorasi'}
+- Rute: ${promptRouteName}
 - Tingkat Beban: ${params.effortRating}
 - Makanan Setara: ${params.foodEquivalency}
 
@@ -233,7 +245,9 @@ Kembalikan format JSON persis seperti ini:
   }
 }`;
 
-      const url = `https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-flash:generateContent?key=${this.geminiApiKey}`;
+      const geminiApiKey = this.geminiApiKey;
+      if (geminiApiKey === null) return null;
+      const url = `https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-flash:generateContent?key=${geminiApiKey}`;
       const response = await this.fetchFn(url, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
@@ -249,9 +263,9 @@ Kembalikan format JSON persis seperti ini:
 
       if (!response.ok) return null;
       const data = (await response.json()) as {
-        candidates?: Array<{
-          content?: { parts?: Array<{ text?: string }> };
-        }>;
+        candidates?: {
+          content?: { parts?: { text?: string }[] };
+        }[];
       };
       const text = data.candidates?.[0]?.content?.parts?.[0]?.text;
       if (!text) return null;

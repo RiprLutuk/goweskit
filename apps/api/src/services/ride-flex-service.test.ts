@@ -12,6 +12,7 @@ describe('RideFlexService', () => {
       bikeName: 'Canyon Ultimate CF SLX',
       routeName: 'Km 0 Sentul to Rainbow Hills',
       weatherTempC: 28,
+      cyclistPersona: 'balanced',
     });
 
     expect(res.effortRating).toBe('epic');
@@ -29,6 +30,7 @@ describe('RideFlexService', () => {
       elevationGainMeters: 20,
       durationMinutes: 45,
       bikeName: 'Brompton M6R',
+      cyclistPersona: 'balanced',
     });
 
     expect(res.effortRating).toBe('recovery');
@@ -37,30 +39,40 @@ describe('RideFlexService', () => {
   });
 
   it('enhances captions using Gemini API when configured and available', async () => {
-    const mockFetch = (async () => ({
-      ok: true,
-      json: async () => ({
-        candidates: [
-          {
-            content: {
-              parts: [
-                {
-                  text: JSON.stringify({
-                    title: '🚀 Sentul Beast Climb 2026',
-                    highlight: 'Menembus batas kecepatan di tanjakan terjal!',
-                    captions: {
-                      athlete: 'Solid 45k ride with unstoppable cadence. #UltraGowes',
-                      humor: 'Gowes tipis cari nasi uduk, dapet bonus betis kram. #GowesSeru',
-                      technical: 'Shimano Ultegra Di2 shifting without lag.',
+    const mockFetch: typeof fetch = () =>
+      Promise.resolve(
+        new Response(
+          JSON.stringify({
+            candidates: [
+              {
+                content: {
+                  parts: [
+                    {
+                      text: JSON.stringify({
+                        title: '🚀 Sentul Beast Climb 2026',
+                        highlight:
+                          'Menembus batas kecepatan di tanjakan terjal!',
+                        captions: {
+                          athlete:
+                            'Solid 45k ride with unstoppable cadence. #UltraGowes',
+                          humor:
+                            'Gowes tipis cari nasi uduk, dapet bonus betis kram. #GowesSeru',
+                          technical:
+                            'Shimano Ultegra Di2 shifting without lag.',
+                        },
+                      }),
                     },
-                  }),
+                  ],
                 },
-              ],
-            },
+              },
+            ],
+          }),
+          {
+            status: 200,
+            headers: { 'content-type': 'application/json' },
           },
-        ],
-      }),
-    })) as unknown as typeof fetch;
+        ),
+      );
 
     const aiService = new RideFlexService({
       geminiApiKey: 'test-gemini-key',
@@ -72,6 +84,7 @@ describe('RideFlexService', () => {
       elevationGainMeters: 550,
       durationMinutes: 100,
       bikeName: 'Trek Emonda',
+      cyclistPersona: 'balanced',
     });
 
     expect(res.title).toBe('🚀 Sentul Beast Climb 2026');
