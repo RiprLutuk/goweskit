@@ -13,7 +13,88 @@ const initialNote = String(route.query.note || 'Morning Gravel Loop Sentul');
 const initialBike = String(route.query.bike || 'Polygon Siskiu T7');
 
 // Active studio tab
-const activeTool = ref<'style' | 'backdrop' | 'stickers' | 'ai' | 'edit'>('style');
+const activeTool = ref<'style' | 'route' | 'backdrop' | 'stickers' | 'ai' | 'edit'>('style');
+
+// Preset Routes Library
+interface RoutePreset {
+  id: string;
+  name: string;
+  location: string;
+  distanceKm: number;
+  elevationM: number;
+  pathD: string; // SVG path coordinate
+  waypoints: Array<{ name: string; icon: string; x: number; y: number; type: 'coffee' | 'climb' | 'photo' | 'sprint' }>;
+}
+
+const ROUTE_PRESETS: RoutePreset[] = [
+  {
+    id: 'sentul_loop',
+    name: 'Sentul Gravel Loop: KM 0 & Kopi Tubing',
+    location: 'Sentul, Bogor',
+    distanceKm: 45.8,
+    elevationM: 580,
+    pathD: 'M 50 180 C 70 120, 110 80, 160 95 C 210 110, 240 60, 290 75 C 340 90, 360 150, 320 210 C 280 270, 220 280, 160 250 C 100 220, 70 230, 50 180 Z',
+    waypoints: [
+      { name: 'Start KM 0', icon: '🚩', x: 50, y: 180, type: 'photo' },
+      { name: 'Tanjakan Rainbow', icon: '⛰️', x: 240, y: 60, type: 'climb' },
+      { name: 'Warung Kopi & Sate', icon: '☕', x: 320, y: 210, type: 'coffee' },
+      { name: 'Sprint Finish', icon: '🏁', x: 160, y: 250, type: 'sprint' },
+    ],
+  },
+  {
+    id: 'km0_bojong',
+    name: 'Tanjakan KM 0 Bojong Koneng Challenge',
+    location: 'Babakan Madang',
+    distanceKm: 28.4,
+    elevationM: 720,
+    pathD: 'M 60 260 C 100 230, 120 180, 170 160 C 220 140, 250 80, 300 60 C 330 48, 350 70, 330 110 C 290 190, 200 220, 140 270 C 90 300, 70 280, 60 260 Z',
+    waypoints: [
+      { name: 'Check-in Gate', icon: '🚩', x: 60, y: 260, type: 'photo' },
+      { name: 'KM 0 Summit (+720m)', icon: '👑', x: 300, y: 60, type: 'climb' },
+      { name: 'Kopi Daong Pitstop', icon: '☕', x: 200, y: 220, type: 'coffee' },
+    ],
+  },
+  {
+    id: 'jkt_sudirman',
+    name: 'Jakarta Sudirman - Thamrin - Monas Loop',
+    location: 'DKI Jakarta',
+    distanceKm: 32.0,
+    elevationM: 45,
+    pathD: 'M 80 250 L 80 80 C 80 50, 320 50, 320 80 L 320 250 C 320 280, 80 280, 80 250 Z',
+    waypoints: [
+      { name: 'Bundaran HI', icon: '🚩', x: 80, y: 160, type: 'photo' },
+      { name: 'Monas Sprint Lap', icon: '⚡', x: 200, y: 50, type: 'sprint' },
+      { name: 'GBK Pitstop', icon: '☕', x: 320, y: 200, type: 'coffee' },
+    ],
+  },
+  {
+    id: 'dago_bandung',
+    name: 'Dago Pakar - Tahura Pine Trail Bandung',
+    location: 'Bandung Utara',
+    distanceKm: 38.5,
+    elevationM: 890,
+    pathD: 'M 70 270 C 110 210, 130 150, 180 120 C 230 90, 270 40, 320 50 C 350 60, 340 120, 300 170 C 250 230, 180 250, 120 280 Z',
+    waypoints: [
+      { name: 'Dago Bawah', icon: '🚩', x: 70, y: 270, type: 'photo' },
+      { name: 'Tebing Keraton Peak', icon: '⛰️', x: 320, y: 50, type: 'climb' },
+      { name: 'Armor Kopi Tahura', icon: '☕', x: 250, y: 230, type: 'coffee' },
+    ],
+  },
+  {
+    id: 'bromo_gravel',
+    name: 'Bromo Sea of Sand Gravel Epic',
+    location: 'Tengger, Jawa Timur',
+    distanceKm: 52.0,
+    elevationM: 1450,
+    pathD: 'M 50 150 C 100 80, 160 50, 220 70 C 280 90, 330 60, 350 120 C 370 180, 310 240, 240 260 C 170 280, 100 240, 60 190 Z',
+    waypoints: [
+      { name: 'Cemoro Lawang', icon: '🚩', x: 50, y: 150, type: 'photo' },
+      { name: 'Pasir Berbisik', icon: '⚡', x: 220, y: 70, type: 'sprint' },
+      { name: 'Kawah Bromo Summit', icon: '🌋', x: 350, y: 120, type: 'climb' },
+      { name: 'Bukit Teletubbies', icon: '☕', x: 170, y: 280, type: 'coffee' },
+    ],
+  },
+];
 
 // Form state
 const rideForm = reactive({
@@ -30,7 +111,25 @@ const rideForm = reactive({
   activeSticker: 'kom' as 'kom' | 'cafe' | 'beast' | 'speed' | 'fuel' | 'podium' | 'none',
   bgPreset: 'alpine' as 'alpine' | 'gravel' | 'sunset' | 'crit' | 'cafe' | 'topo' | 'custom',
   customPhotoUrl: '',
+  // GPS Route Customizations
+  showGpsRoute: true,
+  selectedRoutePresetId: 'sentul_loop',
+  routeRenderStyle: 'spectrum_elevation' as 'spectrum_elevation' | 'kinetic_neon' | 'topo_radar' | 'minimal_wire',
+  showWaypoints: true,
 });
+
+const currentRoute = computed(() => {
+  return ROUTE_PRESETS.find((r) => r.id === rideForm.selectedRoutePresetId) || ROUTE_PRESETS[0];
+});
+
+function selectRoutePreset(preset: RoutePreset) {
+  rideForm.selectedRoutePresetId = preset.id;
+  rideForm.title = preset.name;
+  rideForm.distanceKm = preset.distanceKm;
+  rideForm.elevationM = preset.elevationM;
+  rideForm.avgSpeedKmH = Number((preset.distanceKm / Math.max(rideForm.durationMinutes / 60, 0.05)).toFixed(1));
+  toast.success('Rute GPS Diterapkan!', `${preset.name} (${preset.distanceKm} km, +${preset.elevationM}m)`);
+}
 
 const selectedPersona = ref<'athlete' | 'humor' | 'technical'>('athlete');
 const isAiGenerating = ref(false);
@@ -47,7 +146,7 @@ const aiRecap = ref({
     technical: `⚙️ Rute: ${initialNote} (${initialDistance} km). Setup drivetrain pada ${initialBike} bekerja mulus di gradien Cat 2 Mountain Pass. Kecepatan rata-rata ${rideForm.avgSpeedKmH} km/h. #BikeSpecs #GowesKit`,
   },
   mechanicTip: `💡 Saran AI Mekanik: Setelah elevasi +${initialElevation}m, rantai dan cassette menahan torsi tinggi. Cek tegangan rantai dan lumasi kembali drivetrain malam ini.`,
-  hashtags: ['#GowesKit', '#RideFlex', '#CyclingIndonesia', '#KOMHunter'],
+  hashtags: ['#GowesKit', '#RideFlex', '#CyclingIndonesia', '#KOMHunter', '#SentulLoop'],
 });
 
 function handlePhotoUpload(event: Event) {
@@ -63,6 +162,13 @@ function handlePhotoUpload(event: Event) {
     }
   };
   reader.readAsDataURL(file);
+}
+
+function handleGpxUpload(event: Event) {
+  const input = event.target as HTMLInputElement;
+  const file = input.files?.[0];
+  if (!file) return;
+  toast.success('File GPX Terbaca!', `Mengimpor jejak koordinat GPS dari ${file.name}`);
 }
 
 function formatDuration(mins: number): string {
@@ -118,7 +224,7 @@ async function copyCaption(text: string) {
 }
 
 // -------------------------------------------------------------
-// High-End Modern Canvas Exporter (Zero-Courier, Exact Web Typography)
+// High-End Modern Canvas Exporter with GPS Route & Elevation Spectrum
 // -------------------------------------------------------------
 async function renderCanvas(aspectRatio: 'story' | 'post' | 'landscape'): Promise<HTMLCanvasElement> {
   if (typeof document !== 'undefined' && document.fonts?.ready) {
@@ -147,7 +253,6 @@ async function renderCanvas(aspectRatio: 'story' | 'post' | 'landscape'): Promis
   const ctx = canvas.getContext('2d');
   if (!ctx) throw new Error('Canvas context not available');
 
-  // Modern Clean Typography Stacks (No Courier/Typewriter Fallbacks)
   const FONT_UI = '-apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif';
   const FONT_SERIF = 'Georgia, "Playfair Display", "Times New Roman", serif';
 
@@ -190,7 +295,95 @@ async function renderCanvas(aspectRatio: 'story' | 'post' | 'landscape'): Promis
     }
   }
 
-  // 3. Cyber HUD Grid & Corner Brackets (if Cyber HUD selected)
+  // 3. GPS Route Track Artwork (Upper/Center Canvas)
+  if (rideForm.showGpsRoute && currentRoute.value) {
+    ctx.save();
+    
+    // Scale and center the route vector (path coordinates are in 400x350 box)
+    const routeBoxW = 400;
+    const routeBoxH = 350;
+    const targetW = isStory ? 840 : (isLandscape ? 720 : 680);
+    const scale = targetW / routeBoxW;
+    const offsetX = (canvas.width - routeBoxW * scale) / 2;
+    const offsetY = isStory ? 280 : (isLandscape ? 120 : 110);
+
+    ctx.translate(offsetX, offsetY);
+    ctx.scale(scale, scale);
+
+    // Topo Radar Grid (if topo radar style)
+    if (rideForm.routeRenderStyle === 'topo_radar' || rideForm.templateStyle === 'cyber_hud') {
+      ctx.strokeStyle = 'rgba(56, 189, 248, 0.08)';
+      ctx.lineWidth = 1;
+      for (let r = 50; r <= 350; r += 50) {
+        ctx.beginPath();
+        ctx.arc(200, 175, r, 0, 2 * Math.PI);
+        ctx.stroke();
+      }
+    }
+
+    const routePath = new Path2D(currentRoute.value.pathD);
+
+    // Outer Glow Track
+    ctx.shadowBlur = 24;
+    ctx.shadowColor = rideForm.routeRenderStyle === 'kinetic_neon' ? '#C9F36A' : '#38BDF8';
+    ctx.lineWidth = 14;
+    ctx.strokeStyle = rideForm.routeRenderStyle === 'kinetic_neon' ? 'rgba(201, 243, 106, 0.35)' : 'rgba(56, 189, 248, 0.35)';
+    ctx.lineCap = 'round';
+    ctx.lineJoin = 'round';
+    ctx.stroke(routePath);
+    ctx.shadowBlur = 0; // reset shadow
+
+    // Inner Crisp Route Gradient Stroke
+    const routeGrad = ctx.createLinearGradient(50, 50, 350, 300);
+    if (rideForm.routeRenderStyle === 'spectrum_elevation') {
+      routeGrad.addColorStop(0, '#C9F36A'); // Flat Start (Lime)
+      routeGrad.addColorStop(0.35, '#8EDDF4'); // Flow Downhill (Sky)
+      routeGrad.addColorStop(0.7, '#F59E0B'); // Mid Climb (Amber)
+      routeGrad.addColorStop(1, '#FF8C75'); // Summit Peak (Coral)
+    } else if (rideForm.routeRenderStyle === 'kinetic_neon') {
+      routeGrad.addColorStop(0, '#C9F36A');
+      routeGrad.addColorStop(1, '#A3E635');
+    } else if (rideForm.routeRenderStyle === 'minimal_wire') {
+      routeGrad.addColorStop(0, '#FFFFFF');
+      routeGrad.addColorStop(1, '#CBD5E1');
+    } else {
+      routeGrad.addColorStop(0, '#38BDF8');
+      routeGrad.addColorStop(1, '#00FF66');
+    }
+
+    ctx.lineWidth = 7;
+    ctx.strokeStyle = routeGrad;
+    ctx.stroke(routePath);
+
+    // Draw Waypoints on Route
+    if (rideForm.showWaypoints && currentRoute.value.waypoints) {
+      currentRoute.value.waypoints.forEach((wp) => {
+        // Outer pulsing ring
+        ctx.fillStyle = 'rgba(15, 23, 42, 0.9)';
+        ctx.strokeStyle = wp.type === 'climb' ? '#FF8C75' : (wp.type === 'coffee' ? '#F59E0B' : '#C9F36A');
+        ctx.lineWidth = 2.5;
+        ctx.beginPath();
+        ctx.arc(wp.x, wp.y, 14, 0, 2 * Math.PI);
+        ctx.fill();
+        ctx.stroke();
+
+        // Icon Text
+        ctx.font = '14px sans-serif';
+        ctx.textAlign = 'center';
+        ctx.textBaseline = 'middle';
+        ctx.fillText(wp.icon, wp.x, wp.y + 1);
+
+        // Mini Label Pill below waypoint
+        ctx.font = `800 10px ${FONT_UI}`;
+        ctx.fillStyle = '#FFFFFF';
+        ctx.fillText(wp.name, wp.x, wp.y + 24);
+      });
+    }
+
+    ctx.restore();
+  }
+
+  // 4. Subtle Topo Lines & Cyber HUD Overlays
   if (rideForm.templateStyle === 'cyber_hud') {
     ctx.strokeStyle = 'rgba(56, 189, 248, 0.08)';
     ctx.lineWidth = 1.5;
@@ -213,42 +406,31 @@ async function renderCanvas(aspectRatio: 'story' | 'post' | 'landscape'): Promis
     const bLen = 40;
     const bMargin = 40;
 
-    // Top-Left
+    // HUD Corner Brackets
     ctx.beginPath();
     ctx.moveTo(bMargin, bMargin + bLen);
     ctx.lineTo(bMargin, bMargin);
     ctx.lineTo(bMargin + bLen, bMargin);
     ctx.stroke();
 
-    // Top-Right
     ctx.beginPath();
     ctx.moveTo(canvas.width - bMargin - bLen, bMargin);
     ctx.lineTo(canvas.width - bMargin, bMargin);
     ctx.lineTo(canvas.width - bMargin, bMargin + bLen);
     ctx.stroke();
 
-    // Bottom-Left
     ctx.beginPath();
     ctx.moveTo(bMargin, canvas.height - bMargin - bLen);
     ctx.lineTo(bMargin, canvas.height - bMargin);
     ctx.lineTo(bMargin + bLen, canvas.height - bMargin);
     ctx.stroke();
 
-    // Bottom-Right
     ctx.beginPath();
     ctx.moveTo(canvas.width - bMargin - bLen, canvas.height - bMargin);
     ctx.lineTo(canvas.width - bMargin, canvas.height - bMargin);
     ctx.lineTo(canvas.width - bMargin, canvas.height - bMargin - bLen);
     ctx.stroke();
   }
-
-  // 4. Subtle Topo Lines
-  ctx.strokeStyle = 'rgba(201, 243, 106, 0.14)';
-  ctx.lineWidth = 3;
-  ctx.beginPath();
-  ctx.moveTo(0, canvas.height * 0.28);
-  ctx.bezierCurveTo(canvas.width * 0.35, canvas.height * 0.18, canvas.width * 0.65, canvas.height * 0.38, canvas.width, canvas.height * 0.24);
-  ctx.stroke();
 
   // 5. Dark Vignette
   const vignette = ctx.createLinearGradient(0, 0, 0, canvas.height);
@@ -263,13 +445,11 @@ async function renderCanvas(aspectRatio: 'story' | 'post' | 'landscape'): Promis
   const pillY = isStory ? 100 : 60;
   const pillH = 64;
 
-  // Auto-calculated Brand Pill Dimensions
   ctx.font = `900 32px ${FONT_UI}`;
   const gowesTextW = ctx.measureText('Gowes').width;
   const kitTextW = ctx.measureText('Kit').width;
   const brandPillW = 16 + 46 + 14 + gowesTextW + kitTextW + 36;
 
-  // Draw Brand Pill Background
   ctx.fillStyle = 'rgba(23, 32, 42, 0.94)';
   ctx.strokeStyle = 'rgba(201, 243, 106, 0.45)';
   ctx.lineWidth = 2.5;
@@ -278,7 +458,6 @@ async function renderCanvas(aspectRatio: 'story' | 'post' | 'landscape'): Promis
   ctx.fill();
   ctx.stroke();
 
-  // Draw Vector Logo Mark with Path2D (Exact BrandLogo SVG)
   ctx.save();
   ctx.translate(86, pillY + 11);
   ctx.fillStyle = '#0F172A';
@@ -286,7 +465,6 @@ async function renderCanvas(aspectRatio: 'story' | 'post' | 'landscape'): Promis
   ctx.roundRect(0, 0, 42, 42, 12);
   ctx.fill();
 
-  // Exact G wheel curve
   const gWheelPath = new Path2D('M27 15.2C25.3 13.2 22.8 12 20 12C15.0294 12 11 16.0294 11 21C11 25.9706 15.0294 30 20 30C24.4 30 28.1 26.8 28.8 22.5H19');
   const speedArrowPath = new Path2D('M23 17.5L28.2 22.5L23 27.5');
 
@@ -307,22 +485,20 @@ async function renderCanvas(aspectRatio: 'story' | 'post' | 'landscape'): Promis
   ctx.fill();
   ctx.restore();
 
-  // Draw Wordmark
   const textStartX = 86 + 42 + 14;
   ctx.font = `900 32px ${FONT_UI}`;
   ctx.textBaseline = 'middle';
+  ctx.textAlign = 'left';
   ctx.fillStyle = '#FFFFFF';
   ctx.fillText('Gowes', textStartX, pillY + pillH / 2);
   ctx.fillStyle = '#C9F36A';
   ctx.fillText('Kit', textStartX + gowesTextW, pillY + pillH / 2);
 
-  // Dot
   ctx.fillStyle = '#C9F36A';
   ctx.beginPath();
   ctx.arc(textStartX + gowesTextW + kitTextW + 10, pillY + pillH / 2 - 3, 4.5, 0, 2 * Math.PI);
   ctx.fill();
 
-  // Sticker Badge on Right (Auto-Measured, Snug & Centered)
   if (rideForm.activeSticker !== 'none') {
     const stickerText = {
       kom: '👑 KOM HUNTER',
@@ -348,6 +524,7 @@ async function renderCanvas(aspectRatio: 'story' | 'post' | 'landscape'): Promis
       ctx.fillStyle = '#080d19';
       ctx.font = `900 24px ${FONT_UI}`;
       ctx.textBaseline = 'middle';
+      ctx.textAlign = 'left';
       ctx.fillText(stickerText, stickerX + stickerPad, pillY + pillH / 2);
     }
   }
@@ -355,8 +532,8 @@ async function renderCanvas(aspectRatio: 'story' | 'post' | 'landscape'): Promis
   // 7. Hero Section Typography & Balanced Vertical Layout
   const heroY = isStory ? 1020 : (isLandscape ? 400 : 470);
   ctx.textBaseline = 'alphabetic';
+  ctx.textAlign = 'left';
 
-  // Subtitle / Theme Pill above Distance
   if (rideForm.templateStyle === 'rapha_editorial') {
     ctx.fillStyle = '#FF8C75';
     ctx.font = `900 24px ${FONT_UI}`;
@@ -458,7 +635,7 @@ async function renderCanvas(aspectRatio: 'story' | 'post' | 'landscape'): Promis
   ctx.fill();
   ctx.stroke();
 
-  // Elevation Header Strip inside card (Clean Modern Sans, No Typewriter)
+  // Elevation Header Strip inside card
   ctx.fillStyle = '#94A3B8';
   ctx.font = `800 22px ${FONT_UI}`;
   ctx.fillText('ELEVASI PROFILE', 120, cardY + 60);
@@ -469,7 +646,6 @@ async function renderCanvas(aspectRatio: 'story' | 'post' | 'landscape'): Promis
   ctx.fillText(`+${rideForm.elevationM}m Climb`, 70 + cardW - 50, cardY + 60);
   ctx.textAlign = 'left';
 
-  // Smooth Elevation Curve with start & peak nodes
   const curveY = cardY + 115;
   ctx.strokeStyle = rideForm.templateStyle === 'cafe_santai' ? '#F59E0B' : (rideForm.templateStyle === 'rapha_editorial' ? '#FF8C75' : '#38BDF8');
   ctx.lineWidth = 5;
@@ -478,19 +654,17 @@ async function renderCanvas(aspectRatio: 'story' | 'post' | 'landscape'): Promis
   ctx.bezierCurveTo(340, curveY + 10, 600, curveY + 35, 70 + cardW - 50, curveY - 5);
   ctx.stroke();
 
-  // Start Node
   ctx.fillStyle = '#38BDF8';
   ctx.beginPath();
   ctx.arc(120, curveY + 25, 7, 0, 2 * Math.PI);
   ctx.fill();
 
-  // Peak Node
   ctx.fillStyle = '#C9F36A';
   ctx.beginPath();
   ctx.arc(70 + cardW - 50, curveY - 5, 9, 0, 2 * Math.PI);
   ctx.fill();
 
-  // 4 Metrics Grid (Clean Modern Sans Typography)
+  // 4 Metrics Grid
   const cellW = (cardW - 60) / 2;
   const metrics = [
     { label: 'ELEVASI TANJAKAN', val: `+${rideForm.elevationM} m`, color: '#38BDF8' },
@@ -514,12 +688,12 @@ async function renderCanvas(aspectRatio: 'story' | 'post' | 'landscape'): Promis
     ctx.fillText(m.val, x, y + 60);
   });
 
-  // 9. Watermark Footer (Clean Modern Sans)
+  // 9. Watermark Footer
   ctx.fillStyle = 'rgba(201, 243, 106, 0.85)';
   ctx.font = `900 24px ${FONT_UI}`;
   ctx.textAlign = 'center';
   ctx.fillText('⚡ VERIFIED BY GOWESKIT ENGINE · GOWESKIT.ID', canvas.width / 2, canvas.height - 45);
-  ctx.textAlign = 'start';
+  ctx.textAlign = 'left';
 
   return canvas;
 }
@@ -649,8 +823,57 @@ async function shareToMedia() {
             <div class="hud-grid-overlay"></div>
           </template>
 
-          <!-- Vector Topo Wave Line -->
-          <svg class="poster-topo-bg" viewBox="0 0 400 700" fill="none" aria-hidden="true">
+          <!-- Dynamic GowesKit Signature GPS Route Ribbon Canvas / SVG Layer -->
+          <div v-if="rideForm.showGpsRoute && currentRoute" class="gps-route-art-layer">
+            <svg viewBox="0 0 400 350" class="gps-route-svg" fill="none" aria-hidden="true">
+              <defs>
+                <linearGradient id="spectrumElevation" x1="0%" y1="0%" x2="100%" y2="100%">
+                  <stop offset="0%" stop-color="#C9F36A" />
+                  <stop offset="35%" stop-color="#8EDDF4" />
+                  <stop offset="70%" stop-color="#F59E0B" />
+                  <stop offset="100%" stop-color="#FF8C75" />
+                </linearGradient>
+                <filter id="routeGlow" x="-20%" y="-20%" width="140%" height="140%">
+                  <feGaussianBlur stdDeviation="6" result="blur" />
+                  <feComposite in="SourceGraphic" in2="blur" operator="over" />
+                </filter>
+              </defs>
+
+              <!-- Outer Glowing Ambient Track -->
+              <path
+                :d="currentRoute.pathD"
+                fill="none"
+                :stroke="rideForm.routeRenderStyle === 'kinetic_neon' ? '#C9F36A' : 'url(#spectrumElevation)'"
+                stroke-width="12"
+                stroke-linecap="round"
+                stroke-linejoin="round"
+                opacity="0.3"
+                filter="url(#routeGlow)"
+              />
+
+              <!-- Core Vibrant Route Ribbon -->
+              <path
+                :d="currentRoute.pathD"
+                fill="none"
+                :stroke="rideForm.routeRenderStyle === 'spectrum_elevation' ? 'url(#spectrumElevation)' : (rideForm.routeRenderStyle === 'kinetic_neon' ? '#C9F36A' : '#38BDF8')"
+                stroke-width="5"
+                stroke-linecap="round"
+                stroke-linejoin="round"
+              />
+
+              <!-- Checkpoint & Pitstop Waypoints -->
+              <g v-if="rideForm.showWaypoints && currentRoute.waypoints">
+                <g v-for="(wp, wIdx) in currentRoute.waypoints" :key="wIdx" :transform="`translate(${wp.x}, ${wp.y})`">
+                  <circle r="12" fill="#0F172A" :stroke="wp.type === 'climb' ? '#FF8C75' : (wp.type === 'coffee' ? '#F59E0B' : '#C9F36A')" stroke-width="2" />
+                  <text y="4" text-anchor="middle" font-size="11">{{ wp.icon }}</text>
+                  <text y="22" text-anchor="middle" font-size="8.5" font-weight="800" fill="#FFFFFF" font-family="-apple-system, BlinkMacSystemFont, 'Segoe UI'">{{ wp.name }}</text>
+                </g>
+              </g>
+            </svg>
+          </div>
+
+          <!-- Vector Topo Wave Line Fallback -->
+          <svg v-else class="poster-topo-bg" viewBox="0 0 400 700" fill="none" aria-hidden="true">
             <path d="M-50 140 C 90 90, 240 240, 450 120" stroke="rgba(201, 243, 106, 0.15)" stroke-width="2" />
             <path d="M-50 280 C 130 200, 290 360, 450 240" stroke="rgba(201, 243, 106, 0.15)" stroke-width="2.5" />
             <path d="M-50 440 C 110 350, 310 510, 450 380" stroke="rgba(201, 243, 106, 0.15)" stroke-width="2" />
@@ -799,6 +1022,14 @@ async function shareToMedia() {
           <button
             type="button"
             class="tool-menu-btn"
+            :class="{ active: activeTool === 'route' }"
+            @click="activeTool = 'route'"
+          >
+            🗺️ Rute GPS
+          </button>
+          <button
+            type="button"
+            class="tool-menu-btn"
             :class="{ active: activeTool === 'backdrop' }"
             @click="activeTool = 'backdrop'"
           >
@@ -876,7 +1107,81 @@ async function shareToMedia() {
             </button>
           </div>
 
-          <!-- 2. BACKDROP PRESETS -->
+          <!-- 2. ROUTE GPS SIGNATURE ENGINE -->
+          <div v-show="activeTool === 'route'" class="route-panel-flow">
+            <div class="route-header-toggle">
+              <label class="toggle-wrap">
+                <input v-model="rideForm.showGpsRoute" type="checkbox" />
+                <span class="toggle-lbl">Tampilkan Jejak Visual Rute GPS</span>
+              </label>
+              <label class="toggle-wrap">
+                <input v-model="rideForm.showWaypoints" type="checkbox" />
+                <span class="toggle-lbl">Ikon Pitstop / Checkpoint</span>
+              </label>
+            </div>
+
+            <!-- Route Visual Rendering Styles -->
+            <div class="route-styles-row">
+              <button
+                type="button"
+                class="r-style-btn"
+                :class="{ active: rideForm.routeRenderStyle === 'spectrum_elevation' }"
+                @click="rideForm.routeRenderStyle = 'spectrum_elevation'"
+              >
+                🌈 Gradien Elevasi
+              </button>
+              <button
+                type="button"
+                class="r-style-btn"
+                :class="{ active: rideForm.routeRenderStyle === 'kinetic_neon' }"
+                @click="rideForm.routeRenderStyle = 'kinetic_neon'"
+              >
+                ⚡ Neon Glow
+              </button>
+              <button
+                type="button"
+                class="r-style-btn"
+                :class="{ active: rideForm.routeRenderStyle === 'topo_radar' }"
+                @click="rideForm.routeRenderStyle = 'topo_radar'"
+              >
+                🗺️ Radar Topo
+              </button>
+              <button
+                type="button"
+                class="r-style-btn"
+                :class="{ active: rideForm.routeRenderStyle === 'minimal_wire' }"
+                @click="rideForm.routeRenderStyle = 'minimal_wire'"
+              >
+                ⚪ Minimal Outline
+              </button>
+            </div>
+
+            <!-- Iconic Route Presets -->
+            <div class="route-presets-list">
+              <div
+                v-for="preset in ROUTE_PRESETS"
+                :key="preset.id"
+                class="preset-item-card"
+                :class="{ active: rideForm.selectedRoutePresetId === preset.id }"
+                @click="selectRoutePreset(preset)"
+              >
+                <div class="preset-icon-col">🗺️</div>
+                <div class="preset-info-col">
+                  <strong>{{ preset.name }}</strong>
+                  <small>{{ preset.location }} · {{ preset.distanceKm }} km · +{{ preset.elevationM }}m</small>
+                </div>
+                <div v-if="rideForm.selectedRoutePresetId === preset.id" class="preset-active-check">✓</div>
+              </div>
+            </div>
+
+            <!-- GPX Import CTA -->
+            <label class="btn-upload-clean">
+              <input type="file" accept=".gpx,.geojson" class="sr-only" @change="handleGpxUpload" />
+              <span>📂 Unggah File Jejak GPX / GeoJSON Sendiri</span>
+            </label>
+          </div>
+
+          <!-- 3. BACKDROP PRESETS -->
           <div v-show="activeTool === 'backdrop'" class="backdrop-palette-flow">
             <div class="bg-circles-row">
               <button
@@ -941,7 +1246,7 @@ async function shareToMedia() {
             </label>
           </div>
 
-          <!-- 3. STICKERS -->
+          <!-- 4. STICKERS -->
           <div v-show="activeTool === 'stickers'" class="sticker-pills-flow">
             <button
               type="button"
@@ -993,7 +1298,7 @@ async function shareToMedia() {
             </button>
           </div>
 
-          <!-- 4. AI CAPTIONS -->
+          <!-- 5. AI CAPTIONS -->
           <div v-show="activeTool === 'ai'" class="ai-studio-flow">
             <div class="ai-persona-row">
               <button
@@ -1046,7 +1351,7 @@ async function shareToMedia() {
             </div>
           </div>
 
-          <!-- 5. EDIT DATA -->
+          <!-- 6. EDIT DATA -->
           <div v-show="activeTool === 'edit'" class="edit-fields-flow">
             <div class="field-item">
               <label>Judul Sesi</label>
@@ -1220,10 +1525,30 @@ async function shareToMedia() {
 }
 
 /* ========================================================
+   GPS ROUTE SIGNATURE ART LAYER
+   ======================================================== */
+.gps-route-art-layer {
+  position: absolute;
+  top: 15%;
+  left: 5%;
+  right: 5%;
+  height: 48%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  pointer-events: none;
+  z-index: 1;
+}
+
+.gps-route-svg {
+  width: 100%;
+  height: 100%;
+  filter: drop-shadow(0 0 16px rgba(56, 189, 248, 0.25));
+}
+
+/* ========================================================
    THEME STYLES TRANSFORMATION
    ======================================================== */
-
-/* 1. Rapha Editorial Theme */
 .theme--rapha_editorial {
   font-family: Georgia, Cambria, 'Times New Roman', serif;
   border-color: rgba(255, 140, 117, 0.35);
@@ -1258,7 +1583,6 @@ async function shareToMedia() {
   margin-bottom: 0.2rem;
 }
 
-/* 2. Cyber HUD Theme */
 .theme--cyber_hud {
   font-family: var(--font-ui);
   border-color: rgba(56, 189, 248, 0.4);
@@ -1318,7 +1642,6 @@ async function shareToMedia() {
   z-index: 1;
 }
 
-/* 3. Cafe & Warm Santai Theme */
 .theme--cafe_santai {
   border-color: rgba(245, 158, 11, 0.4);
   box-shadow: 0 20px 50px -10px rgba(0, 0, 0, 0.8), 0 0 30px rgba(245, 158, 11, 0.15);
@@ -1396,8 +1719,8 @@ async function shareToMedia() {
   inset: 0;
   background: linear-gradient(
     180deg,
-    rgba(6, 10, 18, 0.35) 0%,
-    transparent 40%,
+    rgba(6, 10, 18, 0.25) 0%,
+    transparent 35%,
     rgba(6, 10, 18, 0.85) 80%,
     rgba(6, 10, 18, 0.98) 100%
   );
@@ -1635,7 +1958,6 @@ async function shareToMedia() {
   gap: 0.75rem;
 }
 
-/* Horizontally scrollable menu bar without clipping */
 .tool-menu-bar {
   display: flex;
   gap: 0.35rem;
@@ -1723,6 +2045,112 @@ async function shareToMedia() {
 .chip-card small {
   font-size: 0.68rem;
   color: #94a3b8;
+}
+
+/* Route GPS Controls */
+.route-panel-flow {
+  display: flex;
+  flex-direction: column;
+  gap: 0.85rem;
+}
+
+.route-header-toggle {
+  display: flex;
+  flex-direction: column;
+  gap: 0.45rem;
+  background: rgba(15, 23, 42, 0.6);
+  padding: 0.65rem 0.85rem;
+  border-radius: 0.75rem;
+  border: 1px solid rgba(255, 255, 255, 0.08);
+}
+
+.toggle-wrap {
+  display: flex;
+  align-items: center;
+  gap: 0.55rem;
+  cursor: pointer;
+}
+
+.toggle-lbl {
+  font-size: 0.76rem;
+  font-weight: 850;
+  color: #cbd5e1;
+}
+
+.route-styles-row {
+  display: grid;
+  grid-template-columns: repeat(2, 1fr);
+  gap: 0.45rem;
+}
+
+.r-style-btn {
+  padding: 0.45rem 0.5rem;
+  border-radius: 0.65rem;
+  background: rgba(30, 41, 59, 0.6);
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  color: #cbd5e1;
+  font-size: 0.72rem;
+  font-weight: 850;
+  cursor: pointer;
+  text-align: center;
+  transition: all 120ms ease;
+}
+
+.r-style-btn.active {
+  background: rgba(56, 189, 248, 0.15);
+  border-color: #38bdf8;
+  color: #38bdf8;
+}
+
+.route-presets-list {
+  display: flex;
+  flex-direction: column;
+  gap: 0.45rem;
+  max-height: 12rem;
+  overflow-y: auto;
+}
+
+.preset-item-card {
+  display: flex;
+  align-items: center;
+  gap: 0.65rem;
+  padding: 0.6rem 0.75rem;
+  border-radius: 0.75rem;
+  background: rgba(15, 23, 42, 0.75);
+  border: 1.5px solid rgba(255, 255, 255, 0.08);
+  cursor: pointer;
+  transition: all 120ms ease;
+}
+
+.preset-item-card.active {
+  background: rgba(201, 243, 106, 0.1);
+  border-color: var(--color-chain-lime);
+}
+
+.preset-icon-col {
+  font-size: 1.25rem;
+}
+
+.preset-info-col {
+  display: flex;
+  flex-direction: column;
+  flex: 1;
+}
+
+.preset-info-col strong {
+  font-size: 0.78rem;
+  color: #fff;
+}
+
+.preset-info-col small {
+  font-size: 0.66rem;
+  color: #94a3b8;
+}
+
+.preset-active-check {
+  font-weight: 900;
+  color: var(--color-chain-lime);
+  font-size: 0.9rem;
 }
 
 /* Backdrop Circles */

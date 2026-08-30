@@ -26,7 +26,87 @@ const emit = defineEmits<{
 const api = useApi();
 const { toast } = useNotify();
 
-const activeTab = ref<'templates' | 'backgrounds' | 'stickers' | 'ai' | 'data'>('templates');
+const activeTab = ref<'templates' | 'route' | 'backgrounds' | 'stickers' | 'ai' | 'data'>('templates');
+
+interface RoutePreset {
+  id: string;
+  name: string;
+  location: string;
+  distanceKm: number;
+  elevationM: number;
+  pathD: string;
+  waypoints: Array<{ name: string; icon: string; x: number; y: number; type: 'coffee' | 'climb' | 'photo' | 'sprint' }>;
+}
+
+const ROUTE_PRESETS: RoutePreset[] = [
+  {
+    id: 'sentul_loop',
+    name: 'Sentul Gravel Loop: KM 0 & Kopi Tubing',
+    location: 'Sentul, Bogor',
+    distanceKm: 45.8,
+    elevationM: 580,
+    pathD: 'M 50 180 C 70 120, 110 80, 160 95 C 210 110, 240 60, 290 75 C 340 90, 360 150, 320 210 C 280 270, 220 280, 160 250 C 100 220, 70 230, 50 180 Z',
+    waypoints: [
+      { name: 'Start KM 0', icon: '🚩', x: 50, y: 180, type: 'photo' },
+      { name: 'Tanjakan Rainbow', icon: '⛰️', x: 240, y: 60, type: 'climb' },
+      { name: 'Warung Kopi & Sate', icon: '☕', x: 320, y: 210, type: 'coffee' },
+      { name: 'Sprint Finish', icon: '🏁', x: 160, y: 250, type: 'sprint' },
+    ],
+  },
+  {
+    id: 'km0_bojong',
+    name: 'Tanjakan KM 0 Bojong Koneng Challenge',
+    location: 'Babakan Madang',
+    distanceKm: 28.4,
+    elevationM: 720,
+    pathD: 'M 60 260 C 100 230, 120 180, 170 160 C 220 140, 250 80, 300 60 C 330 48, 350 70, 330 110 C 290 190, 200 220, 140 270 C 90 300, 70 280, 60 260 Z',
+    waypoints: [
+      { name: 'Check-in Gate', icon: '🚩', x: 60, y: 260, type: 'photo' },
+      { name: 'KM 0 Summit (+720m)', icon: '👑', x: 300, y: 60, type: 'climb' },
+      { name: 'Kopi Daong Pitstop', icon: '☕', x: 200, y: 220, type: 'coffee' },
+    ],
+  },
+  {
+    id: 'jkt_sudirman',
+    name: 'Jakarta Sudirman - Thamrin - Monas Loop',
+    location: 'DKI Jakarta',
+    distanceKm: 32.0,
+    elevationM: 45,
+    pathD: 'M 80 250 L 80 80 C 80 50, 320 50, 320 80 L 320 250 C 320 280, 80 280, 80 250 Z',
+    waypoints: [
+      { name: 'Bundaran HI', icon: '🚩', x: 80, y: 160, type: 'photo' },
+      { name: 'Monas Sprint Lap', icon: '⚡', x: 200, y: 50, type: 'sprint' },
+      { name: 'GBK Pitstop', icon: '☕', x: 320, y: 200, type: 'coffee' },
+    ],
+  },
+  {
+    id: 'dago_bandung',
+    name: 'Dago Pakar - Tahura Pine Trail Bandung',
+    location: 'Bandung Utara',
+    distanceKm: 38.5,
+    elevationM: 890,
+    pathD: 'M 70 270 C 110 210, 130 150, 180 120 C 230 90, 270 40, 320 50 C 350 60, 340 120, 300 170 C 250 230, 180 250, 120 280 Z',
+    waypoints: [
+      { name: 'Dago Bawah', icon: '🚩', x: 70, y: 270, type: 'photo' },
+      { name: 'Tebing Keraton Peak', icon: '⛰️', x: 320, y: 50, type: 'climb' },
+      { name: 'Armor Kopi Tahura', icon: '☕', x: 250, y: 230, type: 'coffee' },
+    ],
+  },
+  {
+    id: 'bromo_gravel',
+    name: 'Bromo Sea of Sand Gravel Epic',
+    location: 'Tengger, Jawa Timur',
+    distanceKm: 52.0,
+    elevationM: 1450,
+    pathD: 'M 50 150 C 100 80, 160 50, 220 70 C 280 90, 330 60, 350 120 C 370 180, 310 240, 240 260 C 170 280, 100 240, 60 190 Z',
+    waypoints: [
+      { name: 'Cemoro Lawang', icon: '🚩', x: 50, y: 150, type: 'photo' },
+      { name: 'Pasir Berbisik', icon: '⚡', x: 220, y: 70, type: 'sprint' },
+      { name: 'Kawah Bromo Summit', icon: '🌋', x: 350, y: 120, type: 'climb' },
+      { name: 'Bukit Teletubbies', icon: '☕', x: 170, y: 280, type: 'coffee' },
+    ],
+  },
+];
 
 const rideForm = reactive({
   title: props.initialRouteNote || 'Morning Gravel & Hills Rush',
@@ -42,7 +122,25 @@ const rideForm = reactive({
   activeSticker: 'kom' as 'kom' | 'cafe' | 'beast' | 'speed' | 'fuel' | 'podium' | 'none',
   bgPreset: 'alpine' as 'alpine' | 'gravel' | 'sunset' | 'crit' | 'cafe' | 'topo' | 'custom',
   customPhotoUrl: '',
+  // GPS Route Customizations
+  showGpsRoute: true,
+  selectedRoutePresetId: 'sentul_loop',
+  routeRenderStyle: 'spectrum_elevation' as 'spectrum_elevation' | 'kinetic_neon' | 'topo_radar' | 'minimal_wire',
+  showWaypoints: true,
 });
+
+const currentRoute = computed(() => {
+  return ROUTE_PRESETS.find((r) => r.id === rideForm.selectedRoutePresetId) || ROUTE_PRESETS[0];
+});
+
+function selectRoutePreset(preset: RoutePreset) {
+  rideForm.selectedRoutePresetId = preset.id;
+  rideForm.title = preset.name;
+  rideForm.distanceKm = preset.distanceKm;
+  rideForm.elevationM = preset.elevationM;
+  rideForm.avgSpeedKmH = Number((preset.distanceKm / Math.max(rideForm.durationMinutes / 60, 0.05)).toFixed(1));
+  toast.success('Rute GPS Diterapkan!', `${preset.name} (${preset.distanceKm} km, +${preset.elevationM}m)`);
+}
 
 const selectedPersona = ref<'athlete' | 'humor' | 'technical'>('athlete');
 const isAiGenerating = ref(false);
@@ -196,60 +294,75 @@ async function renderCanvas(aspectRatio: 'story' | 'post' | 'landscape'): Promis
     }
   }
 
-  if (rideForm.templateStyle === 'cyber_hud') {
-    ctx.strokeStyle = 'rgba(56, 189, 248, 0.08)';
-    ctx.lineWidth = 1.5;
-    const gridSize = 60;
-    for (let gx = 0; gx < canvas.width; gx += gridSize) {
-      ctx.beginPath();
-      ctx.moveTo(gx, 0);
-      ctx.lineTo(gx, canvas.height);
-      ctx.stroke();
+  // Draw GPS Route Artwork on Canvas
+  if (rideForm.showGpsRoute && currentRoute.value) {
+    ctx.save();
+    const routeBoxW = 400;
+    const targetW = isStory ? 840 : (isLandscape ? 720 : 680);
+    const scale = targetW / routeBoxW;
+    const offsetX = (canvas.width - routeBoxW * scale) / 2;
+    const offsetY = isStory ? 280 : (isLandscape ? 120 : 110);
+
+    ctx.translate(offsetX, offsetY);
+    ctx.scale(scale, scale);
+
+    const routePath = new Path2D(currentRoute.value.pathD);
+
+    ctx.shadowBlur = 24;
+    ctx.shadowColor = rideForm.routeRenderStyle === 'kinetic_neon' ? '#C9F36A' : '#38BDF8';
+    ctx.lineWidth = 14;
+    ctx.strokeStyle = rideForm.routeRenderStyle === 'kinetic_neon' ? 'rgba(201, 243, 106, 0.35)' : 'rgba(56, 189, 248, 0.35)';
+    ctx.lineCap = 'round';
+    ctx.lineJoin = 'round';
+    ctx.stroke(routePath);
+    ctx.shadowBlur = 0;
+
+    const routeGrad = ctx.createLinearGradient(50, 50, 350, 300);
+    if (rideForm.routeRenderStyle === 'spectrum_elevation') {
+      routeGrad.addColorStop(0, '#C9F36A');
+      routeGrad.addColorStop(0.35, '#8EDDF4');
+      routeGrad.addColorStop(0.7, '#F59E0B');
+      routeGrad.addColorStop(1, '#FF8C75');
+    } else if (rideForm.routeRenderStyle === 'kinetic_neon') {
+      routeGrad.addColorStop(0, '#C9F36A');
+      routeGrad.addColorStop(1, '#A3E635');
+    } else if (rideForm.routeRenderStyle === 'minimal_wire') {
+      routeGrad.addColorStop(0, '#FFFFFF');
+      routeGrad.addColorStop(1, '#CBD5E1');
+    } else {
+      routeGrad.addColorStop(0, '#38BDF8');
+      routeGrad.addColorStop(1, '#00FF66');
     }
-    for (let gy = 0; gy < canvas.height; gy += gridSize) {
-      ctx.beginPath();
-      ctx.moveTo(0, gy);
-      ctx.lineTo(canvas.width, gy);
-      ctx.stroke();
+
+    ctx.lineWidth = 7;
+    ctx.strokeStyle = routeGrad;
+    ctx.stroke(routePath);
+
+    if (rideForm.showWaypoints && currentRoute.value.waypoints) {
+      currentRoute.value.waypoints.forEach((wp) => {
+        ctx.fillStyle = 'rgba(15, 23, 42, 0.9)';
+        ctx.strokeStyle = wp.type === 'climb' ? '#FF8C75' : (wp.type === 'coffee' ? '#F59E0B' : '#C9F36A');
+        ctx.lineWidth = 2.5;
+        ctx.beginPath();
+        ctx.arc(wp.x, wp.y, 14, 0, 2 * Math.PI);
+        ctx.fill();
+        ctx.stroke();
+
+        ctx.font = '14px sans-serif';
+        ctx.textAlign = 'center';
+        ctx.textBaseline = 'middle';
+        ctx.fillText(wp.icon, wp.x, wp.y + 1);
+
+        ctx.font = `800 10px ${FONT_UI}`;
+        ctx.fillStyle = '#FFFFFF';
+        ctx.fillText(wp.name, wp.x, wp.y + 24);
+      });
     }
 
-    ctx.strokeStyle = 'rgba(56, 189, 248, 0.8)';
-    ctx.lineWidth = 4;
-    const bLen = 40;
-    const bMargin = 40;
-
-    ctx.beginPath();
-    ctx.moveTo(bMargin, bMargin + bLen);
-    ctx.lineTo(bMargin, bMargin);
-    ctx.lineTo(bMargin + bLen, bMargin);
-    ctx.stroke();
-
-    ctx.beginPath();
-    ctx.moveTo(canvas.width - bMargin - bLen, bMargin);
-    ctx.lineTo(canvas.width - bMargin, bMargin);
-    ctx.lineTo(canvas.width - bMargin, bMargin + bLen);
-    ctx.stroke();
-
-    ctx.beginPath();
-    ctx.moveTo(bMargin, canvas.height - bMargin - bLen);
-    ctx.lineTo(bMargin, canvas.height - bMargin);
-    ctx.lineTo(bMargin + bLen, canvas.height - bMargin);
-    ctx.stroke();
-
-    ctx.beginPath();
-    ctx.moveTo(canvas.width - bMargin - bLen, canvas.height - bMargin);
-    ctx.lineTo(canvas.width - bMargin, canvas.height - bMargin);
-    ctx.lineTo(canvas.width - bMargin, canvas.height - bMargin - bLen);
-    ctx.stroke();
+    ctx.restore();
   }
 
-  ctx.strokeStyle = 'rgba(201, 243, 106, 0.14)';
-  ctx.lineWidth = 3;
-  ctx.beginPath();
-  ctx.moveTo(0, canvas.height * 0.28);
-  ctx.bezierCurveTo(canvas.width * 0.35, canvas.height * 0.18, canvas.width * 0.65, canvas.height * 0.38, canvas.width, canvas.height * 0.24);
-  ctx.stroke();
-
+  // Dark Vignette
   const vignette = ctx.createLinearGradient(0, 0, 0, canvas.height);
   vignette.addColorStop(0, 'rgba(6, 10, 18, 0.45)');
   vignette.addColorStop(0.3, 'rgba(6, 10, 18, 0.05)');
@@ -304,6 +417,7 @@ async function renderCanvas(aspectRatio: 'story' | 'post' | 'landscape'): Promis
   const textStartX = 86 + 42 + 14;
   ctx.font = `900 32px ${FONT_UI}`;
   ctx.textBaseline = 'middle';
+  ctx.textAlign = 'left';
   ctx.fillStyle = '#FFFFFF';
   ctx.fillText('Gowes', textStartX, pillY + pillH / 2);
   ctx.fillStyle = '#C9F36A';
@@ -339,12 +453,14 @@ async function renderCanvas(aspectRatio: 'story' | 'post' | 'landscape'): Promis
       ctx.fillStyle = '#080d19';
       ctx.font = `900 24px ${FONT_UI}`;
       ctx.textBaseline = 'middle';
+      ctx.textAlign = 'left';
       ctx.fillText(stickerText, stickerX + stickerPad, pillY + pillH / 2);
     }
   }
 
   const heroY = isStory ? 1020 : (isLandscape ? 400 : 470);
   ctx.textBaseline = 'alphabetic';
+  ctx.textAlign = 'left';
 
   if (rideForm.templateStyle === 'rapha_editorial') {
     ctx.fillStyle = '#FF8C75';
@@ -501,7 +617,7 @@ async function renderCanvas(aspectRatio: 'story' | 'post' | 'landscape'): Promis
   ctx.font = `900 24px ${FONT_UI}`;
   ctx.textAlign = 'center';
   ctx.fillText('⚡ VERIFIED BY GOWESKIT ENGINE · GOWESKIT.ID', canvas.width / 2, canvas.height - 45);
-  ctx.textAlign = 'start';
+  ctx.textAlign = 'left';
 
   return canvas;
 }
@@ -648,6 +764,29 @@ async function shareToMedia() {
                 <div class="m-hud-grid-layer"></div>
               </template>
 
+              <!-- Dynamic GPS Route Layer -->
+              <div v-if="rideForm.showGpsRoute && currentRoute" class="m-gps-route-layer">
+                <svg viewBox="0 0 400 350" class="m-gps-svg" fill="none" aria-hidden="true">
+                  <path
+                    :d="currentRoute.pathD"
+                    fill="none"
+                    stroke="#38BDF8"
+                    stroke-width="10"
+                    stroke-linecap="round"
+                    stroke-linejoin="round"
+                    opacity="0.35"
+                  />
+                  <path
+                    :d="currentRoute.pathD"
+                    fill="none"
+                    stroke="#C9F36A"
+                    stroke-width="4.5"
+                    stroke-linecap="round"
+                    stroke-linejoin="round"
+                  />
+                </svg>
+              </div>
+
               <div class="modal-poster-vignette"></div>
 
               <!-- Official GowesKit Brand Chip -->
@@ -743,6 +882,14 @@ async function shareToMedia() {
               <button
                 type="button"
                 class="m-tab-item"
+                :class="{ active: activeTab === 'route' }"
+                @click="activeTab = 'route'"
+              >
+                🗺️ Rute
+              </button>
+              <button
+                type="button"
+                class="m-tab-item"
                 :class="{ active: activeTab === 'backgrounds' }"
                 @click="activeTab = 'backgrounds'"
               >
@@ -813,6 +960,22 @@ async function shareToMedia() {
                   ☕ <strong>Kopi &amp; Sate</strong>
                   <small>Golden Amber Fuel</small>
                 </button>
+              </div>
+            </div>
+
+            <!-- Tab: Route GPS -->
+            <div v-show="activeTab === 'route'" class="m-tab-panel">
+              <div class="m-presets-col">
+                <div
+                  v-for="preset in ROUTE_PRESETS"
+                  :key="preset.id"
+                  class="m-preset-card"
+                  :class="{ active: rideForm.selectedRoutePresetId === preset.id }"
+                  @click="selectRoutePreset(preset)"
+                >
+                  <strong>{{ preset.name }}</strong>
+                  <small>{{ preset.distanceKm }} km · +{{ preset.elevationM }}m</small>
+                </div>
               </div>
             </div>
 
@@ -1134,6 +1297,54 @@ async function shareToMedia() {
 
 .aspect--landscape {
   aspect-ratio: 16 / 9 !important;
+}
+
+/* Modal GPS Layer */
+.m-gps-route-layer {
+  position: absolute;
+  top: 15%;
+  left: 5%;
+  right: 5%;
+  height: 48%;
+  pointer-events: none;
+  z-index: 1;
+}
+
+.m-gps-svg {
+  width: 100%;
+  height: 100%;
+}
+
+.m-presets-col {
+  display: flex;
+  flex-direction: column;
+  gap: 0.4rem;
+  max-height: 12rem;
+  overflow-y: auto;
+}
+
+.m-preset-card {
+  display: flex;
+  flex-direction: column;
+  padding: 0.55rem 0.65rem;
+  border-radius: 0.65rem;
+  background: rgba(30, 41, 59, 0.5);
+  border: 1px solid rgba(255, 255, 255, 0.08);
+  cursor: pointer;
+}
+
+.m-preset-card.active {
+  background: rgba(201, 243, 106, 0.15);
+  border-color: var(--color-chain-lime);
+}
+
+.m-preset-card strong {
+  font-size: 0.76rem;
+}
+
+.m-preset-card small {
+  font-size: 0.65rem;
+  color: #94a3b8;
 }
 
 /* Modal Themes */
