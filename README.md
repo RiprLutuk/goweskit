@@ -1,158 +1,222 @@
-# GowesKit 🚲⚡ — Platform Cerdas & Sahabat Pesepeda Indonesia
+<div align="center">
 
-> **"Bukan sekadar gowes, pahami sepedamu luar-dalam!"**
-> Platform edukasi, manajemen sepeda (Garage), cek kompatibilitas suku cadang deterministik (Upgrade Lab), jelajah rute & pitstop (Explore), jadwal mabar komunitas, pemantau servis berkala, solo-ride safety token, hingga studio flex AI.
+# 🚲⚡ GowesKit
+### *Platform Cerdas, Paspor Sepeda & Sahabat Pesepeda Indonesia*
+
+[![TypeScript](https://img.shields.io/badge/TypeScript-Strict-3178C6?style=for-the-badge&logo=typescript&logoColor=white)](https://www.typescriptlang.org/)
+[![Nuxt 3](https://img.shields.io/badge/Nuxt_3-00DC82?style=for-the-badge&logo=nuxtdotjs&logoColor=white)](https://nuxt.com/)
+[![Fastify](https://img.shields.io/badge/Fastify-000000?style=for-the-badge&logo=fastify&logoColor=white)](https://www.fastify.io/)
+[![PostgreSQL & PostGIS](https://img.shields.io/badge/PostGIS-336791?style=for-the-badge&logo=postgresql&logoColor=white)](https://postgis.net/)
+[![Tests Passing](https://img.shields.io/badge/Tests-79%20passed%20%7C%20100%25-brightgreen?style=for-the-badge&logo=vitest&logoColor=white)](https://vitest.dev/)
+[![License MIT](https://img.shields.io/badge/License-MIT-yellow.svg?style=for-the-badge)](LICENSE)
+
+<p align="center">
+  <strong>"Bukan sekadar gowes, pahami sepedamu luar-dalam!"</strong><br />
+  Edukasi Anatomi Sepeda · Paspor Digital (Garage) · Cek Kompatibilitas Upgrade Deterministik · Peta Jalur & Pitstop Kopi · Jadwal Mabar Komunitas · Ride Safety Token · Servis Berkala · Ride Flex Studio AI
+</p>
+
+[🌟 Mengapa GowesKit?](#-mengapa-goweskit) •
+[🚲 Fitur Utama](#-fitur-utama--arsitektur-modul) •
+[🔬 Standar Resmi](#-transparansi-standar-resmi-industri) •
+[🚀 Quick Start](#-panduan-menjalankan-secara-lokal-quick-start) •
+[🚢 Panduan Deploy](#-panduan-deployment-ke-production-vps--cloud) •
+[💖 Donasi GoPay](#-dukung-pengembangan-goweskit-donasi)
+
+</div>
 
 ---
 
 ## 🌟 Mengapa GowesKit?
 
-Pesepeda sering bingung saat mau upgrade parts sepeda:
-* *"Apakah groupset 12-speed ini muat di freehub HG saya?"*
-* *"Fork tapered ini bisa masuk ke headtube straight saya tanpa ganti headset?"*
-* *"Berapa tekanan ban dan interval servis rantai yang tepat?"*
+Setiap pesepeda — baik pemula maupun antusias — sering kali menghadapi dilema teknis saat merawat atau meng-upgrade sepedanya:
 
-**GowesKit** hadir memecahkan masalah tersebut dengan **100% Deterministic Compatibility Engine** berlandaskan standar industri resmi internasional (ISO, SHIS, Park Tool, Shimano/SRAM), tanpa tebak-tebakan atau klaim sepihak.
+* ❓ *"Apakah groupset 12-speed Shimano Micro Spline bisa dipasang di freehub HG lama saya?"*
+* ❓ *"Fork tapered 1.5 inch ini muat di headtube straight 44mm tanpa ganti headset?"*
+* ❓ *"Bagaimana cara mencatat riwayat servis dan masa pakai rantai secara teratur?"*
+* ❓ *"Di mana rute aman, warung makan ramah pesepeda, dan titik pitstop kopi terdekat?"*
+
+**GowesKit** lahir untuk menjawab semua pertanyaan tersebut. Dibangun dengan **100% Deterministic Compatibility Engine** berbasis standar internasional resmi (ISO, SHIS, Park Tool, Shimano/SRAM), GowesKit memberikan jawaban pasti dan transparan tanpa tebak-tebakan.
 
 ---
 
-## 🚲 Fitur Utama & Modul GowesKit
+## 🚲 Fitur Utama & Arsitektur Modul
 
-### 1. 📚 Learn Center & Glosarium Standar Resmi
-* **Anatomi & Standar Sepeda**: Panduan detail untuk Road Bike, MTB Hardtail, Folding Bike, dan Gravel Bike.
-* **Transparansi Standar Resmi**: Dilengkapi tautan rujukan resmi ke **ISO 5775-1 / ISO 4210**, **SHIS (Standardized Headset Identification System)**, **Park Tool BB Guide**, dan **Matriks Kompatibilitas Shimano/SRAM**.
-* **Pencarian Cepat & Filter Standar**: Glosarium interaktif untuk memahami istilah teknis (Thru-Axle, Boost 148, DUB, BB30, UDH, dll).
+```text
+                                    ┌───────────────────────┐
+                                    │    🚲 GOWESKIT WEB    │
+                                    │   (Nuxt 3 + Vue 3)    │
+                                    └───────────┬───────────┘
+                                                │
+                 ┌──────────────────────────────┼──────────────────────────────┐
+                 ▼                              ▼                              ▼
+     ┌───────────────────────┐      ┌───────────────────────┐      ┌───────────────────────┐
+     │   📚 LEARN & GARAGE   │      │   🧪 UPGRADE LAB      │      │   🗺️ EXPLORE & SAFETY │
+     │  - Anatomi 4 Tipe     │      │  - 100% Deterministik │      │  - Radius PostGIS Map │
+     │  - Paspor Sepeda      │      │  - 15 Standar Baku    │      │  - Live Safety Token  │
+     │  - Servis Berkala     │      │  - Provenance ISO/SHIS│      │  - Jadwal Mabar Klub  │
+     └───────────────────────┘      └───────────────────────┘      └───────────────────────┘
+                 │                              │                              │
+                 └──────────────────────────────┼──────────────────────────────┘
+                                                │
+                                    ┌───────────▼───────────┐
+                                    │    ⚡ FASTIFY API     │
+                                    │  (TypeScript Strict)  │
+                                    └───────────┬───────────┘
+                                                │
+                                    ┌───────────▼───────────┐
+                                    │  🐘 POSTGRESQL + GIS  │
+                                    │   (Drizzle ORM + GIS) │
+                                    └───────────────────────┘
+```
 
-### 2. 🛠️ My Garage & Paspor Sepeda
-* **Inventaris Sepeda**: Simpan spek lengkap mulai dari wheelset, bottom bracket, headset, groupset, hingga rem.
-* **Explicit Unknown Tracking**: Jika ada standar sepeda yang belum diketahui, sistem menandainya sebagai `Unknown` dan membimbing cara mengukurnya secara tepat.
-* **Paspor Sepeda Interaktif**: Ringkasan spek siap share dan audit cepat saat ke bengkel.
+### 1. 📚 Learn Center (Pusat Edukasi Sepeda)
+* **4 Kategori Sepeda Utama**: Panduan komprehensif untuk *Road Bike*, *MTB Hardtail*, *Folding Bike (Seli)*, dan *Gravel Bike*.
+* **Glosarium Istilah Interaktif**: Penjelasan gamblang standar teknis seperti *Thru-Axle vs Quick Release*, *DUB vs Hollowtech II*, *Boost 148*, *UDH (Universal Derailleur Hanger)*, dan *Flat Mount vs Post Mount*.
+
+### 2. 🛠️ My Garage & Paspor Sepeda Digital
+* **Spesifikasi Lengkap**: Simpan detail wheelset, bottom bracket, headset, groupset, rem, kokpit, dan saddle.
+* **Explicit Unknown Tracking**: Jika ada standar sepeda yang belum diketahui, sistem menandainya sebagai `Unknown` secara transparan dan menyediakan panduan cara mengukurnya menggunakan jangka sorong (*caliper*).
+* **Paspor Sepeda Siap Audit**: Bagikan spesifikasi sepeda saat konsultasi dengan mekanik bengkel.
 
 ### 3. 🧪 Upgrade Lab (Mesin Kompatibilitas Deterministik)
-* **Cek Kompatibilitas Instan**: Pilih sepeda di Garage dan pilih suku cadang impian (misal: Cassette 12-speed Micro Spline, Wheelset Thru-Axle 12x142, Fork Tapered 1.5").
-* **Hasil Evaluasi Jelas**:
-  * ✅ **Compatible** — Plug & play sesuai standar resmi.
-  * ⚠️ **Conditional** — Butuh adaptor atau spacer khusus.
-  * ❌ **Incompatible** — Tidak muat secara fisik/mekanik.
-  * ❓ **Unknown Specs** — Butuh konfirmasi spek eksisting.
-* **Kotak Provenance**: Menampilkan nomor aturan, versi, dan standar rujukan resmi untuk tiap evaluasi.
+* **Evaluasi Instan & Akurat**: Pilih sepeda Anda dan tentukan suku cadang yang ingin dibeli.
+* **Status Evaluasi Terstandarisasi**:
+  * ✅ **Compatible** — Plug & play sesuai standar baku.
+  * ⚠️ **Conditional** — Memerlukan spacer, adapter crown race, atau freehub body konversi.
+  * ❌ **Incompatible** — Tidak muat secara mekanis/geometri.
+  * ❓ **Unknown Specs** — Membutuhkan data tambahan dari pengguna.
+* **Audit Provenance Box**: Menampilkan versi aturan, nomor standar ISO/SHIS, dan tanggal verifikasi untuk setiap hasil evaluasi.
 
-### 4. 🗺️ Explore & Rute Gowes
-* **Peta Interaktif Privasi Terjaga**: Cari bengkel sepeda, toko sparepart, titik pitstop kopi, minimarket, water station, dan jalur gowes terdekat.
-* **Pencarian Berbasis Radius PostGIS**: Privasi pesepeda terlindungi — koordinat lokasi pengguna tidak pernah disimpan atau dipublikasikan ke publik.
-* **Mode Offline & OpenFreeMap**: Navigasi tetap aman meski sinyal seluler hilang di jalur gravel.
+### 4. 🗺️ Explore & Navigasi Gowes (PostGIS Privacy-First)
+* **Titik Penting Pesepeda**: Temukan bengkel sepeda, toko sparepart, titik pitstop kopi, minimarket, water station, dan jalur gowes terdekat.
+* **Privasi Terlindungi**: Menggunakan kueri spasial PostGIS berbasis radius — koordinat lokasi persis pengguna tidak pernah disimpan atau dipublikasikan.
+* **OpenFreeMap & Offline Navigator**: Peta interaktif berbasis MapLibre yang ringan dan tetap dapat diakses saat minim sinyal.
 
 ### 5. 👥 Komunitas & Jadwal Mabar
-* **Temukan Komunitas Lokal**: Gabung ke klub pesepeda kota Anda (Road, MTB, Gravel, Foldie).
-* **Jadwal Gowes Bareng (Mabar)**: Detail titik kumpul (meeting point), elevasi, rute, dan tingkat pace/kecepatan.
-* **Status Keanggotaan Rapi**: Manajemen anggota, reminder mabar, dan integrasi pendaftaran instan.
+* **Direktori Klub Lokal**: Bergabung dengan komunitas pesepeda di kota Anda (Road, MTB, Gravel, Foldie).
+* **Jadwal Gowes Bareng**: Informasi titik kumpul (*meeting point*), rute, total elevasi, dan rata-rata kecepatan (*pace*).
+* **Manajemen Pendaftaran Mabar**: Pengingat otomatis dan status keanggotaan terintegrasi.
 
-### 6. 🛡️ Ride Safety (Solo-Ride Tracker & SOS)
-* **High-Entropy Expiring Share Token**: Bagikan tautan pelacakan langsung sementara ke kontak tepercaya (*trusted contacts*).
-* **Sesi Otomatis Berbatas Waktu**: Tidak ada pelacakan tersembunyi di latar belakang.
-* **Kontrol Penuh**: Akhiri atau cabut izin akses pelacakan kapan saja dengan satu sentuhan.
+### 6. 🛡️ Ride Safety (Pelacak Solo-Ride & SOS)
+* **High-Entropy Expiring Share Token**: Bagikan tautan pelacakan sementara yang aman ke keluarga atau kontak tepercaya.
+* **Sesi Terkendali Penuh**: Pelacakan hanya aktif atas inisiatif pengguna dan dapat dicabut/diakhiri kapan saja.
 
-### 7. 🔧 Maintenance & Catatan Servis
-* **Service Interval Tracker**: Pengingat berkala untuk lubrikasi rantai, cek brake pad, bleeding rem hidrolik, hingga servis suspensi/fork.
-* **Riwayat Servis**: Dokumentasi perawatan dan histori bengkel untuk menjaga performa sepeda tetap prima.
+### 7. 🔧 Maintenance Log & Interval Tracker
+* **Pengingat Perawatan Berkala**: Rekomendasi servis rantai, pengecekan kampas rem (*brake pads*), bleeding oli rem hidrolik, hingga servis suspensi.
+* **Riwayat Servis**: Dokumentasi catatan mekanik untuk menjaga performa sepeda selalu prima dan nilai jual kembali tetap tinggi.
 
 ### 8. 📸 Ride Flex Studio AI
-* **Poster Generator Estetik**: Ubah data sesi gowes menjadi karya visual modern untuk Instagram Story (9:16), Post Feed (1:1), atau Widescreen (16:9).
-* **4 Gaya Tema Premium**: *Strava Bold (High Contrast)*, *Rapha Editorial (Serif Timeless)*, *Cyber HUD (Neon Tech)*, dan *Cafe Santai (Warm Recovery)*.
-* **Artwork Rute GPS & Spektrum Elevasi**: Visualisasi jalur GPS dengan glowing track dan waypoint pitstop kopi.
-* **Caption Generator AI**: Buat caption menarik dalam berbagai persona (*Peloton Pro*, *Anak Senoparty*, *Mekanik Senior*, *Komuter Santai*).
+* **Poster Generator Estetik**: Transformasi data gowes menjadi karya visual modern siap posting untuk Instagram Story (9:16), Feed Post (1:1), atau Banner (16:9).
+* **4 Gaya Desain Unik**:
+  * ⚡ **Strava Bold**: Tipografi tebal dan aksen Kinetic Neon Green.
+  * 🏔️ **Rapha Editorial**: Tipografi serif elegan dan layout etappe klasik.
+  * 📡 **Cyber HUD**: Tampilan sensor telemetry grid neon.
+  * ☕ **Kopi & Sate**: Warna hangat golden amber untuk santai kulineran.
+* **Spektrum Elevasi & Rute GPS**: Visualisasi jalur rute dengan glowing track dan waypoint pitstop.
+* **Generator Caption AI Multi-Persona**: Buat caption menarik (*Peloton Pro, Anak Senoparty, Mekanik Senior, Komuter Santai*).
+
+---
+
+## 🔬 Transparansi Standar Resmi Industri
+
+GowesKit menolak klaim sepihak. Seluruh mesin kompatibilitas mengacu pada dokumen standar resmi:
+
+1. **ISO 5775-1 / ISO 4210**: Standar dimensi ban, diameter velg (ETRTO/BSD: 622mm, 584mm, 406mm, 451mm), dan keselamatan rangka sepeda.
+2. **SHIS (Standardized Headset Identification System)**: Standar identifikasi headset terpadu dari Cane Creek, FSA, dan Park Tool (EC, ZS, IS).
+3. **Park Tool Bottom Bracket & Axle Standards**: Rujukan standar ulir (BSA, Italian), PressFit (BB86, BB92, PF30, BB30, T47), dan diameter poros (DUB 28.99mm, 24mm Spindle, 30mm Spindle).
+4. **Shimano & SRAM Official Compatibility Matrices**: Standar spline freehub (HG, Micro Spline, XD/XDR) dan rasio penarikan kabel derailleur.
 
 ---
 
 ## 💻 Tech Stack
 
-| Layer | Teknologi |
-|---|---|
-| **Frontend Web** | Nuxt 3, Vue 3, TypeScript Strict, Tailwind CSS / Vanilla CSS Variables |
-| **Backend API** | Fastify, TypeScript Strict, Drizzle ORM |
-| **Database & GIS** | PostgreSQL 16+ / 18 dengan ekstensi **PostGIS** |
-| **Monorepo** | pnpm workspaces |
-| **Shared Contracts** | Zod (`packages/contracts`) |
-| **Domain Logic** | 100% Pure TypeScript Rules (`packages/bike-domain`) |
-| **Maps & Geospatial** | MapLibre GL, OpenFreeMap Tiles |
-| **Testing** | Vitest (79 test files, 100% passing quality gate) |
+| Komponen | Teknologi | Deskripsi |
+|---|---|---|
+| **Frontend** | Nuxt 3, Vue 3, TypeScript | Mobile-first PWA, Server-Side Rendering (SSR) & SPA |
+| **Styling** | Vanilla CSS Variables + Tailwind | Ringan, konsisten dengan GowesKit Design System |
+| **Backend API** | Fastify, TypeScript Strict | High-performance async REST API, validasi input Zod |
+| **Database & GIS** | PostgreSQL 16+ / 18, PostGIS | Relational schema dengan query spasial `ST_DWithin` |
+| **ORM & Migrations** | Drizzle ORM | Type-safe SQL migrations & schema definitions |
+| **Monorepo** | pnpm workspaces | Manajemen modul independen & efisien |
+| **Maps** | MapLibre GL JS, OpenFreeMap | Peta vektor open-source tanpa vendor lock-in |
+| **Testing** | Vitest | 79 file pengujian otomatis dengan cakupan unit & integrasi |
 
 ---
 
-## 🚀 Panduan Menjalankan Secara Lokal (Local Development)
+## 🚀 Panduan Menjalankan Secara Lokal (Quick Start)
 
-### Kebutuhan Sistem:
-* **Node.js**: v22+
-* **pnpm**: v10+ (`npm install -g pnpm`)
-* **PostgreSQL** dengan ekstensi **PostGIS**
+### Persyaratan Sistem:
+* **Node.js**: `v22.0.0` atau lebih baru
+* **pnpm**: `v10.0.0` atau lebih baru (`npm install -g pnpm`)
+* **PostgreSQL**: `v16+` / `v18` dengan ekstensi **PostGIS** aktif
 
-### 1. Setup PostgreSQL & PostGIS (macOS / Homebrew)
+### 1. Instalasi PostgreSQL & PostGIS (macOS Homebrew)
 ```bash
-# Install PostgreSQL dan PostGIS
+# Install PostgreSQL dan ekstensi PostGIS
 brew install postgresql@18 postgis
 brew services start postgresql@18
 
-# Buat database goweskit
+# Buat database lokal
 createdb -h localhost -U $(whoami) goweskit
 ```
 
-*(Alternatif: Gunakan Docker Compose untuk database)*
+*(Opsi Alternatif: Gunakan Docker)*
 ```bash
 docker compose -f infra/docker-compose.yml up -d
 ```
 
-### 2. Install Dependensi & Konfigurasi Environment
+### 2. Kloning Repositori & Setup Environment
 ```bash
 # Clone repository
 git clone https://github.com/RiprLutuk/goweskit.git
 cd goweskit
 
-# Copy file environment
+# Siapkan file environment
 cp .env.example .env
 
-# Install seluruh paket monorepo
+# Install seluruh dependensi monorepo
 pnpm install
 ```
 
-### 3. Migrasi Database & Seeding Data
+### 3. Eksekusi Migrasi Database & Seeding Data
 ```bash
-# Jalankan migrasi skema Drizzle & PostGIS
+# Jalankan migrasi skema database
 pnpm db:migrate
 
-# Isi database dengan data standar sepeda, glosarium, rute demo, & komunitas
+# Isi database dengan standar sepeda resmi, glosarium, rute demo, dan komunitas
 pnpm db:seed
 ```
 
-### 4. Jalankan Server Development
+### 4. Jalankan Server Pengembangan
 ```bash
 pnpm dev
 ```
-Aplikasi web akan aktif di `http://localhost:3000` dan API di `http://localhost:4000`.
+* **Aplikasi Web**: [http://localhost:3000](http://localhost:3000) (atau port 3001)
+* **Backend API**: [http://localhost:4000](http://localhost:4000) (atau port 4001)
 
-**Akun Demo:**
+**Kredensial Akun Demo:**
 * **Email**: `demo@goweskit.local`
 * **Password**: `GowesKitDemo123!`
 
 ---
 
-## 🚢 Panduan Deploy ke Production (VPS / Cloud)
+## 🚢 Panduan Deployment ke Production (VPS / Cloud)
 
-### Opsi A: Deployment Menggunakan Docker & Docker Compose (Direkomendasikan)
+### Opsi 1: Deployment Otomatis via Docker Compose (Direkomendasikan)
 
 1. **Siapkan Server VPS** (Ubuntu 22.04 / 24.04 LTS).
-2. **Install Docker & Docker Compose Plugin**:
+2. **Pasang Docker & Docker Compose**:
    ```bash
    sudo apt update && sudo apt install -y docker.io docker-compose-plugin
    ```
-3. **Clone Repository & Konfigurasi `.env`**:
+3. **Kloning & Konfigurasi `.env`**:
    ```bash
    git clone https://github.com/RiprLutuk/goweskit.git /var/www/goweskit
    cd /var/www/goweskit
    cp .env.example .env
-   # Edit .env dengan kredensial produksi dan domain Anda
-   nano .env
+   nano .env # Masukkan domain dan kredensial database produksi
    ```
-4. **Build & Jalankan Container**:
+4. **Build dan Jalankan Container**:
    ```bash
    docker compose -f infra/docker-compose.prod.yml up -d --build
    ```
@@ -164,7 +228,7 @@ Aplikasi web akan aktif di `http://localhost:3000` dan API di `http://localhost:
 
 ---
 
-### Opsi B: Deployment Native dengan PM2 & Nginx Reverse Proxy
+### Opsi 2: Deployment Native dengan PM2 & Nginx Reverse Proxy
 
 1. **Build Monorepo**:
    ```bash
@@ -172,27 +236,27 @@ Aplikasi web akan aktif di `http://localhost:3000` dan API di `http://localhost:
    pnpm build
    ```
 
-2. **Jalankan Aplikasi Menggunakan PM2**:
+2. **Jalankan Proses dengan PM2**:
    ```bash
    npm install -g pm2
    
-   # Jalankan Fastify API
+   # Jalankan Fastify Backend API
    pm2 start apps/api/dist/index.js --name "goweskit-api" --env PORT=4000
    
-   # Jalankan Nuxt Web
+   # Jalankan Nuxt 3 Frontend Web
    pm2 start apps/web/.output/server/index.mjs --name "goweskit-web" --env PORT=3000
    
    pm2 save
    pm2 startup
    ```
 
-3. **Konfigurasi Nginx Reverse Proxy** (`/etc/nginx/sites-available/goweskit`):
+3. **Konfigurasi Nginx** (`/etc/nginx/sites-available/goweskit`):
    ```nginx
    server {
        listen 80;
        server_name goweskit.id www.goweskit.id;
 
-       # Frontend Web (Nuxt 3)
+       # Nuxt 3 Frontend
        location / {
            proxy_pass http://127.0.0.1:3000;
            proxy_http_version 1.1;
@@ -202,7 +266,7 @@ Aplikasi web akan aktif di `http://localhost:3000` dan API di `http://localhost:
            proxy_cache_bypass $http_upgrade;
        }
 
-       # Backend API (Fastify)
+       # Fastify REST API
        location /api/ {
            proxy_pass http://127.0.0.1:4000;
            proxy_http_version 1.1;
@@ -214,7 +278,7 @@ Aplikasi web akan aktif di `http://localhost:3000` dan API di `http://localhost:
    }
    ```
 
-4. **Aktifkan SSL Gratis dengan Certbot**:
+4. **Aktifkan Sertifikat SSL Gratis (Let's Encrypt)**:
    ```bash
    sudo ln -s /etc/nginx/sites-available/goweskit /etc/nginx/sites-enabled/
    sudo nginx -t && sudo systemctl reload nginx
@@ -223,19 +287,19 @@ Aplikasi web akan aktif di `http://localhost:3000` dan API di `http://localhost:
 
 ---
 
-## 🧪 Pengujian & Quality Gates
+## 🧪 Quality Gates & Pengujian
 
-Setiap perubahan kode wajib melalui quality gate:
+Sebelum melakukan commit, pastikan seluruh quality gate lulus:
 
 ```bash
-# Cek format & lint
+# 1. Format & Linting Check
 pnpm lint
 pnpm format:check
 
-# TypeScript typecheck
+# 2. TypeScript Strict Typecheck (Semua package & apps)
 pnpm typecheck
 
-# Jalankan seluruh test suite (Web, API, Contracts, Domain)
+# 3. Jalankan Seluruh Test Suite (Vitest)
 pnpm test
 ```
 
@@ -243,15 +307,22 @@ pnpm test
 
 ## 💖 Dukung Pengembangan GowesKit (Donasi)
 
-Jika aplikasi ini bermanfaat untuk hobi gowes dan perawatan sepeda Anda, dukung developer untuk biaya server dan riset suku cadang sepeda berikutnya! ☕🚴
+GowesKit dikembangkan secara independen dengan semangat *open-source* untuk memajukan kultur pesepeda di tanah air. Jika aplikasi ini membantu Anda dalam merawat sepeda, menemukan jalur baru, atau merencanakan upgrade suku cadang, Anda dapat memberikan apresiasi berupa donasi untuk mendukung biaya server dan riset suku cadang berikutnya! ☕🚴
 
 > ⚠️ **Catatan Penting**: Donasi hanya dapat dipindai langsung melalui aplikasi **GoPay**.
 
 <div align="center">
   <br />
-  <img src="https://raw.githubusercontent.com/RiprLutuk/PasPapan/main-vps/screenshots/donation-qr.jpeg" alt="Donasi via GoPay" width="280" style="border-radius: 12px; box-shadow: 0 8px 24px rgba(0,0,0,0.15);" />
-  <br />
-  <p><strong>Scan QR di atas langsung dari Aplikasi GoPay</strong></p>
+  <a href="https://github.com/RiprLutuk/PasPapan/blob/main-vps/screenshots/donation-qr.jpeg" target="_blank" rel="noopener noreferrer">
+    <img 
+      src="https://raw.githubusercontent.com/RiprLutuk/PasPapan/main-vps/screenshots/donation-qr.jpeg" 
+      alt="Donasi GowesKit via GoPay" 
+      width="280" 
+      style="border-radius: 16px; border: 2px solid #C9F36A; box-shadow: 0 12px 32px rgba(0,0,0,0.35);" 
+    />
+  </a>
+  <br /><br />
+  <p><strong>📱 Scan QR di atas langsung menggunakan Aplikasi GoPay</strong></p>
   <p><em>Terima kasih banyak atas dukungan goweser semua! Salam satu aspal, satu tanah! 🚲💨</em></p>
 </div>
 
@@ -259,4 +330,5 @@ Jika aplikasi ini bermanfaat untuk hobi gowes dan perawatan sepeda Anda, dukung 
 
 ## 📄 Lisensi
 
-Didistribusikan di bawah Lisensi MIT. Lihat `LICENSE` untuk informasi lebih lanjut.
+Proyek ini didistribusikan di bawah naungan Lisensi **MIT**. Lihat file `LICENSE` untuk rincian selengkapnya.
+
