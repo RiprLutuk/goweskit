@@ -232,7 +232,7 @@ pnpm dev
    ```nginx
    server {
        listen 80;
-       server_name goweskit.demo.pandanteknik.com;
+       server_name yourdomain.com www.yourdomain.com;
 
        location / {
            proxy_pass http://127.0.0.1:3000;
@@ -258,7 +258,7 @@ pnpm dev
    ```bash
    sudo ln -s /etc/nginx/sites-available/goweskit /etc/nginx/sites-enabled/
    sudo nginx -t && sudo systemctl reload nginx
-   sudo certbot --nginx -d goweskit.demo.pandanteknik.com
+   sudo certbot --nginx -d yourdomain.com -d www.yourdomain.com
    ```
 
 ---
