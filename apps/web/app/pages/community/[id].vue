@@ -297,43 +297,42 @@ onMounted(loadCommunity);
     <template v-else-if="detail">
       <!-- ── HERO CARD ───────────────────────────────────────── -->
       <header class="community-hero-card">
-        <!-- Top Status Bar: Badges Row -->
-        <div class="hero-top-badges">
-          <span class="locality-badge">
-            <GIcon name="pin" size="xs" color="#EF4444" />
-            <span>{{ detail.community.locality }}</span>
-          </span>
-          <span v-if="isVerified" class="verified-pill">
-            <GIcon name="check" size="xs" color="#15803D" filled />
-            <span>Terverifikasi</span>
-          </span>
-          <span class="members-badge">
-            <GIcon name="users" size="xs" />
-            <span>{{ detail.community.memberCount }} Anggota</span>
-          </span>
-        </div>
-
-        <!-- Main Identity Row -->
-        <div class="hero-identity-row">
+        <!-- Top Main Row: Avatar + Community Name + Meta Items + Share Button -->
+        <div class="hero-main-row">
           <div class="community-avatar-box">
             <span>{{ initials }}</span>
           </div>
 
           <div class="hero-identity-text">
             <h1 class="community-title">{{ detail.community.name }}</h1>
-            <div class="community-handle-bar">
-              <span class="community-handle-pill">@{{ detail.community.slug }}</span>
-              <button
-                class="share-handle-btn"
-                type="button"
-                title="Bagikan Tautan Komunitas"
-                @click="shareCommunity"
-              >
-                <GIcon name="share" size="xs" />
-                <span>{{ copiedLink ? 'Tersalin' : 'Bagikan' }}</span>
-              </button>
+            <div class="hero-meta-strip">
+              <span class="meta-handle">@{{ detail.community.slug }}</span>
+              <span class="meta-dot">·</span>
+              <span class="meta-item">
+                <GIcon name="pin" size="xs" color="#EF4444" />
+                <span>{{ detail.community.locality }}</span>
+              </span>
+              <span class="meta-dot">·</span>
+              <span class="meta-item">
+                <GIcon name="users" size="xs" />
+                <span>{{ detail.community.memberCount }} Anggota</span>
+              </span>
+              <span v-if="isVerified" class="verified-pill">
+                <GIcon name="check" size="xs" color="#15803D" filled />
+                <span>Terverifikasi</span>
+              </span>
             </div>
           </div>
+
+          <button
+            class="share-handle-btn"
+            type="button"
+            title="Bagikan Tautan Komunitas"
+            @click="shareCommunity"
+          >
+            <GIcon name="share" size="xs" />
+            <span>{{ copiedLink ? 'Tersalin' : 'Bagikan' }}</span>
+          </button>
         </div>
 
         <!-- Description -->
@@ -364,33 +363,36 @@ onMounted(loadCommunity);
           </span>
         </div>
 
-        <!-- Join & Membership Action Card -->
-        <div class="membership-action-box">
-          <div class="membership-status-info">
-            <span class="membership-status-title">
-              {{ detail.community.joinMode === 'open' ? 'Pendaftaran Terbuka (Instan)' : 'Pendaftaran dengan Persetujuan' }}
-            </span>
-            <small v-if="detail.viewerMembership" class="membership-role-tag">
-              Status Anda: <strong>{{ detail.viewerMembership.role.toUpperCase() }}</strong> ({{ detail.viewerMembership.status === 'active' ? 'Anggota Aktif' : detail.viewerMembership.status }})
-            </small>
-            <small v-else class="membership-guest-tag">
-              Belum bergabung dalam komunitas ini
-            </small>
+        <!-- Membership Action / Status -->
+        <!-- Case 1: Already Member -->
+        <div v-if="isActiveMember" class="member-active-bar">
+          <div class="active-status-left">
+            <GIcon name="check" size="xs" color="#15803D" filled />
+            <span>Anda adalah <strong>{{ detail.viewerMembership?.role?.toUpperCase() }}</strong> di komunitas ini</span>
           </div>
+          <span class="active-status-tag">Anggota Aktif</span>
+        </div>
 
+        <!-- Case 2: Requested / Pending -->
+        <div v-else-if="detail.viewerMembership?.status === 'requested'" class="member-pending-bar">
+          <GIcon name="history" size="xs" color="#D97706" />
+          <span>Permintaan bergabung telah dikirim dan menunggu persetujuan pengurus.</span>
+        </div>
+
+        <!-- Case 3: Not Joined Yet (Join CTA) -->
+        <div v-else class="membership-join-box">
           <button
             class="button button--primary join-action-btn"
             type="button"
-            :disabled="
-              joining ||
-              isActiveMember ||
-              detail.viewerMembership?.status === 'requested'
-            "
+            :disabled="joining"
             @click="joinCommunity"
           >
-            <GIcon :name="isActiveMember ? 'check' : 'community'" size="xs" />
+            <GIcon name="community" size="xs" />
             <span>{{ joining ? 'Memproses…' : joinLabel }}</span>
           </button>
+          <small class="join-caption">
+            {{ detail.community.joinMode === 'open' ? 'Pendaftaran terbuka untuk semua pesepeda.' : 'Pendaftaran memerlukan persetujuan pengurus.' }}
+          </small>
         </div>
 
         <p v-if="joinMessage" class="join-toast" role="status">
@@ -664,36 +666,29 @@ onMounted(loadCommunity);
 /* ── Hero Card ───────────────────────────────────────────── */
 .community-hero-card {
   display: grid;
-  gap: 1rem;
-  padding: 1.35rem 1.5rem;
+  gap: 0.85rem;
+  padding: 1.25rem 1.35rem;
   border-radius: 1.35rem;
   background: var(--color-white);
   border: 1px solid var(--color-sand);
-  box-shadow: 0 4px 20px rgb(23 32 42 / 5%);
+  box-shadow: 0 2px 12px rgb(23 32 42 / 4%);
 }
 
-.hero-top-badges {
+.hero-main-row {
   display: flex;
   align-items: center;
-  gap: 0.4rem;
-  flex-wrap: wrap;
-}
-
-.hero-identity-row {
-  display: flex;
-  align-items: center;
-  gap: 1rem;
+  gap: 0.85rem;
 }
 
 .community-avatar-box {
-  width: 3.5rem;
-  height: 3.5rem;
-  border-radius: 1rem;
+  width: 3.2rem;
+  height: 3.2rem;
+  border-radius: 0.85rem;
   background: linear-gradient(135deg, rgba(201, 243, 106, 0.45), rgba(15, 118, 110, 0.2));
   border: 2px solid var(--color-chain-lime);
   display: grid;
   place-items: center;
-  font-size: 1.25rem;
+  font-size: 1.15rem;
   font-weight: 900;
   color: var(--color-ink);
   flex-shrink: 0;
@@ -702,25 +697,54 @@ onMounted(loadCommunity);
 .hero-identity-text {
   flex: 1;
   display: grid;
-  gap: 0.25rem;
+  gap: 0.2rem;
   min-width: 0;
 }
 
-.community-handle-bar {
-  display: flex;
-  align-items: center;
-  gap: 0.45rem;
+.community-title {
+  margin: 0;
+  font-size: 1.25rem;
+  font-weight: 850;
+  letter-spacing: -0.02em;
+  color: var(--color-ink);
+  line-height: 1.2;
 }
 
-.community-handle-pill {
-  font-family: var(--font-mono);
+.hero-meta-strip {
+  display: flex;
+  align-items: center;
+  gap: 0.35rem;
+  flex-wrap: wrap;
   font-size: 0.72rem;
-  font-weight: 800;
   color: var(--color-asphalt);
-  background: var(--color-canvas);
-  padding: 0.15rem 0.5rem;
-  border-radius: 0.4rem;
-  border: 1px solid var(--color-sand);
+}
+
+.meta-handle {
+  font-family: var(--font-mono);
+  font-weight: 750;
+  color: var(--color-asphalt);
+}
+
+.meta-dot {
+  opacity: 0.4;
+}
+
+.meta-item {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.2rem;
+}
+
+.verified-pill {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.2rem;
+  font-size: 0.68rem;
+  font-weight: 800;
+  color: #15803D;
+  background: rgba(21, 128, 61, 0.1);
+  padding: 0.1rem 0.4rem;
+  border-radius: 9999px;
 }
 
 .share-handle-btn {
@@ -732,132 +756,110 @@ onMounted(loadCommunity);
   color: var(--color-ink);
   background: var(--color-canvas);
   border: 1px solid var(--color-sand);
-  padding: 0.15rem 0.5rem;
-  border-radius: 0.4rem;
+  padding: 0.3rem 0.6rem;
+  border-radius: 0.55rem;
   cursor: pointer;
   transition: all 120ms ease;
+  flex-shrink: 0;
+  align-self: flex-start;
 }
 
 .share-handle-btn:hover {
   background: var(--color-sand);
 }
 
-.locality-badge {
-  display: inline-flex;
-  align-items: center;
-  gap: 0.25rem;
-  font-size: 0.72rem;
-  font-weight: 800;
-  color: var(--color-ink);
-  background: var(--color-canvas);
-  padding: 0.15rem 0.5rem;
-  border-radius: 9999px;
-  border: 1px solid var(--color-sand);
-}
-
-.verified-pill {
-  display: inline-flex;
-  align-items: center;
-  gap: 0.25rem;
-  font-size: 0.72rem;
-  font-weight: 800;
-  color: #15803D;
-  background: rgba(21, 128, 61, 0.1);
-  padding: 0.15rem 0.5rem;
-  border-radius: 9999px;
-}
-
-.members-badge {
-  display: inline-flex;
-  align-items: center;
-  gap: 0.25rem;
-  font-size: 0.72rem;
-  font-weight: 800;
-  color: var(--color-asphalt);
-  background: var(--color-sand);
-  padding: 0.15rem 0.5rem;
-  border-radius: 9999px;
-}
-
-.community-title {
-  margin: 0;
-  font-size: 1.4rem;
-  font-weight: 850;
-  letter-spacing: -0.025em;
-  color: var(--color-ink);
-  line-height: 1.25;
-}
-
 .community-description {
   margin: 0;
-  font-size: 0.85rem;
+  font-size: 0.84rem;
   color: var(--color-asphalt);
-  line-height: 1.5;
+  line-height: 1.45;
 }
 
 /* ── Discipline Chips ────────────────────────────────────── */
 .discipline-chips-row {
   display: flex;
-  gap: 0.4rem;
+  gap: 0.35rem;
   flex-wrap: wrap;
 }
 
 .discipline-chip {
   display: inline-flex;
   align-items: center;
-  gap: 0.35rem;
-  font-size: 0.72rem;
+  gap: 0.3rem;
+  font-size: 0.7rem;
   font-weight: 800;
-  padding: 0.25rem 0.6rem;
-  border-radius: 0.55rem;
+  padding: 0.2rem 0.55rem;
+  border-radius: 0.45rem;
   background: var(--color-canvas);
   border: 1px solid var(--color-sand);
   color: var(--color-ink);
   text-transform: capitalize;
 }
 
-/* ── Membership Action Box ───────────────────────────────── */
-.membership-action-box {
+/* ── Membership Status Bars ──────────────────────────────── */
+.member-active-bar {
   display: flex;
   align-items: center;
   justify-content: space-between;
-  gap: 1rem;
-  padding: 1rem 1.15rem;
-  border-radius: 1.1rem;
-  background: linear-gradient(135deg, rgba(201, 243, 106, 0.15), var(--color-canvas));
-  border: 1px solid var(--color-sand);
-  flex-wrap: wrap;
-}
-
-.membership-status-info {
-  display: grid;
-  gap: 0.2rem;
-}
-
-.membership-status-title {
-  font-size: 0.85rem;
-  font-weight: 850;
+  gap: 0.75rem;
+  padding: 0.55rem 0.85rem;
+  border-radius: 0.75rem;
+  background: rgba(22, 163, 74, 0.08);
+  border: 1px solid rgba(22, 163, 74, 0.2);
+  font-size: 0.78rem;
   color: var(--color-ink);
 }
 
-.membership-role-tag {
-  font-size: 0.74rem;
-  color: #15803D;
+.active-status-left {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.35rem;
 }
 
-.membership-guest-tag {
-  font-size: 0.74rem;
-  color: var(--color-asphalt);
+.active-status-tag {
+  font-size: 0.68rem;
+  font-weight: 850;
+  color: #15803D;
+  background: rgba(22, 163, 74, 0.15);
+  padding: 0.1rem 0.45rem;
+  border-radius: 9999px;
+  flex-shrink: 0;
+}
+
+.member-pending-bar {
+  display: flex;
+  align-items: center;
+  gap: 0.45rem;
+  padding: 0.55rem 0.85rem;
+  border-radius: 0.75rem;
+  background: rgba(217, 119, 6, 0.08);
+  border: 1px solid rgba(217, 119, 6, 0.2);
+  font-size: 0.76rem;
+  color: #B45309;
+}
+
+.membership-join-box {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 0.75rem;
+  flex-wrap: wrap;
+  padding-top: 0.25rem;
 }
 
 .join-action-btn {
   display: inline-flex;
   align-items: center;
-  gap: 0.4rem;
-  padding: 0.55rem 1.15rem;
-  font-size: 0.82rem;
+  gap: 0.35rem;
+  padding: 0.45rem 1rem;
+  font-size: 0.8rem;
   font-weight: 850;
-  border-radius: 0.75rem;
+  border-radius: 0.65rem;
+}
+
+.join-caption {
+  font-size: 0.72rem;
+  color: var(--color-asphalt);
 }
 
 .join-toast {
