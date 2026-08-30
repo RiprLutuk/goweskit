@@ -130,12 +130,14 @@ function categoryIcon(slug: string): string {
   return iconMap[slug] ?? '🚲';
 }
 
-function bikeTypeEmoji(slug: string): string {
-  if (slug === 'mtb_hardtail') return '🌲';
-  if (slug === 'folding') return '🧲';
-  if (slug === 'road') return '⚡';
-  if (slug === 'gravel') return '🌾';
-  return '🚲';
+function bikeTypeSvg(slug: string): string {
+  const map: Record<string, string> = {
+    folding: '/bikes/folding.svg',
+    gravel: '/bikes/gravel.svg',
+    mtb_hardtail: '/bikes/mtb_hardtail.svg',
+    road: '/bikes/road.svg',
+  };
+  return map[slug] ?? '/bikes/mtb_hardtail.svg';
 }
 
 function bikeTypeHighlights(slug: string): string[] {
@@ -238,36 +240,10 @@ function resetWizard(): void {
     <!-- HERO / PAGE HEADER -->
     <header class="learn-hero">
       <div class="learn-hero__inner">
-        <!-- Eyebrow & Quick Tools Row -->
-        <div class="learn-hero__top">
-          <div class="learn-badge">
-            <span class="learn-badge__dot"></span>
-            <span>Pusat Pengetahuan Gowes</span>
-          </div>
-
-          <!-- Quick Action Buttons -->
-          <div class="learn-quick-actions">
-            <NuxtLink to="/learn/diagnostics" class="action-pill action-pill--alert">
-              <span class="pill-icon">🔧</span>
-              <span class="pill-text">Diagnostik Masalah</span>
-            </NuxtLink>
-            <button
-              class="action-pill action-pill--wizard"
-              type="button"
-              @click="showWizard = true"
-            >
-              <span class="pill-icon">🧭</span>
-              <span class="pill-text">Deteksi Tipe</span>
-            </button>
-            <button
-              class="action-pill action-pill--curate"
-              type="button"
-              @click="showAdminModal = true"
-            >
-              <span class="pill-icon">➕</span>
-              <span class="pill-text">Tambah Istilah</span>
-            </button>
-          </div>
+        <!-- Eyebrow -->
+        <div class="learn-badge">
+          <span class="learn-badge__dot"></span>
+          <span>Pusat Pengetahuan Gowes</span>
         </div>
 
         <!-- Main Title & Sub -->
@@ -275,6 +251,30 @@ function resetWizard(): void {
         <p class="learn-hero__subtitle">
           Pelajari tipe sepeda, kompatibilitas komponen as roda, bottom bracket, headset, dan standar teknis secara transparan tanpa bingung.
         </p>
+
+        <!-- Quick Action Tools Row -->
+        <div class="learn-quick-actions">
+          <NuxtLink to="/learn/diagnostics" class="action-pill action-pill--alert">
+            <span class="pill-icon">🔧</span>
+            <span>Diagnostik Masalah</span>
+          </NuxtLink>
+          <button
+            class="action-pill action-pill--wizard"
+            type="button"
+            @click="showWizard = true"
+          >
+            <span class="pill-icon">🧭</span>
+            <span>Deteksi Tipe</span>
+          </button>
+          <button
+            class="action-pill action-pill--curate"
+            type="button"
+            @click="showAdminModal = true"
+          >
+            <span class="pill-icon">➕</span>
+            <span>Tambah Istilah</span>
+          </button>
+        </div>
 
         <!-- Search Bar -->
         <form class="learn-search" @submit.prevent="searchLearn">
@@ -290,7 +290,7 @@ function resetWizard(): void {
           />
           <button v-if="searchQuery" class="learn-search__clear" type="button" @click="clearSearch">✕</button>
           <button class="learn-search__submit" type="submit" :disabled="searching">
-            {{ searching ? 'Mencari…' : 'Cari' }}
+            {{ searching ? '…' : 'Cari' }}
           </button>
         </form>
       </div>
@@ -324,7 +324,7 @@ function resetWizard(): void {
         </div>
       </div>
 
-      <!-- Segmented Control Navigation Tabs -->
+      <!-- Segmented Control Navigation Tabs (Mobile-responsive, no text overlapping) -->
       <div v-if="!hasSearched" class="segmented-tabs-wrapper">
         <nav class="segmented-tabs" role="tablist" aria-label="Menu Belajar">
           <button
@@ -349,7 +349,7 @@ function resetWizard(): void {
             @click="activeTab = 'components'"
           >
             <span class="tab-btn__icon">⚙️</span>
-            <span class="tab-btn__label">Komponen Anatomi</span>
+            <span class="tab-btn__label">Komponen</span>
             <span class="tab-btn__badge">{{ componentCategories.length }}</span>
           </button>
 
@@ -362,7 +362,7 @@ function resetWizard(): void {
             @click="activeTab = 'glossary'"
           >
             <span class="tab-btn__icon">📖</span>
-            <span class="tab-btn__label">Kamus Glosarium</span>
+            <span class="tab-btn__label">Glosarium</span>
             <span class="tab-btn__badge">{{ glossaryTerms.length }}</span>
           </button>
         </nav>
@@ -377,7 +377,7 @@ function resetWizard(): void {
 
       <template v-else-if="!hasSearched">
         <!-- ══════════════════════════════════════════════════════════
-             TAB 1: BICYCLE TYPES (ANATOMY & STANDARDS)
+             TAB 1: BICYCLE TYPES (WITH VECTOR ARTWORK ASSETS)
              ══════════════════════════════════════════════════════════ -->
         <section v-if="activeTab === 'types'" class="types-section">
           <div class="types-grid">
@@ -386,11 +386,18 @@ function resetWizard(): void {
               :key="bType.id"
               class="bike-type-card"
             >
-              <!-- Card Header -->
-              <div class="bike-type-card__header">
-                <div class="bike-type-icon-wrapper">
-                  <span class="bike-type-icon">{{ bikeTypeEmoji(bType.slug) }}</span>
-                </div>
+              <!-- Vector Illustration Banner Artwork -->
+              <div class="bike-type-illustration-box">
+                <img
+                  :src="bikeTypeSvg(bType.slug)"
+                  :alt="bType.name"
+                  class="bike-type-svg"
+                  loading="lazy"
+                />
+              </div>
+
+              <!-- Card Content -->
+              <div class="bike-type-card__body">
                 <div class="bike-type-header-content">
                   <div class="bike-type-category-pill">
                     {{ bType.slug.replace('_', ' ').toUpperCase() }}
@@ -400,33 +407,33 @@ function resetWizard(): void {
                     {{ bikeTypeTerrainLabel(bType.slug) }}
                   </div>
                 </div>
-              </div>
 
-              <!-- Summary -->
-              <p class="bike-type-summary">{{ bType.summary }}</p>
+                <!-- Summary -->
+                <p class="bike-type-summary">{{ bType.summary }}</p>
 
-              <!-- Technical Standards Highlights Chips -->
-              <div class="bike-type-specs-shelf">
-                <div class="specs-shelf-label">Standar Kunci:</div>
-                <div class="specs-chips-row">
-                  <span
-                    v-for="badge in bikeTypeHighlights(bType.slug)"
-                    :key="badge"
-                    class="spec-chip"
-                  >
-                    {{ badge }}
-                  </span>
+                <!-- Technical Standards Highlights Chips -->
+                <div class="bike-type-specs-shelf">
+                  <div class="specs-shelf-label">Standar Kunci:</div>
+                  <div class="specs-chips-row">
+                    <span
+                      v-for="badge in bikeTypeHighlights(bType.slug)"
+                      :key="badge"
+                      class="spec-chip"
+                    >
+                      {{ badge }}
+                    </span>
+                  </div>
                 </div>
-              </div>
 
-              <!-- Card Action Button -->
-              <NuxtLink
-                class="bike-type-action-btn"
-                :to="`/learn/bicycle-types/${bType.slug}`"
-              >
-                <span>Buka Diagram Anatomi &amp; Standar</span>
-                <span class="action-btn-arrow">→</span>
-              </NuxtLink>
+                <!-- Card Action Button -->
+                <NuxtLink
+                  class="bike-type-action-btn"
+                  :to="`/learn/bicycle-types/${bType.slug}`"
+                >
+                  <span>Buka Diagram Anatomi &amp; Standar</span>
+                  <span class="action-btn-arrow">→</span>
+                </NuxtLink>
+              </div>
             </article>
           </div>
         </section>
@@ -665,7 +672,7 @@ function resetWizard(): void {
 .learn-page-wrapper {
   display: flex;
   flex-direction: column;
-  gap: 1.5rem;
+  gap: 1.25rem;
   padding-bottom: 3rem;
 }
 
@@ -675,7 +682,7 @@ function resetWizard(): void {
 .learn-hero {
   background: var(--color-white);
   border-bottom: 1.5px solid var(--color-sand);
-  padding: 1.5rem 1rem 1.75rem;
+  padding: 1.25rem 1rem 1.5rem;
   margin: -1rem -1rem 0 -1rem;
 }
 
@@ -684,7 +691,7 @@ function resetWizard(): void {
     border-radius: 1.5rem;
     border: 1.5px solid var(--color-sand);
     margin: 0;
-    padding: 1.75rem 2rem 2rem;
+    padding: 1.5rem 1.75rem 1.75rem;
   }
 }
 
@@ -693,15 +700,7 @@ function resetWizard(): void {
   margin: 0 auto;
   display: flex;
   flex-direction: column;
-  gap: 0.85rem;
-}
-
-.learn-hero__top {
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
   gap: 0.75rem;
-  flex-wrap: wrap;
 }
 
 .learn-badge {
@@ -716,8 +715,9 @@ function resetWizard(): void {
   color: var(--color-asphalt);
   background: var(--color-canvas);
   border: 1px solid var(--color-sand);
-  padding: 0.25rem 0.65rem;
+  padding: 0.2rem 0.6rem;
   border-radius: 9999px;
+  width: fit-content;
 }
 
 .learn-badge__dot {
@@ -727,11 +727,30 @@ function resetWizard(): void {
   background: #16A34A;
 }
 
+.learn-hero__title {
+  margin: 0;
+  font-size: 1.75rem;
+  font-weight: 900;
+  letter-spacing: -0.03em;
+  color: var(--color-ink);
+  line-height: 1.2;
+}
+
+.learn-hero__subtitle {
+  margin: 0;
+  font-size: 0.86rem;
+  color: var(--color-asphalt);
+  line-height: 1.45;
+  max-width: 44rem;
+}
+
+/* Quick Tools Row (Clean responsive chips) */
 .learn-quick-actions {
   display: flex;
   align-items: center;
   gap: 0.45rem;
   flex-wrap: wrap;
+  padding-top: 0.15rem;
 }
 
 .action-pill {
@@ -741,10 +760,10 @@ function resetWizard(): void {
   padding: 0.35rem 0.75rem;
   border-radius: 9999px;
   font-size: 0.76rem;
-  font-weight: 800;
+  font-weight: 850;
   text-decoration: none;
   cursor: pointer;
-  border: 1px solid var(--color-ink);
+  border: 1.5px solid var(--color-ink);
   box-shadow: 0 2px 0 var(--color-ink);
   transition: transform 90ms ease, box-shadow 90ms ease;
   white-space: nowrap;
@@ -768,25 +787,12 @@ function resetWizard(): void {
 }
 
 .action-pill--curate {
-  background: var(--color-white);
+  background: var(--color-canvas);
   color: var(--color-ink);
 }
 
-.learn-hero__title {
-  margin: 0;
-  font-size: 1.85rem;
-  font-weight: 900;
-  letter-spacing: -0.03em;
-  color: var(--color-ink);
-  line-height: 1.2;
-}
-
-.learn-hero__subtitle {
-  margin: 0;
-  font-size: 0.88rem;
-  color: var(--color-asphalt);
-  line-height: 1.5;
-  max-width: 42rem;
+.pill-icon {
+  font-size: 0.85rem;
 }
 
 /* Search Bar */
@@ -794,12 +800,12 @@ function resetWizard(): void {
   display: flex;
   align-items: center;
   gap: 0.5rem;
-  padding: 0.35rem 0.45rem 0.35rem 1rem;
+  padding: 0.35rem 0.45rem 0.35rem 0.85rem;
   border-radius: 9999px;
   background: var(--color-canvas);
   border: 1.5px solid var(--color-sand);
-  box-shadow: 0 3px 12px rgba(23, 32, 42, 0.04);
-  margin-top: 0.5rem;
+  box-shadow: 0 2px 8px rgba(23, 32, 42, 0.03);
+  margin-top: 0.35rem;
   transition: border-color 150ms ease, background-color 150ms ease;
 }
 
@@ -809,7 +815,7 @@ function resetWizard(): void {
 }
 
 .learn-search__icon {
-  font-size: 0.95rem;
+  font-size: 0.9rem;
   opacity: 0.6;
 }
 
@@ -818,7 +824,7 @@ function resetWizard(): void {
   border: none;
   background: transparent;
   outline: none;
-  font-size: 0.85rem;
+  font-size: 0.84rem;
   font-weight: 700;
   color: var(--color-ink);
   font-family: inherit;
@@ -834,13 +840,13 @@ function resetWizard(): void {
 }
 
 .learn-search__submit {
-  padding: 0.45rem 1rem;
+  padding: 0.4rem 0.85rem;
   border-radius: 9999px;
   background: var(--color-ink);
   color: var(--color-white);
   border: none;
-  font-size: 0.78rem;
-  font-weight: 800;
+  font-size: 0.76rem;
+  font-weight: 850;
   cursor: pointer;
   transition: transform 90ms ease;
 }
@@ -850,7 +856,7 @@ function resetWizard(): void {
 }
 
 /* ══════════════════════════════════════════════════════════
-   SEGMENTED NAVIGATION TABS
+   SEGMENTED NAVIGATION TABS (NO TEXT OVERLAPPING)
    ══════════════════════════════════════════════════════════ */
 .learn-content-container {
   display: flex;
@@ -862,42 +868,49 @@ function resetWizard(): void {
 }
 
 .segmented-tabs-wrapper {
+  width: 100%;
   display: flex;
   justify-content: center;
 }
 
 .segmented-tabs {
-  display: flex;
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
   gap: 0.35rem;
   padding: 0.35rem;
   border-radius: 1.15rem;
   background: var(--color-sand);
   width: 100%;
-  max-width: 36rem;
+  max-width: 38rem;
 }
 
 .tab-btn {
-  flex: 1;
   display: flex;
   align-items: center;
   justify-content: center;
-  gap: 0.45rem;
-  padding: 0.6rem 0.75rem;
+  gap: 0.35rem;
+  padding: 0.55rem 0.5rem;
   border-radius: 0.85rem;
   border: none;
   background: transparent;
   color: var(--color-asphalt);
-  font-size: 0.8rem;
+  font-size: 0.78rem;
   font-weight: 850;
   cursor: pointer;
   transition: all 120ms ease;
-  white-space: nowrap;
+  min-width: 0;
 }
 
 .tab-btn--active {
   background: var(--color-white);
   color: var(--color-ink);
-  box-shadow: 0 2px 8px rgba(23, 32, 42, 0.08);
+  box-shadow: 0 2px 6px rgba(23, 32, 42, 0.08);
+}
+
+.tab-btn__label {
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
 }
 
 .tab-btn__badge {
@@ -908,6 +921,7 @@ function resetWizard(): void {
   border-radius: 9999px;
   background: rgba(23, 32, 42, 0.08);
   color: var(--color-ink);
+  flex-shrink: 0;
 }
 
 .tab-btn--active .tab-btn__badge {
@@ -916,7 +930,7 @@ function resetWizard(): void {
 }
 
 /* ══════════════════════════════════════════════════════════
-   TAB 1: BICYCLE TYPE CARDS (CLEAN WORKSHOP AESTHETIC)
+   TAB 1: BICYCLE TYPE CARDS (CLEAN VECTOR ARTWORK AESTHETIC)
    ══════════════════════════════════════════════════════════ */
 .types-section {
   display: flex;
@@ -926,51 +940,58 @@ function resetWizard(): void {
 
 .types-grid {
   display: grid;
-  grid-template-columns: repeat(auto-fill, minmax(22rem, 1fr));
-  gap: 1rem;
+  grid-template-columns: repeat(auto-fill, minmax(20rem, 1fr));
+  gap: 1.25rem;
 }
 
 .bike-type-card {
   background: var(--color-white);
   border: 1.5px solid var(--color-sand);
   border-radius: 1.35rem;
-  padding: 1.35rem;
+  overflow: hidden;
   display: flex;
   flex-direction: column;
-  gap: 0.95rem;
   box-shadow: 0 4px 16px rgba(23, 32, 42, 0.03);
-  transition: border-color 150ms ease, box-shadow 150ms ease;
+  transition: border-color 150ms ease, box-shadow 150ms ease, transform 150ms ease;
 }
 
 .bike-type-card:hover {
   border-color: var(--color-ink);
-  box-shadow: 0 6px 20px rgba(23, 32, 42, 0.06);
+  box-shadow: 0 8px 24px rgba(23, 32, 42, 0.07);
 }
 
-.bike-type-card__header {
-  display: flex;
-  align-items: flex-start;
-  gap: 0.85rem;
-}
-
-.bike-type-icon-wrapper {
-  width: 3.25rem;
-  height: 3.25rem;
-  border-radius: 1rem;
-  background: var(--color-canvas);
-  border: 1.5px solid var(--color-sand);
+/* Vector Illustration Box */
+.bike-type-illustration-box {
+  width: 100%;
+  height: 9.5rem;
+  background: #F8FAFC;
+  border-bottom: 1.5px solid var(--color-sand);
   display: flex;
   align-items: center;
   justify-content: center;
-  font-size: 1.75rem;
-  flex-shrink: 0;
+  padding: 0.75rem;
+}
+
+.bike-type-svg {
+  width: 100%;
+  height: 100%;
+  max-width: 15rem;
+  object-fit: contain;
+}
+
+/* Card Body */
+.bike-type-card__body {
+  padding: 1.25rem;
+  display: flex;
+  flex-direction: column;
+  gap: 0.85rem;
+  flex: 1;
 }
 
 .bike-type-header-content {
   display: flex;
   flex-direction: column;
   gap: 0.2rem;
-  flex: 1;
 }
 
 .bike-type-category-pill {
@@ -1057,6 +1078,7 @@ function resetWizard(): void {
   color: var(--color-ink);
   box-shadow: 0 2px 0 var(--color-ink);
   transition: all 100ms ease;
+  margin-top: 0.25rem;
 }
 
 .bike-type-action-btn:hover {
@@ -1404,6 +1426,18 @@ function resetWizard(): void {
 /* ══════════════════════════════════════════════════════════
    WIZARD MODAL SHEET
    ══════════════════════════════════════════════════════════ */
+.native-modal-backdrop {
+  position: fixed;
+  inset: 0;
+  background: rgba(15, 23, 42, 0.6);
+  backdrop-filter: blur(6px);
+  -webkit-backdrop-filter: blur(6px);
+  display: grid;
+  place-items: center;
+  z-index: 100;
+  padding: 1rem;
+}
+
 .wizard-modal-sheet {
   width: 100%;
   max-width: 30rem;

@@ -1,6 +1,7 @@
 import {
   apiErrorResponseSchema,
   glossaryListResponseSchema,
+  glossaryTermSchema,
   learnSearchResponseSchema,
   type BicycleType,
   type ComponentCategory,
@@ -54,7 +55,7 @@ const openApps: FastifyInstance[] = [];
 
 function buildLearnApp(): FastifyInstance {
   const app = Fastify({ logger: false });
-  app.decorate('authenticate', async () => {});
+  app.decorate('authenticate', () => Promise.resolve());
   app.setErrorHandler((error, request, reply) => {
     const appError =
       error instanceof AppError
@@ -100,8 +101,10 @@ describe('Learn glossary and search routes', () => {
       payload: {
         slug: 'sram_transmission',
         term: 'SRAM Transmission (T-Type)',
-        plainDefinition: 'Sistem drivetrain direct mount tanpa hanger RD tradisional.',
-        technicalDefinition: 'Full Mount interface attaching directly to frame dropout via UDH standard.',
+        plainDefinition:
+          'Sistem drivetrain direct mount tanpa hanger RD tradisional.',
+        technicalDefinition:
+          'Full Mount interface attaching directly to frame dropout via UDH standard.',
         aliases: ['T-Type', 'Transmission'],
         relatedComponentSlugs: ['rear_derailleur', 'cassette'],
       },
@@ -118,7 +121,10 @@ describe('Learn glossary and search routes', () => {
       },
     });
     expect(updateRes.statusCode).toBe(200);
-    expect(updateRes.json().plainDefinition).toBe('Definisi terupdate dari admin curator.');
+    const updated = glossaryTermSchema.parse(updateRes.json());
+    expect(updated.plainDefinition).toBe(
+      'Definisi terupdate dari admin curator.',
+    );
 
     // Delete
     const deleteRes = await app.inject({

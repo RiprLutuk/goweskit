@@ -21,7 +21,7 @@ import {
 import type { CatalogRepository } from '../repositories/catalog-repository.js';
 
 export class CatalogService {
-  private readonly glossaryStore: Map<string, GlossaryTerm> = new Map(
+  private readonly glossaryStore = new Map<string, GlossaryTerm>(
     CURATED_GLOSSARY.map((term) => [term.slug, term]),
   );
 
@@ -64,8 +64,8 @@ export class CatalogService {
       term: input.term,
       plainDefinition: input.plainDefinition,
       technicalDefinition: input.technicalDefinition,
-      aliases: input.aliases || [],
-      relatedComponentSlugs: input.relatedComponentSlugs || [],
+      aliases: input.aliases,
+      relatedComponentSlugs: input.relatedComponentSlugs,
     };
     this.glossaryStore.set(term.slug, term);
     return term;

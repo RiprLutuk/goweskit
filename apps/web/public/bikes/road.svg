@@ -1,0 +1,44 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 240 160" width="100%" height="100%" fill="none">
+  <!-- Background Card Accent -->
+  <rect width="240" height="160" rx="20" fill="#F8FAFC"/>
+  
+  <!-- Fast 700c Deep Section Aero Wheels -->
+  <circle cx="45" cy="105" r="38" stroke="#17202A" stroke-width="3" fill="#FFFFFF"/>
+  <circle cx="45" cy="105" r="34" stroke="#475569" stroke-width="5"/>
+  <circle cx="45" cy="105" r="28" stroke="#EDE4D2" stroke-width="1.5" stroke-dasharray="4 4"/>
+  <circle cx="45" cy="105" r="5" fill="#17202A"/>
+  
+  <circle cx="195" cy="105" r="38" stroke="#17202A" stroke-width="3" fill="#FFFFFF"/>
+  <circle cx="195" cy="105" r="34" stroke="#475569" stroke-width="5"/>
+  <circle cx="195" cy="105" r="28" stroke="#EDE4D2" stroke-width="1.5" stroke-dasharray="4 4"/>
+  <circle cx="195" cy="105" r="5" fill="#17202A"/>
+
+  <!-- Tight Aero Road Geometry Frame -->
+  <!-- Rear triangle -->
+  <path d="M45 105 L92 52 L108 108 Z" stroke="#17202A" stroke-width="4.5" stroke-linejoin="round"/>
+  <!-- Front triangle -->
+  <path d="M108 108 L92 52 L170 50 L174 72 Z" stroke="#17202A" stroke-width="4.5" stroke-linejoin="round" fill="#FF8C75" fill-opacity="0.15"/>
+  
+  <!-- Straight Horizontal Top Tube -->
+  <path d="M92 52 L170 50" stroke="#17202A" stroke-width="5" stroke-linecap="round"/>
+  <!-- Oversized Aero Down Tube -->
+  <path d="M108 108 L174 72" stroke="#17202A" stroke-width="5" stroke-linecap="round"/>
+
+  <!-- 2x Road Crankset with Dual Chainrings -->
+  <circle cx="108" cy="108" r="12" fill="#17202A"/>
+  <circle cx="108" cy="108" r="9" fill="#FF8C75"/>
+
+  <!-- Aero Seatpost & Race Saddle -->
+  <path d="M108 108 L88 35" stroke="#17202A" stroke-width="4.5" stroke-linecap="round"/>
+  <path d="M70 35 C82 32, 104 32, 115 35 C110 39, 82 39, 70 35 Z" fill="#17202A"/>
+  
+  <!-- Straight Aero Carbon Fork -->
+  <path d="M172 50 L195 105" stroke="#17202A" stroke-width="5" stroke-linecap="round"/>
+  
+  <!-- Tight Aero Drop Handlebars -->
+  <path d="M170 50 L175 42 L185 42 C190 42, 190 56, 182 58" stroke="#17202A" stroke-width="4" stroke-linecap="round" fill="none"/>
+  
+  <!-- Badge Label -->
+  <rect x="12" y="12" width="65" height="20" rx="6" fill="#FF8C75"/>
+  <text x="44" y="26" fill="#7C2D12" font-family="system-ui, -apple-system, sans-serif" font-size="10" font-weight="900" text-anchor="middle">ROAD BIKE</text>
+</svg>

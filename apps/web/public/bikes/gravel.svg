@@ -1,0 +1,42 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 240 160" width="100%" height="100%" fill="none">
+  <!-- Background Card Accent -->
+  <rect width="240" height="160" rx="20" fill="#F8FAFC"/>
+  
+  <!-- 700c Gravel Wheels with Tan-wall / All-terrain tires -->
+  <circle cx="45" cy="105" r="38" stroke="#D97706" stroke-width="3" fill="#FFFFFF"/>
+  <circle cx="45" cy="105" r="35" stroke="#17202A" stroke-width="4"/>
+  <circle cx="45" cy="105" r="28" stroke="#EDE4D2" stroke-width="2" stroke-dasharray="4 4"/>
+  <circle cx="45" cy="105" r="6" fill="#17202A"/>
+  
+  <circle cx="195" cy="105" r="38" stroke="#D97706" stroke-width="3" fill="#FFFFFF"/>
+  <circle cx="195" cy="105" r="35" stroke="#17202A" stroke-width="4"/>
+  <circle cx="195" cy="105" r="28" stroke="#EDE4D2" stroke-width="2" stroke-dasharray="4 4"/>
+  <circle cx="195" cy="105" r="6" fill="#17202A"/>
+
+  <!-- Diamond Frame (Sloping top tube for gravel clearance) -->
+  <!-- Rear triangle -->
+  <path d="M45 105 L95 55 L108 108 Z" stroke="#17202A" stroke-width="4.5" stroke-linejoin="round"/>
+  <!-- Front triangle -->
+  <path d="M108 108 L95 55 L165 48 L172 75 Z" stroke="#17202A" stroke-width="4.5" stroke-linejoin="round" fill="#8EDDF4" fill-opacity="0.15"/>
+  <!-- Top tube line -->
+  <path d="M95 55 L165 48" stroke="#17202A" stroke-width="5" stroke-linecap="round"/>
+  <!-- Down tube line -->
+  <path d="M108 108 L172 75" stroke="#17202A" stroke-width="5" stroke-linecap="round"/>
+
+  <!-- Bottom Bracket & Chainring -->
+  <circle cx="108" cy="108" r="12" fill="#C9F36A" stroke="#17202A" stroke-width="3"/>
+
+  <!-- Seatpost & Saddle -->
+  <path d="M108 108 L90 40" stroke="#17202A" stroke-width="4" stroke-linecap="round"/>
+  <path d="M72 40 C85 36, 105 36, 115 40 C110 44, 85 44, 72 40 Z" fill="#17202A"/>
+  
+  <!-- Carbon Rigid Gravel Fork -->
+  <path d="M168 55 L195 105" stroke="#17202A" stroke-width="5" stroke-linecap="round"/>
+  
+  <!-- Flared Drop Bar -->
+  <path d="M165 48 L168 38 L180 38 C185 38, 185 52, 178 54" stroke="#17202A" stroke-width="4" stroke-linecap="round" fill="none"/>
+  
+  <!-- Badge Label -->
+  <rect x="12" y="12" width="60" height="20" rx="6" fill="#8EDDF4"/>
+  <text x="42" y="26" fill="#0C4A6E" font-family="system-ui, -apple-system, sans-serif" font-size="10" font-weight="900" text-anchor="middle">GRAVEL</text>
+</svg>
