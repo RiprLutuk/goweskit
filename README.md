@@ -3,6 +3,7 @@
 # GowesKit
 ### Platform Cerdas, Paspor Sepeda & Manajemen Kompatibilitas Pesepeda
 
+[![Live Demo](https://img.shields.io/badge/Live_Demo-goweskit.demo.pandanteknik.com-00DC82?style=flat-square&logo=google-chrome&logoColor=white)](https://goweskit.demo.pandanteknik.com/)
 [![TypeScript](https://img.shields.io/badge/TypeScript-Strict-3178C6?style=flat-square&logo=typescript&logoColor=white)](https://www.typescriptlang.org/)
 [![Nuxt 3](https://img.shields.io/badge/Nuxt_3-00DC82?style=flat-square&logo=nuxtdotjs&logoColor=white)](https://nuxt.com/)
 [![Fastify](https://img.shields.io/badge/Fastify-000000?style=flat-square&logo=fastify&logoColor=white)](https://www.fastify.io/)
@@ -14,6 +15,7 @@
   Platform edukasi anatomi sepeda, manajemen inventaris (Garage), mesin audit kompatibilitas deterministik (Upgrade Lab), navigasi spasial PostGIS privacy-first, pelacak keselamatan solo-ride, dan poster studio data gowes.
 </p>
 
+[Live Demo](https://goweskit.demo.pandanteknik.com/) •
 [Mengapa GowesKit?](#mengapa-goweskit) •
 [Fitur Utama](#fitur-utama--arsitektur-modul) •
 [Standar Resmi](#transparansi-standar-resmi-industri) •
@@ -230,7 +232,7 @@ pnpm dev
    ```nginx
    server {
        listen 80;
-       server_name goweskit.id www.goweskit.id;
+       server_name goweskit.demo.pandanteknik.com;
 
        location / {
            proxy_pass http://127.0.0.1:3000;
@@ -256,7 +258,7 @@ pnpm dev
    ```bash
    sudo ln -s /etc/nginx/sites-available/goweskit /etc/nginx/sites-enabled/
    sudo nginx -t && sudo systemctl reload nginx
-   sudo certbot --nginx -d goweskit.id -d www.goweskit.id
+   sudo certbot --nginx -d goweskit.demo.pandanteknik.com
    ```
 
 ---
