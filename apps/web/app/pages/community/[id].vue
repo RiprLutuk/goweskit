@@ -477,7 +477,7 @@ onMounted(loadCommunity);
           <div class="title-wrap">
             <h2 id="community-rides-title" class="section-heading">
               <GIcon name="calendar" size="sm" color="#17202A" />
-              <span>Jadwal Gowes Bersama</span>
+              <span>Jadwal Gowes</span>
             </h2>
             <span class="events-count-badge">{{ events.length }}</span>
           </div>
@@ -489,7 +489,7 @@ onMounted(loadCommunity);
             @click="showCreateEventModal = true"
           >
             <GIcon name="plus" size="xs" color="#17202A" />
-            <span>Buat Jadwal Mabar</span>
+            <span>Buat Jadwal</span>
           </button>
         </div>
 
@@ -1016,32 +1016,38 @@ onMounted(loadCommunity);
 .title-wrap {
   display: flex;
   align-items: center;
-  gap: 0.5rem;
+  gap: 0.45rem;
 }
 
 .events-count-badge {
   font-family: var(--font-mono);
   font-size: 0.72rem;
   font-weight: 850;
-  padding: 0.15rem 0.5rem;
+  padding: 0.12rem 0.45rem;
   border-radius: 9999px;
   background: var(--color-sand);
+  color: var(--color-asphalt);
 }
 
 .create-mabar-btn {
   display: inline-flex;
   align-items: center;
-  gap: 0.35rem;
-  padding: 0.4rem 0.85rem;
+  gap: 0.3rem;
+  padding: 0.35rem 0.75rem;
   border-radius: 9999px;
   background: var(--color-chain-lime);
   color: var(--color-ink);
   font-size: 0.76rem;
   font-weight: 850;
-  border: 1px solid var(--color-ink);
+  border: 1px solid rgba(23, 32, 42, 0.2);
   cursor: pointer;
-  box-shadow: 0 1px 0 var(--color-ink);
+  box-shadow: 0 1px 2px rgb(23 32 42 / 6%);
   transition: transform 90ms ease;
+  white-space: nowrap;
+}
+
+.create-mabar-btn:hover {
+  background: #b5ef35;
 }
 
 .create-mabar-btn:active {

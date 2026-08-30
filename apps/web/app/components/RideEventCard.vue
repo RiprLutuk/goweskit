@@ -1,6 +1,5 @@
 <script setup lang="ts">
 import type { NearbyEvent, PublicEvent } from '@goweskit/contracts';
-
 import { formatCommunityDistance } from '../community-display';
 
 const props = defineProps<{ event: NearbyEvent | PublicEvent }>();
@@ -54,83 +53,85 @@ const difficultyText = computed(() => {
 
 <template>
   <NuxtLink class="clean-ride-card" :to="`/community/events/${event.slug || event.id}`">
-    <!-- Left: Compact Minimalist Date Tile -->
-    <div class="clean-date-tile" aria-hidden="true">
-      <span class="date-month">{{ monthLabel }}</span>
-      <span class="date-day">{{ dayNumber }}</span>
-      <span class="date-weekday">{{ dayName }}</span>
+    <!-- Left: Minimalist Date Badge -->
+    <div class="card-date-badge" aria-hidden="true">
+      <span class="badge-month">{{ monthLabel }}</span>
+      <span class="badge-day">{{ dayNumber }}</span>
+      <span class="badge-dayname">{{ dayName }}</span>
     </div>
 
-    <!-- Center: Clear Event Details -->
-    <div class="clean-card-body">
-      <div class="card-topline">
-        <span class="community-name">{{ event.community.name }}</span>
-        <span
-          class="countdown-chip"
-          :class="{ 'countdown-chip--urgent': countdown.isUrgent }"
-        >
-          <GIcon name="bell" size="xs" :filled="isReminderActive(event.id)" :color="isReminderActive(event.id) ? '#16A34A' : '#64748B'" />
-          <span>{{ countdown.label }}</span>
-        </span>
-        <span v-if="distance" class="dist-tag">
-          <GIcon name="pin" size="xs" /> {{ distance }}
+    <!-- Center: Main Event Info -->
+    <div class="card-main">
+      <div class="card-meta-top">
+        <span class="card-community">{{ event.community.name }}</span>
+        <span v-if="distance" class="card-dist">
+          <GIcon name="pin" size="xs" />
+          <span>{{ distance }}</span>
         </span>
       </div>
 
-      <h3 class="event-title">{{ event.title }}</h3>
+      <h3 class="card-title">{{ event.title }}</h3>
 
-      <p class="event-meta-line">
-        <span class="event-time-chip">
+      <div class="card-time-loc">
+        <span class="time-item">
           <GIcon name="history" size="xs" />
           <span>{{ timeLabel }} WIB</span>
         </span>
-        <span class="dot-sep">·</span>
-        <span class="meeting-loc">{{ event.meetingArea }}</span>
-      </p>
+        <span class="loc-item">
+          <GIcon name="pin" size="xs" />
+          <span>{{ event.meetingArea }}</span>
+        </span>
+      </div>
 
-      <div class="event-tags-row">
-        <span class="meta-tag meta-tag--diff">
+      <div class="card-pills-row">
+        <span class="spec-pill spec-pill--diff">
           <GIcon :name="event.difficulty === 'hard' ? 'mountain' : 'route'" size="xs" />
           <span>{{ difficultyText }}</span>
         </span>
-        <span class="meta-tag">
+        <span class="spec-pill">
           <GIcon name="users" size="xs" />
           <span>{{ event.participantCount }}{{ event.capacity ? `/${event.capacity}` : '' }} Riders</span>
         </span>
-        <span v-if="event.bicycleTypes.length" class="meta-tag">
+        <span v-if="event.bicycleTypes.length" class="spec-pill">
           <GIcon name="bike" size="xs" />
           <span>{{ event.bicycleTypes.slice(0, 2).map((t) => t.replaceAll('_', ' ')).join(', ') }}</span>
         </span>
       </div>
     </div>
 
-    <!-- Right: Quick Reminder Toggle & Action -->
-    <div class="card-actions-right" @click.prevent.stop>
+    <!-- Right: Single Clean Reminder Action -->
+    <div class="card-aside" @click.prevent.stop>
       <button
-        class="reminder-quick-btn"
-        :class="{ 'reminder-quick-btn--active': isReminderActive(event.id) }"
+        v-if="!countdown.isPast"
+        class="reminder-pill"
+        :class="{ 'reminder-pill--active': isReminderActive(event.id) }"
         type="button"
-        :title="isReminderActive(event.id) ? 'Hapus Pengingat' : 'Pasang Pengingat Jadwal'"
+        :title="isReminderActive(event.id) ? 'Pengingat Aktif (Klik untuk mematikan)' : 'Pasang Pengingat Jadwal'"
         @click="toggleReminder(event)"
       >
-        <GIcon name="bell" size="xs" :filled="isReminderActive(event.id)" :color="isReminderActive(event.id) ? '#15803D' : '#64748B'" />
+        <GIcon
+          name="bell"
+          size="xs"
+          :filled="isReminderActive(event.id)"
+          :color="isReminderActive(event.id) ? '#15803D' : '#64748B'"
+        />
+        <span>{{ isReminderActive(event.id) ? 'Aktif' : countdown.label }}</span>
       </button>
-      <span class="card-chevron" aria-hidden="true">
-        <GIcon name="chevron-right" size="xs" color="#94A3B8" />
-      </span>
+      <span v-else class="past-pill">Selesai</span>
     </div>
   </NuxtLink>
 </template>
 
 <style scoped>
 .clean-ride-card {
-  display: flex;
-  align-items: center;
+  display: grid;
+  grid-template-columns: auto 1fr auto;
   gap: 0.85rem;
-  padding: 0.85rem 1rem;
-  border-radius: 1rem;
+  align-items: flex-start;
+  padding: 0.95rem 1.1rem;
+  border-radius: 1.15rem;
   background: var(--color-white);
-  border: 1px solid rgb(23 32 42 / 8%);
+  border: 1px solid var(--color-sand);
   box-shadow: 0 2px 10px rgb(23 32 42 / 3%);
   text-decoration: none;
   color: inherit;
@@ -144,13 +145,13 @@ const difficultyText = computed(() => {
 }
 
 .clean-ride-card:active {
-  transform: scale(0.985);
+  transform: scale(0.99);
 }
 
-/* Date Tile */
-.clean-date-tile {
-  flex: 0 0 3.2rem;
-  height: 3.6rem;
+/* Date Badge */
+.card-date-badge {
+  width: 3.2rem;
+  padding: 0.45rem 0.2rem;
   border-radius: 0.75rem;
   background: var(--color-canvas);
   border: 1px solid var(--color-sand);
@@ -158,171 +159,166 @@ const difficultyText = computed(() => {
   flex-direction: column;
   align-items: center;
   justify-content: center;
-  line-height: 1;
-  gap: 0.15rem;
+  gap: 0.05rem;
+  flex-shrink: 0;
+  text-align: center;
 }
 
-.date-month {
+.badge-month {
   font-family: var(--font-mono);
-  font-size: 0.58rem;
-  font-weight: 850;
+  font-size: 0.62rem;
+  font-weight: 900;
   color: var(--color-coral);
-  letter-spacing: 0.05em;
+  letter-spacing: 0.04em;
+  line-height: 1;
 }
 
-.date-day {
+.badge-day {
   font-family: var(--font-mono);
-  font-size: 1.25rem;
+  font-size: 1.3rem;
   font-weight: 900;
   color: var(--color-ink);
-  line-height: 1;
+  line-height: 1.1;
 }
 
-.date-weekday {
-  font-size: 0.6rem;
+.badge-dayname {
+  font-size: 0.62rem;
   font-weight: 700;
   color: var(--color-asphalt);
   text-transform: capitalize;
+  line-height: 1;
 }
 
-/* Card Body */
-.clean-card-body {
-  flex: 1;
-  min-width: 0;
+/* Main Content */
+.card-main {
   display: grid;
-  gap: 0.2rem;
+  gap: 0.25rem;
+  min-width: 0;
 }
 
-.card-topline {
+.card-meta-top {
   display: flex;
   align-items: center;
-  justify-content: space-between;
-  gap: 0.5rem;
+  gap: 0.4rem;
+  font-size: 0.72rem;
+  color: var(--color-asphalt);
 }
 
-.community-name {
-  font-size: 0.72rem;
+.card-community {
   font-weight: 750;
-  color: var(--color-asphalt);
-  white-space: nowrap;
   overflow: hidden;
   text-overflow: ellipsis;
+  white-space: nowrap;
 }
 
-.dist-tag {
+.card-dist {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.2rem;
   font-family: var(--font-mono);
-  font-size: 0.68rem;
   font-weight: 800;
   color: var(--color-ink);
   flex-shrink: 0;
 }
 
-.event-title {
+.card-title {
   margin: 0;
   font-size: 0.95rem;
   font-weight: 850;
-  letter-spacing: -0.015em;
   color: var(--color-ink);
-  white-space: nowrap;
+  line-height: 1.25;
   overflow: hidden;
   text-overflow: ellipsis;
+  white-space: nowrap;
 }
 
-.event-meta-line {
-  margin: 0;
+.card-time-loc {
+  display: flex;
+  align-items: center;
+  gap: 0.6rem;
   font-size: 0.74rem;
   color: var(--color-asphalt);
-  display: flex;
-  align-items: center;
-  gap: 0.35rem;
+  overflow: hidden;
+  text-overflow: ellipsis;
   white-space: nowrap;
-  overflow: hidden;
-  text-overflow: ellipsis;
 }
 
-.dot-sep {
-  opacity: 0.4;
-}
-
-.meeting-loc {
-  overflow: hidden;
-  text-overflow: ellipsis;
-}
-
-.event-tags-row {
-  display: flex;
-  align-items: center;
-  gap: 0.35rem;
-  margin-top: 0.15rem;
-  flex-wrap: wrap;
-}
-
-.meta-tag {
-  font-size: 0.66rem;
-  font-weight: 750;
-  padding: 0.12rem 0.45rem;
-  border-radius: 0.35rem;
-  background: var(--color-canvas);
-  border: 1px solid var(--color-sand);
-  color: var(--color-asphalt);
-}
-
-.countdown-chip {
-  font-family: var(--font-mono);
-  font-size: 0.64rem;
-  font-weight: 800;
+.time-item,
+.loc-item {
   display: inline-flex;
   align-items: center;
   gap: 0.25rem;
-  padding: 0.1rem 0.4rem;
-  border-radius: 0.35rem;
-  background: var(--color-canvas);
-  color: var(--color-asphalt);
-  border: 1px solid var(--color-sand);
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
 }
 
-.countdown-chip--urgent {
-  background: rgba(22, 163, 74, 0.1);
-  color: #15803D;
-  border-color: rgba(22, 163, 74, 0.25);
-}
-
-/* Card Actions Right */
-.card-actions-right {
+.card-pills-row {
   display: flex;
   align-items: center;
   gap: 0.35rem;
+  flex-wrap: wrap;
+  margin-top: 0.15rem;
+}
+
+.spec-pill {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.25rem;
+  font-size: 0.66rem;
+  font-weight: 750;
+  color: var(--color-asphalt);
+  background: var(--color-canvas);
+  padding: 0.12rem 0.45rem;
+  border-radius: 0.35rem;
+  border: 1px solid var(--color-sand);
+}
+
+.spec-pill--diff {
+  color: var(--color-ink);
+  font-weight: 800;
+}
+
+/* Aside / Reminder Action */
+.card-aside {
+  display: flex;
+  align-items: center;
   flex-shrink: 0;
 }
 
-.reminder-quick-btn {
-  width: 2rem;
-  height: 2rem;
-  border-radius: 0.55rem;
+.reminder-pill {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.25rem;
+  font-size: 0.68rem;
+  font-weight: 800;
+  color: var(--color-asphalt);
   background: var(--color-canvas);
   border: 1px solid var(--color-sand);
-  display: grid;
-  place-items: center;
+  padding: 0.22rem 0.55rem;
+  border-radius: 9999px;
   cursor: pointer;
   transition: all 120ms ease;
+  white-space: nowrap;
 }
 
-.reminder-quick-btn:hover {
+.reminder-pill:hover {
   background: var(--color-sand);
 }
 
-.reminder-quick-btn--active {
-  background: rgba(22, 163, 74, 0.12);
+.reminder-pill--active {
+  background: rgba(22, 163, 74, 0.1);
+  color: #15803D;
   border-color: rgba(22, 163, 74, 0.3);
 }
 
-/* Chevron */
-.card-chevron {
-  font-size: 1.25rem;
-  font-weight: 400;
-  color: var(--color-sand);
-  line-height: 1;
-  flex-shrink: 0;
-  padding-left: 0.15rem;
+.past-pill {
+  font-size: 0.66rem;
+  font-weight: 750;
+  color: #94A3B8;
+  background: var(--color-canvas);
+  padding: 0.18rem 0.45rem;
+  border-radius: 9999px;
+  white-space: nowrap;
 }
 </style>

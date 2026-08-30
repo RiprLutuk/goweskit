@@ -33,15 +33,17 @@ describe('useEventReminder', () => {
     expect(url).toContain(encodeURIComponent('Karawaci area, Tangerang'));
   });
 
-  it('computes human-friendly countdown text based on target date', () => {
+  it('computes concise human-friendly countdown text', () => {
     const { getCountdownText } = useEventReminder();
 
     const futureDate = new Date(Date.now() + 86400000 * 3).toISOString();
     const result = getCountdownText(futureDate);
-    expect(result.label).toContain('Hari Lagi');
+    expect(result.label).toBe('3 Hari Lagi');
+    expect(result.isPast).toBe(false);
 
     const pastDate = new Date(Date.now() - 86400000).toISOString();
     const pastResult = getCountdownText(pastDate);
-    expect(pastResult.label).toContain('Selesai');
+    expect(pastResult.label).toBe('Selesai');
+    expect(pastResult.isPast).toBe(true);
   });
 });

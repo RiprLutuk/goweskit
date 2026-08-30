@@ -143,13 +143,13 @@ export function useEventReminder() {
     toast.success('Kalender Disimpan! 📅', 'Buka file .ics di HP atau kalender Anda untuk alarm pengingat otomatis.');
   }
 
-  function getCountdownText(startsAtStr: string): { label: string; isUrgent: boolean; isToday: boolean } {
+  function getCountdownText(startsAtStr: string): { label: string; isUrgent: boolean; isToday: boolean; isPast: boolean } {
     const target = new Date(startsAtStr).getTime();
     const now = Date.now();
     const diffMs = target - now;
 
     if (diffMs <= 0) {
-      return { label: 'Sedang Berlangsung / Selesai', isUrgent: false, isToday: true };
+      return { label: 'Selesai', isUrgent: false, isToday: false, isPast: true };
     }
 
     const diffHours = Math.floor(diffMs / (1000 * 60 * 60));
@@ -157,17 +157,18 @@ export function useEventReminder() {
 
     if (diffHours < 24) {
       return {
-        label: diffHours <= 1 ? 'Kurang dari 1 Jam Lagi' : `${diffHours} Jam Lagi`,
+        label: diffHours <= 1 ? '< 1 Jam' : `${diffHours} Jam Lagi`,
         isUrgent: true,
         isToday: true,
+        isPast: false,
       };
     }
 
     if (diffDays === 1) {
-      return { label: 'Besok', isUrgent: true, isToday: false };
+      return { label: 'Besok', isUrgent: true, isToday: false, isPast: false };
     }
 
-    return { label: `${diffDays} Hari Lagi`, isUrgent: false, isToday: false };
+    return { label: `${diffDays} Hari Lagi`, isUrgent: false, isToday: false, isPast: false };
   }
 
   return {
