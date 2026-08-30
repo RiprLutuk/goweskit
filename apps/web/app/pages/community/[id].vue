@@ -23,6 +23,7 @@ const errorMessage = ref('');
 const joinMessage = ref('');
 const createEventError = ref('');
 const createEventSuccess = ref('');
+const copiedLink = ref(false);
 
 const communityIdentifier = computed(() =>
   String(route.params.slug || route.params.id),
@@ -183,6 +184,35 @@ async function joinCommunity(): Promise<void> {
   }
 }
 
+async function shareCommunity(): Promise<void> {
+  if (!detail.value) return;
+  const c = detail.value.community;
+  const url = window.location.href;
+
+  if (navigator.share) {
+    try {
+      await navigator.share({
+        title: `${c.name} · GowesKit`,
+        text: `Gabung komunitas gowes ${c.name} (${c.locality}) di GowesKit!`,
+        url,
+      });
+      return;
+    } catch {
+      // fallback
+    }
+  }
+
+  try {
+    await navigator.clipboard.writeText(url);
+    copiedLink.value = true;
+    setTimeout(() => {
+      copiedLink.value = false;
+    }, 2000);
+  } catch {
+    // ignore
+  }
+}
+
 async function submitCreateEvent(): Promise<void> {
   creatingEvent.value = true;
   createEventError.value = '';
@@ -267,35 +297,46 @@ onMounted(loadCommunity);
     <template v-else-if="detail">
       <!-- ── HERO CARD ───────────────────────────────────────── -->
       <header class="community-hero-card">
-        <div class="hero-header-row">
-          <!-- Community Avatar Initials -->
+        <!-- Top Status Bar: Badges Row -->
+        <div class="hero-top-badges">
+          <span class="locality-badge">
+            <GIcon name="pin" size="xs" color="#EF4444" />
+            <span>{{ detail.community.locality }}</span>
+          </span>
+          <span v-if="isVerified" class="verified-pill">
+            <GIcon name="check" size="xs" color="#15803D" filled />
+            <span>Terverifikasi</span>
+          </span>
+          <span class="members-badge">
+            <GIcon name="users" size="xs" />
+            <span>{{ detail.community.memberCount }} Anggota</span>
+          </span>
+        </div>
+
+        <!-- Main Identity Row -->
+        <div class="hero-identity-row">
           <div class="community-avatar-box">
             <span>{{ initials }}</span>
           </div>
 
-          <div class="hero-titles-wrap">
-            <div class="hero-badges-row">
-              <span class="locality-badge">
-                <GIcon name="pin" size="xs" color="#EF4444" />
-                <span>{{ detail.community.locality }}</span>
-              </span>
-              <span v-if="isVerified" class="verified-pill">
-                <GIcon name="check" size="xs" color="#15803D" filled />
-                <span>Terverifikasi</span>
-              </span>
-              <span class="members-badge">
-                <GIcon name="users" size="xs" />
-                <span>{{ detail.community.memberCount }} Anggota</span>
-              </span>
-            </div>
-
+          <div class="hero-identity-text">
             <h1 class="community-title">{{ detail.community.name }}</h1>
-            <p class="community-slug-sub">
-              slug: <strong class="font-mono text-chain-lime">/community/{{ detail.community.slug }}</strong>
-            </p>
+            <div class="community-handle-bar">
+              <span class="community-handle-pill">@{{ detail.community.slug }}</span>
+              <button
+                class="share-handle-btn"
+                type="button"
+                title="Bagikan Tautan Komunitas"
+                @click="shareCommunity"
+              >
+                <GIcon name="share" size="xs" />
+                <span>{{ copiedLink ? 'Tersalin' : 'Bagikan' }}</span>
+              </button>
+            </div>
           </div>
         </div>
 
+        <!-- Description -->
         <p v-if="detail.community.description" class="community-description">
           {{ detail.community.description }}
         </p>
@@ -327,10 +368,10 @@ onMounted(loadCommunity);
         <div class="membership-action-box">
           <div class="membership-status-info">
             <span class="membership-status-title">
-              {{ detail.community.joinMode === 'open' ? 'Gabung Terbuka (Instan)' : 'Perlu Persetujuan Pengurus' }}
+              {{ detail.community.joinMode === 'open' ? 'Pendaftaran Terbuka (Instan)' : 'Pendaftaran dengan Persetujuan' }}
             </span>
             <small v-if="detail.viewerMembership" class="membership-role-tag">
-              Status Anda: <strong>{{ detail.viewerMembership.role.toUpperCase() }}</strong> · {{ detail.viewerMembership.status }}
+              Status Anda: <strong>{{ detail.viewerMembership.role.toUpperCase() }}</strong> ({{ detail.viewerMembership.status === 'active' ? 'Anggota Aktif' : detail.viewerMembership.status }})
             </small>
             <small v-else class="membership-guest-tag">
               Belum bergabung dalam komunitas ini
@@ -375,27 +416,57 @@ onMounted(loadCommunity);
         </NuxtLink>
       </aside>
 
-      <!-- ── COMMUNITY QUICK FACTS GRID ──────────────────────── -->
+      <!-- ── COMMUNITY QUICK FACTS (2-COLUMN GRID) ─────────────── -->
       <section class="facts-section" aria-labelledby="community-facts-title">
-        <h2 id="community-facts-title" class="section-heading">Informasi Komunitas</h2>
+        <h2 id="community-facts-title" class="section-heading">
+          <GIcon name="passport" size="sm" />
+          <span>Informasi Komunitas</span>
+        </h2>
         <div class="facts-grid">
           <div class="fact-tile">
-            <span class="fact-label">Kategori Rangka / Disiplin</span>
-            <strong class="fact-value">
-              {{ detail.community.bicycleTypes.map((v) => v.replaceAll('_', ' ')).join(', ') }}
-            </strong>
+            <div class="fact-icon-box">
+              <GIcon name="pin" size="xs" color="#EF4444" />
+            </div>
+            <div class="fact-body">
+              <span class="fact-label">Wilayah Base</span>
+              <strong class="fact-value">{{ detail.community.locality }}</strong>
+            </div>
           </div>
+
           <div class="fact-tile">
-            <span class="fact-label">Visibilitas Publik</span>
-            <strong class="fact-value capitalize">
-              {{ detail.community.visibility === 'public' ? 'Publik (Bisa Ditemukan)' : 'Privat' }}
-            </strong>
+            <div class="fact-icon-box">
+              <GIcon name="bike" size="xs" />
+            </div>
+            <div class="fact-body">
+              <span class="fact-label">Kategori / Disiplin</span>
+              <strong class="fact-value capitalize">
+                {{ detail.community.bicycleTypes.map((v) => v.replaceAll('_', ' ')).join(', ') }}
+              </strong>
+            </div>
           </div>
+
           <div class="fact-tile">
-            <span class="fact-label">Sistem Pendaftaran</span>
-            <strong class="fact-value capitalize">
-              {{ detail.community.joinMode === 'open' ? 'Langsung Aktif' : 'Persetujuan Pengurus' }}
-            </strong>
+            <div class="fact-icon-box">
+              <GIcon name="community" size="xs" />
+            </div>
+            <div class="fact-body">
+              <span class="fact-label">Visibilitas Publik</span>
+              <strong class="fact-value capitalize">
+                {{ detail.community.visibility === 'public' ? 'Publik (Dapat Ditemukan)' : 'Komunitas Privat' }}
+              </strong>
+            </div>
+          </div>
+
+          <div class="fact-tile">
+            <div class="fact-icon-box">
+              <GIcon name="shield" size="xs" color="#15803D" filled />
+            </div>
+            <div class="fact-body">
+              <span class="fact-label">Sistem Pendaftaran</span>
+              <strong class="fact-value capitalize">
+                {{ detail.community.joinMode === 'open' ? 'Langsung Aktif (Instan)' : 'Persetujuan Pengurus' }}
+              </strong>
+            </div>
           </div>
         </div>
       </section>
@@ -594,44 +665,81 @@ onMounted(loadCommunity);
 .community-hero-card {
   display: grid;
   gap: 1rem;
-  padding: 1.5rem;
+  padding: 1.35rem 1.5rem;
   border-radius: 1.35rem;
   background: var(--color-white);
   border: 1px solid var(--color-sand);
   box-shadow: 0 4px 20px rgb(23 32 42 / 5%);
 }
 
-.hero-header-row {
+.hero-top-badges {
   display: flex;
-  align-items: flex-start;
-  gap: 1.15rem;
+  align-items: center;
+  gap: 0.4rem;
+  flex-wrap: wrap;
+}
+
+.hero-identity-row {
+  display: flex;
+  align-items: center;
+  gap: 1rem;
 }
 
 .community-avatar-box {
-  width: 4rem;
-  height: 4rem;
-  border-radius: 1.1rem;
+  width: 3.5rem;
+  height: 3.5rem;
+  border-radius: 1rem;
   background: linear-gradient(135deg, rgba(201, 243, 106, 0.45), rgba(15, 118, 110, 0.2));
   border: 2px solid var(--color-chain-lime);
   display: grid;
   place-items: center;
-  font-size: 1.35rem;
+  font-size: 1.25rem;
   font-weight: 900;
   color: var(--color-ink);
   flex-shrink: 0;
 }
 
-.hero-titles-wrap {
+.hero-identity-text {
   flex: 1;
   display: grid;
-  gap: 0.35rem;
+  gap: 0.25rem;
+  min-width: 0;
 }
 
-.hero-badges-row {
+.community-handle-bar {
   display: flex;
   align-items: center;
-  gap: 0.4rem;
-  flex-wrap: wrap;
+  gap: 0.45rem;
+}
+
+.community-handle-pill {
+  font-family: var(--font-mono);
+  font-size: 0.72rem;
+  font-weight: 800;
+  color: var(--color-asphalt);
+  background: var(--color-canvas);
+  padding: 0.15rem 0.5rem;
+  border-radius: 0.4rem;
+  border: 1px solid var(--color-sand);
+}
+
+.share-handle-btn {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.25rem;
+  font-size: 0.72rem;
+  font-weight: 800;
+  color: var(--color-ink);
+  background: var(--color-canvas);
+  border: 1px solid var(--color-sand);
+  padding: 0.15rem 0.5rem;
+  border-radius: 0.4rem;
+  cursor: pointer;
+  transition: all 120ms ease;
+}
+
+.share-handle-btn:hover {
+  background: var(--color-sand);
 }
 
 .locality-badge {
@@ -673,16 +781,11 @@ onMounted(loadCommunity);
 
 .community-title {
   margin: 0;
-  font-size: 1.55rem;
+  font-size: 1.4rem;
   font-weight: 850;
   letter-spacing: -0.025em;
   color: var(--color-ink);
-}
-
-.community-slug-sub {
-  margin: 0;
-  font-size: 0.72rem;
-  color: var(--color-asphalt);
+  line-height: 1.25;
 }
 
 .community-description {
@@ -841,23 +944,43 @@ onMounted(loadCommunity);
 
 .facts-grid {
   display: grid;
-  grid-template-columns: repeat(3, 1fr);
+  grid-template-columns: repeat(2, 1fr);
   gap: 0.75rem;
 }
 
-@media (max-width: 640px) {
+@media (max-width: 580px) {
   .facts-grid {
     grid-template-columns: 1fr;
   }
 }
 
 .fact-tile {
+  display: flex;
+  align-items: center;
+  gap: 0.85rem;
   padding: 0.85rem 1rem;
-  border-radius: 0.95rem;
+  border-radius: 1rem;
   background: var(--color-white);
   border: 1px solid var(--color-sand);
+  box-shadow: 0 2px 8px rgb(23 32 42 / 3%);
+}
+
+.fact-icon-box {
+  width: 2.25rem;
+  height: 2.25rem;
+  border-radius: 0.65rem;
+  background: var(--color-canvas);
+  border: 1px solid var(--color-sand);
   display: grid;
-  gap: 0.2rem;
+  place-items: center;
+  flex-shrink: 0;
+}
+
+.fact-body {
+  flex: 1;
+  display: grid;
+  gap: 0.15rem;
+  min-width: 0;
 }
 
 .fact-label {
@@ -869,9 +992,12 @@ onMounted(loadCommunity);
 }
 
 .fact-value {
-  font-size: 0.88rem;
+  font-size: 0.85rem;
   font-weight: 800;
   color: var(--color-ink);
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
 }
 
 /* ── Events Section ──────────────────────────────────────── */
