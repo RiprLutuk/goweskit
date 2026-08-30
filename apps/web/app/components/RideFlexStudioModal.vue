@@ -701,7 +701,6 @@ async function renderCanvas(aspectRatio: 'story' | 'post' | 'landscape'): Promis
 
   return canvas;
 }
-}
 
 async function downloadStoryImage() {
   isExporting.value = true;

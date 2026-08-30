@@ -43,6 +43,7 @@ const community: PublicCommunity = {
 
 const event: PublicEvent = {
   id: eventId,
+  slug: 'sunday-loop',
   community: {
     id: community.id,
     slug: community.slug,
