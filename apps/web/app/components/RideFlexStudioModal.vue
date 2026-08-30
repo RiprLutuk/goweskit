@@ -26,6 +26,9 @@ const emit = defineEmits<{
 const api = useApi();
 const { toast } = useNotify();
 
+// Navigation Tabs in Studio
+const activeTab = ref<'templates' | 'ai' | 'data'>('templates');
+
 // Form & Telemetry State
 const rideForm = reactive({
   title: 'Morning Gravel & Hills Rush',
@@ -36,10 +39,10 @@ const rideForm = reactive({
   caloriesKcal: 980,
   temperatureC: 25,
   bikeName: props.bikeNickname,
-  theme: 'strava_bold' as 'strava_bold' | 'rapha_editorial' | 'cyber_hud' | 'cafe_santai',
+  templateStyle: 'strava_bold' as 'strava_bold' | 'rapha_editorial' | 'cyber_hud' | 'cafe_santai' | 'grand_tour',
   aspectRatio: 'story' as 'story' | 'post' | 'landscape',
-  activeSticker: 'kom' as 'kom' | 'cafe' | 'beast' | 'speed' | 'fuel' | 'finished' | 'none',
-  bgPreset: 'topo' as 'topo' | 'alpine' | 'gravel' | 'sunset' | 'crit' | 'cafe' | 'custom',
+  activeSticker: 'kom' as 'kom' | 'cafe' | 'beast' | 'speed' | 'fuel' | 'podium' | 'none',
+  bgPreset: 'alpine' as 'alpine' | 'gravel' | 'sunset' | 'crit' | 'topo' | 'cafe' | 'custom',
   customPhotoUrl: '',
 });
 
@@ -51,11 +54,11 @@ const isAiGenerating = ref(false);
 const aiRecap = ref({
   title: 'Morning Gravel Rush: Menaklukkan Tanjakan Kopi Sentul',
   highlight: 'Kamu membakar 980 kalori dan menaklukkan elevasi +580m! Output tenaga rata-rata luar biasa stabil.',
-  foodEquivalency: '1 mangkok Bubur Ayam Spesial Komplit Telur Setengah Matang 🍲',
+  foodEquivalency: '1 porsi Sate Maranggi + Es Kelapa Muda 🍢🥥',
   climbGradeScore: 'Cat 2 Mountain Pass (~6-8%) ⛰️',
   captions: {
-    athlete: '🎯 45.8 km · +580m Elevasi · Avg 26.2 km/h. Sesi latihan konsisten mempertahankan power output & cadence stabil bersama Polygon Siskiu T7. Fokus recovery setelah membakar ~980 kcal. #GowesKit #RideFlex #CyclingLife',
-    humor: '🚴 Gowes niatnya cuma cari sarapan tipis-tipis, tau-tau speedometer tembus 45.8 km dengan tanjakan 580m! Kaki auto bergetar pas pesen Bubur Ayam Komplit. Kopi dapet, konten dapet, flexing jalan! 😂☕ #GowesSantai #NoWacana',
+    athlete: '🎯 45.8 km · +580m Elevasi · Avg 26.2 km/h. Sesi latihan konsisten mempertahankan power output & cadence stabil bersama Polygon Siskiu T7. Fokus recovery setelah membakar ~980 kcal. #GowesKit #RideFlex #CyclingLife #NoExcuses',
+    humor: '🚴 Gowes niatnya cuma cari sarapan tipis-tipis, tau-tau speedometer tembus 45.8 km dengan tanjakan 580m! Kaki auto getar pas pesen Sate Maranggi. Kopi dapet, konten dapet, flexing jalan! 😂☕ #GowesSantai #NoWacana #GowesKit',
     technical: '⚙️ Rute: Morning Gravel Loop (45.8 km). Setup drivetrain pada Polygon Siskiu T7 bekerja mulus di gradien Cat 2 Mountain Pass. Kecepatan rata-rata 26.2 km/h dengan efisiensi putaran crank optimal. Suhu 25°C. #BikeSpecs #GowesKit',
   },
   mechanicTip: '💡 Saran AI Mekanik: Setelah elevasi +580m, rantai dan cassette menahan torsi tinggi. Cek tegangan rantai dan lumasi kembali drivetrain malam ini.',
@@ -64,18 +67,14 @@ const aiRecap = ref({
 
 const isExporting = ref(false);
 
-// Pure Vector SVG Topo background for reliable offline loading
-const TOPO_SVG_DATA =
-  'data:image/svg+xml;utf8,<svg xmlns="http://www.w3.org/2000/svg" width="800" height="1200" viewBox="0 0 800 1200"><rect width="800" height="1200" fill="%230b1120"/><defs><linearGradient id="g1" x1="0" y1="0" x2="1" y2="1"><stop offset="0%25" stop-color="%231e293b" stop-opacity="0.8"/><stop offset="100%25" stop-color="%230f172a" stop-opacity="0.95"/></linearGradient></defs><rect width="800" height="1200" fill="url(%23g1)"/><path d="M0 200 C 200 150, 400 350, 800 180" stroke="%23334155" stroke-width="2" fill="none" opacity="0.6"/><path d="M0 350 C 250 280, 500 450, 800 320" stroke="%23334155" stroke-width="2.5" fill="none" opacity="0.6"/><path d="M0 500 C 300 420, 600 600, 800 480" stroke="%23334155" stroke-width="2" fill="none" opacity="0.6"/><path d="M0 650 C 200 580, 500 780, 800 620" stroke="%23334155" stroke-width="2.5" fill="none" opacity="0.6"/><path d="M0 800 C 350 720, 450 950, 800 800" stroke="%23334155" stroke-width="2" fill="none" opacity="0.6"/><path d="M0 950 C 220 880, 550 1100, 800 950" stroke="%23334155" stroke-width="2" fill="none" opacity="0.6"/><path d="M 120 1080 Q 280 880, 400 620 T 680 180" stroke="%23c9f36a" stroke-width="6" stroke-dasharray="10 8" fill="none"/><circle cx="120" cy="1080" r="12" fill="%2338bdf8"/><circle cx="680" cy="180" r="14" fill="%23c9f36a"/><circle cx="400" cy="620" r="8" fill="%23fde047"/></svg>';
-
 // Verified High-Res Curated Cycling Photography
 const PRESET_BACKGROUNDS = {
-  topo: TOPO_SVG_DATA,
   alpine: 'https://images.unsplash.com/photo-1502744688674-c619d3864003?auto=format&fit=crop&w=1200&q=85',
   gravel: 'https://images.unsplash.com/photo-1485965120184-e220f721d03e?auto=format&fit=crop&w=1200&q=85',
   sunset: 'https://images.unsplash.com/photo-1507035895480-2b3156c31fc8?auto=format&fit=crop&w=1200&q=85',
   crit: 'https://images.unsplash.com/photo-1517649763962-0c623266ddc0?auto=format&fit=crop&w=1200&q=85',
   cafe: 'https://images.unsplash.com/photo-1501339847302-ac426a4a7cbb?auto=format&fit=crop&w=1200&q=85',
+  topo: 'data:image/svg+xml;utf8,<svg xmlns="http://www.w3.org/2000/svg" width="800" height="1200" viewBox="0 0 800 1200"><rect width="800" height="1200" fill="%230b1120"/><path d="M0 200 C 200 150, 400 350, 800 180" stroke="%23334155" stroke-width="2" fill="none" opacity="0.6"/><path d="M0 350 C 250 280, 500 450, 800 320" stroke="%23334155" stroke-width="2.5" fill="none" opacity="0.6"/><path d="M0 500 C 300 420, 600 600, 800 480" stroke="%23334155" stroke-width="2" fill="none" opacity="0.6"/><path d="M0 650 C 200 580, 500 780, 800 620" stroke="%23334155" stroke-width="2.5" fill="none" opacity="0.6"/><path d="M0 800 C 350 720, 450 950, 800 800" stroke="%23334155" stroke-width="2" fill="none" opacity="0.6"/><path d="M 120 1080 Q 280 880, 400 620 T 680 180" stroke="%23c9f36a" stroke-width="6" stroke-dasharray="10 8" fill="none"/><circle cx="120" cy="1080" r="12" fill="%2338bdf8"/><circle cx="680" cy="180" r="14" fill="%23c9f36a"/></svg>',
 };
 
 const currentBackgroundSrc = computed(() => {
@@ -84,7 +83,7 @@ const currentBackgroundSrc = computed(() => {
   }
   return (
     PRESET_BACKGROUNDS[rideForm.bgPreset as keyof typeof PRESET_BACKGROUNDS] ||
-    PRESET_BACKGROUNDS.topo
+    PRESET_BACKGROUNDS.alpine
   );
 });
 
@@ -97,7 +96,7 @@ function handlePhotoUpload(event: Event) {
     if (typeof e.target?.result === 'string') {
       rideForm.customPhotoUrl = e.target.result;
       rideForm.bgPreset = 'custom';
-      toast.success('Foto Berhasil Diunggah!', 'Foto gowes Anda kini menjadi latar belakang poster.');
+      toast.success('Foto Berhasil Dipasang!', 'Foto jepretan Anda kini menghiasi poster gowes.');
     }
   };
   reader.readAsDataURL(file);
@@ -162,11 +161,11 @@ async function generateAiStory() {
     aiRecap.value = {
       title: randomTitle,
       highlight: `Kamu membakar ~${rideForm.caloriesKcal} kalori dan menaklukkan elevasi +${elev}m dengan kecepatan rata-rata ${speed} km/jam!`,
-      foodEquivalency: '1 porsi Pisang Goreng Keju & Es Kopi Susu Aren 🍌☕',
+      foodEquivalency: '1 porsi Sate Maranggi + Es Kelapa Muda 🍢🥥',
       climbGradeScore: 'Cat 2 Mountain Pass (~6-8%) ⛰️',
       captions: {
         athlete: `🎯 ${distance}km · +${elev}m elevation gain · ${speed} km/h avg pace. Building endurance and power output with ${rideForm.bikeName}. #GowesKit #RideFlex`,
-        humor: `🚴 Katanya gowes tipis-tipis cari sarapan, nyatanya disiksa tanjakan +${elev}m! Kaki auto getar pas pesen kopi, tapi flexing jalan terus! 😂☕ #GowesSantai`,
+        humor: `🚴 Katanya gowes tipis-tipis cari sarapan, nyatanya disiksa tanjakan +${elev}m! Kaki auto getar pas pesen sate, tapi flexing jalan terus! 😂☕ #GowesSantai`,
         technical: `⚙️ Rute: ${distance}km (+${elev}m). Setup drivetrain pada ${rideForm.bikeName} bekerja mulus di gradien menanjak. Kecepatan rata-rata ${speed} km/h. #BikeSpecs`,
       },
       mechanicTip: '💡 Saran AI Mekanik: Setelah tanjakan curam, periksa kekencangan baut crank dan keausan rantai sebelum gowes berikutnya.',
@@ -226,60 +225,67 @@ async function renderCanvas(aspectRatio: 'story' | 'post' | 'landscape'): Promis
     ctx.fillRect(0, 0, canvas.width, canvas.height);
   }
 
-  // 2. Cinematic Vignette Gradient Overlay
+  // 2. Theme Specific Vignette & Overlays
   const gradient = ctx.createLinearGradient(0, 0, 0, canvas.height);
-  gradient.addColorStop(0, 'rgba(11, 17, 32, 0.75)');
-  gradient.addColorStop(0.35, 'rgba(11, 17, 32, 0.25)');
-  gradient.addColorStop(0.65, 'rgba(11, 17, 32, 0.7)');
-  gradient.addColorStop(1, 'rgba(11, 17, 32, 0.96)');
+  if (rideForm.templateStyle === 'cafe_santai') {
+    gradient.addColorStop(0, 'rgba(45, 25, 15, 0.7)');
+    gradient.addColorStop(0.4, 'rgba(45, 25, 15, 0.2)');
+    gradient.addColorStop(0.7, 'rgba(25, 15, 10, 0.75)');
+    gradient.addColorStop(1, 'rgba(20, 10, 5, 0.96)');
+  } else {
+    gradient.addColorStop(0, 'rgba(11, 17, 32, 0.8)');
+    gradient.addColorStop(0.35, 'rgba(11, 17, 32, 0.25)');
+    gradient.addColorStop(0.65, 'rgba(11, 17, 32, 0.75)');
+    gradient.addColorStop(1, 'rgba(11, 17, 32, 0.98)');
+  }
   ctx.fillStyle = gradient;
   ctx.fillRect(0, 0, canvas.width, canvas.height);
 
   // 3. Top Branding Pill
-  ctx.fillStyle = 'rgba(15, 23, 42, 0.85)';
+  ctx.fillStyle = 'rgba(15, 23, 42, 0.9)';
   ctx.strokeStyle = '#C9F36A';
   ctx.lineWidth = 3;
   ctx.beginPath();
-  ctx.roundRect(70, isStory ? 90 : 60, 360, 52, 26);
+  ctx.roundRect(70, isStory ? 90 : 60, 360, 56, 28);
   ctx.fill();
   ctx.stroke();
 
   ctx.fillStyle = '#C9F36A';
   ctx.font = 'bold 24px monospace';
-  ctx.fillText('⚡ GOWESKIT RIDE PASS', 95, isStory ? 126 : 96);
+  ctx.fillText('⚡ GOWESKIT RIDE PASS', 95, isStory ? 128 : 98);
 
   // 4. Sticker Badge if selected
   if (rideForm.activeSticker !== 'none') {
     const stickerText = {
       kom: '👑 KOM HUNTER',
-      cafe: '☕ COFFEE RIDE APPROVED',
+      cafe: '☕ COFFEE APPROVED',
       beast: '⛰️ CLIMB BEAST',
       speed: '⚡ 26+ KM/H PACE',
-      fuel: '🍲 980 KCAL FUEL',
-      finished: '✓ 100% FINISHED',
+      fuel: '🍲 FUEL SATE MARANGGI',
+      podium: '🏁 PODIUM FINISHER',
     }[rideForm.activeSticker];
 
     if (stickerText) {
       ctx.fillStyle = '#C9F36A';
       ctx.beginPath();
-      ctx.roundRect(canvas.width - 430, isStory ? 90 : 60, 360, 52, 26);
+      ctx.roundRect(canvas.width - 440, isStory ? 90 : 60, 370, 56, 28);
       ctx.fill();
 
       ctx.fillStyle = '#17202A';
       ctx.font = '900 22px sans-serif';
-      ctx.fillText(stickerText, canvas.width - 405, isStory ? 126 : 96);
+      ctx.fillText(stickerText, canvas.width - 415, isStory ? 128 : 98);
     }
   }
 
   // 5. Main Hero Distance Callout
-  const heroY = isStory ? 1000 : (isLandscape ? 400 : 460);
+  const heroY = isStory ? 1020 : (isLandscape ? 420 : 470);
 
   // Large Prominent Distance
   ctx.fillStyle = '#C9F36A';
-  ctx.font = '900 130px monospace';
+  ctx.font = '900 135px monospace';
   ctx.fillText(`${rideForm.distanceKm}`, 70, heroY);
   ctx.fillStyle = '#FFFFFF';
-  ctx.font = '900 50px sans-serif';
+  ctx.font = '900 52px sans-serif';
   ctx.fillText('KM', 70 + ctx.measureText(`${rideForm.distanceKm}`).width + 25, heroY - 45);
 
   // Ride Title & Subtitle
@@ -287,9 +293,9 @@ async function renderCanvas(aspectRatio: 'story' | 'post' | 'landscape'): Promis
   ctx.font = '900 44px sans-serif';
   ctx.fillText(rideForm.title.slice(0, 32), 70, heroY + 65);
 
-  ctx.fillStyle = '#94A3B8';
+  ctx.fillStyle = '#CBD5E1';
   ctx.font = 'bold 26px sans-serif';
-  ctx.fillText(`🚴 ${rideForm.bikeName} · ${rideForm.temperatureC}°C Cerah`, 70, heroY + 110);
+  ctx.fillText(`🚴 ${rideForm.bikeName} · ${rideForm.temperatureC}°C Cerah · ${aiRecap.value.climbGradeScore}`, 70, heroY + 110);
 
   // 6. Stats Grid Card
   const cardY = heroY + 145;
@@ -419,124 +425,31 @@ async function shareToMedia() {
       @click.self="emit('close')"
     >
       <div class="studio-modal-card">
-        <!-- Header Top -->
-        <div class="studio-modal__header">
-          <div class="studio-badge">
-            <span class="studio-dot"></span>
-            <span id="studio-title">RIDE FLEX STUDIO &amp; AI STORYTELLER</span>
+        <!-- Top Bar Header -->
+        <header class="studio-topbar">
+          <div class="studio-topbar-left">
+            <span class="live-dot"></span>
+            <span id="studio-title" class="studio-title">RIDE FLEX STUDIO &amp; AI</span>
           </div>
           <button
             type="button"
-            class="studio-close-btn"
+            class="studio-close-circle"
             aria-label="Tutup Studio"
             @click="emit('close')"
           >
             ✕
           </button>
-        </div>
+        </header>
 
-        <div class="studio-body-layout">
-          <!-- LEFT: LIVE HIGH-FLEX POSTER PREVIEW -->
-          <div class="poster-preview-pane">
-            <div
-              class="live-poster"
-              :class="[
-                `live-poster--${rideForm.aspectRatio}`,
-                `live-poster-theme--${rideForm.theme}`,
-              ]"
-              :style="{ backgroundImage: `url(${currentBackgroundSrc})` }"
-            >
-              <!-- Top Vignette & Lighting -->
-              <div class="live-poster__overlay"></div>
-
-              <!-- Top Bar & Stickers -->
-              <div class="poster-top-bar">
-                <div class="poster-brand-chip">
-                  <span class="brand-bolt">⚡</span>
-                  <span>GOWESKIT</span>
-                </div>
-                <span
-                  v-if="rideForm.activeSticker !== 'none'"
-                  class="poster-sticker-tag"
-                >
-                  {{
-                    {
-                      kom: '👑 KOM HUNTER',
-                      cafe: '☕ COFFEE RIDE',
-                      beast: '⛰️ CLIMB BEAST',
-                      speed: '⚡ 26+ KM/H',
-                      fuel: '🍲 980 KCAL FUEL',
-                      finished: '✓ 100% FINISHED',
-                    }[rideForm.activeSticker]
-                  }}
-                </span>
-              </div>
-
-              <!-- Mid Hero Stat: Giant Kinetic Number -->
-              <div class="poster-hero-metric">
-                <div class="hero-distance-line">
-                  <span class="hero-num">{{ rideForm.distanceKm }}</span>
-                  <span class="hero-unit">KM</span>
-                </div>
-                <h3 class="poster-headline">{{ rideForm.title }}</h3>
-                <div class="poster-meta-pill">
-                  <span>🚴 {{ rideForm.bikeName }}</span>
-                  <span>·</span>
-                  <span>{{ rideForm.temperatureC }}°C Cerah</span>
-                </div>
-              </div>
-
-              <!-- Bottom Telemetry Glass Card -->
-              <div class="poster-telemetry-card">
-                <!-- Elevation Mini Sparkline -->
-                <div class="poster-elevation-spark">
-                  <div class="spark-topline">
-                    <span>ELEVASI PROFILE</span>
-                    <strong class="text-sky">+{{ rideForm.elevationM }}m Climb</strong>
-                  </div>
-                  <svg viewBox="0 0 300 36" class="sparkline-svg" aria-hidden="true">
-                    <path
-                      d="M0 32 Q 60 30, 120 16 T 220 8 L 300 4"
-                      fill="none"
-                      stroke="#38BDF8"
-                      stroke-width="3"
-                      stroke-linecap="round"
-                    />
-                    <circle cx="0" cy="32" r="4" fill="#38BDF8" />
-                    <circle cx="300" cy="4" r="5" fill="#C9F36A" />
-                  </svg>
-                </div>
-
-                <!-- 3 Compact Key Metrics -->
-                <div class="poster-metrics-strip">
-                  <div class="stat-cell">
-                    <span class="stat-label">WAKTU</span>
-                    <strong class="stat-value">{{ formatDuration(rideForm.durationMinutes) }}</strong>
-                  </div>
-                  <div class="stat-cell-divider"></div>
-                  <div class="stat-cell">
-                    <span class="stat-label">AVG SPEED</span>
-                    <strong class="stat-value text-lime">{{ rideForm.avgSpeedKmH }} km/h</strong>
-                  </div>
-                  <div class="stat-cell-divider"></div>
-                  <div class="stat-cell">
-                    <span class="stat-label">KALORI</span>
-                    <strong class="stat-value text-coral">~{{ rideForm.caloriesKcal }} kcal</strong>
-                  </div>
-                </div>
-              </div>
-
-              <!-- Verified Footer -->
-              <div class="poster-verified-footer">
-                <span>⚡ VERIFIED BY GOWESKIT ENGINE</span>
-              </div>
-            </div>
-
-            <!-- Quick Format & Ratio Switcher Bar -->
-            <div class="poster-ratio-bar">
+        <!-- Studio Main Workspace: Side-by-Side on Desktop, Sticky Preview on Mobile -->
+        <div class="studio-main-grid">
+          <!-- LEFT PANE: LIVE POSTER STAGE -->
+          <div class="poster-stage">
+            <!-- Aspect Ratio Switcher (Above Poster for Instant Feedback) -->
+            <div class="stage-ratio-pills">
               <button
                 type="button"
-                class="ratio-btn"
+                class="ratio-pill"
                 :class="{ active: rideForm.aspectRatio === 'story' }"
                 @click="rideForm.aspectRatio = 'story'"
               >
@@ -544,7 +457,7 @@ async function shareToMedia() {
               </button>
               <button
                 type="button"
-                class="ratio-btn"
+                class="ratio-pill"
                 :class="{ active: rideForm.aspectRatio === 'post' }"
                 @click="rideForm.aspectRatio = 'post'"
               >
@@ -552,258 +465,457 @@ async function shareToMedia() {
               </button>
               <button
                 type="button"
-                class="ratio-btn"
+                class="ratio-pill"
                 :class="{ active: rideForm.aspectRatio === 'landscape' }"
                 @click="rideForm.aspectRatio = 'landscape'"
               >
                 🛣️ Banner (16:9)
               </button>
             </div>
-          </div>
 
-          <!-- RIGHT: CREATIVE CONTROLS & AGENTIC AI STUDIO -->
-          <div class="studio-controls-pane">
-            <!-- 🤖 1. AGENTIC AI STORYTELLER & CAPTION STUDIO -->
-            <div class="ai-coach-card">
-              <div class="ai-card__header">
-                <div class="ai-header-left">
-                  <span class="ai-spark-icon">✨</span>
-                  <div>
-                    <strong>Agentic AI Ride Coach &amp; Storyteller</strong>
-                    <small>Generate narasi sinematik &amp; caption flexing otomatis</small>
+            <!-- LIVE CANVAS POSTER CONTAINER -->
+            <div
+              class="poster-canvas-box"
+              :class="[
+                `poster--${rideForm.aspectRatio}`,
+                `theme--${rideForm.templateStyle}`,
+              ]"
+              :style="{ backgroundImage: `url(${currentBackgroundSrc})` }"
+            >
+              <!-- Ambient Gradient Lighting -->
+              <div class="poster-vignette"></div>
+
+              <!-- Top Bar & Stickers -->
+              <div class="poster-header-row">
+                <div class="poster-badge-brand">
+                  <span class="brand-bolt">⚡</span>
+                  <span>GOWESKIT</span>
+                </div>
+                <div
+                  v-if="rideForm.activeSticker !== 'none'"
+                  class="poster-hologram-sticker"
+                >
+                  {{
+                    {
+                      kom: '👑 KOM HUNTER',
+                      cafe: '☕ COFFEE APPROVED',
+                      beast: '⛰️ CLIMB BEAST',
+                      speed: '⚡ 26+ KM/H',
+                      fuel: '🍲 FUEL SATE',
+                      podium: '🏁 PODIUM FINISHER',
+                    }[rideForm.activeSticker]
+                  }}
+                </div>
+              </div>
+
+              <!-- Mid Hero Metric: Big Bold Kinetic Typography -->
+              <div class="poster-hero-section">
+                <div class="hero-num-wrapper">
+                  <span class="hero-giant-number">{{ rideForm.distanceKm }}</span>
+                  <span class="hero-giant-unit">KM</span>
+                </div>
+                <h3 class="poster-story-headline">{{ rideForm.title }}</h3>
+                <div class="poster-specs-row">
+                  <span>🚴 {{ rideForm.bikeName }}</span>
+                  <span>·</span>
+                  <span>{{ rideForm.temperatureC }}°C Cerah</span>
+                </div>
+              </div>
+
+              <!-- Bottom Glassmorphism Telemetry Card -->
+              <div class="poster-glass-card">
+                <!-- Elevation Curve -->
+                <div class="spark-elevation-row">
+                  <span class="spark-label">ELEVASI PROFILE</span>
+                  <span class="spark-val text-sky">+{{ rideForm.elevationM }}m Climb</span>
+                </div>
+                <svg viewBox="0 0 300 32" class="spark-svg-curve" aria-hidden="true">
+                  <path
+                    d="M0 28 Q 60 26, 120 14 T 220 8 L 300 4"
+                    fill="none"
+                    stroke="#38BDF8"
+                    stroke-width="3"
+                    stroke-linecap="round"
+                  />
+                  <circle cx="0" cy="28" r="3.5" fill="#38BDF8" />
+                  <circle cx="300" cy="4" r="4.5" fill="#C9F36A" />
+                </svg>
+
+                <!-- 3 Telemetry Pillars -->
+                <div class="telemetry-pillars-grid">
+                  <div class="pillar-box">
+                    <span class="pillar-tag">WAKTU</span>
+                    <strong class="pillar-number">{{ formatDuration(rideForm.durationMinutes) }}</strong>
+                  </div>
+                  <div class="pillar-sep"></div>
+                  <div class="pillar-box">
+                    <span class="pillar-tag">AVG SPEED</span>
+                    <strong class="pillar-number text-lime">{{ rideForm.avgSpeedKmH }} km/h</strong>
+                  </div>
+                  <div class="pillar-sep"></div>
+                  <div class="pillar-box">
+                    <span class="pillar-tag">KALORI</span>
+                    <strong class="pillar-number text-coral">~{{ rideForm.caloriesKcal }} kcal</strong>
                   </div>
                 </div>
-                <button
-                  type="button"
-                  class="ai-generate-btn"
-                  :disabled="isAiGenerating"
-                  @click="generateAiStory"
-                >
-                  <span v-if="isAiGenerating" class="spin-icon">⏳</span>
-                  <span v-else>🪄</span>
-                  <span>{{ isAiGenerating ? 'Meracik AI...' : 'Generate AI' }}</span>
-                </button>
               </div>
 
-              <!-- Culinary & Effort Equivalency Callout -->
-              <div class="ai-food-pill">
-                <span class="food-badge">🍲 FUEL EQUIVALENCY</span>
-                <p>{{ aiRecap.foodEquivalency }}</p>
-              </div>
-
-              <!-- Persona Captions Tab Switcher -->
-              <div class="persona-tab-row">
-                <button
-                  type="button"
-                  class="persona-tab"
-                  :class="{ active: selectedPersona === 'athlete' }"
-                  @click="selectedPersona = 'athlete'"
-                >
-                  🏆 Atlet / Power
-                </button>
-                <button
-                  type="button"
-                  class="persona-tab"
-                  :class="{ active: selectedPersona === 'humor' }"
-                  @click="selectedPersona = 'humor'"
-                >
-                  😂 Santai &amp; Ngopi
-                </button>
-                <button
-                  type="button"
-                  class="persona-tab"
-                  :class="{ active: selectedPersona === 'technical' }"
-                  @click="selectedPersona = 'technical'"
-                >
-                  ⚙️ Tech Geek
-                </button>
-              </div>
-
-              <!-- Live Caption Display Box -->
-              <div class="ai-caption-display-box">
-                <p class="caption-content">{{ aiRecap.captions[selectedPersona] }}</p>
-                <div class="caption-action-bar">
-                  <span class="caption-count">{{ aiRecap.captions[selectedPersona].length }} Karakter</span>
-                  <button
-                    type="button"
-                    class="copy-caption-btn"
-                    @click="copyCaption(aiRecap.captions[selectedPersona])"
-                  >
-                    📋 Salin Caption &amp; Hashtag
-                  </button>
-                </div>
-              </div>
-
-              <!-- Preventive AI Mechanic Tip -->
-              <div class="ai-mechanic-box">
-                <span>{{ aiRecap.mechanicTip }}</span>
+              <!-- Verified Footer -->
+              <div class="poster-bottom-watermark">
+                <span>⚡ VERIFIED BY GOWESKIT ENGINE · GOWESKIT.ID</span>
               </div>
             </div>
+          </div>
 
-            <!-- 🎨 2. BACKGROUND PHOTO PRESETS & UPLOAD -->
-            <div class="studio-section-card">
-              <span class="control-section-title">🖼️ Pilihan Background Estetis</span>
-              <div class="bg-preset-grid">
-                <button
-                  type="button"
-                  class="preset-thumb-btn"
-                  :class="{ active: rideForm.bgPreset === 'topo' }"
-                  @click="rideForm.bgPreset = 'topo'"
-                >
-                  <span class="thumb-emoji">🗺️</span>
-                  <span>Topo Neon</span>
-                </button>
-                <button
-                  type="button"
-                  class="preset-thumb-btn"
-                  :class="{ active: rideForm.bgPreset === 'alpine' }"
-                  @click="rideForm.bgPreset = 'alpine'"
-                >
-                  <span class="thumb-emoji">🏔️</span>
-                  <span>Alpine Pass</span>
-                </button>
-                <button
-                  type="button"
-                  class="preset-thumb-btn"
-                  :class="{ active: rideForm.bgPreset === 'gravel' }"
-                  @click="rideForm.bgPreset = 'gravel'"
-                >
-                  <span class="thumb-emoji">🌲</span>
-                  <span>Gravel Pine</span>
-                </button>
-                <button
-                  type="button"
-                  class="preset-thumb-btn"
-                  :class="{ active: rideForm.bgPreset === 'sunset' }"
-                  @click="rideForm.bgPreset = 'sunset'"
-                >
-                  <span class="thumb-emoji">🌅</span>
-                  <span>Sunset Coast</span>
-                </button>
-                <button
-                  type="button"
-                  class="preset-thumb-btn"
-                  :class="{ active: rideForm.bgPreset === 'crit' }"
-                  @click="rideForm.bgPreset = 'crit'"
-                >
-                  <span class="thumb-emoji">⚡</span>
-                  <span>Speed Crit</span>
-                </button>
-                <button
-                  type="button"
-                  class="preset-thumb-btn"
-                  :class="{ active: rideForm.bgPreset === 'cafe' }"
-                  @click="rideForm.bgPreset = 'cafe'"
-                >
-                  <span class="thumb-emoji">☕</span>
-                  <span>Coffee Ride</span>
-                </button>
-              </div>
-
-              <!-- Upload Custom Ride Photo -->
-              <label class="custom-photo-uploader">
-                <input
-                  type="file"
-                  accept="image/*"
-                  class="sr-only"
-                  @change="handlePhotoUpload"
-                />
-                <span class="upload-icon">📸</span>
-                <span>Unggah Foto Sendiri dari Galeri / Kamera</span>
-              </label>
-            </div>
-
-            <!-- 🏷️ 3. STICKER SELECTION -->
-            <div class="studio-section-card">
-              <span class="control-section-title">🏷️ Stiker Flexing</span>
-              <div class="stickers-row">
-                <button
-                  type="button"
-                  class="sticker-choice-chip"
-                  :class="{ active: rideForm.activeSticker === 'kom' }"
-                  @click="rideForm.activeSticker = 'kom'"
-                >
-                  👑 KOM Hunter
-                </button>
-                <button
-                  type="button"
-                  class="sticker-choice-chip"
-                  :class="{ active: rideForm.activeSticker === 'cafe' }"
-                  @click="rideForm.activeSticker = 'cafe'"
-                >
-                  ☕ Coffee Approved
-                </button>
-                <button
-                  type="button"
-                  class="sticker-choice-chip"
-                  :class="{ active: rideForm.activeSticker === 'beast' }"
-                  @click="rideForm.activeSticker = 'beast'"
-                >
-                  ⛰️ Climb Beast
-                </button>
-                <button
-                  type="button"
-                  class="sticker-choice-chip"
-                  :class="{ active: rideForm.activeSticker === 'speed' }"
-                  @click="rideForm.activeSticker = 'speed'"
-                >
-                  ⚡ Breakaway Pace
-                </button>
-                <button
-                  type="button"
-                  class="sticker-choice-chip"
-                  :class="{ active: rideForm.activeSticker === 'fuel' }"
-                  @click="rideForm.activeSticker = 'fuel'"
-                >
-                  🍲 980 kcal Fuel
-                </button>
-                <button
-                  type="button"
-                  class="sticker-choice-chip"
-                  :class="{ active: rideForm.activeSticker === 'none' }"
-                  @click="rideForm.activeSticker = 'none'"
-                >
-                  Tanpa Stiker
-                </button>
-              </div>
-            </div>
-
-            <!-- 📊 4. EDIT TELEMETRY METRICS -->
-            <div class="studio-section-card">
-              <span class="control-section-title">📊 Edit Data Telemetri</span>
-              <div class="fields-grid">
-                <div class="input-item">
-                  <label>Judul Sesi Gowes</label>
-                  <input v-model="rideForm.title" type="text" />
-                </div>
-                <div class="input-item">
-                  <label>Nama Sepeda</label>
-                  <input v-model="rideForm.bikeName" type="text" />
-                </div>
-                <div class="input-item">
-                  <label>Jarak (km)</label>
-                  <input v-model.number="rideForm.distanceKm" type="number" step="0.1" />
-                </div>
-                <div class="input-item">
-                  <label>Elevasi (m)</label>
-                  <input v-model.number="rideForm.elevationM" type="number" />
-                </div>
-                <div class="input-item">
-                  <label>Durasi (Menit)</label>
-                  <input v-model.number="rideForm.durationMinutes" type="number" />
-                </div>
-                <div class="input-item">
-                  <label>Suhu Udara (°C)</label>
-                  <input v-model.number="rideForm.temperatureC" type="number" />
-                </div>
-              </div>
-            </div>
-
-            <!-- 🚀 5. FINAL ACTION BUTTONS -->
-            <div class="studio-action-row">
+          <!-- RIGHT PANE: CREATIVE STUDIO TOOLS & AI -->
+          <div class="studio-tools-pane">
+            <!-- Studio Tab Switcher -->
+            <nav class="studio-tab-bar" aria-label="Studio Modes">
               <button
                 type="button"
-                class="main-share-btn"
+                class="studio-tab-btn"
+                :class="{ active: activeTab === 'templates' }"
+                @click="activeTab = 'templates'"
+              >
+                🎨 Template &amp; Foto
+              </button>
+              <button
+                type="button"
+                class="studio-tab-btn"
+                :class="{ active: activeTab === 'ai' }"
+                @click="activeTab = 'ai'"
+              >
+                ✨ Cerita AI &amp; Caption
+              </button>
+              <button
+                type="button"
+                class="studio-tab-btn"
+                :class="{ active: activeTab === 'data' }"
+                @click="activeTab = 'data'"
+              >
+                📊 Edit Data
+              </button>
+            </nav>
+
+            <!-- TAB 1: TEMPLATES, BACKGROUNDS & STICKERS -->
+            <div v-show="activeTab === 'templates'" class="tab-content-flow">
+              <!-- Visual Style Preset Cards -->
+              <section class="tool-section">
+                <label class="tool-section-label">PILIH GAYA TEMPLATE POSTER</label>
+                <div class="template-style-grid">
+                  <button
+                    type="button"
+                    class="style-preset-card"
+                    :class="{ active: rideForm.templateStyle === 'strava_bold' }"
+                    @click="rideForm.templateStyle = 'strava_bold'"
+                  >
+                    <span class="style-icon">🔥</span>
+                    <strong class="style-name">Strava Bold</strong>
+                    <small class="style-desc">Kinetic Neon, Angka Besar, Telemetri Tajam</small>
+                  </button>
+                  <button
+                    type="button"
+                    class="style-preset-card"
+                    :class="{ active: rideForm.templateStyle === 'rapha_editorial' }"
+                    @click="rideForm.templateStyle = 'rapha_editorial'"
+                  >
+                    <span class="style-icon">🏔️</span>
+                    <strong class="style-name">Rapha Editorial</strong>
+                    <small class="style-desc">Clean Cycling Magazine &amp; Koordinat</small>
+                  </button>
+                  <button
+                    type="button"
+                    class="style-preset-card"
+                    :class="{ active: rideForm.templateStyle === 'cyber_hud' }"
+                    @click="rideForm.templateStyle = 'cyber_hud'"
+                  >
+                    <span class="style-icon">⚡</span>
+                    <strong class="style-name">Cyber HUD</strong>
+                    <small class="style-desc">Futuristik Cyan/Lime &amp; Grade Sensor</small>
+                  </button>
+                  <button
+                    type="button"
+                    class="style-preset-card"
+                    :class="{ active: rideForm.templateStyle === 'cafe_santai' }"
+                    @click="rideForm.templateStyle = 'cafe_santai'"
+                  >
+                    <span class="style-icon">☕</span>
+                    <strong class="style-name">Kopi &amp; Kuliner</strong>
+                    <small class="style-desc">Warm Caramel &amp; Fuel Sate Maranggi</small>
+                  </button>
+                </div>
+              </section>
+
+              <!-- Curated Visual Background Photos -->
+              <section class="tool-section">
+                <label class="tool-section-label">PILIHAN LATAR BELAKANG FOTO</label>
+                <div class="visual-bg-grid">
+                  <button
+                    type="button"
+                    class="bg-thumb-card"
+                    :class="{ active: rideForm.bgPreset === 'alpine' }"
+                    :style="{ backgroundImage: `url(${PRESET_BACKGROUNDS.alpine})` }"
+                    @click="rideForm.bgPreset = 'alpine'"
+                  >
+                    <span class="bg-thumb-label">Alpine Pass</span>
+                  </button>
+                  <button
+                    type="button"
+                    class="bg-thumb-card"
+                    :class="{ active: rideForm.bgPreset === 'gravel' }"
+                    :style="{ backgroundImage: `url(${PRESET_BACKGROUNDS.gravel})` }"
+                    @click="rideForm.bgPreset = 'gravel'"
+                  >
+                    <span class="bg-thumb-label">Gravel Pine</span>
+                  </button>
+                  <button
+                    type="button"
+                    class="bg-thumb-card"
+                    :class="{ active: rideForm.bgPreset === 'sunset' }"
+                    :style="{ backgroundImage: `url(${PRESET_BACKGROUNDS.sunset})` }"
+                    @click="rideForm.bgPreset = 'sunset'"
+                  >
+                    <span class="bg-thumb-label">Sunset Coast</span>
+                  </button>
+                  <button
+                    type="button"
+                    class="bg-thumb-card"
+                    :class="{ active: rideForm.bgPreset === 'crit' }"
+                    :style="{ backgroundImage: `url(${PRESET_BACKGROUNDS.crit})` }"
+                    @click="rideForm.bgPreset = 'crit'"
+                  >
+                    <span class="bg-thumb-label">Speed Crit</span>
+                  </button>
+                  <button
+                    type="button"
+                    class="bg-thumb-card"
+                    :class="{ active: rideForm.bgPreset === 'cafe' }"
+                    :style="{ backgroundImage: `url(${PRESET_BACKGROUNDS.cafe})` }"
+                    @click="rideForm.bgPreset = 'cafe'"
+                  >
+                    <span class="bg-thumb-label">Coffee Stop</span>
+                  </button>
+                  <button
+                    type="button"
+                    class="bg-thumb-card bg-thumb-card--topo"
+                    :class="{ active: rideForm.bgPreset === 'topo' }"
+                    @click="rideForm.bgPreset = 'topo'"
+                  >
+                    <span class="bg-thumb-label">🗺️ Topo Neon</span>
+                  </button>
+                </div>
+
+                <!-- 1-Tap Upload Custom Photo -->
+                <label class="upload-photo-cta">
+                  <input
+                    type="file"
+                    accept="image/*"
+                    class="sr-only"
+                    @change="handlePhotoUpload"
+                  />
+                  <span class="upload-badge-icon">📸</span>
+                  <div class="upload-text-group">
+                    <strong>Gunakan Foto Jepretan Sendiri</strong>
+                    <small>Ambil langsung dari kamera HP atau galeri foto</small>
+                  </div>
+                </label>
+              </section>
+
+              <!-- Stickers Selector -->
+              <section class="tool-section">
+                <label class="tool-section-label">PILIH STIKER FLEXING</label>
+                <div class="sticker-chips-cloud">
+                  <button
+                    type="button"
+                    class="hologram-chip"
+                    :class="{ active: rideForm.activeSticker === 'kom' }"
+                    @click="rideForm.activeSticker = 'kom'"
+                  >
+                    👑 KOM Hunter
+                  </button>
+                  <button
+                    type="button"
+                    class="hologram-chip"
+                    :class="{ active: rideForm.activeSticker === 'cafe' }"
+                    @click="rideForm.activeSticker = 'cafe'"
+                  >
+                    ☕ Coffee Approved
+                  </button>
+                  <button
+                    type="button"
+                    class="hologram-chip"
+                    :class="{ active: rideForm.activeSticker === 'beast' }"
+                    @click="rideForm.activeSticker = 'beast'"
+                  >
+                    ⛰️ Climb Beast
+                  </button>
+                  <button
+                    type="button"
+                    class="hologram-chip"
+                    :class="{ active: rideForm.activeSticker === 'speed' }"
+                    @click="rideForm.activeSticker = 'speed'"
+                  >
+                    ⚡ Breakaway Pace
+                  </button>
+                  <button
+                    type="button"
+                    class="hologram-chip"
+                    :class="{ active: rideForm.activeSticker === 'fuel' }"
+                    @click="rideForm.activeSticker = 'fuel'"
+                  >
+                    🍲 Sate Maranggi Fuel
+                  </button>
+                  <button
+                    type="button"
+                    class="hologram-chip"
+                    :class="{ active: rideForm.activeSticker === 'podium' }"
+                    @click="rideForm.activeSticker = 'podium'"
+                  >
+                    🏁 Podium Finisher
+                  </button>
+                  <button
+                    type="button"
+                    class="hologram-chip"
+                    :class="{ active: rideForm.activeSticker === 'none' }"
+                    @click="rideForm.activeSticker = 'none'"
+                  >
+                    Tanpa Stiker
+                  </button>
+                </div>
+              </section>
+            </div>
+
+            <!-- TAB 2: AGENTIC AI & MULTI-PERSONA CAPTIONS -->
+            <div v-show="activeTab === 'ai'" class="tab-content-flow">
+              <div class="ai-studio-panel">
+                <div class="ai-hero-header">
+                  <div class="ai-title-wrap">
+                    <span class="ai-magic-star">✨</span>
+                    <div>
+                      <h4 class="ai-main-title">Agentic AI Ride Coach &amp; Storyteller</h4>
+                      <p class="ai-sub-title">Otomatis buat caption flexing keren &amp; analisa performa</p>
+                    </div>
+                  </div>
+                  <button
+                    type="button"
+                    class="ai-trigger-pill"
+                    :disabled="isAiGenerating"
+                    @click="generateAiStory"
+                  >
+                    <span v-if="isAiGenerating" class="spin-icon">⏳</span>
+                    <span v-else>🪄</span>
+                    <span>{{ isAiGenerating ? 'Meracik AI...' : 'Generate Cerita Baru' }}</span>
+                  </button>
+                </div>
+
+                <!-- Culinary Fuel Banner -->
+                <div class="culinary-fuel-card">
+                  <span class="fuel-badge-tag">🍢 INDONESIAN CYCLING FUEL EQUIVALENCY</span>
+                  <strong class="fuel-text">{{ aiRecap.foodEquivalency }}</strong>
+                  <small class="fuel-sub">Estimasi energi terbakar ~{{ rideForm.caloriesKcal }} kcal di tanjakan {{ aiRecap.climbGradeScore }}</small>
+                </div>
+
+                <!-- Persona Switcher -->
+                <div class="persona-switch-deck">
+                  <button
+                    type="button"
+                    class="persona-deck-card"
+                    :class="{ active: selectedPersona === 'athlete' }"
+                    @click="selectedPersona = 'athlete'"
+                  >
+                    <span class="persona-icon">🏆</span>
+                    <div class="persona-text-col">
+                      <strong>Gaya Atlet</strong>
+                      <small>Fokus Power &amp; Pacing</small>
+                    </div>
+                  </button>
+                  <button
+                    type="button"
+                    class="persona-deck-card"
+                    :class="{ active: selectedPersona === 'humor' }"
+                    @click="selectedPersona = 'humor'"
+                  >
+                    <span class="persona-icon">😂</span>
+                    <div class="persona-text-col">
+                      <strong>Humor Santai</strong>
+                      <small>Niat Tipis Kopi &amp; Sarapan</small>
+                    </div>
+                  </button>
+                  <button
+                    type="button"
+                    class="persona-deck-card"
+                    :class="{ active: selectedPersona === 'technical' }"
+                    @click="selectedPersona = 'technical'"
+                  >
+                    <span class="persona-icon">⚙️</span>
+                    <div class="persona-text-col">
+                      <strong>Tech Geek</strong>
+                      <small>Drivetrain &amp; Spek Sepeda</small>
+                    </div>
+                  </button>
+                </div>
+
+                <!-- Caption Box -->
+                <div class="caption-preview-box">
+                  <p class="caption-p">{{ aiRecap.captions[selectedPersona] }}</p>
+                  <div class="caption-footer-bar">
+                    <span class="char-count">{{ aiRecap.captions[selectedPersona].length }} Karakter</span>
+                    <button
+                      type="button"
+                      class="copy-magic-btn"
+                      @click="copyCaption(aiRecap.captions[selectedPersona])"
+                    >
+                      📋 Salin Caption &amp; Hashtag
+                    </button>
+                  </div>
+                </div>
+
+                <!-- AI Mechanic Advice -->
+                <div class="ai-mechanic-card">
+                  <span class="mechanic-icon">🔧</span>
+                  <p class="mechanic-text">{{ aiRecap.mechanicTip }}</p>
+                </div>
+              </div>
+            </div>
+
+            <!-- TAB 3: DATA METRICS -->
+            <div v-show="activeTab === 'data'" class="tab-content-flow">
+              <section class="tool-section">
+                <label class="tool-section-label">SESUAIKAN DATA TELEMETRI GOWES</label>
+                <div class="telemetry-inputs-grid">
+                  <div class="form-group-item">
+                    <label>Judul Sesi Gowes</label>
+                    <input v-model="rideForm.title" type="text" />
+                  </div>
+                  <div class="form-group-item">
+                    <label>Nama Sepeda</label>
+                    <input v-model="rideForm.bikeName" type="text" />
+                  </div>
+                  <div class="form-group-item">
+                    <label>Jarak Tempuh (km)</label>
+                    <input v-model.number="rideForm.distanceKm" type="number" step="0.1" />
+                  </div>
+                  <div class="form-group-item">
+                    <label>Elevasi Tanjakan (m)</label>
+                    <input v-model.number="rideForm.elevationM" type="number" />
+                  </div>
+                  <div class="form-group-item">
+                    <label>Durasi Total (Menit)</label>
+                    <input v-model.number="rideForm.durationMinutes" type="number" />
+                  </div>
+                  <div class="form-group-item">
+                    <label>Suhu Udara (°C)</label>
+                    <input v-model.number="rideForm.temperatureC" type="number" />
+                  </div>
+                </div>
+              </section>
+            </div>
+
+            <!-- Sticky Bottom Export Action Buttons -->
+            <footer class="studio-bottom-actions">
+              <button
+                type="button"
+                class="action-btn-share"
                 :disabled="isExporting"
                 @click="shareToMedia"
               >
@@ -812,14 +924,14 @@ async function shareToMedia() {
               </button>
               <button
                 type="button"
-                class="download-png-btn"
+                class="action-btn-download"
                 :disabled="isExporting"
                 @click="downloadStoryImage"
               >
                 <span class="btn-icon">💾</span>
                 <span>Unduh Gambar HD (PNG)</span>
               </button>
-            </div>
+            </footer>
           </div>
         </div>
       </div>
@@ -828,13 +940,13 @@ async function shareToMedia() {
 </template>
 
 <style scoped>
-/* Backdrop */
+/* Backdrop Blur */
 .studio-modal-backdrop {
   position: fixed;
   inset: 0;
   z-index: 100;
-  background: rgba(11, 17, 32, 0.88);
-  backdrop-filter: blur(10px);
+  background: rgba(11, 17, 32, 0.92);
+  backdrop-filter: blur(14px);
   display: flex;
   align-items: center;
   justify-content: center;
@@ -842,99 +954,143 @@ async function shareToMedia() {
   overflow-y: auto;
 }
 
-/* Modal Card */
+/* Modal Shell */
 .studio-modal-card {
   width: 100%;
-  max-width: 58rem;
-  max-height: 92vh;
-  background: #0f172a;
-  border: 1px solid rgba(255, 255, 255, 0.12);
-  border-radius: 1.5rem;
+  max-width: 62rem;
+  max-height: 94vh;
+  background: #0d1527;
+  border: 1.5px solid rgba(201, 243, 106, 0.25);
+  border-radius: 1.75rem;
   display: flex;
   flex-direction: column;
   overflow: hidden;
-  box-shadow: 0 25px 60px -15px rgba(0, 0, 0, 0.7);
+  box-shadow: 0 30px 80px -20px rgba(0, 0, 0, 0.8), 0 0 40px rgba(201, 243, 106, 0.08);
   color: #f8fafc;
 }
 
-/* Header */
-.studio-modal__header {
+/* Top Bar */
+.studio-topbar {
   display: flex;
   align-items: center;
   justify-content: space-between;
-  padding: 1rem 1.5rem;
+  padding: 1.15rem 1.75rem;
+  background: #080d18;
   border-bottom: 1px solid rgba(255, 255, 255, 0.08);
-  background: #0b1120;
 }
 
-.studio-badge {
+.studio-topbar-left {
   display: inline-flex;
   align-items: center;
-  gap: 0.5rem;
-  font-family: var(--font-mono);
-  font-size: 0.75rem;
-  font-weight: 900;
-  color: var(--color-chain-lime);
-  letter-spacing: 0.04em;
+  gap: 0.65rem;
 }
 
-.studio-dot {
-  width: 0.5rem;
-  height: 0.5rem;
+.live-dot {
+  width: 0.55rem;
+  height: 0.55rem;
   border-radius: 50%;
   background: var(--color-chain-lime);
-  box-shadow: 0 0 10px var(--color-chain-lime);
+  box-shadow: 0 0 12px var(--color-chain-lime);
+  animation: pulse 2s infinite ease-in-out;
 }
 
-.studio-close-btn {
+@keyframes pulse {
+  0%, 100% { opacity: 1; transform: scale(1); }
+  50% { opacity: 0.5; transform: scale(1.2); }
+}
+
+.studio-title {
+  font-family: var(--font-mono);
+  font-size: 0.85rem;
+  font-weight: 900;
+  color: var(--color-chain-lime);
+  letter-spacing: 0.05em;
+}
+
+.studio-close-circle {
   background: rgba(255, 255, 255, 0.08);
-  border: none;
+  border: 1px solid rgba(255, 255, 255, 0.1);
   color: #94a3b8;
-  width: 2rem;
-  height: 2rem;
+  width: 2.2rem;
+  height: 2.2rem;
   border-radius: 50%;
   cursor: pointer;
   display: flex;
   align-items: center;
   justify-content: center;
-  font-size: 0.9rem;
+  font-size: 0.95rem;
   transition: all 120ms ease;
 }
 
-.studio-close-btn:hover {
-  background: rgba(255, 255, 255, 0.18);
+.studio-close-circle:hover {
+  background: rgba(255, 255, 255, 0.2);
   color: #fff;
 }
 
-/* Layout Split */
-.studio-body-layout {
+/* Studio Main Workspace Grid */
+.studio-main-grid {
   display: grid;
-  grid-template-columns: 22rem 1fr;
+  grid-template-columns: 21.5rem 1fr;
   overflow-y: auto;
-  gap: 1.5rem;
-  padding: 1.5rem;
+  gap: 1.75rem;
+  padding: 1.75rem;
+  align-items: start;
 }
 
-@media (max-width: 820px) {
-  .studio-body-layout {
+@media (max-width: 860px) {
+  .studio-main-grid {
     grid-template-columns: 1fr;
+    padding: 1rem;
+    gap: 1.25rem;
   }
 }
 
-/* LEFT PREVIEW PANE */
-.poster-preview-pane {
+/* LEFT PANE: POSTER STAGE */
+.poster-stage {
   display: flex;
   flex-direction: column;
   align-items: center;
   gap: 1rem;
+  position: sticky;
+  top: 0;
 }
 
-/* LIVE POSTER CONTAINER */
-.live-poster {
+/* Ratio Switcher Pills */
+.stage-ratio-pills {
+  display: flex;
+  gap: 0.35rem;
+  background: rgba(255, 255, 255, 0.06);
+  padding: 0.3rem;
+  border-radius: 0.85rem;
   width: 100%;
-  max-width: 20rem;
+}
+
+.ratio-pill {
+  flex: 1;
+  background: transparent;
+  border: none;
+  padding: 0.45rem 0.25rem;
+  font-size: 0.7rem;
+  font-weight: 850;
+  color: #94a3b8;
+  border-radius: 0.6rem;
+  cursor: pointer;
+  transition: all 120ms ease;
+  white-space: nowrap;
+}
+
+.ratio-pill.active {
+  background: #1e293b;
+  color: var(--color-chain-lime);
+  box-shadow: 0 3px 10px rgba(0, 0, 0, 0.4);
+}
+
+/* POSTER CANVAS BOX */
+.poster-canvas-box {
+  width: 100%;
+  max-width: 19.5rem;
   aspect-ratio: 9 / 16;
-  border-radius: 1.25rem;
+  border-radius: 1.35rem;
   background-size: cover;
   background-position: center;
   position: relative;
@@ -943,34 +1099,33 @@ async function shareToMedia() {
   flex-direction: column;
   justify-content: space-between;
   padding: 1.15rem;
-  box-shadow: 0 18px 40px rgba(0, 0, 0, 0.6);
-  border: 1.5px solid rgba(255, 255, 255, 0.15);
-  transition: all 200ms ease;
+  box-shadow: 0 20px 50px rgba(0, 0, 0, 0.7);
+  border: 1.5px solid rgba(255, 255, 255, 0.2);
 }
 
-.live-poster--post {
+.poster--post {
   aspect-ratio: 1 / 1;
 }
 
-.live-poster--landscape {
+.poster--landscape {
   aspect-ratio: 16 / 9;
 }
 
-.live-poster__overlay {
+.poster-vignette {
   position: absolute;
   inset: 0;
   background: linear-gradient(
     180deg,
-    rgba(11, 17, 32, 0.75) 0%,
+    rgba(11, 17, 32, 0.8) 0%,
     rgba(11, 17, 32, 0.2) 35%,
     rgba(11, 17, 32, 0.75) 70%,
-    rgba(11, 17, 32, 0.96) 100%
+    rgba(11, 17, 32, 0.98) 100%
   );
   z-index: 1;
 }
 
-/* Top Bar in Poster */
-.poster-top-bar {
+/* Poster Header */
+.poster-header-row {
   position: relative;
   z-index: 2;
   display: flex;
@@ -979,77 +1134,77 @@ async function shareToMedia() {
   gap: 0.5rem;
 }
 
-.poster-brand-chip {
+.poster-badge-brand {
   display: inline-flex;
   align-items: center;
   gap: 0.35rem;
-  padding: 0.25rem 0.6rem;
+  padding: 0.25rem 0.65rem;
   border-radius: 9999px;
-  background: rgba(15, 23, 42, 0.85);
-  border: 1px solid var(--color-chain-lime);
+  background: rgba(15, 23, 42, 0.9);
+  border: 1.5px solid var(--color-chain-lime);
   font-family: var(--font-mono);
   font-size: 0.62rem;
   font-weight: 900;
   color: var(--color-chain-lime);
-  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.4);
+  box-shadow: 0 2px 10px rgba(0, 0, 0, 0.5);
 }
 
-.poster-sticker-tag {
+.poster-hologram-sticker {
   padding: 0.25rem 0.65rem;
   border-radius: 9999px;
   background: var(--color-chain-lime);
   color: #0f172a;
   font-size: 0.62rem;
   font-weight: 900;
-  box-shadow: 0 2px 10px rgba(201, 243, 106, 0.3);
+  box-shadow: 0 2px 12px rgba(201, 243, 106, 0.4);
 }
 
-/* Hero Distance Callout in Poster */
-.poster-hero-metric {
+/* Poster Hero Kinetic Metric */
+.poster-hero-section {
   position: relative;
   z-index: 2;
   margin-top: auto;
-  margin-bottom: 0.5rem;
+  margin-bottom: 0.65rem;
   display: flex;
   flex-direction: column;
   gap: 0.15rem;
 }
 
-.hero-distance-line {
+.hero-num-wrapper {
   display: flex;
   align-items: baseline;
   gap: 0.35rem;
-  line-height: 1;
+  line-height: 0.95;
 }
 
-.hero-num {
+.hero-giant-number {
   font-family: var(--font-mono);
-  font-size: 2.8rem;
+  font-size: 3rem;
   font-weight: 900;
   color: var(--color-chain-lime);
-  letter-spacing: -0.04em;
-  text-shadow: 0 4px 16px rgba(0, 0, 0, 0.8);
+  letter-spacing: -0.05em;
+  text-shadow: 0 4px 20px rgba(0, 0, 0, 0.9);
 }
 
-.hero-unit {
-  font-size: 1.1rem;
+.hero-giant-unit {
+  font-size: 1.15rem;
   font-weight: 900;
   color: #ffffff;
 }
 
-.poster-headline {
+.poster-story-headline {
   margin: 0;
-  font-size: 0.95rem;
+  font-size: 0.98rem;
   font-weight: 850;
   color: #ffffff;
   letter-spacing: -0.02em;
-  text-shadow: 0 2px 8px rgba(0, 0, 0, 0.8);
+  text-shadow: 0 2px 10px rgba(0, 0, 0, 0.9);
   white-space: nowrap;
   overflow: hidden;
   text-overflow: ellipsis;
 }
 
-.poster-meta-pill {
+.poster-specs-row {
   display: flex;
   align-items: center;
   gap: 0.35rem;
@@ -1057,90 +1212,74 @@ async function shareToMedia() {
   color: #cbd5e1;
 }
 
-/* Telemetry Glass Card in Poster */
-.poster-telemetry-card {
+/* Poster Glass Card */
+.poster-glass-card {
   position: relative;
   z-index: 2;
   background: rgba(15, 23, 42, 0.88);
-  border: 1px solid rgba(201, 243, 106, 0.35);
-  border-radius: 0.95rem;
-  padding: 0.65rem 0.75rem;
+  border: 1.5px solid rgba(201, 243, 106, 0.35);
+  border-radius: 1rem;
+  padding: 0.75rem 0.85rem;
   display: flex;
   flex-direction: column;
   gap: 0.5rem;
-  backdrop-filter: blur(8px);
+  backdrop-filter: blur(10px);
 }
 
-.poster-elevation-spark {
-  display: flex;
-  flex-direction: column;
-  gap: 0.2rem;
-}
-
-.spark-topline {
+.spark-elevation-row {
   display: flex;
   justify-content: space-between;
   align-items: center;
   font-family: var(--font-mono);
   font-size: 0.58rem;
-  font-weight: 800;
-  color: #94a3b8;
+  font-weight: 850;
 }
 
-.sparkline-svg {
+.spark-svg-curve {
   width: 100%;
-  height: 1.35rem;
+  height: 1.4rem;
 }
 
-.poster-metrics-strip {
+.telemetry-pillars-grid {
   display: flex;
   align-items: center;
   justify-content: space-between;
   border-top: 1px solid rgba(255, 255, 255, 0.08);
-  padding-top: 0.4rem;
+  padding-top: 0.45rem;
 }
 
-.stat-cell {
+.pillar-box {
   display: flex;
   flex-direction: column;
   align-items: center;
   flex: 1;
 }
 
-.stat-cell-divider {
+.pillar-sep {
   width: 1px;
-  height: 1.4rem;
+  height: 1.5rem;
   background: rgba(255, 255, 255, 0.1);
 }
 
-.stat-label {
+.pillar-tag {
   font-family: var(--font-mono);
   font-size: 0.52rem;
   font-weight: 800;
   color: #94a3b8;
 }
 
-.stat-value {
+.pillar-number {
   font-family: var(--font-mono);
   font-size: 0.82rem;
   font-weight: 900;
   color: #f8fafc;
 }
 
-.text-lime {
-  color: var(--color-chain-lime);
-}
+.text-lime { color: var(--color-chain-lime); }
+.text-sky { color: #38bdf8; }
+.text-coral { color: #ff8c75; }
 
-.text-sky {
-  color: #38bdf8;
-}
-
-.text-coral {
-  color: #ff8c75;
-}
-
-/* Verified Footer */
-.poster-verified-footer {
+.poster-bottom-watermark {
   position: relative;
   z-index: 2;
   text-align: center;
@@ -1148,304 +1287,508 @@ async function shareToMedia() {
   font-size: 0.55rem;
   font-weight: 800;
   color: rgba(201, 243, 106, 0.8);
-  letter-spacing: 0.02em;
   margin-top: 0.25rem;
 }
 
-/* Ratio Switcher Bar */
-.poster-ratio-bar {
+/* RIGHT PANE: TOOLS & CONTROLS */
+.studio-tools-pane {
   display: flex;
-  gap: 0.35rem;
-  background: rgba(255, 255, 255, 0.05);
-  padding: 0.25rem;
-  border-radius: 0.75rem;
-  width: 100%;
+  flex-direction: column;
+  gap: 1.25rem;
 }
 
-.ratio-btn {
+/* Tab Bar */
+.studio-tab-bar {
+  display: flex;
+  gap: 0.5rem;
+  background: #080d18;
+  padding: 0.35rem;
+  border-radius: 1rem;
+  border: 1px solid rgba(255, 255, 255, 0.08);
+}
+
+.studio-tab-btn {
   flex: 1;
   background: transparent;
   border: none;
-  padding: 0.4rem 0.2rem;
-  font-size: 0.68rem;
-  font-weight: 800;
+  padding: 0.65rem 0.5rem;
+  font-size: 0.78rem;
+  font-weight: 850;
   color: #94a3b8;
-  border-radius: 0.5rem;
+  border-radius: 0.75rem;
+  cursor: pointer;
+  transition: all 120ms ease;
+  white-space: nowrap;
+}
+
+.studio-tab-btn.active {
+  background: #1e293b;
+  color: var(--color-chain-lime);
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.4);
+}
+
+.tab-content-flow {
+  display: flex;
+  flex-direction: column;
+  gap: 1.25rem;
+}
+
+/* Tool Sections */
+.tool-section {
+  display: flex;
+  flex-direction: column;
+  gap: 0.75rem;
+}
+
+.tool-section-label {
+  font-family: var(--font-mono);
+  font-size: 0.68rem;
+  font-weight: 900;
+  color: #94a3b8;
+  letter-spacing: 0.04em;
+}
+
+/* Style Preset Grid */
+.template-style-grid {
+  display: grid;
+  grid-template-columns: repeat(2, 1fr);
+  gap: 0.65rem;
+}
+
+.style-preset-card {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  gap: 0.25rem;
+  padding: 0.85rem;
+  border-radius: 1rem;
+  background: rgba(30, 41, 59, 0.5);
+  border: 1.5px solid rgba(255, 255, 255, 0.08);
+  color: #f8fafc;
+  cursor: pointer;
+  text-align: left;
+  transition: all 120ms ease;
+}
+
+.style-preset-card:hover {
+  border-color: rgba(201, 243, 106, 0.4);
+}
+
+.style-preset-card.active {
+  background: rgba(201, 243, 106, 0.1);
+  border-color: var(--color-chain-lime);
+}
+
+.style-icon {
+  font-size: 1.25rem;
+}
+
+.style-name {
+  font-size: 0.85rem;
+  font-weight: 850;
+  color: #ffffff;
+}
+
+.style-desc {
+  font-size: 0.68rem;
+  color: #94a3b8;
+  line-height: 1.3;
+}
+
+/* Visual Background Photos Grid */
+.visual-bg-grid {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 0.65rem;
+}
+
+.bg-thumb-card {
+  height: 5rem;
+  border-radius: 0.85rem;
+  background-size: cover;
+  background-position: center;
+  border: 2px solid rgba(255, 255, 255, 0.1);
+  display: flex;
+  align-items: flex-end;
+  padding: 0.45rem;
+  cursor: pointer;
+  position: relative;
+  overflow: hidden;
+  transition: all 120ms ease;
+}
+
+.bg-thumb-card::before {
+  content: '';
+  position: absolute;
+  inset: 0;
+  background: linear-gradient(180deg, transparent 40%, rgba(15, 23, 42, 0.9) 100%);
+}
+
+.bg-thumb-card.active {
+  border-color: var(--color-chain-lime);
+  box-shadow: 0 0 15px rgba(201, 243, 106, 0.4);
+}
+
+.bg-thumb-card--topo {
+  background: #0b1120;
+}
+
+.bg-thumb-label {
+  position: relative;
+  z-index: 1;
+  font-size: 0.68rem;
+  font-weight: 900;
+  color: #ffffff;
+  text-shadow: 0 1px 4px rgba(0, 0, 0, 0.9);
+}
+
+/* Upload Custom Photo CTA */
+.upload-photo-cta {
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+  padding: 0.85rem 1.15rem;
+  border-radius: 1rem;
+  border: 1.5px dashed rgba(201, 243, 106, 0.4);
+  background: rgba(201, 243, 106, 0.05);
   cursor: pointer;
   transition: all 120ms ease;
 }
 
-.ratio-btn.active {
-  background: #1e293b;
-  color: #f8fafc;
-  box-shadow: 0 2px 6px rgba(0, 0, 0, 0.3);
+.upload-photo-cta:hover {
+  background: rgba(201, 243, 106, 0.1);
+  border-color: var(--color-chain-lime);
 }
 
-/* RIGHT CONTROLS PANE */
-.studio-controls-pane {
+.upload-badge-icon {
+  font-size: 1.5rem;
+}
+
+.upload-text-group strong {
+  display: block;
+  font-size: 0.82rem;
+  color: var(--color-chain-lime);
+}
+
+.upload-text-group small {
+  font-size: 0.7rem;
+  color: #94a3b8;
+}
+
+/* Sticker Chips */
+.sticker-chips-cloud {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.45rem;
+}
+
+.hologram-chip {
+  padding: 0.45rem 0.85rem;
+  border-radius: 9999px;
+  background: rgba(30, 41, 59, 0.7);
+  border: 1px solid rgba(255, 255, 255, 0.12);
+  color: #cbd5e1;
+  font-size: 0.72rem;
+  font-weight: 850;
+  cursor: pointer;
+  transition: all 120ms ease;
+}
+
+.hologram-chip.active {
+  background: var(--color-chain-lime);
+  border-color: var(--color-chain-lime);
+  color: #0f172a;
+}
+
+/* TAB 2: AI STORYTELLER PANEL */
+.ai-studio-panel {
   display: flex;
   flex-direction: column;
   gap: 1rem;
+  background: linear-gradient(135deg, rgba(30, 41, 59, 0.8), rgba(15, 23, 42, 0.95));
+  border: 1.5px solid rgba(201, 243, 106, 0.3);
+  border-radius: 1.25rem;
+  padding: 1.25rem;
 }
 
-/* AI COACH CARD */
-.ai-coach-card {
-  background: linear-gradient(135deg, rgba(30, 41, 59, 0.9), rgba(15, 23, 42, 0.95));
-  border: 1px solid rgba(201, 243, 106, 0.3);
-  border-radius: 1.15rem;
-  padding: 1.15rem;
-  display: flex;
-  flex-direction: column;
-  gap: 0.85rem;
-  box-shadow: 0 10px 25px rgba(0, 0, 0, 0.3);
-}
-
-.ai-card__header {
+.ai-hero-header {
   display: flex;
   align-items: center;
   justify-content: space-between;
   gap: 0.75rem;
 }
 
-.ai-header-left {
+.ai-title-wrap {
   display: flex;
   align-items: center;
   gap: 0.65rem;
 }
 
-.ai-spark-icon {
-  font-size: 1.4rem;
+.ai-magic-star {
+  font-size: 1.5rem;
 }
 
-.ai-header-left strong {
-  display: block;
-  font-size: 0.92rem;
-  color: #f8fafc;
+.ai-main-title {
+  margin: 0;
+  font-size: 0.95rem;
+  font-weight: 900;
+  color: #ffffff;
 }
 
-.ai-header-left small {
+.ai-sub-title {
+  margin: 0.1rem 0 0;
   font-size: 0.72rem;
   color: #94a3b8;
 }
 
-.ai-generate-btn {
+.ai-trigger-pill {
   display: inline-flex;
   align-items: center;
   gap: 0.4rem;
-  padding: 0.5rem 0.9rem;
+  padding: 0.55rem 0.95rem;
   border-radius: 0.75rem;
   background: var(--color-chain-lime);
   color: #0f172a;
   border: none;
-  font-size: 0.75rem;
+  font-size: 0.78rem;
   font-weight: 900;
   cursor: pointer;
-  box-shadow: 0 4px 12px rgba(201, 243, 106, 0.25);
+  box-shadow: 0 4px 14px rgba(201, 243, 106, 0.35);
   transition: all 120ms ease;
   white-space: nowrap;
 }
 
-.ai-generate-btn:hover:not(:disabled) {
-  transform: translateY(-1px);
-  box-shadow: 0 6px 16px rgba(201, 243, 106, 0.4);
+.ai-trigger-pill:hover:not(:disabled) {
+  transform: translateY(-2px);
+  box-shadow: 0 6px 18px rgba(201, 243, 106, 0.5);
 }
 
-.ai-generate-btn:disabled {
-  opacity: 0.6;
-  cursor: not-allowed;
-}
-
-.spin-icon {
-  display: inline-block;
-  animation: spin 1s infinite linear;
-}
-
-@keyframes spin {
-  100% {
-    transform: rotate(360deg);
-  }
-}
-
-/* Culinary & Food Fuel Equivalency */
-.ai-food-pill {
+.culinary-fuel-card {
   display: flex;
   flex-direction: column;
   gap: 0.25rem;
-  padding: 0.65rem 0.85rem;
-  border-radius: 0.75rem;
-  background: rgba(255, 255, 255, 0.05);
-  border-left: 3px solid #ff8c75;
+  padding: 0.75rem 1rem;
+  border-radius: 0.85rem;
+  background: rgba(255, 140, 117, 0.1);
+  border: 1px solid rgba(255, 140, 117, 0.3);
 }
 
-.food-badge {
+.fuel-badge-tag {
   font-family: var(--font-mono);
-  font-size: 0.58rem;
+  font-size: 0.6rem;
   font-weight: 900;
   color: #ff8c75;
 }
 
-.ai-food-pill p {
-  margin: 0;
-  font-size: 0.8rem;
-  font-weight: 750;
-  color: #f1f5f9;
-}
-
-/* Persona Tabs */
-.persona-tab-row {
-  display: flex;
-  gap: 0.35rem;
-  background: rgba(0, 0, 0, 0.25);
-  padding: 0.25rem;
-  border-radius: 0.75rem;
-}
-
-.persona-tab {
-  flex: 1;
-  background: transparent;
-  border: none;
-  padding: 0.45rem 0.3rem;
-  font-size: 0.72rem;
-  font-weight: 800;
-  color: #94a3b8;
-  border-radius: 0.5rem;
-  cursor: pointer;
-  transition: all 120ms ease;
-  white-space: nowrap;
-}
-
-.persona-tab.active {
-  background: #334155;
+.fuel-text {
+  font-size: 0.92rem;
   color: #ffffff;
 }
 
-/* Live Caption Display Box */
-.ai-caption-display-box {
-  display: flex;
-  flex-direction: column;
-  gap: 0.6rem;
-  padding: 0.85rem;
-  border-radius: 0.85rem;
-  background: rgba(0, 0, 0, 0.35);
-  border: 1px solid rgba(255, 255, 255, 0.08);
+.fuel-sub {
+  font-size: 0.7rem;
+  color: #cbd5e1;
 }
 
-.caption-content {
+/* Persona Switcher Deck */
+.persona-switch-deck {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 0.5rem;
+}
+
+.persona-deck-card {
+  display: flex;
+  align-items: center;
+  gap: 0.45rem;
+  padding: 0.65rem 0.5rem;
+  border-radius: 0.85rem;
+  background: rgba(15, 23, 42, 0.7);
+  border: 1.5px solid rgba(255, 255, 255, 0.08);
+  color: #cbd5e1;
+  cursor: pointer;
+  text-align: left;
+  transition: all 120ms ease;
+}
+
+.persona-deck-card.active {
+  background: #1e293b;
+  border-color: var(--color-chain-lime);
+  color: #ffffff;
+}
+
+.persona-icon {
+  font-size: 1.25rem;
+}
+
+.persona-text-col strong {
+  display: block;
+  font-size: 0.78rem;
+  color: #ffffff;
+}
+
+.persona-text-col small {
+  font-size: 0.62rem;
+  color: #94a3b8;
+}
+
+/* Caption Preview Box */
+.caption-preview-box {
+  display: flex;
+  flex-direction: column;
+  gap: 0.75rem;
+  padding: 1rem;
+  border-radius: 0.95rem;
+  background: rgba(11, 17, 32, 0.6);
+  border: 1px solid rgba(255, 255, 255, 0.1);
+}
+
+.caption-p {
   margin: 0;
-  font-size: 0.8rem;
-  line-height: 1.5;
+  font-size: 0.84rem;
+  line-height: 1.55;
   color: #e2e8f0;
 }
 
-.caption-action-bar {
+.caption-footer-bar {
   display: flex;
   align-items: center;
   justify-content: space-between;
   border-top: 1px solid rgba(255, 255, 255, 0.08);
-  padding-top: 0.5rem;
+  padding-top: 0.6rem;
 }
 
-.caption-count {
+.char-count {
   font-family: var(--font-mono);
   font-size: 0.65rem;
   color: #64748b;
 }
 
-.copy-caption-btn {
+.copy-magic-btn {
   background: rgba(201, 243, 106, 0.15);
-  border: 1px solid var(--color-chain-lime);
+  border: 1.5px solid var(--color-chain-lime);
   color: var(--color-chain-lime);
-  padding: 0.35rem 0.75rem;
-  border-radius: 0.6rem;
-  font-size: 0.72rem;
-  font-weight: 850;
+  padding: 0.4rem 0.85rem;
+  border-radius: 0.65rem;
+  font-size: 0.75rem;
+  font-weight: 900;
   cursor: pointer;
   transition: all 120ms ease;
 }
 
-.copy-caption-btn:hover {
+.copy-magic-btn:hover {
   background: var(--color-chain-lime);
   color: #0f172a;
 }
 
-.ai-mechanic-box {
-  padding: 0.55rem 0.75rem;
-  border-radius: 0.65rem;
+.ai-mechanic-card {
+  display: flex;
+  align-items: flex-start;
+  gap: 0.5rem;
+  padding: 0.65rem 0.85rem;
+  border-radius: 0.75rem;
   background: rgba(56, 189, 248, 0.1);
   border: 1px solid rgba(56, 189, 248, 0.25);
-  font-size: 0.72rem;
-  color: #bae6fd;
 }
 
-/* SECTION CARDS */
-.studio-section-card {
-  background: rgba(30, 41, 59, 0.5);
-  border: 1px solid rgba(255, 255, 255, 0.08);
-  border-radius: 1.15rem;
-  padding: 1rem;
-  display: flex;
-  flex-direction: column;
+.mechanic-icon {
+  font-size: 1rem;
+}
+
+.mechanic-text {
+  margin: 0;
+  font-size: 0.74rem;
+  color: #bae6fd;
+  line-height: 1.4;
+}
+
+/* TAB 3: DATA INPUTS */
+.telemetry-inputs-grid {
+  display: grid;
+  grid-template-columns: repeat(2, 1fr);
   gap: 0.75rem;
 }
 
-.control-section-title {
-  font-size: 0.8rem;
-  font-weight: 850;
-  color: #e2e8f0;
-}
-
-/* BG Preset Grid */
-.bg-preset-grid {
-  display: grid;
-  grid-template-columns: repeat(3, 1fr);
-  gap: 0.45rem;
-}
-
-.preset-thumb-btn {
+.form-group-item {
   display: flex;
   flex-direction: column;
-  align-items: center;
-  gap: 0.2rem;
-  padding: 0.5rem 0.25rem;
-  border-radius: 0.75rem;
-  background: rgba(15, 23, 42, 0.7);
-  border: 1.5px solid rgba(255, 255, 255, 0.08);
-  color: #94a3b8;
-  font-size: 0.68rem;
+  gap: 0.25rem;
+}
+
+.form-group-item label {
+  font-size: 0.7rem;
   font-weight: 800;
-  cursor: pointer;
-  transition: all 120ms ease;
+  color: #94a3b8;
 }
 
-.preset-thumb-btn.active {
-  border-color: var(--color-chain-lime);
-  background: rgba(201, 243, 106, 0.1);
+.form-group-item input {
+  background: rgba(15, 23, 42, 0.85);
+  border: 1px solid rgba(255, 255, 255, 0.15);
+  border-radius: 0.75rem;
+  padding: 0.55rem 0.75rem;
   color: #ffffff;
+  font-size: 0.82rem;
+  font-weight: 750;
 }
 
-.thumb-emoji {
-  font-size: 1.1rem;
+.form-group-item input:focus {
+  outline: none;
+  border-color: var(--color-chain-lime);
 }
 
-.custom-photo-uploader {
+/* STICKY BOTTOM ACTIONS */
+.studio-bottom-actions {
+  display: flex;
+  gap: 0.85rem;
+  margin-top: 0.5rem;
+  position: sticky;
+  bottom: 0;
+  background: #0d1527;
+  padding-top: 0.5rem;
+}
+
+.action-btn-share {
+  flex: 1.3;
   display: flex;
   align-items: center;
   justify-content: center;
   gap: 0.5rem;
-  padding: 0.65rem;
-  border-radius: 0.75rem;
-  border: 1.5px dashed rgba(255, 255, 255, 0.25);
-  background: rgba(255, 255, 255, 0.03);
-  color: #cbd5e1;
-  font-size: 0.75rem;
-  font-weight: 800;
+  padding: 0.95rem 1.25rem;
+  border-radius: 1rem;
+  background: var(--color-chain-lime);
+  color: #0f172a;
+  border: none;
+  font-size: 0.92rem;
+  font-weight: 900;
+  cursor: pointer;
+  box-shadow: 0 6px 20px rgba(201, 243, 106, 0.4);
+  transition: all 120ms ease;
+}
+
+.action-btn-share:hover:not(:disabled) {
+  transform: translateY(-2px);
+  box-shadow: 0 8px 26px rgba(201, 243, 106, 0.55);
+}
+
+.action-btn-download {
+  flex: 1;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.5rem;
+  padding: 0.95rem 1.25rem;
+  border-radius: 1rem;
+  background: rgba(255, 255, 255, 0.08);
+  border: 1.5px solid rgba(255, 255, 255, 0.15);
+  color: #ffffff;
+  font-size: 0.85rem;
+  font-weight: 850;
   cursor: pointer;
   transition: all 120ms ease;
 }
 
-.custom-photo-uploader:hover {
-  border-color: var(--color-chain-lime);
-  color: var(--color-chain-lime);
+.action-btn-download:hover:not(:disabled) {
+  background: rgba(255, 255, 255, 0.18);
 }
 
 .sr-only {
@@ -1457,115 +1800,5 @@ async function shareToMedia() {
   overflow: hidden;
   clip: rect(0, 0, 0, 0);
   border: 0;
-}
-
-/* Stickers Row */
-.stickers-row {
-  display: flex;
-  flex-wrap: wrap;
-  gap: 0.35rem;
-}
-
-.sticker-choice-chip {
-  padding: 0.4rem 0.7rem;
-  border-radius: 9999px;
-  background: rgba(15, 23, 42, 0.7);
-  border: 1px solid rgba(255, 255, 255, 0.12);
-  color: #cbd5e1;
-  font-size: 0.7rem;
-  font-weight: 850;
-  cursor: pointer;
-  transition: all 120ms ease;
-}
-
-.sticker-choice-chip.active {
-  background: var(--color-chain-lime);
-  border-color: var(--color-chain-lime);
-  color: #0f172a;
-}
-
-/* Fields Grid */
-.fields-grid {
-  display: grid;
-  grid-template-columns: repeat(2, 1fr);
-  gap: 0.65rem;
-}
-
-.input-item {
-  display: flex;
-  flex-direction: column;
-  gap: 0.25rem;
-}
-
-.input-item label {
-  font-size: 0.68rem;
-  font-weight: 800;
-  color: #94a3b8;
-}
-
-.input-item input {
-  background: rgba(15, 23, 42, 0.85);
-  border: 1px solid rgba(255, 255, 255, 0.15);
-  border-radius: 0.65rem;
-  padding: 0.45rem 0.65rem;
-  color: #ffffff;
-  font-size: 0.8rem;
-  font-weight: 750;
-}
-
-.input-item input:focus {
-  outline: none;
-  border-color: var(--color-chain-lime);
-}
-
-/* Action Buttons */
-.studio-action-row {
-  display: flex;
-  gap: 0.75rem;
-  margin-top: 0.5rem;
-}
-
-.main-share-btn {
-  flex: 1.2;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  gap: 0.5rem;
-  padding: 0.85rem 1rem;
-  border-radius: 0.85rem;
-  background: var(--color-chain-lime);
-  color: #0f172a;
-  border: none;
-  font-size: 0.88rem;
-  font-weight: 900;
-  cursor: pointer;
-  box-shadow: 0 4px 18px rgba(201, 243, 106, 0.35);
-  transition: all 120ms ease;
-}
-
-.main-share-btn:hover:not(:disabled) {
-  transform: translateY(-2px);
-  box-shadow: 0 8px 24px rgba(201, 243, 106, 0.5);
-}
-
-.download-png-btn {
-  flex: 1;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  gap: 0.5rem;
-  padding: 0.85rem 1rem;
-  border-radius: 0.85rem;
-  background: rgba(255, 255, 255, 0.08);
-  border: 1px solid rgba(255, 255, 255, 0.15);
-  color: #ffffff;
-  font-size: 0.82rem;
-  font-weight: 850;
-  cursor: pointer;
-  transition: all 120ms ease;
-}
-
-.download-png-btn:hover:not(:disabled) {
-  background: rgba(255, 255, 255, 0.15);
 }
 </style>
