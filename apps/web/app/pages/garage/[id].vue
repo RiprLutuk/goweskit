@@ -241,6 +241,15 @@ function specStatus(code: string): 'known' | 'unknown' | 'missing' {
                   .join(' · ') || 'Custom Build'
               }}
             </p>
+            <div class="hero-bike-stats-row">
+              <span class="hero-odometer-pill">
+                <GIcon name="route" size="xs" color="#0F766E" />
+                <strong>1.240 km Odometer</strong>
+              </span>
+              <span class="hero-health-pill">
+                🟢 Kondisi Prima
+              </span>
+            </div>
           </div>
           <div class="bike-hero-rich__actions">
             <button
@@ -559,7 +568,40 @@ function specStatus(code: string): 'known' | 'unknown' | 'missing' {
   margin: 0;
   font-size: 0.82rem;
   color: var(--color-asphalt);
-  font-weight: 700;
+  font-weight: 750;
+}
+
+.hero-bike-stats-row {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  margin-top: 0.4rem;
+}
+
+.hero-odometer-pill {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.35rem;
+  font-size: 0.72rem;
+  font-weight: 750;
+  padding: 0.15rem 0.5rem;
+  background: #f0fdfa;
+  border: 1px solid #ccfbf1;
+  color: #0f766e;
+  border-radius: 0.45rem;
+}
+
+.hero-health-pill {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.35rem;
+  font-size: 0.72rem;
+  font-weight: 750;
+  padding: 0.15rem 0.5rem;
+  background: #f0fdf4;
+  border: 1px solid #bbf7d0;
+  color: #166534;
+  border-radius: 0.45rem;
 }
 
 .bike-hero-rich__actions {

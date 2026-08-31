@@ -405,9 +405,39 @@ onMounted(loadEvent);
         <div v-if="detail.event.requirements" class="requirements-box">
           <span class="req-title">
             <GIcon name="shield" size="xs" color="#EF4444" filled />
-            <span>Perlengkapan &amp; Syarat Wajib:</span>
+            <span>Perlengkapan &amp; Syarat Khusus Panitia:</span>
           </span>
           <p class="req-content">{{ detail.event.requirements }}</p>
+        </div>
+
+        <!-- Mandatory & Recommended Gear Checklist -->
+        <div class="gear-checklist-card">
+          <div class="gear-checklist-header">
+            <GIcon name="shield" size="xs" color="#16A34A" filled />
+            <strong>Checklist Kesiapan Perlengkapan Rider:</strong>
+          </div>
+          <div class="gear-items-grid">
+            <label class="gear-item">
+              <input type="checkbox" checked disabled />
+              <span>⛑️ Helm Standar Bersepeda (Wajib)</span>
+            </label>
+            <label class="gear-item">
+              <input type="checkbox" checked disabled />
+              <span>💡 Lampu Depan &amp; Belakang (Flashing)</span>
+            </label>
+            <label class="gear-item">
+              <input type="checkbox" />
+              <span>🛞 Ban Dalam Cadangan &amp; Tire Lever</span>
+            </label>
+            <label class="gear-item">
+              <input type="checkbox" />
+              <span>💨 Pompa Mini / CO2 &amp; Multi-tool Hex</span>
+            </label>
+            <label class="gear-item">
+              <input type="checkbox" />
+              <span>💧 Botol Minum (Bidon) &amp; Uang/QRIS</span>
+            </label>
+          </div>
         </div>
       </section>
 
@@ -746,6 +776,43 @@ onMounted(loadEvent);
   border: 1px solid #fef08a;
   display: grid;
   gap: 0.25rem;
+}
+
+.gear-checklist-card {
+  display: grid;
+  gap: 0.65rem;
+  padding: 0.85rem 1rem;
+  background: #f8fafc;
+  border: 1px solid #e2e8f0;
+  border-radius: 0.85rem;
+}
+
+.gear-checklist-header {
+  display: flex;
+  align-items: center;
+  gap: 0.45rem;
+  font-size: 0.78rem;
+  color: #1e293b;
+}
+
+.gear-items-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(13rem, 1fr));
+  gap: 0.45rem;
+}
+
+.gear-item {
+  display: flex;
+  align-items: center;
+  gap: 0.45rem;
+  font-size: 0.75rem;
+  font-weight: 700;
+  color: #334155;
+  cursor: pointer;
+}
+
+.gear-item input[type="checkbox"] {
+  accent-color: #16a34a;
 }
 
 .req-title {

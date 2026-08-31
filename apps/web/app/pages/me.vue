@@ -43,6 +43,62 @@ async function loadUserStats(): Promise<void> {
   }
 }
 
+const exportingData = ref(false);
+
+async function exportPersonalData(): Promise<void> {
+  if (!user.value) return;
+  exportingData.value = true;
+  try {
+    const [bikesRes, contactsRes, repRes] = await Promise.allSettled([
+      api<BikeListResponse>('/bikes'),
+      api<TrustedContactListResponse>('/trusted-contacts'),
+      api<ContributorReputationResponse>('/community/reputation/me'),
+    ]);
+
+    const exportPayload = {
+      compliance:
+        'UU Perlindungan Data Pribadi (UU PDP No. 27/2022) & GDPR Article 20 Right to Data Portability',
+      exportedAt: new Date().toISOString(),
+      user: {
+        id: user.value.id,
+        email: user.value.email,
+        displayName: user.value.displayName,
+        createdAt: user.value.createdAt,
+      },
+      stats: {
+        bikeCount: bikeCount.value,
+        contactCount: contactCount.value,
+        reputationScore: reputationScore.value,
+      },
+      bikes: bikesRes.status === 'fulfilled' ? bikesRes.value.bikes : [],
+      trustedContacts:
+        contactsRes.status === 'fulfilled' ? contactsRes.value.contacts : [],
+      reputation: repRes.status === 'fulfilled' ? repRes.value.reputation : null,
+    };
+
+    const blob = new Blob([JSON.stringify(exportPayload, null, 2)], {
+      type: 'application/json',
+    });
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement('a');
+    a.href = url;
+    a.download = `goweskit-data-export-${new Date().toISOString().slice(0, 10)}.json`;
+    document.body.appendChild(a);
+    a.click();
+    document.body.removeChild(a);
+    URL.revokeObjectURL(url);
+
+    toast.success(
+      'Data Berhasil Diunduh!',
+      'File JSON portabilitas data siap disimpan.',
+    );
+  } catch (err: unknown) {
+    toast.error('Gagal Mengunduh Data', getApiErrorMessage(err));
+  } finally {
+    exportingData.value = false;
+  }
+}
+
 async function shareRiderProfile(): Promise<void> {
   if (!user.value) return;
   const name = user.value.displayName;
@@ -405,7 +461,40 @@ async function quickDemoLogin(): Promise<void> {
         </div>
       </section>
 
-      <!-- 6. LOGOUT BUTTON -->
+      <!-- 6. INSET GROUPED LIST: PRIVACY & DATA PORTABILITY (UU PDP / GDPR) -->
+      <section class="settings-group">
+        <h3 class="group-heading">Privasi &amp; Kepatuhan Data (UU PDP)</h3>
+        <div class="inset-list">
+          <div class="inset-item inset-item--static">
+            <div class="item-icon-box item-icon--lime">
+              <GIcon name="shield" size="sm" color="#16A34A" filled />
+            </div>
+            <div class="item-body">
+              <strong>Enkripsi Data Pribadi</strong>
+              <small>Data PII terenkripsi AES-256 tingkat database</small>
+            </div>
+            <span class="status-pill-small pill--green">Aktif</span>
+          </div>
+
+          <button
+            class="inset-item"
+            type="button"
+            :disabled="exportingData"
+            @click="exportPersonalData"
+          >
+            <div class="item-icon-box item-icon--sky">
+              <GIcon name="download" size="sm" />
+            </div>
+            <div class="item-body">
+              <strong>{{ exportingData ? 'Mengunduh Data…' : 'Unduh Salinan Data Saya' }}</strong>
+              <small>Ekspor JSON portabilitas data (Profil, Sepeda, Kontak)</small>
+            </div>
+            <GIcon name="chevron-right" size="xs" color="#94A3B8" />
+          </button>
+        </div>
+      </section>
+
+      <!-- 7. LOGOUT BUTTON -->
       <section class="settings-group">
         <div class="inset-list">
           <button

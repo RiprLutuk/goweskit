@@ -4,6 +4,7 @@ import {
   safetyLocationUpdateRequestSchema,
   startSafetySessionRequestSchema,
   type CreateSafetySessionResponse,
+  type SafetyLocation,
   type SafetyMutationSuccess,
   type SafetySessionListResponse,
   type SafetySessionResponse,
@@ -85,6 +86,15 @@ export function registerSafetyRoutes(
       const input = parseInput(safetyLocationUpdateRequestSchema, request.body);
       const user = await authenticate(request, authService);
       return safetyService.updateLocation(user.id, sessionId, input);
+    },
+  );
+
+  app.get<{ Reply: { locations: SafetyLocation[] } }>(
+    '/api/v1/safety/sessions/:sessionId/locations',
+    async (request) => {
+      const { sessionId } = parseInput(sessionParamsSchema, request.params);
+      const user = await authenticate(request, authService);
+      return safetyService.listSessionLocations(user.id, sessionId);
     },
   );
 

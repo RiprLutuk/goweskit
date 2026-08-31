@@ -77,9 +77,11 @@ export type IconName =
   | 'history'
   | 'calendar'
   | 'bell'
-  | 'notification'
   | 'passport'
-  | 'verified';
+  | 'verified'
+  | 'palette'
+  | 'cadence'
+  | 'goweskit-mark';
 
 const props = withDefaults(
   defineProps<{
@@ -589,6 +591,32 @@ const pixelSize = computed(() => {
     <g v-else-if="name === 'bell' || name === 'notification'" :stroke="color" :stroke-width="strokeWidth" stroke-linecap="round" stroke-linejoin="round" :fill="filled ? color : 'none'">
       <path d="M18 8A6 6 0 0 0 6 8c0 7-3 9-3 9h18s-3-2-3-9" />
       <path d="M13.73 21a2 2 0 0 1-3.46 0" />
+    </g>
+
+    <!-- Palette / Custom Frame Styling -->
+    <g v-else-if="name === 'palette'" :stroke="color" :stroke-width="strokeWidth" stroke-linecap="round" stroke-linejoin="round">
+      <path d="M12 2C6.49 2 2 6.49 2 12c0 4.41 3.59 8 8 8h1.5a2.5 2.5 0 0 0 2.5-2.5c0-.68-.28-1.3-.73-1.77-.45-.47-.77-1.1-.77-1.73 0-1.38 1.12-2.5 2.5-2.5H17c2.76 0 5-2.24 5-5 0-4.42-4.48-6.5-10-6.5Z" />
+      <circle cx="7" cy="9.5" r="1.2" :fill="color" />
+      <circle cx="11.5" cy="6.5" r="1.2" :fill="color" />
+      <circle cx="16.5" cy="8" r="1.2" :fill="color" />
+    </g>
+
+    <!-- Cadence / Crank Rotation Sensor -->
+    <g v-else-if="name === 'cadence'" :stroke="color" :stroke-width="strokeWidth" stroke-linecap="round" stroke-linejoin="round">
+      <circle cx="12" cy="12" r="8" stroke-dasharray="3 3" />
+      <circle cx="12" cy="12" r="2.5" :fill="color" />
+      <path d="M12 12L18 7" />
+      <circle cx="18" cy="7" r="1.8" />
+      <path d="M7 4.5A9 9 0 0 1 17 4.5" />
+      <polyline points="15 2 18 4.5 15 7" />
+    </g>
+
+    <!-- Signature GowesKit Cycling Emblem (Kinetic Chainring & Aero Speed Vector) -->
+    <g v-else-if="name === 'goweskit-mark'">
+      <rect width="24" height="24" rx="7" fill="#0F172A" />
+      <path d="M17.5 8C15.8 6.6 13.5 6 11.2 6.8C7.5 8.2 5.5 12.2 6.8 16C8 19.8 12.2 21.8 16 20.5C18.8 19.5 20.8 17 21 14" stroke="#C9F36A" stroke-width="2.2" stroke-linecap="round" />
+      <path d="M13.5 10.5L18.5 14L13.5 17.5" stroke="#38BDF8" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" />
+      <circle cx="11.8" cy="14" r="1.6" fill="#FFFFFF" />
     </g>
 
     <!-- Fallback Bike Wheel Cog -->

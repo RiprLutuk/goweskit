@@ -26,9 +26,55 @@ const searching = ref(false);
 const hasSearched = ref(false);
 const searchError = ref('');
 
-// Tab Navigation: 'types' | 'components' | 'glossary'
 const activeTab = ref<'types' | 'components' | 'glossary'>('types');
 const showAdminModal = ref(false);
+
+const glossarySearch = ref('');
+const showOnlyBookmarked = ref(false);
+const bookmarkedTerms = ref<string[]>([]);
+
+function loadBookmarks(): void {
+  if (typeof localStorage === 'undefined') return;
+  try {
+    const raw = localStorage.getItem('goweskit_glossary_bookmarks');
+    bookmarkedTerms.value = raw ? (JSON.parse(raw) as string[]) : [];
+  } catch {
+    bookmarkedTerms.value = [];
+  }
+}
+
+function toggleBookmark(slug: string): void {
+  if (bookmarkedTerms.value.includes(slug)) {
+    bookmarkedTerms.value = bookmarkedTerms.value.filter((s) => s !== slug);
+  } else {
+    bookmarkedTerms.value = [...bookmarkedTerms.value, slug];
+  }
+  if (typeof localStorage !== 'undefined') {
+    localStorage.setItem(
+      'goweskit_glossary_bookmarks',
+      JSON.stringify(bookmarkedTerms.value),
+    );
+  }
+}
+
+const filteredGlossaryTerms = computed(() => {
+  let list = glossaryTerms.value;
+  if (showOnlyBookmarked.value) {
+    list = list.filter((t) => bookmarkedTerms.value.includes(t.slug));
+  }
+  if (glossarySearch.value.trim()) {
+    const q = glossarySearch.value.toLowerCase().trim();
+    list = list.filter(
+      (t) =>
+        t.term.toLowerCase().includes(q) ||
+        t.plainDefinition.toLowerCase().includes(q) ||
+        (t.technicalDefinition &&
+          t.technicalDefinition.toLowerCase().includes(q)) ||
+        (t.aliases && t.aliases.some((a) => a.toLowerCase().includes(q))),
+    );
+  }
+  return list;
+});
 
 function onTermCreated(term: GlossaryTerm): void {
   glossaryTerms.value.unshift(term);
@@ -50,6 +96,7 @@ const wizardResult = ref<{
 } | null>(null);
 
 onMounted(async () => {
+  loadBookmarks();
   try {
     const [typesResponse, categoriesResponse, glossaryResponse] =
       await Promise.all([
@@ -515,16 +562,58 @@ function resetWizard(): void {
             </button>
           </div>
 
+          <!-- Quick Glossary Search & Bookmark Filter -->
+          <div class="glossary-filter-row">
+            <div class="glossary-search-input-box">
+              <GIcon name="search" size="xs" color="#64748B" />
+              <input
+                v-model="glossarySearch"
+                type="search"
+                placeholder="Cari istilah standar (misal: UDH, Boost, T47, BSA)…"
+                class="glossary-search-input"
+              />
+              <button
+                v-if="glossarySearch"
+                type="button"
+                class="glossary-clear-btn"
+                @click="glossarySearch = ''"
+              >
+                ✕
+              </button>
+            </div>
+
+            <button
+              type="button"
+              class="bookmark-filter-toggle"
+              :class="{ 'bookmark-filter-toggle--active': showOnlyBookmarked }"
+              @click="showOnlyBookmarked = !showOnlyBookmarked"
+            >
+              <span>{{ showOnlyBookmarked ? '⭐ Istilah Tersimpan' : '☆ Tersimpan' }}</span>
+              <span class="bookmark-count-badge">{{ bookmarkedTerms.length }}</span>
+            </button>
+          </div>
+
           <div class="glossary-grid">
             <article
-              v-for="term in glossaryTerms"
+              v-for="term in filteredGlossaryTerms"
               :id="`glossary-${term.slug}`"
               :key="term.slug"
               class="glossary-card"
             >
               <div class="glossary-card__top">
-                <h3 class="glossary-card__title">{{ term.term }}</h3>
-                <span class="glossary-card__code">{{ term.slug }}</span>
+                <div class="glossary-title-group">
+                  <h3 class="glossary-card__title">{{ term.term }}</h3>
+                  <span class="glossary-card__code">{{ term.slug }}</span>
+                </div>
+                <button
+                  type="button"
+                  class="glossary-star-btn"
+                  :class="{ 'glossary-star-btn--bookmarked': bookmarkedTerms.includes(term.slug) }"
+                  :title="bookmarkedTerms.includes(term.slug) ? 'Hapus dari bookmark' : 'Simpan ke bookmark'"
+                  @click="toggleBookmark(term.slug)"
+                >
+                  {{ bookmarkedTerms.includes(term.slug) ? '⭐' : '☆' }}
+                </button>
               </div>
               <p class="glossary-card__plain">{{ term.plainDefinition }}</p>
               
@@ -1383,6 +1472,71 @@ function resetWizard(): void {
   white-space: nowrap;
 }
 
+.glossary-filter-row {
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+  flex-wrap: wrap;
+}
+
+.glossary-search-input-box {
+  flex: 1;
+  min-width: 14rem;
+  display: flex;
+  align-items: center;
+  gap: 0.45rem;
+  padding: 0.5rem 0.85rem;
+  background: var(--color-white);
+  border: 1px solid var(--color-sand);
+  border-radius: 0.75rem;
+}
+
+.glossary-search-input {
+  flex: 1;
+  border: none;
+  background: transparent;
+  outline: none;
+  font-size: 0.82rem;
+  color: var(--color-ink);
+}
+
+.glossary-clear-btn {
+  border: none;
+  background: transparent;
+  color: var(--color-asphalt);
+  font-size: 0.75rem;
+  cursor: pointer;
+}
+
+.bookmark-filter-toggle {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.4rem;
+  padding: 0.5rem 0.85rem;
+  background: var(--color-white);
+  border: 1px solid var(--color-sand);
+  border-radius: 0.75rem;
+  font-size: 0.78rem;
+  font-weight: 750;
+  color: var(--color-asphalt);
+  cursor: pointer;
+  transition: all 120ms ease;
+}
+
+.bookmark-filter-toggle--active {
+  background: #fefce8;
+  border-color: #fde047;
+  color: #854d0e;
+}
+
+.bookmark-count-badge {
+  font-size: 0.65rem;
+  padding: 0.1rem 0.35rem;
+  border-radius: 9999px;
+  background: #f1f5f9;
+  color: #475569;
+}
+
 .glossary-grid {
   display: grid;
   grid-template-columns: repeat(auto-fill, minmax(22rem, 1fr));
@@ -1404,6 +1558,26 @@ function resetWizard(): void {
   align-items: center;
   justify-content: space-between;
   gap: 0.5rem;
+}
+
+.glossary-title-group {
+  display: flex;
+  align-items: center;
+  gap: 0.45rem;
+}
+
+.glossary-star-btn {
+  border: none;
+  background: transparent;
+  font-size: 1.15rem;
+  cursor: pointer;
+  padding: 0.2rem;
+  line-height: 1;
+  transition: transform 90ms ease;
+}
+
+.glossary-star-btn:hover {
+  transform: scale(1.2);
 }
 
 .glossary-card__title {

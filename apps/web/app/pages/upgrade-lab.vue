@@ -34,6 +34,51 @@ const presentation = computed(() =>
     : COMPATIBILITY_STATUS_PRESENTATION[result.value.status],
 );
 
+const REQUIRED_TOOLS: Record<string, Array<{ name: string; icon: string; desc: string }>> = {
+  bottom_bracket: [
+    { name: 'Kunci BB Hollowtech / T47', icon: '🔧', desc: 'Sesuai tipe mangkok BB frame' },
+    { name: 'Grease Anti-Seize', icon: '🧴', desc: 'Mencegah creaking pada drat' },
+    { name: 'Kunci Torsi (35-50 Nm)', icon: '⚙️', desc: 'Memastikan kekencangan standar pabrik' },
+  ],
+  brake_mount: [
+    { name: 'Kunci Torx T25', icon: '🔧', desc: 'Baut rotor cakram 6-bolt' },
+    { name: 'Kunci Hex 4/5mm', icon: '⚙️', desc: 'Baut kaliper Post / Flat Mount' },
+    { name: 'Rotor Alignment Tool', icon: '📏', desc: 'Menghindari gesekan pad rem' },
+  ],
+  rear_axle: [
+    { name: 'Kunci Hex 5/6mm', icon: '🔧', desc: 'Thru-Axle leverless' },
+    { name: 'Thru-Axle Thread Lube', icon: '🧴', desc: 'Pelumas ulir as roda' },
+  ],
+  front_axle: [
+    { name: 'Kunci Hex 5/6mm', icon: '🔧', desc: 'Thru-Axle leverless' },
+    { name: 'Thru-Axle Thread Lube', icon: '🧴', desc: 'Pelumas ulir as roda' },
+  ],
+  seatpost_diameter: [
+    { name: 'Torque Wrench (4-5 Nm)', icon: '⚙️', desc: 'Wajib untuk seatpost/frame karbon' },
+    { name: 'Carbon Grip Paste', icon: '🧴', desc: 'Mencegah seatpost merosot tanpa over-torque' },
+  ],
+  headset: [
+    { name: 'Kunci Hex 4/5mm', icon: '🔧', desc: 'Top cap preload & stem clamp' },
+    { name: 'Headset Bearing Grease', icon: '🧴', desc: 'Melindungi bearing dari keringat/air' },
+  ],
+  cassette_freehub: [
+    { name: 'Chain Whip', icon: '⛓️', desc: 'Menahan sproket saat dibuka' },
+    { name: 'Cassette Lockring Tool', icon: '🔧', desc: 'Sesuai standar Shimano/SRAM' },
+    { name: 'Kunci Pas 24mm / Kunci Torsi', icon: '⚙️', desc: 'Torsi pengencangan 40 Nm' },
+  ],
+  wheel_size: [
+    { name: 'Tire Lever (Pencungkil Ban)', icon: '🪛', desc: 'Pemasangan ban luar' },
+    { name: 'Pompa Lantai dengan Gauge', icon: '💨', desc: 'Menyesuaikan tekanan PSI standar' },
+  ],
+};
+
+function getRequiredTools(ruleCode: string) {
+  return REQUIRED_TOOLS[ruleCode] || [
+    { name: 'Set Kunci Hex (4, 5, 6mm)', icon: '🔧', desc: 'Kunci standar perakitan sepeda' },
+    { name: 'Kunci Torsi', icon: '⚙️', desc: 'Menjaga keamanan torsi baut' },
+  ];
+}
+
 watch(activeRule, (rule) => {
   candidateValue.value = rule?.values[0]?.code ?? '';
   result.value = null;
@@ -402,6 +447,26 @@ ${window.location.origin}/upgrade-lab
                 <span class="ext-icon">↗</span>
               </a>
               <span class="provenance-meta">Aturan v{{ prov.ruleVersion }} · Ditinjau {{ prov.reviewedAt }}</span>
+            </div>
+          </div>
+        </div>
+
+        <!-- Required Mechanic Tools Box -->
+        <div class="tools-guide-box">
+          <div class="tools-header">
+            <span class="tools-title">🛠️ Perkakas Mekanik yang Dibutuhkan:</span>
+          </div>
+          <div class="tools-grid">
+            <div
+              v-for="tool in getRequiredTools(selectedRuleCode)"
+              :key="tool.name"
+              class="tool-item"
+            >
+              <span class="tool-icon">{{ tool.icon }}</span>
+              <div class="tool-info">
+                <strong>{{ tool.name }}</strong>
+                <small>{{ tool.desc }}</small>
+              </div>
             </div>
           </div>
         </div>
@@ -775,6 +840,59 @@ ${window.location.origin}/upgrade-lab
   font-family: var(--font-mono);
   font-size: 0.66rem;
   color: var(--color-asphalt);
+}
+
+.tools-guide-box {
+  display: grid;
+  gap: 0.65rem;
+  padding: 0.85rem 1rem;
+  border-radius: 0.85rem;
+  background: #f8fafc;
+  border: 1px solid #e2e8f0;
+}
+
+.tools-header {
+  font-size: 0.75rem;
+  font-weight: 850;
+  color: #1e293b;
+}
+
+.tools-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(14rem, 1fr));
+  gap: 0.5rem;
+}
+
+.tool-item {
+  display: flex;
+  align-items: flex-start;
+  gap: 0.45rem;
+  padding: 0.45rem 0.65rem;
+  background: #ffffff;
+  border: 1px solid #e2e8f0;
+  border-radius: 0.6rem;
+}
+
+.tool-icon {
+  font-size: 1.1rem;
+  line-height: 1;
+}
+
+.tool-info {
+  display: flex;
+  flex-direction: column;
+  gap: 0.1rem;
+}
+
+.tool-info strong {
+  font-size: 0.76rem;
+  color: #1e293b;
+}
+
+.tool-info small {
+  font-size: 0.68rem;
+  color: #64748b;
+  line-height: 1.2;
 }
 
 .result-share-bar {

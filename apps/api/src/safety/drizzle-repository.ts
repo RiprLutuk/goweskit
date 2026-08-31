@@ -13,6 +13,7 @@ import {
   safetySessions,
   trustedContacts,
 } from '../db/schema.js';
+import { decryptNullable, encryptNullable } from '../crypto/encryption.js';
 import { AppError } from '../errors.js';
 import type {
   CreateStoredSafetySessionInput,
@@ -94,7 +95,7 @@ function mapSession(row: SafetySessionRow): StoredSafetySession {
     shareTokenHash: row.share_token_hash,
     shareExpiresAt: toDate(row.share_expires_at),
     sosTriggeredAt: nullableDate(row.sos_triggered_at),
-    note: row.note,
+    note: decryptNullable(row.note),
     lastLocation: hasLocation
       ? {
           coordinate: {
@@ -112,16 +113,30 @@ function mapSession(row: SafetySessionRow): StoredSafetySession {
   };
 }
 
+function mapTrustedContact(row: typeof trustedContacts.$inferSelect): StoredTrustedContact {
+  return {
+    id: row.id,
+    userId: row.userId,
+    name: row.name,
+    phone: decryptNullable(row.phone),
+    email: decryptNullable(row.email),
+    note: decryptNullable(row.note),
+    createdAt: row.createdAt,
+    updatedAt: row.updatedAt,
+  };
+}
+
 export class DrizzleSafetyRepository implements SafetyRepository {
   public constructor(private readonly database: Database) {}
 
-  public listTrustedContacts(userId: string): Promise<StoredTrustedContact[]> {
-    return this.database
+  public async listTrustedContacts(userId: string): Promise<StoredTrustedContact[]> {
+    const rows = await this.database
       .select()
       .from(trustedContacts)
       .where(eq(trustedContacts.userId, userId))
       .orderBy(asc(trustedContacts.name), desc(trustedContacts.createdAt))
       .limit(100);
+    return rows.map(mapTrustedContact);
   }
 
   public async findTrustedContact(
@@ -138,7 +153,7 @@ export class DrizzleSafetyRepository implements SafetyRepository {
         ),
       )
       .limit(1);
-    return contact ?? null;
+    return contact ? mapTrustedContact(contact) : null;
   }
 
   public async createTrustedContact(
@@ -151,16 +166,16 @@ export class DrizzleSafetyRepository implements SafetyRepository {
       .values({
         userId,
         name: input.name,
-        phone: input.phone ?? null,
-        email: input.email ?? null,
-        note: input.note ?? null,
+        phone: encryptNullable(input.phone) ?? null,
+        email: encryptNullable(input.email) ?? null,
+        note: encryptNullable(input.note) ?? null,
         createdAt: now,
         updatedAt: now,
       })
       .returning();
     if (contact === undefined)
       throw new Error('Trusted contact insert returned no row.');
-    return contact;
+    return mapTrustedContact(contact);
   }
 
   public async deleteTrustedContact(
@@ -220,13 +235,14 @@ export class DrizzleSafetyRepository implements SafetyRepository {
         shareTokenHash: input.shareTokenHash,
         shareExpiresAt: input.shareExpiresAt,
         sosTriggeredAt: null,
-        note: input.note,
+        note: encryptNullable(input.note) ?? null,
       })
       .returning();
     if (session === undefined)
       throw new Error('Safety session insert returned no row.');
     return {
       ...session,
+      note: decryptNullable(session.note),
       lastLocation: null,
     };
   }
@@ -278,6 +294,38 @@ export class DrizzleSafetyRepository implements SafetyRepository {
       );
     }
     return this.requiredSession(sessionId);
+  }
+
+  public async listSessionLocations(sessionId: string): Promise<SafetyLocation[]> {
+    const result = await this.database.execute(sql`
+      SELECT 
+        ST_X(location::geometry) AS longitude,
+        ST_Y(location::geometry) AS latitude,
+        accuracy_meters,
+        battery_percent,
+        recorded_at
+      FROM safety_locations
+      WHERE session_id = ${sessionId}
+      ORDER BY recorded_at ASC
+    `);
+    return (
+      result.rows as Array<{
+        longitude: number | string;
+        latitude: number | string;
+        accuracy_meters: number | string;
+        battery_percent: number | string | null;
+        recorded_at: Date | string;
+      }>
+    ).map((row) => ({
+      coordinate: {
+        longitude: Number(row.longitude),
+        latitude: Number(row.latitude),
+      },
+      accuracyMeters: Number(row.accuracy_meters),
+      batteryPercent:
+        row.battery_percent === null ? null : Number(row.battery_percent),
+      recordedAt: new Date(row.recorded_at).toISOString(),
+    }));
   }
 
   public async findSessionsExpiringBefore(

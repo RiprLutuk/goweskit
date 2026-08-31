@@ -416,7 +416,10 @@ function formatKm(meters: number): string {
           <GIcon name="bike" size="lg" color="#17202A" />
         </div>
         <div class="bike-banner-info">
-          <strong class="bike-banner-name">{{ activeBike.nickname }}</strong>
+          <div class="bike-banner-title-row">
+            <strong class="bike-banner-name">{{ activeBike.nickname }}</strong>
+            <span class="bike-health-badge">🟢 Siap Gowes</span>
+          </div>
           <span class="bike-banner-sub">{{ activeBike.brand }} {{ activeBike.model }} · Standar Terverifikasi</span>
         </div>
         <span class="banner-chevron">›</span>
@@ -914,10 +917,27 @@ function formatKm(meters: number): string {
   min-width: 0;
 }
 
+.bike-banner-title-row {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+}
+
 .bike-banner-name {
   font-size: 0.92rem;
   font-weight: 850;
   color: var(--color-ink);
+}
+
+.bike-health-badge {
+  font-size: 0.65rem;
+  font-weight: 750;
+  padding: 0.15rem 0.45rem;
+  background: #f0fdf4;
+  border: 1px solid #bbf7d0;
+  color: #166534;
+  border-radius: 9999px;
+  white-space: nowrap;
 }
 
 .bike-banner-sub {

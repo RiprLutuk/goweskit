@@ -9,6 +9,7 @@ import {
   type StoredSpecValue,
   userBikes,
 } from '../db/schema.js';
+import { decryptNullable, encryptNullable } from '../crypto/encryption.js';
 
 export interface StoredBikeSpec {
   standardCode: BikeSpecCode;
@@ -96,7 +97,7 @@ export class DrizzleGarageRepository implements GarageRepository {
           photoUrl: input.photoUrl ?? null,
           photoStorageKey,
           avatarPreset: input.avatarPreset ?? null,
-          notes: input.notes ?? null,
+          notes: encryptNullable(input.notes) ?? null,
         })
         .returning({ id: userBikes.id });
 
@@ -149,7 +150,8 @@ export class DrizzleGarageRepository implements GarageRepository {
       patch.photoStorageKey = input.photoStorageKey;
     if (input.avatarPreset !== undefined)
       patch.avatarPreset = input.avatarPreset;
-    if (input.notes !== undefined) patch.notes = input.notes;
+    if (input.notes !== undefined)
+      patch.notes = encryptNullable(input.notes);
 
     await this.database
       .update(userBikes)
@@ -216,6 +218,7 @@ export class DrizzleGarageRepository implements GarageRepository {
 
     return rows.map(({ bike, bicycleType }) => ({
       ...bike,
+      notes: decryptNullable(bike.notes),
       bicycleType,
       specs: specs.filter((spec) => spec.userBikeId === bike.id),
     }));

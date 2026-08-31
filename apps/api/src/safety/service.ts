@@ -223,6 +223,18 @@ export class SafetyService {
     return this.finishSession(userId, sessionId, 'revoked');
   }
 
+  public async listSessionLocations(
+    userId: string,
+    sessionId: string,
+  ): Promise<{ locations: SafetyLocation[] }> {
+    const session = await this.repository.findSession(userId, sessionId);
+    if (session === null) {
+      throw new AppError('INVALID_REQUEST', 'Safety session was not found.', 404);
+    }
+    const locations = await this.repository.listSessionLocations(sessionId);
+    return { locations };
+  }
+
   public async getPublicShare(
     rawToken: string,
     requesterKey: string,

@@ -93,4 +93,68 @@ describe('RideFlexService', () => {
     expect(res.captions.technical).toContain('Shimano Ultegra Di2');
     expect(res.estimatedCaloriesKcal).toBeGreaterThan(600);
   });
+
+  it('supports multimodal photo vision and telemetry coaching', async () => {
+    const mockFetch: typeof fetch = (input, init) => {
+      const body = JSON.parse(init?.body as string);
+      expect(body.contents[0].parts[0].inline_data).toBeDefined();
+      expect(body.contents[0].parts[0].inline_data.mime_type).toBe('image/jpeg');
+
+      return Promise.resolve(
+        new Response(
+          JSON.stringify({
+            candidates: [
+              {
+                content: {
+                  parts: [
+                    {
+                      text: JSON.stringify({
+                        title: '🌲 Gravel Adventure Kopi Tubing',
+                        highlight: 'Jalur offroad sejuk ditemani kabut pagi.',
+                        captions: {
+                          athlete: '180W average power with strong endurance.',
+                          humor: 'Sepeda kotor, senyum lebar!',
+                          technical: 'Gravel 40c tires at 32 psi.',
+                          gravel: 'Kabut tipis di kebun teh Sentul sangat epik.',
+                        },
+                        photoVisualInsight: 'Pemandangan kebun teh berkabut dengan rute tanah berbatu.',
+                        recommendedTheme: 'gravel',
+                        trainingInsight: 'Zona 3 Aerobic dominan, hidrasi 750ml cukup.',
+                        mechanicTip: 'Cuci sisa lumpur pada disc brake rotor.',
+                      }),
+                    },
+                  ],
+                },
+              },
+            ],
+          }),
+          { status: 200, headers: { 'content-type': 'application/json' } },
+        ),
+      );
+    };
+
+    const aiService = new RideFlexService({
+      geminiApiKey: 'test-gemini-key',
+      fetchFn: mockFetch,
+    });
+
+    const res = await aiService.generateStory({
+      distanceKm: 32,
+      elevationGainMeters: 450,
+      durationMinutes: 90,
+      bikeName: 'Polygon Bend R5',
+      cyclistPersona: 'gravel',
+      heartRateBpm: 154,
+      cadenceRpm: 84,
+      powerWatts: 180,
+      photoBase64: 'data:image/jpeg;base64,/9j/4AAQSkZJRgABAQAAAQABAAD',
+      photoMimeType: 'image/jpeg',
+    });
+
+    expect(res.title).toBe('🌲 Gravel Adventure Kopi Tubing');
+    expect(res.photoVisualInsight).toContain('kebun teh');
+    expect(res.recommendedTheme).toBe('gravel');
+    expect(res.trainingInsight).toContain('Aerobic');
+    expect(res.captions.gravel).toContain('Kabut tipis');
+  });
 });

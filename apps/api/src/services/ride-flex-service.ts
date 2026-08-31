@@ -17,7 +17,12 @@ interface LlmStoryOutput {
     athlete?: string;
     humor?: string;
     technical?: string;
+    gravel?: string;
   };
+  photoVisualInsight?: string;
+  recommendedTheme?: 'alpine' | 'gravel' | 'sunset' | 'crit' | 'cafe' | 'topo';
+  trainingInsight?: string;
+  mechanicTip?: string;
 }
 
 export class RideFlexService {
@@ -41,6 +46,12 @@ export class RideFlexService {
       bikeName = 'Sepeda Kesayangan',
       routeName,
       weatherTempC,
+      cyclistPersona = 'balanced',
+      heartRateBpm,
+      cadenceRpm,
+      powerWatts,
+      photoBase64,
+      photoMimeType,
     } = input;
 
     const hours = Math.max(durationMinutes / 60, 0.05);
@@ -116,7 +127,6 @@ export class RideFlexService {
       '#GowesKit',
       '#RideFlex',
       '#CyclingIndonesia',
-      '#StravaKiller',
       '#GowesPagi',
       `#${bikeName.replaceAll(/\s+/g, '')}`,
     ];
@@ -150,7 +160,7 @@ export class RideFlexService {
         ? `Berhasil melibas tanjakan +${String(elevationGainMeters)}m dengan rata-rata kecepatan ${String(avgSpeed)} km/h.`
         : `Menyelesaikan rute sejauh ${String(distanceKm)} km dalam waktu ${String(durationMinutes)} menit dengan ritme stabil.`;
 
-    const athleteCaption = `🎯 ${String(distanceKm)} km · +${String(elevationGainMeters)}m Elevasi · Avg ${String(avgSpeed)} km/h. Sesi latihan konsisten mempertahankan power output & cadence stabil bersama ${bikeName}. Fokus pada recovery dan nutrisi setelah membakar estimasi ~${String(estimatedCaloriesKcal)} kcal.`;
+    const athleteCaption = `🎯 ${String(distanceKm)} km · +${String(elevationGainMeters)}m Elevasi · Avg ${String(avgSpeed)} km/h${powerWatts ? ` · ${String(powerWatts)}W Avg Power` : ''}. Sesi latihan konsisten mempertahankan power output & cadence stabil bersama ${bikeName}. Fokus pada recovery dan nutrisi setelah membakar estimasi ~${String(estimatedCaloriesKcal)} kcal.`;
 
     const humorCaption = `🚴 Gowes niatnya cuma cari sarapan tipis-tipis, tau-tau speedometer tembus ${String(distanceKm)} km dengan tanjakan ${String(elevationGainMeters)}m! Kaki auto bergetar pas pesen ${foodEquivalency}. Yang penting kopi dapet, konten dapet, flexing jalan! 😂☕`;
 
@@ -165,8 +175,12 @@ export class RideFlexService {
     let finalAthlete = athleteCaption;
     let finalHumor = humorCaption;
     let finalTechnical = technicalCaption;
+    let finalGravel: string | undefined = undefined;
+    let finalPhotoVisualInsight: string | undefined = undefined;
+    let finalRecommendedTheme: 'alpine' | 'gravel' | 'sunset' | 'crit' | 'cafe' | 'topo' | undefined = undefined;
+    let finalTrainingInsight: string | undefined = undefined;
 
-    // 7. Optional LLM Enhancement (Google Gemini / OpenAI)
+    // 7. Generative LLM Enhancement (Google Gemini Multimodal / Vision)
     if (this.geminiApiKey) {
       const llmResult = await this.tryGenerateGemini({
         distanceKm,
@@ -178,6 +192,12 @@ export class RideFlexService {
         effortRating,
         foodEquivalency,
         climbGradeScore,
+        cyclistPersona,
+        heartRateBpm,
+        cadenceRpm,
+        powerWatts,
+        photoBase64,
+        photoMimeType,
       });
 
       if (llmResult?.title) finalTitle = llmResult.title;
@@ -187,6 +207,16 @@ export class RideFlexService {
       if (llmResult?.captions?.humor) finalHumor = llmResult.captions.humor;
       if (llmResult?.captions?.technical)
         finalTechnical = llmResult.captions.technical;
+      if (llmResult?.captions?.gravel)
+        finalGravel = llmResult.captions.gravel;
+      if (llmResult?.photoVisualInsight)
+        finalPhotoVisualInsight = llmResult.photoVisualInsight;
+      if (llmResult?.recommendedTheme)
+        finalRecommendedTheme = llmResult.recommendedTheme;
+      if (llmResult?.trainingInsight)
+        finalTrainingInsight = llmResult.trainingInsight;
+      if (llmResult?.mechanicTip)
+        mechanicTip = llmResult.mechanicTip;
     }
 
     return {
@@ -201,7 +231,11 @@ export class RideFlexService {
         athlete: finalAthlete,
         humor: finalHumor,
         technical: finalTechnical,
+        ...(finalGravel ? { gravel: finalGravel } : {}),
       },
+      photoVisualInsight: finalPhotoVisualInsight,
+      recommendedTheme: finalRecommendedTheme,
+      trainingInsight: finalTrainingInsight,
       mechanicTip,
       suggestedHashtags,
       generatedAt: new Date().toISOString(),
@@ -218,14 +252,32 @@ export class RideFlexService {
     effortRating: string;
     foodEquivalency: string;
     climbGradeScore: string;
+    cyclistPersona: string;
+    heartRateBpm?: number | undefined;
+    cadenceRpm?: number | undefined;
+    powerWatts?: number | undefined;
+    photoBase64?: string | undefined;
+    photoMimeType?: string | undefined;
   }): Promise<LlmStoryOutput | null> {
+    const geminiApiKey = this.geminiApiKey;
+    if (geminiApiKey === null) return null;
+
     try {
       const promptRouteName =
         params.routeName === undefined || params.routeName.length === 0
           ? 'Rute Eksplorasi'
           : params.routeName;
-      const prompt = `Anda adalah Agentic AI Ride Coach & Storyteller GowesKit (platform sepeda Indonesia).
-Buat caption sosial media & flexing ride sinematik dalam bahasa Indonesia yang seru dan natural berdasarkan data:
+
+      const telemetryStr = [
+        params.heartRateBpm ? `Heart Rate: ${String(params.heartRateBpm)} BPM` : null,
+        params.cadenceRpm ? `Cadence: ${String(params.cadenceRpm)} RPM` : null,
+        params.powerWatts ? `Power: ${String(params.powerWatts)} Watts` : null,
+      ]
+        .filter(Boolean)
+        .join(', ');
+
+      const prompt = `Anda adalah Agentic AI Ride Coach & Storyteller GowesKit (platform cycling pintar Indonesia).
+Analisis sesi gowes ini dan buat caption sosial media sinematik dalam bahasa Indonesia yang seru, otentik, dan natural:
 - Jarak: ${String(params.distanceKm)} km
 - Elevasi: +${String(params.elevationGainMeters)} m (${params.climbGradeScore})
 - Durasi: ${String(params.durationMinutes)} menit (Avg ${String(params.avgSpeed)} km/h)
@@ -233,32 +285,54 @@ Buat caption sosial media & flexing ride sinematik dalam bahasa Indonesia yang s
 - Rute: ${promptRouteName}
 - Tingkat Beban: ${params.effortRating}
 - Makanan Setara: ${params.foodEquivalency}
+- Persona Pilihan: ${params.cyclistPersona}
+${telemetryStr ? `- Telemetri Sensor: ${telemetryStr}` : ''}
+${params.photoBase64 ? '- Foto Sesi: (Lihat gambar terlampir untuk mendeskripsikan suasana tempat/pemandangan)' : ''}
 
 Kembalikan format JSON persis seperti ini:
 {
   "title": "Judul gowes catchy dengan emoji",
   "highlight": "Ringkasan performa 1-2 kalimat",
   "captions": {
-    "athlete": "Caption gaya atlet fokus endurance & pace (pakai hashtag)",
+    "athlete": "Caption gaya atlet fokus endurance & power output",
     "humor": "Caption humor/santai khas goweser Indonesia (soal sarapan/ngopi/nanjak)",
-    "technical": "Caption gearhead breakdown teknis performa sepeda"
-  }
+    "technical": "Caption gearhead breakdown teknis performa sepeda & komponen",
+    "gravel": "Caption petualangan eksplorasi alam & gravel ride"
+  },
+  "photoVisualInsight": "Pengamatan visual singkat dari foto (jika ada) atau suasana rute",
+  "recommendedTheme": "alpine" | "gravel" | "sunset" | "crit" | "cafe" | "topo",
+  "trainingInsight": "Insight fisiologis singkat mengenai intensitas, hidrasi, dan recovery time",
+  "mechanicTip": "Tips perawatan preventif mekanik sepeda berdasarkan rute & elevasi"
 }`;
 
-      const geminiApiKey = this.geminiApiKey;
-      if (geminiApiKey === null) return null;
+      const contentsParts: Array<{ text?: string; inline_data?: { mime_type: string; data: string } }> = [];
+
+      // If photo base64 provided, add vision inline_data part
+      if (params.photoBase64) {
+        const cleanBase64 = params.photoBase64.replace(/^data:image\/[a-z]+;base64,/, '');
+        contentsParts.push({
+          inline_data: {
+            mime_type: params.photoMimeType || 'image/jpeg',
+            data: cleanBase64,
+          },
+        });
+      }
+
+      contentsParts.push({ text: prompt });
+
+      // Try gemini-1.5-flash
       const url = `https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-flash:generateContent?key=${geminiApiKey}`;
       const response = await this.fetchFn(url, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
-          contents: [{ parts: [{ text: prompt }] }],
+          contents: [{ parts: contentsParts }],
           generationConfig: {
             temperature: 0.7,
             responseMimeType: 'application/json',
           },
         }),
-        signal: AbortSignal.timeout(3500),
+        signal: AbortSignal.timeout(7500),
       });
 
       if (!response.ok) return null;

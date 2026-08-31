@@ -110,6 +110,40 @@ async function saveEvent(): Promise<void> {
   }
 }
 
+async function quickLogService(
+  type: MaintenanceEventType,
+  presetNotes: string,
+  dueDays: number,
+): Promise<void> {
+  saving.value = true;
+  errorMessage.value = '';
+  successMessage.value = '';
+  try {
+    const nextDate = new Date();
+    nextDate.setDate(nextDate.getDate() + dueDays);
+    const response = await api<MaintenanceEventResponse>(
+      `/bikes/${props.bikeId}/maintenance`,
+      {
+        method: 'POST',
+        body: {
+          type,
+          performedAt: today,
+          notes: presetNotes,
+          nextDueDate: nextDate.toISOString().slice(0, 10),
+          performedAtDistanceKm: null,
+          nextDueDistanceKm: null,
+        },
+      },
+    );
+    events.value = [response.event, ...events.value];
+    successMessage.value = `✓ Servis "${MAINTENANCE_EVENT_LABELS[type]}" berhasil dicatat!`;
+  } catch (error: unknown) {
+    errorMessage.value = getApiErrorMessage(error);
+  } finally {
+    saving.value = false;
+  }
+}
+
 onMounted(loadEvents);
 </script>
 
@@ -120,6 +154,45 @@ onMounted(loadEvents);
         <p class="section-heading__eyebrow">Buku Servis Digital</p>
         <h2 id="maintenance-title">Riwayat Perawatan</h2>
         <p>Catat servis rantai, rem, suspensi, dan pasang pengingat tanggal &amp; jarak tempuh (odometer).</p>
+      </div>
+    </div>
+
+    <!-- 1-Click Quick Service Actions (MAINT-005) -->
+    <div class="quick-service-bar">
+      <span class="quick-service-label">⚡ 1-Klik Tandai Servis Selesai:</span>
+      <div class="quick-service-buttons">
+        <button
+          type="button"
+          class="quick-svc-btn"
+          :disabled="saving"
+          @click="quickLogService('chain_lube', 'Pembersihan & pelumasan rantai rutin', 14)"
+        >
+          ⛓️ Rantai Bersih &amp; Lumasi
+        </button>
+        <button
+          type="button"
+          class="quick-svc-btn"
+          :disabled="saving"
+          @click="quickLogService('sealant', 'Pengecekan tekanan & top-up sealant ban', 30)"
+        >
+          💨 Ban &amp; Sealant OK
+        </button>
+        <button
+          type="button"
+          class="quick-svc-btn"
+          :disabled="saving"
+          @click="quickLogService('brake_pads', 'Inspeksi ketebalan & pembersihan pad rem', 60)"
+        >
+          🛑 Pad Rem Dicek
+        </button>
+        <button
+          type="button"
+          class="quick-svc-btn"
+          :disabled="saving"
+          @click="quickLogService('chain_clean', 'Cuci menyeluruh dan degrease drivetrain', 30)"
+        >
+          🧼 Cuci &amp; Degrease
+        </button>
       </div>
     </div>
 
@@ -255,6 +328,54 @@ onMounted(loadEvents);
 .maintenance {
   display: grid;
   gap: 1.25rem;
+}
+
+.quick-service-bar {
+  display: grid;
+  gap: 0.5rem;
+  padding: 0.85rem 1rem;
+  background: #f8fafc;
+  border: 1px solid #e2e8f0;
+  border-radius: 1rem;
+}
+
+.quick-service-label {
+  font-size: 0.76rem;
+  font-weight: 850;
+  color: #1e293b;
+}
+
+.quick-service-buttons {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.45rem;
+}
+
+.quick-svc-btn {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.35rem;
+  padding: 0.45rem 0.75rem;
+  background: #ffffff;
+  border: 1px solid #cbd5e1;
+  border-radius: 0.6rem;
+  font-size: 0.75rem;
+  font-weight: 750;
+  color: #334155;
+  cursor: pointer;
+  transition: all 120ms ease;
+  box-shadow: 0 1px 2px rgba(0, 0, 0, 0.04);
+}
+
+.quick-svc-btn:hover:not(:disabled) {
+  background: #f1f5f9;
+  border-color: #94a3b8;
+  transform: translateY(-1px);
+}
+
+.quick-svc-btn:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
 }
 
 .maintenance-form {

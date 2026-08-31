@@ -4,7 +4,9 @@
   "type": "module",
   "scripts": {
     "build": "tsc -p tsconfig.build.json",
+    "db:encrypt": "tsx src/db/run-pii-migration.ts",
     "db:generate": "drizzle-kit generate",
+    "db:inspect": "tsx src/db/inspect-data.ts",
     "db:migrate": "drizzle-kit migrate",
     "db:seed": "pnpm --filter @goweskit/bike-domain build && pnpm --filter @goweskit/contracts build && tsx src/db/seed.ts",
     "dev": "tsx watch src/server.ts",

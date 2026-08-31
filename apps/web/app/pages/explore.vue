@@ -13,14 +13,15 @@ import {
 
 type ExploreItem = NearbyPlace | NearbyRoute;
 
-const BANDUNG_CENTER: Coordinate = {
-  longitude: 107.6191,
-  latitude: -6.9175,
+// Default to the main cycling hub where seeded routes & places are available
+const DEFAULT_EXPLORE_CENTER: Coordinate = {
+  longitude: 106.6315,
+  latitude: -6.1775,
 };
 
 const api = useApi();
 const { toast } = useNotify();
-const center = ref<Coordinate>(BANDUNG_CENTER);
+const center = ref<Coordinate>(DEFAULT_EXPLORE_CENTER);
 const userLocation = ref<Coordinate | null>(null);
 const radiusKm = ref(15);
 const category = ref('all');
@@ -38,6 +39,7 @@ const isDesktopSidebarOpen = ref(true);
 const places = ref<NearbyPlace[]>([]);
 const routes = ref<NearbyRoute[]>([]);
 const selectedId = ref<string | null>(null);
+const hoveredElevationDistance = ref<number | null>(null);
 const loading = ref(true);
 const locating = ref(false);
 const errorMessage = ref('');
@@ -130,7 +132,7 @@ function toggleSheetPosition(): void {
 }
 
 function cleanName(rawName: string): string {
-  return rawName.replace(/^\[(Place|Route)\]\s*/i, '').trim();
+  return rawName.replace(/^\[(Place|Route)\]\s*/i, '').replace(/^Demo\s+/i, '').trim();
 }
 
 function cleanDescription(rawDesc: string | null | undefined): string {
@@ -238,11 +240,14 @@ function useMyLocation(): void {
       userLocation.value = coordinate;
       center.value = coordinate;
       locating.value = false;
+      toast.success('Lokasi Terdeteksi', 'Memuat rute & spot gowes terdekat.');
       void loadNearby();
     },
     () => {
       locating.value = false;
-      locationMessage.value = 'GPS tidak tersedia. Menggunakan Area Bandung.';
+      locationMessage.value = 'GPS tidak tersedia. Menggunakan Area Default.';
+      toast.info('GPS Tidak Tersedia', 'Menampilkan rute & tempat gowes area Tangerang/BSD.');
+      void loadNearby();
     },
     { enableHighAccuracy: false, timeout: 10_000, maximumAge: 60_000 },
   );
@@ -266,17 +271,19 @@ function toggleOfflineRoute(item: ExploreItem): void {
   if (item.kind !== 'route') return;
   if (isRouteSavedOffline(item.id)) {
     removeOfflineRoute(item.id);
+    toast.info('Rute Dihapus dari Offline', item.name);
   } else {
     saveRouteOffline({
       id: item.id,
-      title: item.name,
-      description: item.description,
+      title: cleanName(item.name),
+      description: cleanDescription(item.description),
       distanceKm: item.distanceMeters / 1000,
       elevationGainMeters: item.elevationGainMeters,
       difficulty: item.difficulty,
       coordinates: item.geometry.coordinates as [number, number][],
       elevationProfile: elevationData.value?.elevationProfile ?? undefined,
     });
+    toast.success('Rute Tersimpan Offline ✓', 'Siap digunakan di area tanpa sinyal.');
   }
 }
 
@@ -284,6 +291,7 @@ async function selectItem(selection: { kind: 'place' | 'route'; id: string }): P
   selectedId.value = selection.id;
   sheetPosition.value = 'half';
   elevationData.value = null;
+  hoveredElevationDistance.value = null;
 
   if (selection.kind === 'route') {
     loadingElevation.value = true;
@@ -316,6 +324,7 @@ async function saveSelectedItem(item: ExploreItem): Promise<void> {
     });
     savedItems.value.add(item.id);
     saveToast.value = '✓ Disimpan ke Profil!';
+    toast.success('Tersimpan', `${cleanName(item.name)} ditambahkan ke favorit.`);
     setTimeout(() => {
       saveToast.value = '';
     }, 2500);
@@ -331,17 +340,19 @@ const elevationSvgPath = computed(() => {
   const pts = elevationData.value.elevationProfile;
   const lastPt = pts[pts.length - 1];
   const maxDist = (lastPt ? lastPt.distanceMeters : 1) || 1;
-  const minElev = Math.min(...pts.map(p => p.elevationMeters));
-  const maxElev = Math.max(...pts.map(p => p.elevationMeters));
+  const minElev = Math.min(...pts.map((p) => p.elevationMeters));
+  const maxElev = Math.max(...pts.map((p) => p.elevationMeters));
   const elevRange = maxElev - minElev || 1;
 
   const w = 300;
-  const h = 45;
-  const padding = 5;
+  const h = 50;
+  const padding = 6;
 
-  const coords = pts.map(p => {
+  const coords = pts.map((p) => {
     const x = Math.round((p.distanceMeters / maxDist) * w);
-    const y = Math.round(h - padding - ((p.elevationMeters - minElev) / elevRange) * (h - padding * 2));
+    const y = Math.round(
+      h - padding - ((p.elevationMeters - minElev) / elevRange) * (h - padding * 2),
+    );
     return `${x},${y}`;
   });
 
@@ -350,8 +361,19 @@ const elevationSvgPath = computed(() => {
 
 const elevationFillPath = computed(() => {
   if (!elevationSvgPath.value) return '';
-  return `${elevationSvgPath.value} L 300 45 L 0 45 Z`;
+  return `${elevationSvgPath.value} L 300 50 L 0 50 Z`;
 });
+
+function onElevationChartMouseMove(e: MouseEvent): void {
+  if (!selectedItem.value || selectedItem.value.kind !== 'route') return;
+  const rect = (e.currentTarget as HTMLElement).getBoundingClientRect();
+  const relX = Math.max(0, Math.min(1, (e.clientX - rect.left) / rect.width));
+  hoveredElevationDistance.value = relX * selectedItem.value.distanceMeters;
+}
+
+function onElevationChartMouseLeave(): void {
+  hoveredElevationDistance.value = null;
+}
 
 function formatDistance(meters: number): string {
   return meters < 1000
@@ -370,6 +392,21 @@ function itemDistance(item: ExploreItem): number {
   return item.kind === 'place'
     ? item.distanceMeters
     : item.distanceFromUserMeters;
+}
+
+function estimatedRideTime(meters: number): string {
+  // Estimated at 20 km/h average cycling speed
+  const minutes = Math.round((meters / 1000 / 20) * 60);
+  if (minutes < 60) return `${minutes} menit`;
+  const hours = Math.floor(minutes / 60);
+  const remainingMin = minutes % 60;
+  return `${hours} jam ${remainingMin}m`;
+}
+
+function estimatedCalories(meters: number, elevationMeters = 0): string {
+  // Estimated cycling calorie burn (~30 kcal per km + 10 kcal per 100m climb)
+  const kcal = Math.round((meters / 1000) * 32 + (elevationMeters / 100) * 12);
+  return `${kcal} kkal`;
 }
 
 function applyCategory(cat: string): void {
@@ -424,8 +461,102 @@ ${url}
   }
 }
 
+function openExternalNavigation(
+  item: ExploreItem,
+  platform: 'google' | 'komoot' = 'google',
+): void {
+  let lat = 0;
+  let lng = 0;
+  if (item.kind === 'place') {
+    lat = item.coordinate.latitude;
+    lng = item.coordinate.longitude;
+  } else {
+    const coords = item.geometry.coordinates[0];
+    if (coords) {
+      lng = coords[0]!;
+      lat = coords[1]!;
+    }
+  }
+  const url =
+    platform === 'komoot'
+      ? `https://www.komoot.com/plan/@${lat},${lng},14z`
+      : `https://www.google.com/maps/dir/?api=1&destination=${lat},${lng}&travelmode=bicycling`;
+  window.open(url, '_blank', 'noopener,noreferrer');
+}
+
+function getSuitableBikes(item: ExploreItem): string[] {
+  if (item.kind === 'route') {
+    if (item.routeType === 'mtb') return ['MTB', 'Gravel'];
+    if (item.routeType === 'gravel') return ['Gravel', 'MTB', 'All-Road'];
+    if (item.routeType === 'road') return ['Road Bike', 'Gravel', 'Folding'];
+    return ['Semua Sepeda'];
+  }
+  if (item.type === 'bike_park') return ['MTB', 'Dirt Jump', 'BMX'];
+  if (item.type === 'trailhead') return ['MTB', 'Gravel'];
+  if (item.type === 'coffee' || item.type === 'rest') return ['Semua Sepeda', 'Road', 'Gravel', 'Folding'];
+  if (item.type === 'workshop' || item.type === 'store') return ['Semua Sepeda'];
+  return ['Semua Sepeda'];
+}
+
+function getPlaceAmenities(item: ExploreItem): { icon: string; label: string }[] {
+  if (item.kind === 'place') {
+    switch (item.type) {
+      case 'workshop':
+        return [
+          { icon: '🔧', label: 'Pompa & Perkakas' },
+          { icon: '⚙️', label: 'Sparepart Ready' },
+          { icon: '🅿️', label: 'Parkir Sepeda' },
+        ];
+      case 'store':
+        return [
+          { icon: '🏪', label: 'Aksesoris Gowes' },
+          { icon: '🚲', label: 'Unit Sepeda' },
+          { icon: '💳', label: 'QRIS & Tunai' },
+        ];
+      case 'coffee':
+        return [
+          { icon: '☕', label: 'Kopi & Camilan' },
+          { icon: '🪑', label: 'Tempat Duduk' },
+          { icon: '🔌', label: 'Stopkontak' },
+        ];
+      case 'water':
+        return [
+          { icon: '💧', label: 'Refill Air Bersih' },
+          { icon: '🚰', label: 'Keran Siap Pakai' },
+        ];
+      case 'trailhead':
+        return [
+          { icon: '🌲', label: 'Jalur Alami' },
+          { icon: '🧭', label: 'Papan Petunjuk' },
+          { icon: '🅿️', label: 'Parkir Kendaraan' },
+        ];
+      case 'bike_park':
+        return [
+          { icon: '🚵', label: 'Rintangan/Drop' },
+          { icon: '🚧', label: 'Pump Track' },
+          { icon: '🌱', label: 'Latihan Skill' },
+        ];
+      case 'meeting_point':
+        return [
+          { icon: '🚩', label: 'Titik Kumpul' },
+          { icon: '🅿️', label: 'Halaman Luas' },
+          { icon: '💡', label: 'Penerangan' },
+        ];
+      default:
+        return [
+          { icon: '🪑', label: 'Tempat Duduk' },
+          { icon: '🌳', label: 'Area Teduh' },
+        ];
+    }
+  }
+  return [
+    { icon: '🛣️', label: item.surface || 'Campuran' },
+    { icon: '⚡', label: `Tingkat ${item.difficulty}` },
+  ];
+}
+
 onMounted(() => {
-  useMyLocation();
+  void loadNearby();
   window.addEventListener('mousemove', onTouchMoveDrag);
   window.addEventListener('mouseup', onTouchEndDrag);
 });
@@ -447,16 +578,17 @@ onBeforeUnmount(() => {
           :routes="routes"
           :selected-id="selectedId"
           :user-location="userLocation"
+          :hovered-elevation-distance="hoveredElevationDistance"
           @select="selectItem"
           @map-error="mapError = true"
         />
         <template #fallback>
-          <div class="map-loading-placeholder">Memuat peta…</div>
+          <div class="map-loading-placeholder">Memuat peta interaktif…</div>
         </template>
       </ClientOnly>
     </div>
 
-    <!-- 2. DESKTOP FLOATING LEFT SIDEBAR (Apple/Google Maps Desktop View) -->
+    <!-- 2. DESKTOP FLOATING LEFT SIDEBAR (Apple/Google Maps Style) -->
     <aside
       class="desktop-explore-panel"
       :class="{ 'desktop-explore-panel--collapsed': !isDesktopSidebarOpen }"
@@ -537,7 +669,7 @@ onBeforeUnmount(() => {
             type="button"
             @click="applyCategory('routes')"
           >
-            <GIcon name="route" size="xs" /> Rute
+            <GIcon name="route" size="xs" /> Rute ({{ routes.length }})
           </button>
           <button
             class="cat-chip"
@@ -586,30 +718,76 @@ onBeforeUnmount(() => {
       <div class="panel-body">
         <!-- A. Selected Spot Detail View -->
         <article v-if="selectedItem" class="desktop-selected-card">
+          <!-- Top Tag Stack & Dismiss Button -->
           <div class="card-headline-row">
             <div class="pill-badge-stack">
-              <span class="type-pill">{{ typeLabel(selectedItem) }}</span>
-              <span class="dist-pill">{{ formatDistance(itemDistance(selectedItem)) }}</span>
+              <span class="type-pill" :class="`type-pill--${selectedItem.kind === 'place' ? selectedItem.type : selectedItem.routeType}`">
+                {{ typeLabel(selectedItem) }}
+              </span>
+              <span class="dist-pill">📍 {{ formatDistance(itemDistance(selectedItem)) }}</span>
+              <span v-if="selectedItem.verificationStatus === 'staff_verified'" class="verified-pill">
+                ✓ Terverifikasi
+              </span>
+              <span v-if="selectedItem.beginnerFriendly" class="beginner-pill">
+                🌱 Ramah Pemula
+              </span>
             </div>
-            <button class="dismiss-btn" type="button" @click="selectedId = null">✕ Tutup</button>
+            <button class="dismiss-circle-btn" type="button" title="Tutup" @click="selectedId = null">✕</button>
           </div>
 
-          <h2 class="card-item-title">{{ cleanName(selectedItem.name) }}</h2>
-          <p class="card-item-desc">{{ cleanDescription(selectedItem.description) }}</p>
+          <div class="card-title-group">
+            <h2 class="card-item-title">{{ cleanName(selectedItem.name) }}</h2>
+            <p class="card-item-desc">{{ cleanDescription(selectedItem.description) || 'Spot gowes rekomendasi komunitas.' }}</p>
+          </div>
 
-          <!-- Route Elevation Sparkline Curve -->
-          <div v-if="selectedItem.kind === 'route'" class="route-spark-box">
+          <!-- Quick Telemetry Stats Grid for Routes -->
+          <div v-if="selectedItem.kind === 'route'" class="route-metrics-grid">
+            <div class="metric-pill">
+              <span class="metric-label">Jarak</span>
+              <span class="metric-val">{{ (selectedItem.distanceMeters / 1000).toFixed(1) }} <small>km</small></span>
+            </div>
+            <div class="metric-pill">
+              <span class="metric-label">Elevasi</span>
+              <span class="metric-val">+{{ selectedItem.elevationGainMeters }} <small>m</small></span>
+            </div>
+            <div class="metric-pill">
+              <span class="metric-label">Estimasi</span>
+              <span class="metric-val">{{ estimatedRideTime(selectedItem.distanceMeters) }}</span>
+            </div>
+            <div class="metric-pill">
+              <span class="metric-label">Kalori</span>
+              <span class="metric-val">{{ estimatedCalories(selectedItem.distanceMeters, selectedItem.elevationGainMeters) }}</span>
+            </div>
+          </div>
+
+          <!-- Route Elevation Interactive Sparkline -->
+          <div
+            v-if="selectedItem.kind === 'route'"
+            class="route-spark-box"
+            @mousemove="onElevationChartMouseMove"
+            @mouseleave="onElevationChartMouseLeave"
+          >
             <div class="spark-labels">
-              <span>+{{ selectedItem.elevationGainMeters }}m Elevasi</span>
-              <span v-if="elevationData" class="spark-gradient">
+              <span>Profil Elevasi (+{{ selectedItem.elevationGainMeters }}m)</span>
+              <span v-if="hoveredElevationDistance !== null" class="spark-hover-indicator">
+                {{ (hoveredElevationDistance / 1000).toFixed(1) }} km
+              </span>
+              <span v-else-if="elevationData" class="spark-gradient">
                 Avg {{ elevationData.averageGradientPercent }}% · Max {{ elevationData.maxGradientPercent }}%
               </span>
               <span v-else class="spark-difficulty">{{ selectedItem.difficulty }} · {{ selectedItem.surface }}</span>
             </div>
-            <svg viewBox="0 0 300 45" class="spark-svg" aria-hidden="true">
+
+            <svg viewBox="0 0 300 50" class="spark-svg" aria-hidden="true">
+              <defs>
+                <linearGradient id="elevGradDesktop" x1="0" y1="0" x2="0" y2="1">
+                  <stop offset="0%" stop-color="#0284c7" stop-opacity="0.45" />
+                  <stop offset="100%" stop-color="#0284c7" stop-opacity="0.05" />
+                </linearGradient>
+              </defs>
               <path
-                :d="elevationFillPath || 'M0 40 Q 60 30, 120 22 T 240 10 L 300 6 L 300 45 L 0 45 Z'"
-                fill="rgba(56, 189, 248, 0.25)"
+                :d="elevationFillPath || 'M0 40 Q 60 30, 120 22 T 240 10 L 300 6 L 300 50 L 0 50 Z'"
+                fill="url(#elevGradDesktop)"
               />
               <path
                 :d="elevationSvgPath || 'M0 40 Q 60 30, 120 22 T 240 10 L 300 6'"
@@ -619,51 +797,105 @@ onBeforeUnmount(() => {
                 stroke-linecap="round"
               />
             </svg>
+            <span class="spark-hint-text">Arahkan kursor untuk menelusuri titik elevasi di peta</span>
+          </div>
+
+          <!-- Spot & Cycling Specs Card -->
+          <div class="spot-specs-card">
+            <div class="spec-row">
+              <span class="spec-label">🚲 Rekomendasi Sepeda</span>
+              <div class="spec-chips">
+                <span v-for="bike in getSuitableBikes(selectedItem)" :key="bike" class="bike-spec-chip">
+                  {{ bike }}
+                </span>
+              </div>
+            </div>
+
+            <div class="spec-row">
+              <span class="spec-label">{{ selectedItem.kind === 'place' ? '✨ Fasilitas Spot' : '🛣️ Karakter Rute' }}</span>
+              <div class="amenities-wrap">
+                <span v-for="amenity in getPlaceAmenities(selectedItem)" :key="amenity.label" class="amenity-badge">
+                  <span>{{ amenity.icon }}</span>
+                  <span>{{ amenity.label }}</span>
+                </span>
+              </div>
+            </div>
           </div>
 
           <p v-if="saveToast" class="save-toast-chip" role="status">{{ saveToast }}</p>
 
-          <div class="card-bottom-actions">
-            <NuxtLink class="action-btn action-btn--primary" to="/safety">
-              <GIcon name="bike" size="sm" /> Mulai Gowes
-            </NuxtLink>
-            <button
-              class="action-btn action-btn--share"
-              type="button"
-              @click="shareSelectedItem(selectedItem)"
-            >
-              <GIcon name="share" size="sm" /> <span>Bagikan</span>
-            </button>
+          <!-- Ergonomic Two-Tier Action Layout -->
+          <div class="detail-action-hub">
             <NuxtLink
-              v-if="selectedItem.kind === 'route'"
-              class="action-btn action-btn--flex"
-              :to="`/ride-flex?distance=${(selectedItem.distanceMeters / 1000).toFixed(1)}&elevation=${selectedItem.elevationGainMeters}&note=${encodeURIComponent(cleanName(selectedItem.name))}`"
+              class="primary-ride-cta"
+              :to="`/safety?note=${encodeURIComponent(cleanName(selectedItem.name))}`"
             >
-              <GIcon name="camera" size="sm" /> <span>Poster AI</span>
+              <GIcon name="bike" size="sm" />
+              <span>Mulai Sesi Gowes ke Sini</span>
+              <span class="cta-arrow">➔</span>
             </NuxtLink>
-            <button
-              v-if="selectedItem.kind === 'route'"
-              class="action-btn action-btn--secondary"
-              :class="{ 'action-btn--saved': isRouteSavedOffline(selectedItem.id) }"
-              type="button"
-              @click="toggleOfflineRoute(selectedItem)"
-            >
-              <GIcon :name="isRouteSavedOffline(selectedItem.id) ? 'check' : 'download'" size="sm" />
-              <span>{{ isRouteSavedOffline(selectedItem.id) ? 'Offline ✓' : 'Simpan Offline' }}</span>
-            </button>
-            <button
-              class="action-btn action-btn--bookmark"
-              :class="{ 'action-btn--saved': savedItems.has(selectedItem.id) }"
-              type="button"
-              :disabled="savingItem"
-              @click="saveSelectedItem(selectedItem)"
-            >
-              <GIcon :name="savedItems.has(selectedItem.id) ? 'bookmark-filled' : 'bookmark'" size="sm" />
-              <span>{{ savedItems.has(selectedItem.id) ? 'Tersimpan' : 'Simpan' }}</span>
-            </button>
-            <button class="action-btn action-btn--secondary" type="button" @click="showContributionsModal = true">
-              Ulasan
-            </button>
+
+            <div class="secondary-actions-grid">
+              <button
+                class="card-action-pill"
+                type="button"
+                title="Buka Navigasi di Google Maps"
+                @click="openExternalNavigation(selectedItem, 'google')"
+              >
+                <span class="pill-icon">🗺️</span>
+                <span>Google Maps</span>
+              </button>
+
+              <button
+                class="card-action-pill"
+                type="button"
+                title="Buka Rute di Komoot"
+                @click="openExternalNavigation(selectedItem, 'komoot')"
+              >
+                <span class="pill-icon">🌲</span>
+                <span>Komoot</span>
+              </button>
+
+              <button
+                class="card-action-pill"
+                type="button"
+                title="Bagikan Spot/Rute Ini"
+                @click="shareSelectedItem(selectedItem)"
+              >
+                <GIcon name="share" size="xs" />
+                <span>Bagikan</span>
+              </button>
+
+              <button
+                class="card-action-pill"
+                :class="{ 'card-action-pill--active': savedItems.has(selectedItem.id) }"
+                type="button"
+                :disabled="savingItem"
+                @click="saveSelectedItem(selectedItem)"
+              >
+                <GIcon :name="savedItems.has(selectedItem.id) ? 'bookmark-filled' : 'bookmark'" size="xs" />
+                <span>{{ savedItems.has(selectedItem.id) ? 'Tersimpan' : 'Simpan' }}</span>
+              </button>
+
+              <NuxtLink
+                v-if="selectedItem.kind === 'route'"
+                class="card-action-pill"
+                :to="`/ride-flex?distance=${(selectedItem.distanceMeters / 1000).toFixed(1)}&elevation=${selectedItem.elevationGainMeters}&note=${encodeURIComponent(cleanName(selectedItem.name))}`"
+              >
+                <GIcon name="camera" size="xs" />
+                <span>Poster AI</span>
+              </NuxtLink>
+
+              <button
+                v-else
+                class="card-action-pill"
+                type="button"
+                @click="showContributionsModal = true"
+              >
+                <span class="pill-icon">💬</span>
+                <span>Ulasan / Info</span>
+              </button>
+            </div>
           </div>
         </article>
 
@@ -671,6 +903,7 @@ onBeforeUnmount(() => {
         <div v-else class="desktop-feed-wrapper">
           <div class="desktop-feed-meta">
             <span>Ditemukan <strong>{{ allItems.length }}</strong> tempat &amp; rute</span>
+            <span class="active-radar-pill">● Radar Aktif</span>
           </div>
 
           <!-- Skeleton Shimmer Feed during Loading -->
@@ -698,7 +931,7 @@ onBeforeUnmount(() => {
               type="button"
               @click="selectItem({ kind: item.kind, id: item.id })"
             >
-              <div class="feed-card-icon">
+              <div class="feed-card-icon" :style="{ background: item.kind === 'route' ? '#E0F2FE' : '#F7F4EB' }">
                 <GIcon :name="getItemIconName(item)" size="md" color="#17202A" />
               </div>
               <div class="feed-card-body">
@@ -706,7 +939,12 @@ onBeforeUnmount(() => {
                   <span class="feed-card-title">{{ cleanName(item.name) }}</span>
                   <span class="feed-card-dist">{{ formatDistance(itemDistance(item)) }}</span>
                 </div>
-                <p class="feed-card-desc">{{ cleanDescription(item.description) || 'Informasi rute & tempat gowes' }}</p>
+                <p class="feed-card-desc">{{ cleanDescription(item.description) || 'Informasi rute & tempat gowes terverifikasi' }}</p>
+                <div class="feed-card-tags">
+                  <span class="tag-chip">{{ typeLabel(item) }}</span>
+                  <span v-if="item.kind === 'route'" class="tag-chip tag-chip--highlight">+{{ item.elevationGainMeters }}m</span>
+                  <span v-if="item.beginnerFriendly" class="tag-chip tag-chip--beginner">Ramah Pemula</span>
+                </div>
               </div>
             </button>
           </div>
@@ -770,7 +1008,7 @@ onBeforeUnmount(() => {
           type="button"
           @click="applyCategory('all')"
         >
-          Semua
+          Semua ({{ allItems.length }})
         </button>
         <button
           class="cat-chip"
@@ -829,8 +1067,9 @@ onBeforeUnmount(() => {
       :class="[
         `mobile-bottom-sheet--${sheetPosition}`,
         { 'mobile-bottom-sheet--dragging': isDraggingSheet },
+        { 'mobile-bottom-sheet--selected': selectedItem !== null },
       ]"
-      :style="sheetCustomHeight ? { height: `${sheetCustomHeight}px` } : {}"
+      :style="sheetCustomHeight && !selectedItem ? { height: `${sheetCustomHeight}px` } : {}"
     >
       <!-- Touch/Grabber Area -->
       <div
@@ -849,29 +1088,75 @@ onBeforeUnmount(() => {
 
       <!-- A. Selected Spot View (Mobile) -->
       <article v-if="selectedItem" class="sheet-selected-card">
+        <!-- Top Tag Stack & Dismiss Button -->
         <div class="card-headline-row">
           <div class="pill-badge-stack">
-            <span class="type-pill">{{ typeLabel(selectedItem) }}</span>
-            <span class="dist-pill">{{ formatDistance(itemDistance(selectedItem)) }}</span>
+            <span class="type-pill" :class="`type-pill--${selectedItem.kind === 'place' ? selectedItem.type : selectedItem.routeType}`">
+              {{ typeLabel(selectedItem) }}
+            </span>
+            <span class="dist-pill">📍 {{ formatDistance(itemDistance(selectedItem)) }}</span>
+            <span v-if="selectedItem.verificationStatus === 'staff_verified'" class="verified-pill">
+              ✓ Terverifikasi
+            </span>
+            <span v-if="selectedItem.beginnerFriendly" class="beginner-pill">
+              🌱 Ramah Pemula
+            </span>
           </div>
-          <button class="dismiss-btn" type="button" @click="selectedId = null">✕</button>
+          <button class="dismiss-circle-btn" type="button" title="Tutup" @click="selectedId = null">✕</button>
         </div>
 
-        <h2 class="card-item-title">{{ cleanName(selectedItem.name) }}</h2>
-        <p class="card-item-desc">{{ cleanDescription(selectedItem.description) }}</p>
+        <div class="card-title-group">
+          <h2 class="card-item-title">{{ cleanName(selectedItem.name) }}</h2>
+          <p class="card-item-desc">{{ cleanDescription(selectedItem.description) || 'Spot gowes rekomendasi komunitas.' }}</p>
+        </div>
 
-        <div v-if="selectedItem.kind === 'route'" class="route-spark-box">
+        <!-- Quick Telemetry Stats Grid for Routes (Mobile) -->
+        <div v-if="selectedItem.kind === 'route'" class="route-metrics-grid">
+          <div class="metric-pill">
+            <span class="metric-label">Jarak</span>
+            <span class="metric-val">{{ (selectedItem.distanceMeters / 1000).toFixed(1) }} <small>km</small></span>
+          </div>
+          <div class="metric-pill">
+            <span class="metric-label">Elevasi</span>
+            <span class="metric-val">+{{ selectedItem.elevationGainMeters }} <small>m</small></span>
+          </div>
+          <div class="metric-pill">
+            <span class="metric-label">Estimasi</span>
+            <span class="metric-val">{{ estimatedRideTime(selectedItem.distanceMeters) }}</span>
+          </div>
+          <div class="metric-pill">
+            <span class="metric-label">Kalori</span>
+            <span class="metric-val">{{ estimatedCalories(selectedItem.distanceMeters, selectedItem.elevationGainMeters) }}</span>
+          </div>
+        </div>
+
+        <!-- Elevation Sparkline (Mobile) -->
+        <div
+          v-if="selectedItem.kind === 'route'"
+          class="route-spark-box"
+          @mousemove="onElevationChartMouseMove"
+          @mouseleave="onElevationChartMouseLeave"
+        >
           <div class="spark-labels">
             <span>+{{ selectedItem.elevationGainMeters }}m Elevasi</span>
-            <span v-if="elevationData" class="spark-gradient">
+            <span v-if="hoveredElevationDistance !== null" class="spark-hover-indicator">
+              {{ (hoveredElevationDistance / 1000).toFixed(1) }} km
+            </span>
+            <span v-else-if="elevationData" class="spark-gradient">
               Avg {{ elevationData.averageGradientPercent }}% · Max {{ elevationData.maxGradientPercent }}%
             </span>
             <span v-else class="spark-difficulty">{{ selectedItem.difficulty }} · {{ selectedItem.surface }}</span>
           </div>
-          <svg viewBox="0 0 300 45" class="spark-svg" aria-hidden="true">
+          <svg viewBox="0 0 300 50" class="spark-svg" aria-hidden="true">
+            <defs>
+              <linearGradient id="elevGradMobile" x1="0" y1="0" x2="0" y2="1">
+                <stop offset="0%" stop-color="#0284c7" stop-opacity="0.45" />
+                <stop offset="100%" stop-color="#0284c7" stop-opacity="0.05" />
+              </linearGradient>
+            </defs>
             <path
-              :d="elevationFillPath || 'M0 40 Q 60 30, 120 22 T 240 10 L 300 6 L 300 45 L 0 45 Z'"
-              fill="rgba(56, 189, 248, 0.2)"
+              :d="elevationFillPath || 'M0 40 Q 60 30, 120 22 T 240 10 L 300 6 L 300 50 L 0 50 Z'"
+              fill="url(#elevGradMobile)"
             />
             <path
               :d="elevationSvgPath || 'M0 40 Q 60 30, 120 22 T 240 10 L 300 6'"
@@ -883,49 +1168,102 @@ onBeforeUnmount(() => {
           </svg>
         </div>
 
+        <!-- Spot & Cycling Specs Card (Mobile) -->
+        <div class="spot-specs-card">
+          <div class="spec-row">
+            <span class="spec-label">🚲 Rekomendasi Sepeda</span>
+            <div class="spec-chips">
+              <span v-for="bike in getSuitableBikes(selectedItem)" :key="bike" class="bike-spec-chip">
+                {{ bike }}
+              </span>
+            </div>
+          </div>
+
+          <div class="spec-row">
+            <span class="spec-label">{{ selectedItem.kind === 'place' ? '✨ Fasilitas Spot' : '🛣️ Karakter Rute' }}</span>
+            <div class="amenities-wrap">
+              <span v-for="amenity in getPlaceAmenities(selectedItem)" :key="amenity.label" class="amenity-badge">
+                <span>{{ amenity.icon }}</span>
+                <span>{{ amenity.label }}</span>
+              </span>
+            </div>
+          </div>
+        </div>
+
         <p v-if="saveToast" class="save-toast-chip" role="status">{{ saveToast }}</p>
 
-        <div class="card-bottom-actions">
-          <NuxtLink class="action-btn action-btn--primary" to="/safety">
-            <GIcon name="bike" size="sm" /> Mulai Gowes
-          </NuxtLink>
-          <button
-            class="action-btn action-btn--share"
-            type="button"
-            @click="shareSelectedItem(selectedItem)"
-          >
-            <GIcon name="share" size="sm" /> <span>Bagikan</span>
-          </button>
+        <!-- Ergonomic Two-Tier Action Layout (Mobile) -->
+        <div class="detail-action-hub">
           <NuxtLink
-            v-if="selectedItem.kind === 'route'"
-            class="action-btn action-btn--flex"
-            :to="`/ride-flex?distance=${(selectedItem.distanceMeters / 1000).toFixed(1)}&elevation=${selectedItem.elevationGainMeters}&note=${encodeURIComponent(cleanName(selectedItem.name))}`"
+            class="primary-ride-cta"
+            :to="`/safety?note=${encodeURIComponent(cleanName(selectedItem.name))}`"
           >
-            <GIcon name="camera" size="sm" /> <span>Poster AI</span>
+            <GIcon name="bike" size="sm" />
+            <span>Mulai Sesi Gowes ke Sini</span>
+            <span class="cta-arrow">➔</span>
           </NuxtLink>
-          <button
-            v-if="selectedItem.kind === 'route'"
-            class="action-btn action-btn--secondary"
-            :class="{ 'action-btn--saved': isRouteSavedOffline(selectedItem.id) }"
-            type="button"
-            @click="toggleOfflineRoute(selectedItem)"
-          >
-            <GIcon :name="isRouteSavedOffline(selectedItem.id) ? 'check' : 'download'" size="sm" />
-            <span>{{ isRouteSavedOffline(selectedItem.id) ? 'Offline ✓' : 'Simpan Offline' }}</span>
-          </button>
-          <button
-            class="action-btn action-btn--bookmark"
-            :class="{ 'action-btn--saved': savedItems.has(selectedItem.id) }"
-            type="button"
-            :disabled="savingItem"
-            @click="saveSelectedItem(selectedItem)"
-          >
-            <GIcon :name="savedItems.has(selectedItem.id) ? 'bookmark-filled' : 'bookmark'" size="sm" />
-            <span>{{ savedItems.has(selectedItem.id) ? 'Tersimpan' : 'Simpan' }}</span>
-          </button>
-          <button class="action-btn action-btn--secondary" type="button" @click="showContributionsModal = true">
-            Ulasan
-          </button>
+
+          <div class="secondary-actions-grid">
+            <button
+              class="card-action-pill"
+              type="button"
+              title="Buka Navigasi di Google Maps"
+              @click="openExternalNavigation(selectedItem, 'google')"
+            >
+              <span class="pill-icon">🗺️</span>
+              <span>Google Maps</span>
+            </button>
+
+            <button
+              class="card-action-pill"
+              type="button"
+              title="Buka Rute di Komoot"
+              @click="openExternalNavigation(selectedItem, 'komoot')"
+            >
+              <span class="pill-icon">🌲</span>
+              <span>Komoot</span>
+            </button>
+
+            <button
+              class="card-action-pill"
+              type="button"
+              title="Bagikan Spot/Rute Ini"
+              @click="shareSelectedItem(selectedItem)"
+            >
+              <GIcon name="share" size="xs" />
+              <span>Bagikan</span>
+            </button>
+
+            <button
+              class="card-action-pill"
+              :class="{ 'card-action-pill--active': savedItems.has(selectedItem.id) }"
+              type="button"
+              :disabled="savingItem"
+              @click="saveSelectedItem(selectedItem)"
+            >
+              <GIcon :name="savedItems.has(selectedItem.id) ? 'bookmark-filled' : 'bookmark'" size="xs" />
+              <span>{{ savedItems.has(selectedItem.id) ? 'Tersimpan' : 'Simpan' }}</span>
+            </button>
+
+            <NuxtLink
+              v-if="selectedItem.kind === 'route'"
+              class="card-action-pill"
+              :to="`/ride-flex?distance=${(selectedItem.distanceMeters / 1000).toFixed(1)}&elevation=${selectedItem.elevationGainMeters}&note=${encodeURIComponent(cleanName(selectedItem.name))}`"
+            >
+              <GIcon name="camera" size="xs" />
+              <span>Poster AI</span>
+            </NuxtLink>
+
+            <button
+              v-else
+              class="card-action-pill"
+              type="button"
+              @click="showContributionsModal = true"
+            >
+              <span class="pill-icon">💬</span>
+              <span>Ulasan / Info</span>
+            </button>
+          </div>
         </div>
       </article>
 
@@ -937,7 +1275,7 @@ onBeforeUnmount(() => {
           tabindex="0"
           @click="toggleSheetPosition"
         >
-          <strong>Spot &amp; Rute Sekitar</strong>
+          <strong>Spot &amp; Rute Gowes</strong>
           <div class="header-right-pills">
             <span class="feed-count-badge">{{ allItems.length }}</span>
             <span class="sheet-expand-hint">{{ sheetPosition === 'expanded' ? '▼' : '▲' }}</span>
@@ -952,7 +1290,7 @@ onBeforeUnmount(() => {
             type="button"
             @click="selectItem({ kind: item.kind, id: item.id })"
           >
-            <div class="feed-card-icon">
+            <div class="feed-card-icon" :style="{ background: item.kind === 'route' ? '#E0F2FE' : '#F7F4EB' }">
               <GIcon :name="getItemIconName(item)" size="md" color="#17202A" />
             </div>
             <div class="feed-card-body">
@@ -961,6 +1299,10 @@ onBeforeUnmount(() => {
                 <span class="feed-card-dist">{{ formatDistance(itemDistance(item)) }}</span>
               </div>
               <p class="feed-card-desc">{{ cleanDescription(item.description) }}</p>
+              <div class="feed-card-tags">
+                <span class="tag-chip">{{ typeLabel(item) }}</span>
+                <span v-if="item.kind === 'route'" class="tag-chip tag-chip--highlight">+{{ item.elevationGainMeters }}m</span>
+              </div>
             </div>
           </button>
         </div>
@@ -971,35 +1313,35 @@ onBeforeUnmount(() => {
     <div v-if="showFilterModal" class="native-modal-backdrop" @click.self="showFilterModal = false">
       <div class="native-modal-sheet">
         <div class="modal-header">
-          <h2>Filter &amp; Jarak</h2>
+          <h2>Filter &amp; Jarak Radar</h2>
           <button class="modal-close" type="button" @click="showFilterModal = false">✕</button>
         </div>
         <div class="modal-body-grid">
           <label>
             Radius Pencarian
             <select v-model="radiusKm" @change="loadNearby">
-              <option :value="5">5 km</option>
-              <option :value="10">10 km</option>
-              <option :value="15">15 km</option>
-              <option :value="25">25 km</option>
-              <option :value="50">50 km</option>
+              <option :value="5">5 km (Sangat Dekat)</option>
+              <option :value="10">10 km (Kota / Sekitar)</option>
+              <option :value="15">15 km (Standar Gowes)</option>
+              <option :value="25">25 km (Long Ride)</option>
+              <option :value="50">50 km (Epic Tour)</option>
             </select>
           </label>
           <label>
             Tingkat Kesulitan
             <select v-model="difficulty" @change="loadNearby">
               <option value="all">Semua Tingkat</option>
-              <option v-for="d in ROUTE_DIFFICULTIES" :key="d" :value="d">{{ d }}</option>
+              <option v-for="d in ROUTE_DIFFICULTIES" :key="d" :value="d">{{ d.toUpperCase() }}</option>
             </select>
           </label>
           <label>
             Tipe Sepeda
             <select v-model="bikeType" @change="loadNearby">
-              <option value="all">Semua Sepeda</option>
-              <option value="mtb_hardtail">MTB</option>
-              <option value="gravel">Gravel</option>
-              <option value="road">Road</option>
-              <option value="folding">Lipat</option>
+              <option value="all">Semua Tipe Sepeda</option>
+              <option value="mtb_hardtail">MTB Hardtail</option>
+              <option value="gravel">Gravel Bike</option>
+              <option value="road">Road Bike</option>
+              <option value="folding">Sepeda Lipat</option>
             </select>
           </label>
         </div>
@@ -1017,7 +1359,7 @@ onBeforeUnmount(() => {
     >
       <div class="native-modal-sheet native-modal-sheet--large">
         <div class="modal-header">
-          <h2>Kontribusi Komunitas</h2>
+          <h2>Kontribusi &amp; Ulasan Komunitas</h2>
           <button class="modal-close" type="button" @click="showContributionsModal = false">✕</button>
         </div>
         <div class="modal-scroll-body">
@@ -1072,7 +1414,7 @@ onBeforeUnmount(() => {
   top: 1.25rem;
   left: 1.25rem;
   bottom: 1.25rem;
-  width: 25rem;
+  width: 26rem;
   max-width: calc(100vw - 2.5rem);
   background: rgb(255 255 255 / 96%);
   backdrop-filter: blur(24px);
@@ -1113,24 +1455,6 @@ onBeforeUnmount(() => {
   display: flex;
   align-items: center;
   justify-content: space-between;
-}
-
-.panel-brand-link {
-  display: inline-flex;
-  align-items: center;
-  gap: 0.45rem;
-  text-decoration: none;
-  color: var(--color-ink);
-}
-
-.panel-brand-icon {
-  font-size: 1.25rem;
-}
-
-.panel-brand-text {
-  font-size: 0.95rem;
-  font-weight: 700;
-  letter-spacing: -0.02em;
 }
 
 .sidebar-toggle-btn {
@@ -1250,7 +1574,7 @@ onBeforeUnmount(() => {
 
 .desktop-selected-card {
   display: grid;
-  gap: 0.65rem;
+  gap: 0.75rem;
 }
 
 .desktop-feed-wrapper {
@@ -1268,9 +1592,16 @@ onBeforeUnmount(() => {
   padding: 0 0.2rem;
 }
 
+.active-radar-pill {
+  font-family: var(--font-mono);
+  font-size: 0.65rem;
+  font-weight: 850;
+  color: #16a34a;
+}
+
 .desktop-feed-list {
   display: grid;
-  gap: 0.45rem;
+  gap: 0.5rem;
 }
 
 .empty-feed-hint {
@@ -1278,6 +1609,423 @@ onBeforeUnmount(() => {
   font-size: 0.8rem;
   color: var(--color-asphalt);
   padding: 2rem 1rem;
+}
+
+/* ═════════════════════════════════════════════════════════════
+   METRICS & ROUTE DETAILS
+   ═════════════════════════════════════════════════════════════ */
+.route-metrics-grid {
+  display: grid;
+  grid-template-columns: repeat(4, 1fr);
+  gap: 0.4rem;
+}
+
+.metric-pill {
+  background: rgb(237 228 210 / 45%);
+  border: 1px solid rgb(23 32 42 / 08%);
+  padding: 0.4rem 0.35rem;
+  border-radius: 0.55rem;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  text-align: center;
+}
+
+.metric-label {
+  font-size: 0.58rem;
+  font-weight: 800;
+  text-transform: uppercase;
+  color: var(--color-asphalt);
+}
+
+.metric-val {
+  font-family: var(--font-mono);
+  font-size: 0.76rem;
+  font-weight: 900;
+  color: var(--color-ink);
+}
+
+.route-spark-box {
+  display: grid;
+  gap: 0.25rem;
+  padding: 0.55rem 0.65rem;
+  border-radius: 0.75rem;
+  background: rgb(237 228 210 / 30%);
+  border: 1px solid var(--color-sand);
+  cursor: crosshair;
+}
+
+.spark-labels {
+  display: flex;
+  justify-content: space-between;
+  font-size: 0.68rem;
+  font-weight: 850;
+  color: var(--color-ink);
+}
+
+.spark-gradient {
+  font-family: var(--font-mono);
+  color: #0284c7;
+  font-weight: 850;
+}
+
+.spark-hover-indicator {
+  font-family: var(--font-mono);
+  color: #16a34a;
+  font-weight: 900;
+}
+
+.spark-hint-text {
+  font-size: 0.58rem;
+  color: var(--color-asphalt);
+  opacity: 0.75;
+  text-align: center;
+}
+
+.dismiss-circle-btn {
+  display: grid;
+  place-content: center;
+  width: 1.85rem;
+  height: 1.85rem;
+  border-radius: 50%;
+  background: var(--color-sand);
+  border: 1px solid rgb(23 32 42 / 12%);
+  color: var(--color-ink);
+  font-size: 0.85rem;
+  font-weight: 850;
+  cursor: pointer;
+  transition: transform 90ms ease, background 120ms ease;
+  flex-shrink: 0;
+}
+
+.dismiss-circle-btn:active {
+  transform: scale(0.92);
+}
+
+.card-headline-row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 0.5rem;
+  width: 100%;
+}
+
+.card-title-group {
+  display: grid;
+  gap: 0.25rem;
+}
+
+.pill-badge-stack {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.35rem;
+  align-items: center;
+  flex: 1;
+  min-width: 0;
+}
+
+.type-pill {
+  padding: 0.15rem 0.45rem;
+  border-radius: 0.4rem;
+  background: var(--color-chain-lime);
+  color: var(--color-ink);
+  font-family: var(--font-mono);
+  font-size: 0.62rem;
+  font-weight: 900;
+  text-transform: uppercase;
+}
+
+.type-pill--workshop { background: #c9f36a; color: #17202a; }
+.type-pill--store { background: #8eddf4; color: #17202a; }
+.type-pill--coffee { background: #fde68a; color: #92400e; }
+.type-pill--water { background: #a5f3fc; color: #155e75; }
+.type-pill--trailhead { background: #a7f3d0; color: #065f46; }
+.type-pill--bike_park { background: #fecdd3; color: #9f1239; }
+.type-pill--meeting_point { background: #ddd6fe; color: #5b21b6; }
+.type-pill--rest { background: #ede4d2; color: #17202a; }
+
+.type-pill--road { background: #bae6fd; color: #0369a1; }
+.type-pill--gravel { background: #fed7aa; color: #9a3412; }
+.type-pill--mtb { background: #bbf7d0; color: #166534; }
+
+.dist-pill {
+  padding: 0.15rem 0.45rem;
+  border-radius: 0.4rem;
+  background: rgb(237 228 210 / 70%);
+  font-family: var(--font-mono);
+  font-size: 0.62rem;
+  font-weight: 850;
+  color: var(--color-ink);
+}
+
+.verified-pill {
+  padding: 0.15rem 0.45rem;
+  border-radius: 0.4rem;
+  background: #dcfce7;
+  color: #166534;
+  font-size: 0.62rem;
+  font-weight: 850;
+}
+
+.beginner-pill {
+  padding: 0.15rem 0.45rem;
+  border-radius: 0.4rem;
+  background: #f0fdf4;
+  color: #15803d;
+  font-size: 0.62rem;
+  font-weight: 850;
+  border: 1px solid #bbf7d0;
+}
+
+.card-item-title {
+  margin: 0;
+  font-size: 1.25rem;
+  font-weight: 850;
+  letter-spacing: -0.02em;
+  color: var(--color-ink);
+}
+
+.card-item-desc {
+  margin: 0;
+  font-size: 0.8rem;
+  color: var(--color-asphalt);
+  line-height: 1.4;
+}
+
+/* Spot & Cycling Specs Card */
+.spot-specs-card {
+  background: rgb(237 228 210 / 35%);
+  border: 1px solid rgb(23 32 42 / 09%);
+  border-radius: 0.85rem;
+  padding: 0.65rem 0.75rem;
+  display: grid;
+  gap: 0.55rem;
+}
+
+.spec-row {
+  display: grid;
+  gap: 0.3rem;
+}
+
+.spec-label {
+  font-size: 0.64rem;
+  font-weight: 850;
+  text-transform: uppercase;
+  color: var(--color-asphalt);
+  letter-spacing: -0.01em;
+}
+
+.spec-chips {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.3rem;
+}
+
+.bike-spec-chip {
+  font-size: 0.68rem;
+  font-weight: 850;
+  background: var(--color-white);
+  border: 1px solid rgb(23 32 42 / 12%);
+  padding: 0.15rem 0.45rem;
+  border-radius: 0.4rem;
+  color: var(--color-ink);
+}
+
+.amenities-wrap {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.35rem;
+}
+
+.amenity-badge {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.25rem;
+  font-size: 0.68rem;
+  font-weight: 800;
+  background: var(--color-white);
+  border: 1px solid rgb(23 32 42 / 10%);
+  padding: 0.2rem 0.45rem;
+  border-radius: 0.45rem;
+  color: var(--color-ink);
+}
+
+/* ═════════════════════════════════════════════════════════════
+   DETAIL ACTION HUB (2-Tier Ergonomic Layout)
+   ═════════════════════════════════════════════════════════════ */
+.detail-action-hub {
+  display: grid;
+  gap: 0.5rem;
+  margin-top: 0.35rem;
+}
+
+.primary-ride-cta {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.6rem;
+  width: 100%;
+  padding: 0.72rem 1rem;
+  border-radius: 0.85rem;
+  background: var(--color-chain-lime);
+  color: var(--color-ink);
+  font-weight: 900;
+  font-size: 0.85rem;
+  text-decoration: none;
+  border: 1.5px solid var(--color-ink);
+  box-shadow: 0 4px 12px rgb(201 243 106 / 45%);
+  transition: transform 90ms ease, box-shadow 120ms ease;
+  user-select: none;
+}
+
+.primary-ride-cta:active {
+  transform: scale(0.97);
+}
+
+.cta-arrow {
+  font-size: 0.9rem;
+  transition: transform 120ms ease;
+}
+
+.primary-ride-cta:hover .cta-arrow {
+  transform: translateX(3px);
+}
+
+.secondary-actions-grid {
+  display: grid;
+  grid-template-columns: repeat(4, 1fr);
+  gap: 0.35rem;
+}
+
+.card-action-pill {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 0.2rem;
+  padding: 0.48rem 0.25rem;
+  border-radius: 0.75rem;
+  background: var(--color-white);
+  border: 1px solid rgb(23 32 42 / 12%);
+  color: var(--color-ink);
+  font-size: 0.65rem;
+  font-weight: 850;
+  text-decoration: none;
+  cursor: pointer;
+  transition: all 120ms ease;
+  user-select: none;
+  text-align: center;
+}
+
+.card-action-pill:active {
+  transform: scale(0.94);
+}
+
+.card-action-pill--active {
+  background: #fef08a;
+  border-color: #eab308;
+  color: #854d0e;
+}
+
+.pill-icon {
+  font-size: 0.9rem;
+  line-height: 1;
+}
+
+/* Feed Cards */
+.feed-card-row {
+  display: flex;
+  align-items: flex-start;
+  gap: 0.65rem;
+  padding: 0.7rem 0.75rem;
+  border-radius: 0.85rem;
+  border: 1px solid var(--color-sand);
+  background: var(--color-white);
+  text-align: left;
+  cursor: pointer;
+  transition: all 120ms ease;
+  width: 100%;
+}
+
+.feed-card-row:hover {
+  border-color: var(--color-ink);
+  box-shadow: 0 4px 12px rgb(0 0 0 / 06%);
+}
+
+.feed-card-icon {
+  width: 2.2rem;
+  height: 2.2rem;
+  border-radius: 0.65rem;
+  display: grid;
+  place-content: center;
+  flex-shrink: 0;
+  border: 1px solid rgb(23 32 42 / 08%);
+}
+
+.feed-card-body {
+  flex: 1;
+  min-width: 0;
+  display: grid;
+  gap: 0.2rem;
+}
+
+.feed-card-top {
+  display: flex;
+  align-items: baseline;
+  justify-content: space-between;
+}
+
+.feed-card-title {
+  font-weight: 850;
+  font-size: 0.88rem;
+  color: var(--color-ink);
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.feed-card-dist {
+  font-family: var(--font-mono);
+  font-size: 0.68rem;
+  font-weight: 900;
+  color: var(--color-asphalt);
+  flex-shrink: 0;
+}
+
+.feed-card-desc {
+  margin: 0;
+  font-size: 0.72rem;
+  color: var(--color-asphalt);
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.feed-card-tags {
+  display: flex;
+  gap: 0.3rem;
+  margin-top: 0.15rem;
+}
+
+.tag-chip {
+  font-size: 0.6rem;
+  font-weight: 800;
+  padding: 0.08rem 0.35rem;
+  border-radius: 0.3rem;
+  background: rgb(237 228 210 / 60%);
+  color: var(--color-ink);
+  text-transform: capitalize;
+}
+
+.tag-chip--highlight {
+  background: #e0f2fe;
+  color: #0369a1;
+  font-family: var(--font-mono);
+}
+
+.tag-chip--beginner {
+  background: #dcfce7;
+  color: #15803d;
 }
 
 /* ═════════════════════════════════════════════════════════════
@@ -1347,6 +2095,12 @@ onBeforeUnmount(() => {
   max-height: calc(88vh - 4.5rem);
 }
 
+.mobile-bottom-sheet--selected {
+  height: auto !important;
+  max-height: calc(85vh - 4.2rem) !important;
+  overflow: hidden;
+}
+
 .mobile-bottom-sheet--dragging {
   transition: none !important;
 }
@@ -1372,159 +2126,8 @@ onBeforeUnmount(() => {
 .sheet-selected-card {
   padding: 0.35rem 1.1rem 0.85rem;
   display: grid;
-  gap: 0.45rem;
+  gap: 0.55rem;
   overflow-y: auto;
-}
-
-.card-headline-row {
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-}
-
-.pill-badge-stack {
-  display: flex;
-  gap: 0.35rem;
-}
-
-.type-pill {
-  padding: 0.15rem 0.45rem;
-  border-radius: 0.4rem;
-  background: var(--color-chain-lime);
-  color: var(--color-ink);
-  font-family: var(--font-mono);
-  font-size: 0.62rem;
-  font-weight: 900;
-  text-transform: uppercase;
-}
-
-.dist-pill {
-  padding: 0.15rem 0.45rem;
-  border-radius: 0.4rem;
-  background: rgb(237 228 210 / 70%);
-  font-family: var(--font-mono);
-  font-size: 0.62rem;
-  font-weight: 850;
-}
-
-.dismiss-btn {
-  border: none;
-  background: none;
-  font-size: 0.78rem;
-  color: var(--color-asphalt);
-  cursor: pointer;
-  padding: 0.2rem;
-  font-weight: 750;
-}
-
-.card-item-title {
-  margin: 0;
-  font-size: 1.15rem;
-  font-weight: 850;
-  letter-spacing: -0.02em;
-  color: var(--color-ink);
-}
-
-.card-item-desc {
-  margin: 0;
-  font-size: 0.76rem;
-  color: var(--color-asphalt);
-  line-height: 1.35;
-}
-
-.route-spark-box {
-  display: grid;
-  gap: 0.2rem;
-  padding: 0.45rem 0.65rem;
-  border-radius: 0.65rem;
-  background: rgb(237 228 210 / 30%);
-  border: 1px solid var(--color-sand);
-}
-
-.spark-labels {
-  display: flex;
-  justify-content: space-between;
-  font-size: 0.68rem;
-  font-weight: 850;
-  color: var(--color-ink);
-}
-
-.spark-gradient {
-  font-family: var(--font-mono);
-  color: #0284c7;
-  font-weight: 850;
-}
-
-.save-toast-chip {
-  margin: 0;
-  padding: 0.25rem 0.5rem;
-  border-radius: 0.5rem;
-  background: #f0fdf4;
-  color: #166534;
-  font-size: 0.72rem;
-  font-weight: 850;
-  text-align: center;
-  border: 1px solid #bbf7d0;
-}
-
-.card-bottom-actions {
-  display: grid;
-  grid-template-columns: 1fr 1fr 1fr;
-  gap: 0.4rem;
-  margin-top: 0.2rem;
-}
-
-.action-btn {
-  display: grid;
-  place-items: center;
-  padding: 0.5rem 0.5rem;
-  border-radius: 0.75rem;
-  font-size: 0.74rem;
-  font-weight: 850;
-  text-decoration: none;
-  cursor: pointer;
-  transition: transform 90ms ease, background 120ms ease;
-  white-space: nowrap;
-}
-
-.action-btn:active {
-  transform: scale(0.96);
-}
-
-.action-btn--primary {
-  background: var(--color-ink);
-  color: var(--color-white);
-  border: none;
-}
-
-.action-btn--bookmark {
-  background: var(--color-sand);
-  color: var(--color-ink);
-  border: 1px solid rgb(23 32 42 / 15%);
-}
-
-.action-btn--saved {
-  background: #fef08a;
-  border-color: #eab308;
-  color: #854d0e;
-}
-
-.action-btn--secondary {
-  background: var(--color-white);
-  color: var(--color-ink);
-  border: 1px solid var(--color-sand);
-}
-
-.action-btn--share {
-  background: var(--color-chain-lime);
-  color: var(--color-ink);
-  border: 1px solid var(--color-ink);
-}
-
-.action-btn--flex {
-  background: #0284c7;
-  color: #ffffff;
-  border: 1px solid #0284c7;
 }
 
 .sheet-feed-container {
@@ -1575,107 +2178,54 @@ onBeforeUnmount(() => {
   -webkit-overflow-scrolling: touch;
 }
 
-.feed-card-row {
-  display: flex;
-  align-items: center;
-  gap: 0.65rem;
-  padding: 0.6rem 0.75rem;
-  border-radius: 0.85rem;
-  border: 1px solid var(--color-sand);
-  background: var(--color-white);
-  text-align: left;
-  cursor: pointer;
-  transition: all 120ms ease;
-  width: 100%;
-}
-
-.feed-card-row:hover {
-  border-color: var(--color-ink);
-}
-
-.feed-card-row:active {
-  transform: scale(0.98);
-  background: rgb(201 243 106 / 15%);
-}
-
-.feed-card-icon {
-  font-size: 1.25rem;
-  width: 1.9rem;
-  height: 1.9rem;
-  display: grid;
-  place-items: center;
+.save-toast-chip {
+  margin: 0;
+  padding: 0.25rem 0.5rem;
   border-radius: 0.5rem;
-  background: var(--color-sand);
-  flex-shrink: 0;
-}
-
-.feed-card-body {
-  flex: 1;
-  min-width: 0;
-}
-
-.feed-card-top {
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-}
-
-.feed-card-title {
-  font-size: 0.84rem;
+  background: #f0fdf4;
+  color: #166534;
+  font-size: 0.72rem;
   font-weight: 850;
-  color: var(--color-ink);
-  white-space: nowrap;
-  overflow: hidden;
-  text-overflow: ellipsis;
+  text-align: center;
+  border: 1px solid #bbf7d0;
 }
 
-.feed-card-dist {
-  font-family: var(--font-mono);
-  font-size: 0.68rem;
-  font-weight: 800;
+.dismiss-btn {
+  border: none;
+  background: none;
+  font-size: 0.78rem;
   color: var(--color-asphalt);
-  margin-left: 0.4rem;
-  flex-shrink: 0;
-}
-
-.feed-card-desc {
-  margin: 0.05rem 0 0;
-  font-size: 0.7rem;
-  color: var(--color-asphalt);
-  white-space: nowrap;
-  overflow: hidden;
-  text-overflow: ellipsis;
+  cursor: pointer;
+  padding: 0.2rem;
+  font-weight: 750;
 }
 
 /* Modals */
 .native-modal-backdrop {
   position: fixed;
   inset: 0;
-  background: rgb(15 23 42 / 60%);
-  backdrop-filter: blur(6px);
-  -webkit-backdrop-filter: blur(6px);
+  background: rgb(0 0 0 / 45%);
+  backdrop-filter: blur(4px);
+  z-index: 60;
   display: grid;
-  place-items: center;
-  z-index: 100;
+  place-content: center;
   padding: 1rem;
 }
 
 .native-modal-sheet {
-  width: 100%;
-  max-width: 28rem;
   background: var(--color-white);
   border-radius: 1.25rem;
-  padding: 1.25rem;
-  box-shadow: 0 12px 40px rgb(0 0 0 / 25%);
+  border: 1.5px solid var(--color-ink);
+  box-shadow: 0 16px 40px rgb(0 0 0 / 25%);
+  width: 22rem;
+  max-width: calc(100vw - 2rem);
+  padding: 1.2rem;
   display: grid;
   gap: 1rem;
 }
 
 .native-modal-sheet--large {
-  max-width: 38rem;
-  max-height: 85vh;
-  display: flex;
-  flex-direction: column;
+  width: 32rem;
 }
 
 .modal-header {
@@ -1686,41 +2236,39 @@ onBeforeUnmount(() => {
 
 .modal-header h2 {
   margin: 0;
-  font-size: 1.1rem;
+  font-size: 1.05rem;
   font-weight: 850;
 }
 
 .modal-close {
   border: none;
-  background: none;
-  font-size: 1rem;
-  color: var(--color-asphalt);
+  background: var(--color-sand);
+  width: 1.8rem;
+  height: 1.8rem;
+  border-radius: 50%;
   cursor: pointer;
+  font-weight: 850;
 }
 
 .modal-body-grid {
   display: grid;
-  gap: 0.75rem;
+  gap: 0.85rem;
 }
 
 .modal-body-grid label {
-  display: grid;
-  gap: 0.25rem;
-  font-size: 0.75rem;
+  display: flex;
+  flex-direction: column;
+  gap: 0.35rem;
+  font-size: 0.8rem;
   font-weight: 800;
-  color: var(--color-asphalt);
 }
 
 .modal-body-grid select {
-  padding: 0.5rem;
+  padding: 0.55rem;
   border-radius: 0.65rem;
-  border: 1px solid var(--color-sand);
-  background: var(--color-white);
+  border: 1px solid rgb(23 32 42 / 20%);
+  background: var(--color-sand);
+  font-weight: 750;
   font-size: 0.82rem;
-}
-
-.modal-scroll-body {
-  overflow-y: auto;
-  max-height: 70vh;
 }
 </style>

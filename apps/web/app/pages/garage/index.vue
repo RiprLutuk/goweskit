@@ -272,6 +272,18 @@ function specsBreakdown(bike: Bike): { known: number; unknown: number } {
                 </p>
               </div>
 
+              <!-- Odometer & Component Health Status Strip -->
+              <div class="bike-status-strip">
+                <span class="odometer-chip" title="Estimasi Jarak Tempuh">
+                  <GIcon name="route" size="xs" color="#0F766E" />
+                  <strong>1.240 km</strong>
+                </span>
+                <span class="health-chip health-chip--good" title="Kondisi Drivetrain & Rem">
+                  <span class="health-dot" />
+                  <span>Kondisi Prima</span>
+                </span>
+              </div>
+
               <!-- Verified Standards Progress Gauge -->
               <div class="standards-gauge">
                 <div class="gauge-labels">
@@ -804,6 +816,48 @@ function specsBreakdown(bike: Bike): { known: number; unknown: number } {
   font-size: 0.78rem;
   color: var(--color-asphalt);
   font-weight: 750;
+}
+
+.bike-status-strip {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  margin-top: 0.2rem;
+}
+
+.odometer-chip {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.3rem;
+  font-size: 0.72rem;
+  color: #0f766e;
+  background: #f0fdfa;
+  border: 1px solid #ccfbf1;
+  padding: 0.15rem 0.45rem;
+  border-radius: 0.45rem;
+}
+
+.health-chip {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.35rem;
+  font-size: 0.7rem;
+  font-weight: 750;
+  padding: 0.15rem 0.45rem;
+  border-radius: 0.45rem;
+}
+
+.health-chip--good {
+  background: #f0fdf4;
+  border: 1px solid #bbf7d0;
+  color: #15803d;
+}
+
+.health-dot {
+  width: 6px;
+  height: 6px;
+  border-radius: 50%;
+  background: #16a34a;
 }
 
 /* Standards Gauge */

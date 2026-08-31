@@ -18,9 +18,14 @@ export const GenerateRideStoryRequestSchema = z.object({
   routeName: z.string().max(120).optional(),
   weatherTempC: z.number().min(-20).max(60).optional(),
   cyclistPersona: z
-    .enum(['balanced', 'athlete', 'humor', 'gearhead'])
+    .enum(['balanced', 'athlete', 'humor', 'gravel', 'gearhead'])
     .optional()
     .default('balanced'),
+  heartRateBpm: z.number().min(30).max(250).optional(),
+  cadenceRpm: z.number().min(10).max(220).optional(),
+  powerWatts: z.number().min(0).max(2500).optional(),
+  photoBase64: z.string().optional(),
+  photoMimeType: z.string().optional(),
 });
 
 export type GenerateRideStoryRequest = z.infer<
@@ -39,7 +44,13 @@ export const GenerateRideStoryResponseSchema = z.object({
     athlete: z.string(),
     humor: z.string(),
     technical: z.string(),
+    gravel: z.string().optional(),
   }),
+  photoVisualInsight: z.string().optional(),
+  recommendedTheme: z
+    .enum(['alpine', 'gravel', 'sunset', 'crit', 'cafe', 'topo'])
+    .optional(),
+  trainingInsight: z.string().optional(),
   mechanicTip: z.string(),
   suggestedHashtags: z.array(z.string()),
   generatedAt: z.string(),

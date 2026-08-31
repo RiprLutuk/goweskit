@@ -105,6 +105,7 @@ export interface SafetyRepository {
     sessionId: string,
     location: SafetyLocation,
   ): Promise<StoredSafetySession>;
+  listSessionLocations(sessionId: string): Promise<SafetyLocation[]>;
   findSessionsExpiringBefore(now: Date): Promise<StoredSafetySession[]>;
 
   appendAudit(entry: SafetyAuditEntry): Promise<void>;

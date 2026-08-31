@@ -3,6 +3,7 @@ import { and, eq, gt } from 'drizzle-orm';
 
 import type { Database } from '../db/client.js';
 import { sessions, users } from '../db/schema.js';
+import { decryptText, encryptText } from '../crypto/encryption.js';
 
 export interface StoredUser extends User {
   googleSubject: string | null;
@@ -36,7 +37,7 @@ export interface AuthRepository {
 function toStoredUser(row: typeof users.$inferSelect): StoredUser {
   return {
     id: row.id,
-    displayName: row.displayName,
+    displayName: decryptText(row.displayName),
     email: row.email,
     googleSubject: row.googleSubject,
     passwordHash: row.passwordHash,
@@ -60,7 +61,10 @@ export class DrizzleAuthRepository implements AuthRepository {
     try {
       const [created] = await this.database
         .insert(users)
-        .values(input)
+        .values({
+          ...input,
+          displayName: encryptText(input.displayName),
+        })
         .returning();
       return created === undefined ? null : toStoredUser(created);
     } catch (error: unknown) {
@@ -99,7 +103,11 @@ export class DrizzleAuthRepository implements AuthRepository {
     try {
       const [created] = await this.database
         .insert(users)
-        .values({ ...input, passwordHash: null })
+        .values({
+          ...input,
+          displayName: encryptText(input.displayName),
+          passwordHash: null,
+        })
         .returning();
       return created === undefined ? null : toStoredUser(created);
     } catch (error: unknown) {
@@ -137,7 +145,7 @@ export class DrizzleAuthRepository implements AuthRepository {
 
     return {
       id: row.user.id,
-      displayName: row.user.displayName,
+      displayName: decryptText(row.user.displayName),
       email: row.user.email,
       createdAt: row.user.createdAt.toISOString(),
     };
