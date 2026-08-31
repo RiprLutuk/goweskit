@@ -7,11 +7,18 @@
   --color-coral: #ff8c75;
   --color-sand: #ede4d2;
   --color-white: #ffffff;
-  --font-ui: 'Outfit', 'Plus Jakarta Sans', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
-  --font-heading: 'Outfit', 'Space Grotesk', -apple-system, BlinkMacSystemFont, sans-serif;
-  --font-body: 'Plus Jakarta Sans', 'Outfit', -apple-system, BlinkMacSystemFont, sans-serif;
-  --font-display: 'Space Grotesk', 'Outfit', -apple-system, BlinkMacSystemFont, sans-serif;
-  --font-mono: 'JetBrains Mono', 'Space Grotesk', ui-monospace, SFMono-Regular, Menlo, Monaco, monospace;
+  --font-ui:
+    'Outfit', 'Plus Jakarta Sans', -apple-system, BlinkMacSystemFont,
+    'Segoe UI', Roboto, sans-serif;
+  --font-heading:
+    'Outfit', 'Space Grotesk', -apple-system, BlinkMacSystemFont, sans-serif;
+  --font-body:
+    'Plus Jakarta Sans', 'Outfit', -apple-system, BlinkMacSystemFont, sans-serif;
+  --font-display:
+    'Space Grotesk', 'Outfit', -apple-system, BlinkMacSystemFont, sans-serif;
+  --font-mono:
+    'JetBrains Mono', 'Space Grotesk', ui-monospace, SFMono-Regular, Menlo,
+    Monaco, monospace;
   --radius-card: 20px;
   --shadow-card: 0 8px 28px rgb(23 32 42 / 7%);
   --safe-top: env(safe-area-inset-top, 0px);
@@ -41,17 +48,31 @@ html {
   -moz-osx-font-smoothing: grayscale;
 }
 
-h1, h2, h3, h4, h5, h6 {
+h1,
+h2,
+h3,
+h4,
+h5,
+h6 {
   font-family: var(--font-heading);
   letter-spacing: -0.025em;
   color: var(--color-ink);
 }
 
-p, li, dd, input, textarea, select {
+p,
+li,
+dd,
+input,
+textarea,
+select {
   font-family: var(--font-body);
 }
 
-code, kbd, samp, pre, .technical-label {
+code,
+kbd,
+samp,
+pre,
+.technical-label {
   font-family: var(--font-mono);
 }
 
@@ -77,7 +98,12 @@ a {
   color: inherit;
 }
 
-button, a, input, select, textarea, [role="button"] {
+button,
+a,
+input,
+select,
+textarea,
+[role='button'] {
   touch-action: manipulation;
 }
 
@@ -317,7 +343,11 @@ button, a, input, select, textarea, [role="button"] {
   text-decoration: none;
   cursor: pointer;
   user-select: none;
-  transition: transform 90ms cubic-bezier(0.2, 0.8, 0.4, 1), background-color 120ms ease, border-color 120ms ease, opacity 120ms ease;
+  transition:
+    transform 90ms cubic-bezier(0.2, 0.8, 0.4, 1),
+    background-color 120ms ease,
+    border-color 120ms ease,
+    opacity 120ms ease;
 }
 
 .button:active:not(:disabled) {
@@ -1450,7 +1480,9 @@ button, a, input, select, textarea, [role="button"] {
   border: none !important;
   cursor: pointer !important;
   box-shadow: 0 4px 14px rgb(23 32 42 / 18%) !important;
-  transition: transform 90ms ease, background-color 120ms ease !important;
+  transition:
+    transform 90ms ease,
+    background-color 120ms ease !important;
 }
 
 .goweskit-btn-confirm:active {
@@ -1466,7 +1498,9 @@ button, a, input, select, textarea, [role="button"] {
   font-size: 0.88rem !important;
   border: none !important;
   cursor: pointer !important;
-  transition: transform 90ms ease, background-color 120ms ease !important;
+  transition:
+    transform 90ms ease,
+    background-color 120ms ease !important;
 }
 
 .goweskit-btn-cancel:active {
@@ -1527,7 +1561,9 @@ button, a, input, select, textarea, [role="button"] {
   font-size: 0.9rem;
   font-family: inherit;
   outline: none;
-  transition: border-color 120ms ease, box-shadow 120ms ease;
+  transition:
+    border-color 120ms ease,
+    box-shadow 120ms ease;
 }
 
 .input-control:focus {

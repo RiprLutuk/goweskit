@@ -34,6 +34,22 @@ function buildGarageApp() {
             photoUrl: input.photoUrl ?? null,
             avatarPreset: input.avatarPreset ?? null,
           }),
+        getPublicPassport: (id: string) =>
+          Promise.resolve({
+            id,
+            nickname: 'Siskiu T7 Beast',
+            bicycleType: 'Mountain Bike',
+            brand: 'Polygon',
+            model: 'Siskiu T7',
+            modelYear: 2024,
+            photoUrl: null,
+            avatarPreset: 'enduro_slate',
+            notes: null,
+            specs: [],
+            registeredAt: '2026-08-01T00:00:00.000Z',
+            ownershipStatus: 'verified_owner' as const,
+            passportUid: 'GWK-100000',
+          }),
       } as unknown as AppServices['garage'],
       installedComponents: {} as AppServices['installedComponents'],
       maintenance: {} as AppServices['maintenance'],
@@ -47,7 +63,7 @@ afterEach(async () => {
   await Promise.all(openApps.splice(0).map(async (app) => app.close()));
 });
 
-describe('Garage photo route', () => {
+describe('Garage routes', () => {
   it('updates a validated bike photo and avatar key', async () => {
     const response = await buildGarageApp().inject({
       method: 'PUT',
@@ -64,6 +80,23 @@ describe('Garage photo route', () => {
         id: bikeId,
         photoUrl: 'https://cdn.example.com/bikes/demo.webp',
         avatarPreset: 'hardtail_lime',
+      },
+    });
+  });
+
+  it('retrieves public bike passport without requiring authentication', async () => {
+    const response = await buildGarageApp().inject({
+      method: 'GET',
+      url: `/api/v1/bikes/${bikeId}/public-passport`,
+    });
+
+    expect(response.statusCode).toBe(200);
+    expect(response.json()).toMatchObject({
+      bike: {
+        id: bikeId,
+        nickname: 'Siskiu T7 Beast',
+        passportUid: 'GWK-100000',
+        ownershipStatus: 'verified_owner',
       },
     });
   });

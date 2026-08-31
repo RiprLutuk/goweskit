@@ -19,7 +19,8 @@ describe('AES-256-GCM Field-Level Encryption', () => {
   });
 
   it('handles unicode, emojis, and multiline text', () => {
-    const complex = 'Nama: Pak Budi 🚲 | Catatan: "Hati-hati tanjakan Sentul! #gowes"';
+    const complex =
+      'Nama: Pak Budi 🚲 | Catatan: "Hati-hati tanjakan Sentul! #gowes"';
     const encrypted = encryptText(complex);
     expect(decryptText(encrypted)).toBe(complex);
   });

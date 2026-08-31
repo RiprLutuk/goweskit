@@ -34,16 +34,39 @@ const presentation = computed(() =>
     : COMPATIBILITY_STATUS_PRESENTATION[result.value.status],
 );
 
-const REQUIRED_TOOLS: Record<string, Array<{ name: string; icon: string; desc: string }>> = {
+const REQUIRED_TOOLS: Record<
+  string,
+  Array<{ name: string; icon: string; desc: string }>
+> = {
   bottom_bracket: [
-    { name: 'Kunci BB Hollowtech / T47', icon: '🔧', desc: 'Sesuai tipe mangkok BB frame' },
-    { name: 'Grease Anti-Seize', icon: '🧴', desc: 'Mencegah creaking pada drat' },
-    { name: 'Kunci Torsi (35-50 Nm)', icon: '⚙️', desc: 'Memastikan kekencangan standar pabrik' },
+    {
+      name: 'Kunci BB Hollowtech / T47',
+      icon: '🔧',
+      desc: 'Sesuai tipe mangkok BB frame',
+    },
+    {
+      name: 'Grease Anti-Seize',
+      icon: '🧴',
+      desc: 'Mencegah creaking pada drat',
+    },
+    {
+      name: 'Kunci Torsi (35-50 Nm)',
+      icon: '⚙️',
+      desc: 'Memastikan kekencangan standar pabrik',
+    },
   ],
   brake_mount: [
     { name: 'Kunci Torx T25', icon: '🔧', desc: 'Baut rotor cakram 6-bolt' },
-    { name: 'Kunci Hex 4/5mm', icon: '⚙️', desc: 'Baut kaliper Post / Flat Mount' },
-    { name: 'Rotor Alignment Tool', icon: '📏', desc: 'Menghindari gesekan pad rem' },
+    {
+      name: 'Kunci Hex 4/5mm',
+      icon: '⚙️',
+      desc: 'Baut kaliper Post / Flat Mount',
+    },
+    {
+      name: 'Rotor Alignment Tool',
+      icon: '📏',
+      desc: 'Menghindari gesekan pad rem',
+    },
   ],
   rear_axle: [
     { name: 'Kunci Hex 5/6mm', icon: '🔧', desc: 'Thru-Axle leverless' },
@@ -54,29 +77,210 @@ const REQUIRED_TOOLS: Record<string, Array<{ name: string; icon: string; desc: s
     { name: 'Thru-Axle Thread Lube', icon: '🧴', desc: 'Pelumas ulir as roda' },
   ],
   seatpost_diameter: [
-    { name: 'Torque Wrench (4-5 Nm)', icon: '⚙️', desc: 'Wajib untuk seatpost/frame karbon' },
-    { name: 'Carbon Grip Paste', icon: '🧴', desc: 'Mencegah seatpost merosot tanpa over-torque' },
+    {
+      name: 'Torque Wrench (4-5 Nm)',
+      icon: '⚙️',
+      desc: 'Wajib untuk seatpost/frame karbon',
+    },
+    {
+      name: 'Carbon Grip Paste',
+      icon: '🧴',
+      desc: 'Mencegah seatpost merosot tanpa over-torque',
+    },
   ],
   headset: [
-    { name: 'Kunci Hex 4/5mm', icon: '🔧', desc: 'Top cap preload & stem clamp' },
-    { name: 'Headset Bearing Grease', icon: '🧴', desc: 'Melindungi bearing dari keringat/air' },
+    {
+      name: 'Kunci Hex 4/5mm',
+      icon: '🔧',
+      desc: 'Top cap preload & stem clamp',
+    },
+    {
+      name: 'Headset Bearing Grease',
+      icon: '🧴',
+      desc: 'Melindungi bearing dari keringat/air',
+    },
   ],
   cassette_freehub: [
     { name: 'Chain Whip', icon: '⛓️', desc: 'Menahan sproket saat dibuka' },
-    { name: 'Cassette Lockring Tool', icon: '🔧', desc: 'Sesuai standar Shimano/SRAM' },
-    { name: 'Kunci Pas 24mm / Kunci Torsi', icon: '⚙️', desc: 'Torsi pengencangan 40 Nm' },
+    {
+      name: 'Cassette Lockring Tool',
+      icon: '🔧',
+      desc: 'Sesuai standar Shimano/SRAM',
+    },
+    {
+      name: 'Kunci Pas 24mm / Kunci Torsi',
+      icon: '⚙️',
+      desc: 'Torsi pengencangan 40 Nm',
+    },
   ],
   wheel_size: [
-    { name: 'Tire Lever (Pencungkil Ban)', icon: '🪛', desc: 'Pemasangan ban luar' },
-    { name: 'Pompa Lantai dengan Gauge', icon: '💨', desc: 'Menyesuaikan tekanan PSI standar' },
+    {
+      name: 'Tire Lever (Pencungkil Ban)',
+      icon: '🪛',
+      desc: 'Pemasangan ban luar',
+    },
+    {
+      name: 'Pompa Lantai dengan Gauge',
+      icon: '💨',
+      desc: 'Menyesuaikan tekanan PSI standar',
+    },
   ],
 };
 
 function getRequiredTools(ruleCode: string) {
-  return REQUIRED_TOOLS[ruleCode] || [
-    { name: 'Set Kunci Hex (4, 5, 6mm)', icon: '🔧', desc: 'Kunci standar perakitan sepeda' },
-    { name: 'Kunci Torsi', icon: '⚙️', desc: 'Menjaga keamanan torsi baut' },
+  return (
+    REQUIRED_TOOLS[ruleCode] || [
+      {
+        name: 'Set Kunci Hex (4, 5, 6mm)',
+        icon: '🔧',
+        desc: 'Kunci standar perakitan sepeda',
+      },
+      { name: 'Kunci Torsi', icon: '⚙️', desc: 'Menjaga keamanan torsi baut' },
+    ]
+  );
+}
+
+interface ShoppingItem {
+  id: string;
+  name: string;
+  category: 'part' | 'consumable' | 'labor';
+  checked: boolean;
+  estPrice: string;
+}
+
+const BUDGET_TIERS: Record<
+  string,
+  { economic: string; enthusiast: string; pro: string; labor: string }
+> = {
+  bottom_bracket: {
+    economic: 'Rp 180.000 - 350.000',
+    enthusiast: 'Rp 650.000 - 1.200.000',
+    pro: 'Rp 1.800.000 - 3.500.000',
+    labor: 'Rp 50.000 - 80.000',
+  },
+  wheel_size: {
+    economic: 'Rp 800.000 - 1.800.000',
+    enthusiast: 'Rp 2.800.000 - 6.500.000',
+    pro: 'Rp 12.000.000 - 28.000.000',
+    labor: 'Rp 75.000 - 150.000',
+  },
+  brake_mount: {
+    economic: 'Rp 350.000 - 750.000',
+    enthusiast: 'Rp 1.500.000 - 3.200.000',
+    pro: 'Rp 4.500.000 - 9.000.000',
+    labor: 'Rp 60.000 - 120.000',
+  },
+  rear_axle: {
+    economic: 'Rp 120.000 - 250.000',
+    enthusiast: 'Rp 350.000 - 700.000',
+    pro: 'Rp 900.000 - 1.800.000',
+    labor: 'Rp 30.000 - 50.000',
+  },
+  front_axle: {
+    economic: 'Rp 120.000 - 250.000',
+    enthusiast: 'Rp 350.000 - 700.000',
+    pro: 'Rp 900.000 - 1.800.000',
+    labor: 'Rp 30.000 - 50.000',
+  },
+  seatpost_diameter: {
+    economic: 'Rp 150.000 - 350.000',
+    enthusiast: 'Rp 650.000 - 1.800.000',
+    pro: 'Rp 2.500.000 - 6.000.000',
+    labor: 'Rp 40.000 - 80.000',
+  },
+  headset: {
+    economic: 'Rp 150.000 - 300.000',
+    enthusiast: 'Rp 450.000 - 900.000',
+    pro: 'Rp 1.500.000 - 2.800.000',
+    labor: 'Rp 50.000 - 100.000',
+  },
+  cassette_freehub: {
+    economic: 'Rp 250.000 - 600.000',
+    enthusiast: 'Rp 900.000 - 2.200.000',
+    pro: 'Rp 3.500.000 - 8.500.000',
+    labor: 'Rp 50.000 - 80.000',
+  },
+};
+
+const selectedBudgetTier = ref<'economic' | 'enthusiast' | 'pro'>('enthusiast');
+const shoppingItems = ref<ShoppingItem[]>([]);
+
+function generateShoppingList() {
+  const code = selectedRuleCode.value;
+  const val = candidateValue.value;
+  const tiers = BUDGET_TIERS[code] || BUDGET_TIERS.bottom_bracket!;
+  const tierPrice =
+    selectedBudgetTier.value === 'economic'
+      ? tiers.economic
+      : selectedBudgetTier.value === 'pro'
+        ? tiers.pro
+        : tiers.enthusiast;
+
+  shoppingItems.value = [
+    {
+      id: '1',
+      name: `Unit Part: ${activeRule.value?.label || 'Komponen'} (${val || 'Standar Baru'})`,
+      category: 'part',
+      checked: false,
+      estPrice: tierPrice,
+    },
+    {
+      id: '2',
+      name: 'Spacer / Adaptor / Ring Penyesuai Presisi',
+      category: 'part',
+      checked: false,
+      estPrice: 'Rp 35.000 - 90.000',
+    },
+    {
+      id: '3',
+      name: 'Grease / Pelumas Khusus Anti-Seize / Threadlocker',
+      category: 'consumable',
+      checked: false,
+      estPrice: 'Rp 45.000 - 85.000',
+    },
+    {
+      id: '4',
+      name: 'Estimasi Jasa Pasang Bengkel & Uji Jalan',
+      category: 'labor',
+      checked: false,
+      estPrice: tiers.labor,
+    },
   ];
+}
+
+watch(
+  [selectedRuleCode, candidateValue, selectedBudgetTier],
+  () => {
+    generateShoppingList();
+  },
+  { immediate: true },
+);
+
+function toggleShoppingItem(item: ShoppingItem) {
+  item.checked = !item.checked;
+}
+
+async function copyShoppingList() {
+  const currentBike = bikes.value.find((b) => b.id === selectedBikeId.value);
+  const text = `🛒 DAFTAR BELANJA UPGRADE SEPEDA — GOWESKIT
+🚲 Sepeda: ${currentBike ? currentBike.nickname : 'Sepeda Saya'}
+🎯 Uji Part: ${activeRule.value?.label || selectedRuleCode.value} (${candidateValue.value})
+💰 Tier Budget: ${selectedBudgetTier.value.toUpperCase()}
+
+Checklist Belanja:
+${shoppingItems.value.map((i) => `${i.checked ? '✅' : '⬜'} ${i.name} [${i.estPrice}]`).join('\n')}
+
+💡 Rekomendasi: Pastikan ukuran standar sesuai sebelum transaksi di toko/bengkel.`;
+
+  try {
+    await navigator.clipboard.writeText(text);
+    toast.success(
+      'Daftar Belanja Disalin!',
+      'Siap dikirim ke WhatsApp toko sepeda atau catatan belanja Anda.',
+    );
+  } catch {
+    toast.info('Gagal menyalin otomatis', 'Silakan salin manual.');
+  }
 }
 
 watch(activeRule, (rule) => {
@@ -130,7 +334,11 @@ async function quickDemoLogin(): Promise<void> {
   }
 }
 
-function applyPreset(rule: CompatibilityRuleCode, value: string, knowledge: 'known' | 'unknown' = 'known'): void {
+function applyPreset(
+  rule: CompatibilityRuleCode,
+  value: string,
+  knowledge: 'known' | 'unknown' = 'known',
+): void {
   selectedRuleCode.value = rule;
   candidateKnowledge.value = knowledge;
   candidateValue.value = value;
@@ -176,7 +384,9 @@ async function shareUpgradeResult(): Promise<void> {
   if (!result.value) return;
   const currentBike = bikes.value.find((b) => b.id === selectedBikeId.value);
   const bikeName = currentBike ? currentBike.nickname : 'Sepeda';
-  const statusLabel = presentation.value ? presentation.value.label : result.value.status;
+  const statusLabel = presentation.value
+    ? presentation.value.label
+    : result.value.status;
 
   const text = `⚡ HASIL UJI KOMPATIBILITAS GOWESKIT
 ━━━━━━━━━━━━━━━━━━━━
@@ -206,7 +416,10 @@ ${window.location.origin}/upgrade-lab
 
   try {
     await navigator.clipboard.writeText(text);
-    toast.success('Hasil Uji Disalin!', 'Siap ditempel ke WhatsApp atau forum sepeda.');
+    toast.success(
+      'Hasil Uji Disalin!',
+      'Siap ditempel ke WhatsApp atau forum sepeda.',
+    );
   } catch {
     toast.info('Gagal menyalin otomatis', 'Silakan salin manual.');
   }
@@ -223,15 +436,25 @@ ${window.location.origin}/upgrade-lab
       </div>
       <h1 class="native-title">Upgrade Lab</h1>
       <p class="native-sub">
-        Uji kecocokan komponen baru pada sepeda Anda berdasarkan standar dimensi teknis nyata, bukan tebak-tebakan merek.
+        Uji kecocokan komponen baru pada sepeda Anda berdasarkan standar dimensi
+        teknis nyata, bukan tebak-tebakan merek.
       </p>
     </header>
 
     <!-- Skeleton Lab Shimmer during Loading -->
-    <div v-if="loading" style="display: grid; gap: 1rem;">
-      <div class="skeleton-shimmer" style="width: 100%; height: 3.5rem; border-radius: 0.85rem;" />
-      <div class="skeleton-shimmer" style="width: 100%; height: 8rem; border-radius: 1.15rem;" />
-      <div class="skeleton-shimmer" style="width: 100%; height: 14rem; border-radius: 1.15rem;" />
+    <div v-if="loading" style="display: grid; gap: 1rem">
+      <div
+        class="skeleton-shimmer"
+        style="width: 100%; height: 3.5rem; border-radius: 0.85rem"
+      />
+      <div
+        class="skeleton-shimmer"
+        style="width: 100%; height: 8rem; border-radius: 1.15rem"
+      />
+      <div
+        class="skeleton-shimmer"
+        style="width: 100%; height: 14rem; border-radius: 1.15rem"
+      />
     </div>
 
     <!-- Signed-out state -->
@@ -240,10 +463,17 @@ ${window.location.origin}/upgrade-lab
         <GIcon name="upgrade" size="xl" color="#17202A" filled />
       </div>
       <h2>Uji Kompatibilitas Komponen</h2>
-      <p>Masuk ke akun GowesKit Anda untuk memilih sepeda dari garasi dan menguji suku cadang baru.</p>
+      <p>
+        Masuk ke akun GowesKit Anda untuk memilih sepeda dari garasi dan menguji
+        suku cadang baru.
+      </p>
       <div class="guest-actions">
-        <NuxtLink class="button button--primary button--full" to="/login">Masuk ke Akun</NuxtLink>
-        <NuxtLink class="button button--secondary button--full" to="/register">Daftar Akun Baru</NuxtLink>
+        <NuxtLink class="button button--primary button--full" to="/login"
+          >Masuk ke Akun</NuxtLink
+        >
+        <NuxtLink class="button button--secondary button--full" to="/register"
+          >Daftar Akun Baru</NuxtLink
+        >
         <button
           class="button button--sand button--full"
           type="button"
@@ -251,7 +481,9 @@ ${window.location.origin}/upgrade-lab
           @click="quickDemoLogin"
         >
           <GIcon name="bolt" size="xs" color="#D97706" filled />
-          <span>{{ demoLoggingIn ? 'Memuat Demo…' : 'Buka Contoh Lab Demo (1-Klik)' }}</span>
+          <span>{{
+            demoLoggingIn ? 'Memuat Demo…' : 'Buka Contoh Lab Demo (1-Klik)'
+          }}</span>
         </button>
       </div>
     </div>
@@ -261,7 +493,10 @@ ${window.location.origin}/upgrade-lab
         <GIcon name="bike" size="xl" color="#17202A" />
       </div>
       <h2>Daftarkan Sepeda Terlebih Dahulu</h2>
-      <p>Anda memerlukan minimal 1 sepeda terdaftar di garasi untuk menguji suku cadang.</p>
+      <p>
+        Anda memerlukan minimal 1 sepeda terdaftar di garasi untuk menguji suku
+        cadang.
+      </p>
       <NuxtLink class="button button--primary" to="/garage/new">
         <GIcon name="plus" size="xs" />
         <span>Tambah Sepeda ke Garasi</span>
@@ -365,11 +600,18 @@ ${window.location.origin}/upgrade-lab
               </button>
             </div>
 
-            <div v-if="candidateKnowledge === 'known' && activeRule" class="candidate-val-picker">
+            <div
+              v-if="candidateKnowledge === 'known' && activeRule"
+              class="candidate-val-picker"
+            >
               <label>
                 <span class="field-label">Nilai / Ukuran Standar Kandidat</span>
                 <select v-model="candidateValue" class="native-select">
-                  <option v-for="val in activeRule.values" :key="val.code" :value="val.code">
+                  <option
+                    v-for="val in activeRule.values"
+                    :key="val.code"
+                    :value="val.code"
+                  >
                     {{ val.label }}
                   </option>
                 </select>
@@ -378,7 +620,10 @@ ${window.location.origin}/upgrade-lab
 
             <div v-else class="unknown-guidance-pill">
               <GIcon name="shield" size="xs" color="#0284C7" filled />
-              <span>GowesKit akan memandu Anda mencari info yang hilang tanpa membuat asumsi salah.</span>
+              <span
+                >GowesKit akan memandu Anda mencari info yang hilang tanpa
+                membuat asumsi salah.</span
+              >
             </div>
           </div>
 
@@ -388,12 +633,18 @@ ${window.location.origin}/upgrade-lab
             :disabled="evaluating"
           >
             <GIcon name="upgrade" size="xs" />
-            <span>{{ evaluating ? 'Menganalisis Standar…' : 'Evaluasi Kecocokan Sekarang' }}</span>
+            <span>{{
+              evaluating
+                ? 'Menganalisis Standar…'
+                : 'Evaluasi Kecocokan Sekarang'
+            }}</span>
           </button>
         </div>
       </form>
 
-      <p v-if="errorMessage" class="state-card state-card--error" role="alert">{{ errorMessage }}</p>
+      <p v-if="errorMessage" class="state-card state-card--error" role="alert">
+        {{ errorMessage }}
+      </p>
 
       <!-- Evaluation Result Card -->
       <section
@@ -402,7 +653,9 @@ ${window.location.origin}/upgrade-lab
         :class="`result-card--${result.status}`"
       >
         <div class="result-top-banner">
-          <span class="result-status-badge">{{ presentation.symbol }} {{ presentation.label }}</span>
+          <span class="result-status-badge"
+            >{{ presentation.symbol }} {{ presentation.label }}</span
+          >
           <span v-if="result.ruleProvenance[0]" class="rule-ver-tag">
             Aturan v{{ result.ruleProvenance[0].ruleVersion }}
           </span>
@@ -412,41 +665,71 @@ ${window.location.origin}/upgrade-lab
         <p class="result-summary">{{ result.technicalExplanation }}</p>
 
         <!-- Checks Performed Details -->
-        <div v-for="chk in result.checksPerformed" :key="chk.ruleCode" class="tech-compare-table">
+        <div
+          v-for="chk in result.checksPerformed"
+          :key="chk.ruleCode"
+          class="tech-compare-table"
+        >
           <div class="compare-row">
             <span class="compare-lbl">Spek Sepeda ({{ chk.label }})</span>
-            <strong class="compare-val">{{ chk.bikeValue || 'Belum Terdata (Unknown)' }}</strong>
+            <strong class="compare-val">{{
+              chk.bikeValue || 'Belum Terdata (Unknown)'
+            }}</strong>
           </div>
           <div class="compare-row">
             <span class="compare-lbl">Spek Suku Cadang Baru</span>
-            <strong class="compare-val">{{ chk.candidateValue || 'Tidak Diketahui (Unknown)' }}</strong>
+            <strong class="compare-val">{{
+              chk.candidateValue || 'Tidak Diketahui (Unknown)'
+            }}</strong>
           </div>
         </div>
 
         <!-- Missing Info Guidance -->
-        <div v-if="result.missingInformation && result.missingInformation.length" class="missing-info-box">
+        <div
+          v-if="result.missingInformation && result.missingInformation.length"
+          class="missing-info-box"
+        >
           <span class="missing-title">
             <GIcon name="shield" size="xs" color="#EF4444" filled />
             <span>Data yang Perlu Anda Pastikan:</span>
           </span>
           <ul>
-            <li v-for="info in result.missingInformation" :key="info">{{ info }}</li>
+            <li v-for="info in result.missingInformation" :key="info">
+              {{ info }}
+            </li>
           </ul>
         </div>
 
         <!-- Official Standard Provenance Reference -->
-        <div v-if="result.ruleProvenance && result.ruleProvenance.length" class="provenance-source-box">
+        <div
+          v-if="result.ruleProvenance && result.ruleProvenance.length"
+          class="provenance-source-box"
+        >
           <div class="provenance-header">
             <GIcon name="shield" size="xs" color="#0284C7" filled />
-            <span class="provenance-label">Dasar Standar Resmi (Verified Provenance)</span>
+            <span class="provenance-label"
+              >Dasar Standar Resmi (Verified Provenance)</span
+            >
           </div>
           <div class="provenance-list">
-            <div v-for="prov in result.ruleProvenance" :key="prov.ruleCode" class="provenance-item">
-              <a :href="prov.sourceUrl" target="_blank" rel="noopener noreferrer" class="provenance-link">
+            <div
+              v-for="prov in result.ruleProvenance"
+              :key="prov.ruleCode"
+              class="provenance-item"
+            >
+              <a
+                :href="prov.sourceUrl"
+                target="_blank"
+                rel="noopener noreferrer"
+                class="provenance-link"
+              >
                 <span>{{ prov.sourceTitle }}</span>
                 <span class="ext-icon">↗</span>
               </a>
-              <span class="provenance-meta">Aturan v{{ prov.ruleVersion }} · Ditinjau {{ prov.reviewedAt }}</span>
+              <span class="provenance-meta"
+                >Aturan v{{ prov.ruleVersion }} · Ditinjau
+                {{ prov.reviewedAt }}</span
+              >
             </div>
           </div>
         </div>
@@ -454,7 +737,9 @@ ${window.location.origin}/upgrade-lab
         <!-- Required Mechanic Tools Box -->
         <div class="tools-guide-box">
           <div class="tools-header">
-            <span class="tools-title">🛠️ Perkakas Mekanik yang Dibutuhkan:</span>
+            <span class="tools-title"
+              >🛠️ Perkakas Mekanik yang Dibutuhkan:</span
+            >
           </div>
           <div class="tools-grid">
             <div
@@ -468,6 +753,81 @@ ${window.location.origin}/upgrade-lab
                 <small>{{ tool.desc }}</small>
               </div>
             </div>
+          </div>
+        </div>
+
+        <!-- Budget & Part Shopping Checklist (GOAL-004) -->
+        <div class="shopping-checklist-box">
+          <div class="shopping-head">
+            <div class="head-left">
+              <span class="shopping-title"
+                >🚲 Estimasi Biaya &amp; Checklist Belanja Part:</span
+              >
+              <small class="shopping-subtitle"
+                >Siapkan part &amp; perkakas sebelum eksekusi di toko atau
+                bengkel.</small
+              >
+            </div>
+            <!-- Tier selector -->
+            <div class="tier-pills">
+              <button
+                type="button"
+                class="tier-pill"
+                :class="{ active: selectedBudgetTier === 'economic' }"
+                @click="selectedBudgetTier = 'economic'"
+              >
+                Ekonomis
+              </button>
+              <button
+                type="button"
+                class="tier-pill"
+                :class="{ active: selectedBudgetTier === 'enthusiast' }"
+                @click="selectedBudgetTier = 'enthusiast'"
+              >
+                Enthusiast
+              </button>
+              <button
+                type="button"
+                class="tier-pill"
+                :class="{ active: selectedBudgetTier === 'pro' }"
+                @click="selectedBudgetTier = 'pro'"
+              >
+                Pro Spec
+              </button>
+            </div>
+          </div>
+
+          <!-- Interactive checklist items -->
+          <div class="checklist-items">
+            <div
+              v-for="item in shoppingItems"
+              :key="item.id"
+              class="check-row"
+              :class="{ checked: item.checked }"
+              @click="toggleShoppingItem(item)"
+            >
+              <input
+                type="checkbox"
+                :checked="item.checked"
+                class="check-input"
+                @click.stop="toggleShoppingItem(item)"
+              />
+              <div class="check-info">
+                <span class="check-name">{{ item.name }}</span>
+                <span class="check-price">{{ item.estPrice }}</span>
+              </div>
+            </div>
+          </div>
+
+          <div class="shopping-footer">
+            <button
+              type="button"
+              class="btn-copy-shopping"
+              @click="copyShoppingList"
+            >
+              <GIcon name="bookmark" size="xs" />
+              <span>Salin Checklist ke WhatsApp / Catatan</span>
+            </button>
           </div>
         </div>
 
@@ -893,6 +1253,143 @@ ${window.location.origin}/upgrade-lab
   font-size: 0.68rem;
   color: #64748b;
   line-height: 1.2;
+}
+
+.shopping-checklist-box {
+  display: flex;
+  flex-direction: column;
+  gap: 0.85rem;
+  padding: 1rem 1.15rem;
+  border-radius: 1rem;
+  background: #f8fafc;
+  border: 1.5px solid #cbd5e1;
+}
+
+.shopping-head {
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-start;
+  gap: 0.75rem;
+  flex-wrap: wrap;
+}
+
+.head-left {
+  display: flex;
+  flex-direction: column;
+  gap: 0.15rem;
+}
+
+.shopping-title {
+  font-size: 0.85rem;
+  font-weight: 850;
+  color: #0f172a;
+}
+
+.shopping-subtitle {
+  font-size: 0.72rem;
+  color: #64748b;
+}
+
+.tier-pills {
+  display: flex;
+  gap: 0.35rem;
+}
+
+.tier-pill {
+  padding: 0.25rem 0.6rem;
+  border-radius: 9999px;
+  font-size: 0.7rem;
+  font-weight: 800;
+  border: 1px solid #cbd5e1;
+  background: #ffffff;
+  color: #475569;
+  cursor: pointer;
+}
+
+.tier-pill.active {
+  background: #0f172a;
+  color: #ffffff;
+  border-color: #0f172a;
+}
+
+.checklist-items {
+  display: flex;
+  flex-direction: column;
+  gap: 0.4rem;
+}
+
+.check-row {
+  display: flex;
+  align-items: center;
+  gap: 0.65rem;
+  background: #ffffff;
+  border: 1px solid #e2e8f0;
+  border-radius: 0.65rem;
+  padding: 0.55rem 0.85rem;
+  cursor: pointer;
+  transition: all 120ms ease;
+}
+
+.check-row:hover {
+  border-color: #94a3b8;
+}
+
+.check-row.checked {
+  background: #f0fdf4;
+  border-color: #86efac;
+}
+
+.check-row.checked .check-name {
+  text-decoration: line-through;
+  color: #64748b;
+}
+
+.check-input {
+  width: 1.1rem;
+  height: 1.1rem;
+  cursor: pointer;
+  accent-color: #16a34a;
+}
+
+.check-info {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  width: 100%;
+  gap: 0.5rem;
+}
+
+.check-name {
+  font-size: 0.78rem;
+  font-weight: 700;
+  color: #1e293b;
+}
+
+.check-price {
+  font-family: var(--font-mono);
+  font-size: 0.72rem;
+  font-weight: 800;
+  color: #0f766e;
+  white-space: nowrap;
+}
+
+.shopping-footer {
+  display: flex;
+  justify-content: flex-end;
+}
+
+.btn-copy-shopping {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.4rem;
+  background: #e0f2fe;
+  color: #0369a1;
+  border: 1px solid #bae6fd;
+  border-radius: 0.6rem;
+  padding: 0.45rem 0.85rem;
+  font-size: 0.74rem;
+  font-weight: 800;
+  cursor: pointer;
 }
 
 .result-share-bar {

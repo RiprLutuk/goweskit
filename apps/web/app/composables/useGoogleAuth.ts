@@ -56,7 +56,8 @@ export function useGoogleAuth() {
       script.async = true;
       script.defer = true;
       script.onload = () => resolve();
-      script.onerror = () => reject(new Error('Gagal memuat Google Sign-In SDK.'));
+      script.onerror = () =>
+        reject(new Error('Gagal memuat Google Sign-In SDK.'));
       document.head.appendChild(script);
     });
   }
@@ -91,7 +92,10 @@ export function useGoogleAuth() {
                 throw new Error('Kredensial token Google tidak valid.');
               }
               await loginWithGoogle({ idToken: response.credential });
-              toast.success('Berhasil Masuk!', 'Akun Google Anda berhasil terhubung.');
+              toast.success(
+                'Berhasil Masuk!',
+                'Akun Google Anda berhasil terhubung.',
+              );
               await navigateTo('/me');
               resolve(true);
             } catch (err: unknown) {
@@ -107,24 +111,29 @@ export function useGoogleAuth() {
         });
 
         // Trigger Google One-Tap / Account Selector
-        window.google!.accounts.id.prompt((notification: GooglePromptMomentNotification) => {
-          if (notification?.isNotDisplayed?.()) {
-            const reason = notification.getNotDisplayedReason?.();
-            console.warn('[Google Auth] Prompt not displayed reason:', reason);
-          }
-          if (notification?.isSkippedMoment?.()) {
-            const reason = notification.getSkippedReason?.();
-            console.warn('[Google Auth] Prompt skipped reason:', reason);
-          }
-          if (notification?.isDismissedMoment?.()) {
-            const reason = notification.getDismissedReason?.();
-            console.warn('[Google Auth] Prompt dismissed reason:', reason);
-          }
-          // Reset loading state after prompt interaction
-          setTimeout(() => {
-            if (loading.value) loading.value = false;
-          }, 2000);
-        });
+        window.google!.accounts.id.prompt(
+          (notification: GooglePromptMomentNotification) => {
+            if (notification?.isNotDisplayed?.()) {
+              const reason = notification.getNotDisplayedReason?.();
+              console.warn(
+                '[Google Auth] Prompt not displayed reason:',
+                reason,
+              );
+            }
+            if (notification?.isSkippedMoment?.()) {
+              const reason = notification.getSkippedReason?.();
+              console.warn('[Google Auth] Prompt skipped reason:', reason);
+            }
+            if (notification?.isDismissedMoment?.()) {
+              const reason = notification.getDismissedReason?.();
+              console.warn('[Google Auth] Prompt dismissed reason:', reason);
+            }
+            // Reset loading state after prompt interaction
+            setTimeout(() => {
+              if (loading.value) loading.value = false;
+            }, 2000);
+          },
+        );
       });
     } catch (err: unknown) {
       const msg = getApiErrorMessage(err);

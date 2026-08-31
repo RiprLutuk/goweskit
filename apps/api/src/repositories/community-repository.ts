@@ -276,7 +276,9 @@ export class DrizzleCommunityRepository implements CommunityRepository {
     );
   }
 
-  public async findCommunityById(identifier: string): Promise<PublicCommunity | null> {
+  public async findCommunityById(
+    identifier: string,
+  ): Promise<PublicCommunity | null> {
     const isUuid =
       /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i.test(
         identifier,

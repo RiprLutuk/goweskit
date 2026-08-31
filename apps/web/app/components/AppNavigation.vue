@@ -17,7 +17,11 @@ function handleTabClick(): void {
   <nav class="app-navigation" aria-label="Navigasi aplikasi">
     <div class="app-navigation__inner">
       <ul class="app-navigation__list">
-        <li v-for="item in NAVIGATION_ITEMS" :key="item.path" class="app-navigation__li">
+        <li
+          v-for="item in NAVIGATION_ITEMS"
+          :key="item.path"
+          class="app-navigation__li"
+        >
           <NuxtLink
             v-if="item.available"
             class="app-navigation__item"
@@ -142,7 +146,9 @@ function handleTabClick(): void {
   color: var(--color-asphalt);
   text-decoration: none;
   touch-action: manipulation;
-  transition: transform 90ms ease, color 120ms ease;
+  transition:
+    transform 90ms ease,
+    color 120ms ease;
   position: relative;
 }
 
@@ -159,7 +165,9 @@ function handleTabClick(): void {
 }
 
 .tab-icon {
-  transition: stroke-width 120ms ease, transform 120ms ease;
+  transition:
+    stroke-width 120ms ease,
+    transform 120ms ease;
 }
 
 .app-navigation__label {
@@ -169,7 +177,9 @@ function handleTabClick(): void {
   line-height: 1.1;
   text-align: center;
   color: var(--color-asphalt);
-  transition: color 120ms ease, font-weight 120ms ease;
+  transition:
+    color 120ms ease,
+    font-weight 120ms ease;
 }
 
 /* Minimalist Clean Active Bar Indicator */
@@ -178,7 +188,9 @@ function handleTabClick(): void {
   height: 3px;
   border-radius: 9999px;
   background: transparent;
-  transition: width 150ms ease, background-color 150ms ease;
+  transition:
+    width 150ms ease,
+    background-color 150ms ease;
   margin-top: 1px;
 }
 

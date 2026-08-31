@@ -157,9 +157,7 @@ async function loadCommunity(): Promise<void> {
 
 async function joinCommunity(): Promise<void> {
   if (!user.value) {
-    await navigateTo(
-      `/login?redirect=/community/${communityIdentifier.value}`,
-    );
+    await navigateTo(`/login?redirect=/community/${communityIdentifier.value}`);
     return;
   }
   joining.value = true;
@@ -272,9 +270,17 @@ onMounted(loadCommunity);
 
     <!-- Skeleton Community Detail Shimmer during Loading -->
     <div v-if="loading" class="skeleton-stack">
-      <div class="skeleton-shimmer" style="width: 100%; height: 12rem; border-radius: 1.25rem;" />
+      <div
+        class="skeleton-shimmer"
+        style="width: 100%; height: 12rem; border-radius: 1.25rem"
+      />
       <div class="skeleton-grid-row">
-        <div v-for="i in 3" :key="i" class="skeleton-shimmer" style="height: 6rem; border-radius: 1rem;" />
+        <div
+          v-for="i in 3"
+          :key="i"
+          class="skeleton-shimmer"
+          style="height: 6rem; border-radius: 1rem"
+        />
       </div>
     </div>
 
@@ -345,7 +351,10 @@ onMounted(loadCommunity);
         </p>
 
         <!-- Bicycle Types Discipline Chips -->
-        <div v-if="detail.community.bicycleTypes.length" class="discipline-chips-row">
+        <div
+          v-if="detail.community.bicycleTypes.length"
+          class="discipline-chips-row"
+        >
           <span
             v-for="bType in detail.community.bicycleTypes"
             :key="bType"
@@ -369,9 +378,15 @@ onMounted(loadCommunity);
 
         <!-- Membership Action / Status (Only shown if NOT already an active member) -->
         <!-- Case 1: Requested / Pending Approval -->
-        <div v-if="detail.viewerMembership?.status === 'requested'" class="member-pending-bar">
+        <div
+          v-if="detail.viewerMembership?.status === 'requested'"
+          class="member-pending-bar"
+        >
           <GIcon name="history" size="xs" color="#D97706" />
-          <span>Permintaan bergabung telah dikirim dan menunggu persetujuan pengurus.</span>
+          <span
+            >Permintaan bergabung telah dikirim dan menunggu persetujuan
+            pengurus.</span
+          >
         </div>
 
         <!-- Case 2: Not Joined Yet (Show Join CTA) -->
@@ -386,7 +401,11 @@ onMounted(loadCommunity);
             <span>{{ joining ? 'Memproses…' : joinLabel }}</span>
           </button>
           <small class="join-caption">
-            {{ detail.community.joinMode === 'open' ? 'Pendaftaran terbuka untuk semua pesepeda.' : 'Pendaftaran memerlukan persetujuan pengurus.' }}
+            {{
+              detail.community.joinMode === 'open'
+                ? 'Pendaftaran terbuka untuk semua pesepeda.'
+                : 'Pendaftaran memerlukan persetujuan pengurus.'
+            }}
           </small>
         </div>
 
@@ -402,7 +421,9 @@ onMounted(loadCommunity);
         </div>
         <div class="admin-copy">
           <strong>Akses Pengurus Komunitas</strong>
-          <p>Kelola verifikasi calon anggota dan peninjauan permintaan mabar.</p>
+          <p>
+            Kelola verifikasi calon anggota dan peninjauan permintaan mabar.
+          </p>
         </div>
         <NuxtLink
           class="admin-link-btn"
@@ -426,7 +447,9 @@ onMounted(loadCommunity);
             </div>
             <div class="fact-body">
               <span class="fact-label">Wilayah Base</span>
-              <strong class="fact-value">{{ detail.community.locality }}</strong>
+              <strong class="fact-value">{{
+                detail.community.locality
+              }}</strong>
             </div>
           </div>
 
@@ -437,7 +460,11 @@ onMounted(loadCommunity);
             <div class="fact-body">
               <span class="fact-label">Kategori / Disiplin</span>
               <strong class="fact-value capitalize">
-                {{ detail.community.bicycleTypes.map((v) => v.replaceAll('_', ' ')).join(', ') }}
+                {{
+                  detail.community.bicycleTypes
+                    .map((v) => v.replaceAll('_', ' '))
+                    .join(', ')
+                }}
               </strong>
             </div>
           </div>
@@ -449,7 +476,11 @@ onMounted(loadCommunity);
             <div class="fact-body">
               <span class="fact-label">Visibilitas Publik</span>
               <strong class="fact-value capitalize">
-                {{ detail.community.visibility === 'public' ? 'Publik (Dapat Ditemukan)' : 'Komunitas Privat' }}
+                {{
+                  detail.community.visibility === 'public'
+                    ? 'Publik (Dapat Ditemukan)'
+                    : 'Komunitas Privat'
+                }}
               </strong>
             </div>
           </div>
@@ -461,7 +492,11 @@ onMounted(loadCommunity);
             <div class="fact-body">
               <span class="fact-label">Sistem Pendaftaran</span>
               <strong class="fact-value capitalize">
-                {{ detail.community.joinMode === 'open' ? 'Langsung Aktif (Instan)' : 'Persetujuan Pengurus' }}
+                {{
+                  detail.community.joinMode === 'open'
+                    ? 'Langsung Aktif (Instan)'
+                    : 'Persetujuan Pengurus'
+                }}
               </strong>
             </div>
           </div>
@@ -495,7 +530,10 @@ onMounted(loadCommunity);
             <GIcon name="bike" size="lg" color="#94A3B8" />
           </div>
           <h3>Belum Ada Jadwal Mabar</h3>
-          <p>Komunitas ini belum memiliki jadwal gowes terencana dalam waktu dekat.</p>
+          <p>
+            Komunitas ini belum memiliki jadwal gowes terencana dalam waktu
+            dekat.
+          </p>
         </div>
         <div v-else class="events-feed">
           <RideEventCard
@@ -513,22 +551,39 @@ onMounted(loadCommunity);
           class="native-modal-backdrop"
           @click.self="showCreateEventModal = false"
         >
-          <div class="native-modal-sheet" role="dialog" aria-modal="true" aria-labelledby="create-event-modal-title">
+          <div
+            class="native-modal-sheet"
+            role="dialog"
+            aria-modal="true"
+            aria-labelledby="create-event-modal-title"
+          >
             <div class="modal-header">
               <div>
                 <span class="modal-eyebrow">Event Komunitas</span>
                 <h2 id="create-event-modal-title">Buat Jadwal Gowes Baru</h2>
               </div>
-              <button class="modal-close" type="button" @click="showCreateEventModal = false">
+              <button
+                class="modal-close"
+                type="button"
+                @click="showCreateEventModal = false"
+              >
                 <GIcon name="close" size="xs" />
               </button>
             </div>
 
             <form class="create-event-form" @submit.prevent="submitCreateEvent">
-              <p v-if="createEventError" class="state-card state-card--error" role="alert">
+              <p
+                v-if="createEventError"
+                class="state-card state-card--error"
+                role="alert"
+              >
                 {{ createEventError }}
               </p>
-              <p v-if="createEventSuccess" class="state-card state-card--success" role="status">
+              <p
+                v-if="createEventSuccess"
+                class="state-card state-card--success"
+                role="status"
+              >
                 {{ createEventSuccess }}
               </p>
 
@@ -584,7 +639,9 @@ onMounted(loadCommunity);
                   <span>Visibilitas</span>
                   <select v-model="newEventForm.visibility">
                     <option value="public">Publik (Semua Rider)</option>
-                    <option value="members_only">Khusus Member Komunitas</option>
+                    <option value="members_only">
+                      Khusus Member Komunitas
+                    </option>
                   </select>
                 </label>
                 <label class="form-field">
@@ -614,7 +671,9 @@ onMounted(loadCommunity);
                 :disabled="creatingEvent"
               >
                 <GIcon name="check" size="xs" />
-                <span>{{ creatingEvent ? 'Menyimpan…' : 'Terbitkan Jadwal Mabar' }}</span>
+                <span>{{
+                  creatingEvent ? 'Menyimpan…' : 'Terbitkan Jadwal Mabar'
+                }}</span>
               </button>
             </form>
           </div>
@@ -679,7 +738,11 @@ onMounted(loadCommunity);
   width: 3.2rem;
   height: 3.2rem;
   border-radius: 0.85rem;
-  background: linear-gradient(135deg, rgba(201, 243, 106, 0.45), rgba(15, 118, 110, 0.2));
+  background: linear-gradient(
+    135deg,
+    rgba(201, 243, 106, 0.45),
+    rgba(15, 118, 110, 0.2)
+  );
   border: 2px solid var(--color-chain-lime);
   display: grid;
   place-items: center;
@@ -736,7 +799,7 @@ onMounted(loadCommunity);
   gap: 0.2rem;
   font-size: 0.68rem;
   font-weight: 850;
-  color: #15803D;
+  color: #15803d;
   background: rgba(22, 163, 74, 0.15);
   padding: 0.1rem 0.45rem;
   border-radius: 9999px;
@@ -748,7 +811,7 @@ onMounted(loadCommunity);
   gap: 0.2rem;
   font-size: 0.68rem;
   font-weight: 800;
-  color: #15803D;
+  color: #15803d;
   background: rgba(21, 128, 61, 0.1);
   padding: 0.1rem 0.4rem;
   border-radius: 9999px;
@@ -826,7 +889,7 @@ onMounted(loadCommunity);
 .active-status-tag {
   font-size: 0.68rem;
   font-weight: 850;
-  color: #15803D;
+  color: #15803d;
   background: rgba(22, 163, 74, 0.15);
   padding: 0.1rem 0.45rem;
   border-radius: 9999px;
@@ -842,7 +905,7 @@ onMounted(loadCommunity);
   background: rgba(217, 119, 6, 0.08);
   border: 1px solid rgba(217, 119, 6, 0.2);
   font-size: 0.76rem;
-  color: #B45309;
+  color: #b45309;
 }
 
 .membership-join-box {
@@ -873,7 +936,7 @@ onMounted(loadCommunity);
   margin: 0;
   font-size: 0.8rem;
   font-weight: 800;
-  color: #15803D;
+  color: #15803d;
   padding: 0.4rem 0.75rem;
   border-radius: 0.5rem;
   background: rgba(21, 128, 61, 0.1);
@@ -911,7 +974,7 @@ onMounted(loadCommunity);
 .admin-copy strong {
   font-size: 0.88rem;
   font-weight: 850;
-  color: #B45309;
+  color: #b45309;
 }
 
 .admin-copy p {

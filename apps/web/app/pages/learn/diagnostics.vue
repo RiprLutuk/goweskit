@@ -24,7 +24,9 @@ const filteredSymptoms = computed<readonly DiagnosticSymptom[]>(() => {
     : DIAGNOSTIC_SYMPTOMS;
 
   if (selectedCategory.value !== 'all') {
-    list = list.filter((s) => s.category === (selectedCategory.value as DiagnosticCategory));
+    list = list.filter(
+      (s) => s.category === (selectedCategory.value as DiagnosticCategory),
+    );
   }
   return list;
 });
@@ -51,15 +53,20 @@ function getSeverityClass(severity: DiagnosticSymptom['severity']) {
   <div class="native-container diagnostics-page">
     <!-- Header -->
     <header class="diagnostics-header">
-      <NuxtLink to="/learn" class="back-link">← Kembali ke Belajar Anatomi</NuxtLink>
+      <NuxtLink to="/learn" class="back-link"
+        >← Kembali ke Belajar Anatomi</NuxtLink
+      >
       <div class="header-title-row">
         <div>
-          <span class="eyebrow">Pusat Diagnostik &amp; Troubleshooting Sepeda</span>
+          <span class="eyebrow"
+            >Pusat Diagnostik &amp; Troubleshooting Sepeda</span
+          >
           <h1 class="page-title">Deteksi Suara &amp; Masalah Komponen</h1>
         </div>
       </div>
       <p class="header-desc">
-        Sepeda Anda berdecit, operan loncat, atau rem amblas? Temukan sumber masalah, langkah inspeksi mandiri, dan torsi standar sebelum ke bengkel.
+        Sepeda Anda berdecit, operan loncat, atau rem amblas? Temukan sumber
+        masalah, langkah inspeksi mandiri, dan torsi standar sebelum ke bengkel.
       </p>
 
       <!-- Search Box -->
@@ -76,7 +83,11 @@ function getSeverityClass(severity: DiagnosticSymptom['severity']) {
       </div>
 
       <!-- Filter Pills -->
-      <div class="category-pills" role="tablist" aria-label="Filter Kategori Masalah">
+      <div
+        class="category-pills"
+        role="tablist"
+        aria-label="Filter Kategori Masalah"
+      >
         <button
           v-for="cat in categories"
           :key="cat.key"
@@ -99,7 +110,10 @@ function getSeverityClass(severity: DiagnosticSymptom['severity']) {
           <GIcon name="wrench" size="2xl" color="#94A3B8" />
         </div>
         <h3>Tidak ada masalah yang cocok</h3>
-        <p>Coba gunakan kata kunci lain seperti "rantai", "rem", atau "bottom bracket".</p>
+        <p>
+          Coba gunakan kata kunci lain seperti "rantai", "rem", atau "bottom
+          bracket".
+        </p>
       </div>
 
       <div
@@ -117,7 +131,10 @@ function getSeverityClass(severity: DiagnosticSymptom['severity']) {
         >
           <div class="symptom-meta-top">
             <span class="category-tag">{{ symptom.categoryName }}</span>
-            <span class="severity-badge" :class="[getSeverityClass(symptom.severity)]">
+            <span
+              class="severity-badge"
+              :class="[getSeverityClass(symptom.severity)]"
+            >
               Tingkat: {{ symptom.severity.toUpperCase() }}
             </span>
           </div>
@@ -125,7 +142,12 @@ function getSeverityClass(severity: DiagnosticSymptom['severity']) {
           <div class="symptom-title-row">
             <h2 class="symptom-title">{{ symptom.title }}</h2>
             <span class="expand-chevron" aria-hidden="true">
-              <GIcon :name="activeSymptomId === symptom.id ? 'chevron-up' : 'chevron-down'" size="xs" />
+              <GIcon
+                :name="
+                  activeSymptomId === symptom.id ? 'chevron-up' : 'chevron-down'
+                "
+                size="xs"
+              />
             </span>
           </div>
 
@@ -141,7 +163,9 @@ function getSeverityClass(severity: DiagnosticSymptom['severity']) {
               <span>Kemungkinan Penyebab:</span>
             </h3>
             <ul class="detail-list">
-              <li v-for="(cause, i) in symptom.probableCauses" :key="i">{{ cause }}</li>
+              <li v-for="(cause, i) in symptom.probableCauses" :key="i">
+                {{ cause }}
+              </li>
             </ul>
           </section>
 
@@ -152,7 +176,9 @@ function getSeverityClass(severity: DiagnosticSymptom['severity']) {
               <span>Langkah Pemeriksaan Mandiri:</span>
             </h3>
             <ol class="detail-numbered-list">
-              <li v-for="(step, i) in symptom.inspectionSteps" :key="i">{{ step }}</li>
+              <li v-for="(step, i) in symptom.inspectionSteps" :key="i">
+                {{ step }}
+              </li>
             </ol>
           </section>
 
@@ -206,7 +232,7 @@ function getSeverityClass(severity: DiagnosticSymptom['severity']) {
 .eyebrow {
   font-size: 0.7rem;
   font-weight: 800;
-  color: #0F766E;
+  color: #0f766e;
   text-transform: uppercase;
   letter-spacing: 0.06em;
 }
@@ -305,7 +331,9 @@ function getSeverityClass(severity: DiagnosticSymptom['severity']) {
   border-radius: 1rem;
   border: 1.5px solid var(--color-sand);
   overflow: hidden;
-  transition: border-color 150ms ease, box-shadow 150ms ease;
+  transition:
+    border-color 150ms ease,
+    box-shadow 150ms ease;
 }
 
 .symptom-card--expanded {
@@ -334,7 +362,7 @@ function getSeverityClass(severity: DiagnosticSymptom['severity']) {
 .category-tag {
   font-size: 0.65rem;
   font-weight: 850;
-  color: #0F766E;
+  color: #0f766e;
   text-transform: uppercase;
 }
 
@@ -347,27 +375,27 @@ function getSeverityClass(severity: DiagnosticSymptom['severity']) {
 }
 
 .severity-badge--critical {
-  background: #FEE2E2;
-  color: #991B1B;
-  border: 1px solid #FCA5A5;
+  background: #fee2e2;
+  color: #991b1b;
+  border: 1px solid #fca5a5;
 }
 
 .severity-badge--high {
-  background: #FFEDD5;
-  color: #9A3412;
-  border: 1px solid #FDBA74;
+  background: #ffedd5;
+  color: #9a3412;
+  border: 1px solid #fdba74;
 }
 
 .severity-badge--medium {
-  background: #FEF3C7;
-  color: #92400E;
-  border: 1px solid #FDE68A;
+  background: #fef3c7;
+  color: #92400e;
+  border: 1px solid #fde68a;
 }
 
 .severity-badge--low {
-  background: #F1F5F9;
+  background: #f1f5f9;
   color: #475569;
-  border: 1px solid #CBD5E1;
+  border: 1px solid #cbd5e1;
 }
 
 .symptom-title-row {
@@ -428,8 +456,8 @@ function getSeverityClass(severity: DiagnosticSymptom['severity']) {
 }
 
 .highlight-box {
-  background: #F8FAFC;
-  border: 1px solid #E2E8F0;
+  background: #f8fafc;
+  border: 1px solid #e2e8f0;
   border-radius: 0.75rem;
   padding: 0.85rem;
 }
@@ -438,29 +466,29 @@ function getSeverityClass(severity: DiagnosticSymptom['severity']) {
   margin: 0;
   font-size: 0.82rem;
   line-height: 1.45;
-  color: #1E293B;
+  color: #1e293b;
   font-weight: 700;
 }
 
 .torque-spec {
   font-size: 0.75rem;
-  color: #0F766E;
+  color: #0f766e;
   margin-top: 0.4rem;
-  background: #F0FDFA;
+  background: #f0fdfa;
   padding: 0.35rem 0.65rem;
   border-radius: 0.4rem;
-  border: 1px solid #CCFBF1;
+  border: 1px solid #ccfbf1;
   display: inline-block;
 }
 
 .shop-callout {
-  background: #FFFBEB;
-  border: 1px solid #FEF3C7;
+  background: #fffbeb;
+  border: 1px solid #fef3c7;
   border-radius: 0.75rem;
   padding: 0.75rem;
   font-size: 0.78rem;
   line-height: 1.45;
-  color: #92400E;
+  color: #92400e;
 }
 
 .shop-callout p {

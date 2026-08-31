@@ -1,5 +1,8 @@
 <script setup lang="ts">
-import { useOfflineNavigator, type OfflineSavedRoute } from '~/composables/useOfflineNavigator';
+import {
+  useOfflineNavigator,
+  type OfflineSavedRoute,
+} from '~/composables/useOfflineNavigator';
 
 defineProps<{
   isOpen: boolean;
@@ -10,7 +13,8 @@ const emit = defineEmits<{
   (e: 'selectRoute', route: OfflineSavedRoute): void;
 }>();
 
-const { savedRoutes, removeOfflineRoute, exportGpxFile, isOnline } = useOfflineNavigator();
+const { savedRoutes, removeOfflineRoute, exportGpxFile, isOnline } =
+  useOfflineNavigator();
 
 function formatDist(km: number): string {
   return `${km.toFixed(1)} km`;
@@ -31,11 +35,18 @@ function formatDist(km: number): string {
         <!-- Header -->
         <div class="offline-modal__header">
           <div>
-            <div class="offline-status-pill" :class="{ 'offline-status-pill--offline': !isOnline }">
-              <span class="status-dot"/>
-              {{ isOnline ? 'Tersambung Internet' : 'Mode Offline (Tanpa Sinyal)' }}
+            <div
+              class="offline-status-pill"
+              :class="{ 'offline-status-pill--offline': !isOnline }"
+            >
+              <span class="status-dot" />
+              {{
+                isOnline ? 'Tersambung Internet' : 'Mode Offline (Tanpa Sinyal)'
+              }}
             </div>
-            <h2 id="offline-modal-title" class="offline-title">Rute Tersimpan Offline</h2>
+            <h2 id="offline-modal-title" class="offline-title">
+              Rute Tersimpan Offline
+            </h2>
           </div>
           <button
             type="button"
@@ -55,7 +66,9 @@ function formatDist(km: number): string {
             </div>
             <h3>Belum Ada Rute Offline</h3>
             <p>
-              Simpan rute favorit saat terhubung internet agar peta elevasi dan titik koordinat tetap bisa diakses di puncak bukit atau pegunungan.
+              Simpan rute favorit saat terhubung internet agar peta elevasi dan
+              titik koordinat tetap bisa diakses di puncak bukit atau
+              pegunungan.
             </p>
           </div>
 
@@ -66,19 +79,34 @@ function formatDist(km: number): string {
               class="offline-route-card"
             >
               <div class="route-header-line">
-                <span class="difficulty-chip" :class="[`difficulty-chip--${route.difficulty}`]">
+                <span
+                  class="difficulty-chip"
+                  :class="[`difficulty-chip--${route.difficulty}`]"
+                >
                   {{ route.difficulty.toUpperCase() }}
                 </span>
-                <span class="route-dist-tag">{{ formatDist(route.distanceKm) }} · +{{ route.elevationGainMeters }}m</span>
+                <span class="route-dist-tag"
+                  >{{ formatDist(route.distanceKm) }} · +{{
+                    route.elevationGainMeters
+                  }}m</span
+                >
               </div>
 
               <h3 class="route-title">{{ route.title }}</h3>
-              <p v-if="route.description" class="route-desc">{{ route.description }}</p>
+              <p v-if="route.description" class="route-desc">
+                {{ route.description }}
+              </p>
 
               <!-- Sparkline Elevation if exists -->
-              <div v-if="route.elevationProfile && route.elevationProfile.length > 1" class="elevation-mini-preview">
+              <div
+                v-if="
+                  route.elevationProfile && route.elevationProfile.length > 1
+                "
+                class="elevation-mini-preview"
+              >
                 <span class="elevation-label">
-                  <GIcon name="mountain" size="xs" /> Profil Kontur Ketinggian Tersimpan
+                  <GIcon name="mountain" size="xs" /> Profil Kontur Ketinggian
+                  Tersimpan
                 </span>
               </div>
 
@@ -107,7 +135,10 @@ function formatDist(km: number): string {
 
         <!-- Footer -->
         <div class="offline-modal__footer">
-          <span>Data tersimpan di penyimpanan browser lokal (IndexedDB / LocalStorage).</span>
+          <span
+            >Data tersimpan di penyimpanan browser lokal (IndexedDB /
+            LocalStorage).</span
+          >
         </div>
       </div>
     </div>
@@ -131,7 +162,7 @@ function formatDist(km: number): string {
   position: relative;
   width: 100%;
   max-width: 32rem;
-  background: #FFFFFF;
+  background: #ffffff;
   border-radius: 1.25rem;
   box-shadow: 0 20px 40px rgba(0, 0, 0, 0.2);
   display: flex;
@@ -145,7 +176,7 @@ function formatDist(km: number): string {
   align-items: flex-start;
   justify-content: space-between;
   padding: 1.25rem 1.5rem;
-  border-bottom: 1px solid #E2E8F0;
+  border-bottom: 1px solid #e2e8f0;
 }
 
 .offline-status-pill {
@@ -154,18 +185,18 @@ function formatDist(km: number): string {
   gap: 0.4rem;
   font-size: 0.65rem;
   font-weight: 800;
-  color: #0F766E;
-  background: #F0FDFA;
-  border: 1px solid #CCFBF1;
+  color: #0f766e;
+  background: #f0fdfa;
+  border: 1px solid #ccfbf1;
   padding: 0.2rem 0.6rem;
   border-radius: 9999px;
   margin-bottom: 0.35rem;
 }
 
 .offline-status-pill--offline {
-  color: #B45309;
-  background: #FFFBEB;
-  border-color: #FDE68A;
+  color: #b45309;
+  background: #fffbeb;
+  border-color: #fde68a;
 }
 
 .status-dot {
@@ -179,13 +210,13 @@ function formatDist(km: number): string {
   margin: 0;
   font-size: 1.25rem;
   font-weight: 900;
-  color: #17202A;
+  color: #17202a;
   letter-spacing: -0.02em;
 }
 
 .modal-close-btn {
-  background: #F1F5F9;
-  border: 1px solid #E2E8F0;
+  background: #f1f5f9;
+  border: 1px solid #e2e8f0;
   width: 2rem;
   height: 2rem;
   border-radius: 50%;
@@ -217,13 +248,13 @@ function formatDist(km: number): string {
   margin: 0 0 0.4rem 0;
   font-size: 1.1rem;
   font-weight: 850;
-  color: #17202A;
+  color: #17202a;
 }
 
 .empty-offline-box p {
   margin: 0;
   font-size: 0.82rem;
-  color: #64748B;
+  color: #64748b;
   line-height: 1.45;
 }
 
@@ -233,8 +264,8 @@ function formatDist(km: number): string {
 }
 
 .offline-route-card {
-  background: #F8FAFC;
-  border: 1.5px solid #E2E8F0;
+  background: #f8fafc;
+  border: 1.5px solid #e2e8f0;
   border-radius: 1rem;
   padding: 1rem;
   display: flex;
@@ -257,23 +288,23 @@ function formatDist(km: number): string {
 }
 
 .difficulty-chip--easy {
-  background: #DCFCE7;
+  background: #dcfce7;
   color: #166534;
 }
 
 .difficulty-chip--moderate {
-  background: #FEF3C7;
-  color: #92400E;
+  background: #fef3c7;
+  color: #92400e;
 }
 
 .difficulty-chip--hard {
-  background: #FFEDD5;
-  color: #9A3412;
+  background: #ffedd5;
+  color: #9a3412;
 }
 
 .difficulty-chip--extreme {
-  background: #FEE2E2;
-  color: #991B1B;
+  background: #fee2e2;
+  color: #991b1b;
 }
 
 .route-dist-tag {
@@ -286,19 +317,19 @@ function formatDist(km: number): string {
   margin: 0;
   font-size: 1rem;
   font-weight: 850;
-  color: #17202A;
+  color: #17202a;
 }
 
 .route-desc {
   margin: 0;
   font-size: 0.78rem;
-  color: #64748B;
+  color: #64748b;
   line-height: 1.4;
 }
 
 .elevation-mini-preview {
-  background: #FFFFFF;
-  border: 1px solid #E2E8F0;
+  background: #ffffff;
+  border: 1px solid #e2e8f0;
   border-radius: 0.5rem;
   padding: 0.35rem 0.6rem;
   margin-top: 0.2rem;
@@ -307,7 +338,7 @@ function formatDist(km: number): string {
 .elevation-label {
   font-size: 0.68rem;
   font-weight: 800;
-  color: #0F766E;
+  color: #0f766e;
 }
 
 .route-action-row {
@@ -333,25 +364,25 @@ function formatDist(km: number): string {
 }
 
 .btn-action--gpx {
-  background: #17202A;
-  color: #FFFFFF;
+  background: #17202a;
+  color: #ffffff;
   border: none;
   flex: 1;
   justify-content: center;
 }
 
 .btn-action--delete {
-  background: #FFFFFF;
-  border: 1px solid #CBD5E1;
-  color: #64748B;
+  background: #ffffff;
+  border: 1px solid #cbd5e1;
+  color: #64748b;
 }
 
 .offline-modal__footer {
   padding: 0.75rem 1.5rem;
-  background: #F8FAFC;
-  border-top: 1px solid #E2E8F0;
+  background: #f8fafc;
+  border-top: 1px solid #e2e8f0;
   font-size: 0.68rem;
-  color: #94A3B8;
+  color: #94a3b8;
   text-align: center;
 }
 </style>

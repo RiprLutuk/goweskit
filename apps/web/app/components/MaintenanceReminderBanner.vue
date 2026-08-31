@@ -49,11 +49,16 @@ const schedules = computed<MaintenanceSchedule[]>(() => {
   ];
 });
 
-const overdueCount = computed(() => schedules.value.filter((s) => s.urgency === 'overdue').length);
+const overdueCount = computed(
+  () => schedules.value.filter((s) => s.urgency === 'overdue').length,
+);
 </script>
 
 <template>
-  <div class="maint-banner" :class="{ 'maint-banner--alert': overdueCount > 0 }">
+  <div
+    class="maint-banner"
+    :class="{ 'maint-banner--alert': overdueCount > 0 }"
+  >
     <div class="maint-banner__header">
       <div class="maint-banner__title-group">
         <div class="maint-icon-box">
@@ -67,7 +72,11 @@ const overdueCount = computed(() => schedules.value.filter((s) => s.urgency === 
         <div>
           <h3 class="maint-title">Jadwal Servis Berkala &amp; Perawatan</h3>
           <p class="maint-subtitle">
-            {{ overdueCount > 0 ? `${overdueCount} perawatan membutuhkan perhatian Anda.` : 'Semua komponen dalam kondisi terawat.' }}
+            {{
+              overdueCount > 0
+                ? `${overdueCount} perawatan membutuhkan perhatian Anda.`
+                : 'Semua komponen dalam kondisi terawat.'
+            }}
           </p>
         </div>
       </div>
@@ -83,7 +92,13 @@ const overdueCount = computed(() => schedules.value.filter((s) => s.urgency === 
         <div class="item-top">
           <span class="item-name">{{ item.taskName }}</span>
           <span class="urgency-tag" :class="[`urgency-tag--${item.urgency}`]">
-            {{ item.urgency === 'overdue' ? 'Lewat Jadwal' : item.urgency === 'due_soon' ? 'Segera' : 'Prima' }}
+            {{
+              item.urgency === 'overdue'
+                ? 'Lewat Jadwal'
+                : item.urgency === 'due_soon'
+                  ? 'Segera'
+                  : 'Prima'
+            }}
           </span>
         </div>
 
@@ -116,8 +131,8 @@ const overdueCount = computed(() => schedules.value.filter((s) => s.urgency === 
 }
 
 .maint-banner--alert {
-  border-color: #FDE68A;
-  background: #FFFDF5;
+  border-color: #fde68a;
+  background: #fffdf5;
 }
 
 .maint-banner__header {
@@ -167,13 +182,13 @@ const overdueCount = computed(() => schedules.value.filter((s) => s.urgency === 
 }
 
 .maint-item-card--overdue {
-  border-color: #FCA5A5;
-  background: #FFF5F5;
+  border-color: #fca5a5;
+  background: #fff5f5;
 }
 
 .maint-item-card--due_soon {
-  border-color: #FDE68A;
-  background: #FFFFF0;
+  border-color: #fde68a;
+  background: #fffff0;
 }
 
 .item-top {
@@ -199,17 +214,17 @@ const overdueCount = computed(() => schedules.value.filter((s) => s.urgency === 
 }
 
 .urgency-tag--overdue {
-  background: #FEE2E2;
-  color: #991B1B;
+  background: #fee2e2;
+  color: #991b1b;
 }
 
 .urgency-tag--due_soon {
-  background: #FEF3C7;
-  color: #92400E;
+  background: #fef3c7;
+  color: #92400e;
 }
 
 .urgency-tag--ok {
-  background: #DCFCE7;
+  background: #dcfce7;
   color: #166534;
 }
 

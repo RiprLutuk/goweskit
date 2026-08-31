@@ -43,12 +43,15 @@ function loadGoogleSdk(): Promise<void> {
     script.async = true;
     script.defer = true;
     script.onload = () => resolve();
-    script.onerror = () => reject(new Error('Gagal memuat Google Sign-In SDK.'));
+    script.onerror = () =>
+      reject(new Error('Gagal memuat Google Sign-In SDK.'));
     document.head.appendChild(script);
   });
 }
 
-async function handleCredentialResponse(response: { credential: string }): Promise<void> {
+async function handleCredentialResponse(response: {
+  credential: string;
+}): Promise<void> {
   if (!response.credential) {
     emit('error', 'Token kredensial Google tidak ditemukan.');
     return;
@@ -142,7 +145,7 @@ onMounted(() => {
 
 .google-missing-warning {
   font-size: 0.72rem;
-  color: #94A3B8;
+  color: #94a3b8;
   text-align: center;
 }
 </style>

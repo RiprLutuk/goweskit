@@ -120,7 +120,8 @@ export const DIAGNOSTIC_SYMPTOMS: readonly DiagnosticSymptom[] = [
       'Bersihkan rotor dengan Isopropyl Alcohol (IPA 99%). Amplas halus permukaan kampas dan bersihkan residunya.',
     proShopRecommendedIf:
       'Minyak rem hidrolik bocor dari piston kaliper (butuh seal rebuild / kaliper baru).',
-    standardTorqueNm: '6–8 Nm (Brake Caliper Bolts), 4–6 Nm (6-Bolt Rotor), 40 Nm (Centerlock)',
+    standardTorqueNm:
+      '6–8 Nm (Brake Caliper Bolts), 4–6 Nm (6-Bolt Rotor), 40 Nm (Centerlock)',
   },
   {
     id: 'spongy_lever',
@@ -172,15 +173,21 @@ export const DIAGNOSTIC_SYMPTOMS: readonly DiagnosticSymptom[] = [
   },
 ];
 
-export function getDiagnosticSymptomById(id: string): DiagnosticSymptom | undefined {
+export function getDiagnosticSymptomById(
+  id: string,
+): DiagnosticSymptom | undefined {
   return DIAGNOSTIC_SYMPTOMS.find((s) => s.id === id);
 }
 
-export function getDiagnosticSymptomsByCategory(category: DiagnosticCategory): readonly DiagnosticSymptom[] {
+export function getDiagnosticSymptomsByCategory(
+  category: DiagnosticCategory,
+): readonly DiagnosticSymptom[] {
   return DIAGNOSTIC_SYMPTOMS.filter((s) => s.category === category);
 }
 
-export function searchDiagnosticSymptoms(query: string): readonly DiagnosticSymptom[] {
+export function searchDiagnosticSymptoms(
+  query: string,
+): readonly DiagnosticSymptom[] {
   const q = query.trim().toLowerCase();
   if (!q) return DIAGNOSTIC_SYMPTOMS;
   return DIAGNOSTIC_SYMPTOMS.filter(

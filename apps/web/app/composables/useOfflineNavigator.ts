@@ -104,7 +104,10 @@ export function useOfflineNavigator() {
     if (typeof localStorage === 'undefined') return;
     savedRoutes.value = savedRoutes.value.filter((r) => r.id !== routeId);
     localStorage.setItem(STORAGE_KEY, JSON.stringify(savedRoutes.value));
-    toast.info('Rute Dihapus dari Offline', 'Penyimpanan lokal telah diperbarui.');
+    toast.info(
+      'Rute Dihapus dari Offline',
+      'Penyimpanan lokal telah diperbarui.',
+    );
   }
 
   function exportGpxFile(route: OfflineSavedRoute): void {
@@ -141,7 +144,10 @@ ${trkpts}
     link.click();
     document.body.removeChild(link);
     URL.revokeObjectURL(url);
-    toast.success('GPX Terunduh', 'File siap dimasukkan ke head unit Garmin/Wahoo.');
+    toast.success(
+      'GPX Terunduh',
+      'File siap dimasukkan ke head unit Garmin/Wahoo.',
+    );
   }
 
   if (typeof window !== 'undefined') {

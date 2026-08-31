@@ -1,10 +1,20 @@
 <script setup lang="ts">
-import type { BikeListResponse, ContributorReputationResponse } from '@goweskit/contracts';
+import type {
+  BikeListResponse,
+  ContributorReputationResponse,
+} from '@goweskit/contracts';
 import type { TrustedContactListResponse } from '@goweskit/contracts/safety';
 
 const api = useApi();
 const { user, initialized, refresh, logout, login } = useAuth();
-const { canInstall, isStandalone, isIOS, showInstallGuide, installApp, triggerHaptic } = usePwa();
+const {
+  canInstall,
+  isStandalone,
+  isIOS,
+  showInstallGuide,
+  installApp,
+  triggerHaptic,
+} = usePwa();
 const { toast, alert } = useNotify();
 
 const errorMessage = ref('');
@@ -35,9 +45,12 @@ async function loadUserStats(): Promise<void> {
       api<TrustedContactListResponse>('/trusted-contacts'),
       api<ContributorReputationResponse>('/community/reputation/me'),
     ]);
-    if (bikesRes.status === 'fulfilled') bikeCount.value = bikesRes.value.bikes.length;
-    if (contactsRes.status === 'fulfilled') contactCount.value = contactsRes.value.contacts.length;
-    if (repRes.status === 'fulfilled') reputationScore.value = repRes.value.reputation.score;
+    if (bikesRes.status === 'fulfilled')
+      bikeCount.value = bikesRes.value.bikes.length;
+    if (contactsRes.status === 'fulfilled')
+      contactCount.value = contactsRes.value.contacts.length;
+    if (repRes.status === 'fulfilled')
+      reputationScore.value = repRes.value.reputation.score;
   } catch {
     // stats are optional
   }
@@ -73,7 +86,8 @@ async function exportPersonalData(): Promise<void> {
       bikes: bikesRes.status === 'fulfilled' ? bikesRes.value.bikes : [],
       trustedContacts:
         contactsRes.status === 'fulfilled' ? contactsRes.value.contacts : [],
-      reputation: repRes.status === 'fulfilled' ? repRes.value.reputation : null,
+      reputation:
+        repRes.status === 'fulfilled' ? repRes.value.reputation : null,
     };
 
     const blob = new Blob([JSON.stringify(exportPayload, null, 2)], {
@@ -141,7 +155,10 @@ ${url}
 function testHaptic(): void {
   triggerHaptic([30, 60, 30]);
   hapticFeedbackSent.value = true;
-  toast.info('Haptic Feedback Aktif', 'Getaran respon perangkat berhasil dipicu.');
+  toast.info(
+    'Haptic Feedback Aktif',
+    'Getaran respon perangkat berhasil dipicu.',
+  );
   setTimeout(() => {
     hapticFeedbackSent.value = false;
   }, 2000);
@@ -205,19 +222,38 @@ async function quickDemoLogin(): Promise<void> {
         </span>
       </div>
       <h1 class="native-title">Pengaturan Saya</h1>
-      <p class="native-sub">Kelola garasi sepeda, kontak keselamatan solo, dan preferensi aplikasi GowesKit.</p>
+      <p class="native-sub">
+        Kelola garasi sepeda, kontak keselamatan solo, dan preferensi aplikasi
+        GowesKit.
+      </p>
     </header>
 
     <!-- Skeleton Profile Shimmer during Loading -->
-    <div v-if="!initialized" class="pro-rider-card" style="padding: 1.25rem; display: grid; gap: 1rem;">
-      <div style="display: flex; gap: 1rem; align-items: center;">
-        <div class="skeleton-shimmer" style="width: 3.5rem; height: 3.5rem; border-radius: 50%;" />
-        <div style="flex: 1; display: grid; gap: 0.4rem;">
-          <div class="skeleton-shimmer" style="width: 50%; height: 1.2rem; border-radius: 0.35rem;" />
-          <div class="skeleton-shimmer" style="width: 70%; height: 0.85rem; border-radius: 0.3rem;" />
+    <div
+      v-if="!initialized"
+      class="pro-rider-card"
+      style="padding: 1.25rem; display: grid; gap: 1rem"
+    >
+      <div style="display: flex; gap: 1rem; align-items: center">
+        <div
+          class="skeleton-shimmer"
+          style="width: 3.5rem; height: 3.5rem; border-radius: 50%"
+        />
+        <div style="flex: 1; display: grid; gap: 0.4rem">
+          <div
+            class="skeleton-shimmer"
+            style="width: 50%; height: 1.2rem; border-radius: 0.35rem"
+          />
+          <div
+            class="skeleton-shimmer"
+            style="width: 70%; height: 0.85rem; border-radius: 0.3rem"
+          />
         </div>
       </div>
-      <div class="skeleton-shimmer" style="width: 100%; height: 3.5rem; border-radius: 0.85rem;" />
+      <div
+        class="skeleton-shimmer"
+        style="width: 100%; height: 3.5rem; border-radius: 0.85rem"
+      />
     </div>
 
     <!-- ══════════════════════════════════════════════════════════
@@ -292,7 +328,10 @@ async function quickDemoLogin(): Promise<void> {
             </div>
             <div class="item-body">
               <strong>Ride Flex Studio &amp; Poster AI</strong>
-              <small>Buat poster Strava-killer HD &amp; caption medsos otomatis</small>
+              <small
+                >Buat poster Strava-killer HD &amp; caption medsos
+                otomatis</small
+              >
             </div>
             <GIcon name="chevron-right" size="xs" color="#94A3B8" />
           </NuxtLink>
@@ -314,7 +353,9 @@ async function quickDemoLogin(): Promise<void> {
             </div>
             <div class="item-body">
               <strong>Upgrade Lab</strong>
-              <small>Simulasi kecocokan suku cadang &amp; standar as roda</small>
+              <small
+                >Simulasi kecocokan suku cadang &amp; standar as roda</small
+              >
             </div>
             <GIcon name="chevron-right" size="xs" color="#94A3B8" />
           </NuxtLink>
@@ -397,7 +438,11 @@ async function quickDemoLogin(): Promise<void> {
               <strong>Auto GPS Location</strong>
               <small>Otomatis pusatkan peta &amp; cuaca di titik Anda</small>
             </div>
-            <input v-model="autoLocation" type="checkbox" class="toggle-checkbox" />
+            <input
+              v-model="autoLocation"
+              type="checkbox"
+              class="toggle-checkbox"
+            />
           </div>
 
           <div class="inset-item inset-item--static">
@@ -408,7 +453,11 @@ async function quickDemoLogin(): Promise<void> {
               <strong>Kontras Tinggi Anatomi</strong>
               <small>Pertegas garis diagram komponen sepeda</small>
             </div>
-            <input v-model="highContrast" type="checkbox" class="toggle-checkbox" />
+            <input
+              v-model="highContrast"
+              type="checkbox"
+              class="toggle-checkbox"
+            />
           </div>
         </div>
       </section>
@@ -423,12 +472,25 @@ async function quickDemoLogin(): Promise<void> {
             </div>
             <div class="item-body">
               <strong>Status Aplikasi</strong>
-              <small v-if="isStandalone">Telah terpasang sebagai Mobile App (PWA)</small>
-              <small v-else-if="canInstall">Siap di-install ke layar utama HP</small>
+              <small v-if="isStandalone"
+                >Telah terpasang sebagai Mobile App (PWA)</small
+              >
+              <small v-else-if="canInstall"
+                >Siap di-install ke layar utama HP</small
+              >
               <small v-else>Berjalan di browser web mobile</small>
             </div>
-            <span class="status-pill-small" :class="isStandalone ? 'pill--green' : 'pill--blue'">
-              {{ isStandalone ? 'Standalone' : (canInstall ? 'Siap Install' : 'Web Browser') }}
+            <span
+              class="status-pill-small"
+              :class="isStandalone ? 'pill--green' : 'pill--blue'"
+            >
+              {{
+                isStandalone
+                  ? 'Standalone'
+                  : canInstall
+                    ? 'Siap Install'
+                    : 'Web Browser'
+              }}
             </span>
           </div>
 
@@ -442,7 +504,11 @@ async function quickDemoLogin(): Promise<void> {
               <GIcon name="upgrade" size="sm" filled />
             </div>
             <div class="item-body">
-              <strong class="text-accent">{{ isIOS ? 'Tambah ke Home Screen (Safari iOS)' : 'Install GowesKit ke HP' }}</strong>
+              <strong class="text-accent">{{
+                isIOS
+                  ? 'Tambah ke Home Screen (Safari iOS)'
+                  : 'Install GowesKit ke HP'
+              }}</strong>
               <small>Akses offline cepat dan tampilan layar penuh</small>
             </div>
             <GIcon name="chevron-right" size="xs" color="#94A3B8" />
@@ -454,9 +520,15 @@ async function quickDemoLogin(): Promise<void> {
             </div>
             <div class="item-body">
               <strong>Uji Respon Getar (Haptic)</strong>
-              <small>{{ hapticFeedbackSent ? '✓ Berhasil Bergetar!' : 'Sentuhan tombol darurat SOS & navigasi' }}</small>
+              <small>{{
+                hapticFeedbackSent
+                  ? '✓ Berhasil Bergetar!'
+                  : 'Sentuhan tombol darurat SOS & navigasi'
+              }}</small>
             </div>
-            <span class="haptic-chip">{{ hapticFeedbackSent ? '✓ Aktif' : 'Tes' }}</span>
+            <span class="haptic-chip">{{
+              hapticFeedbackSent ? '✓ Aktif' : 'Tes'
+            }}</span>
           </button>
         </div>
       </section>
@@ -486,8 +558,12 @@ async function quickDemoLogin(): Promise<void> {
               <GIcon name="download" size="sm" />
             </div>
             <div class="item-body">
-              <strong>{{ exportingData ? 'Mengunduh Data…' : 'Unduh Salinan Data Saya' }}</strong>
-              <small>Ekspor JSON portabilitas data (Profil, Sepeda, Kontak)</small>
+              <strong>{{
+                exportingData ? 'Mengunduh Data…' : 'Unduh Salinan Data Saya'
+              }}</strong>
+              <small
+                >Ekspor JSON portabilitas data (Profil, Sepeda, Kontak)</small
+              >
             </div>
             <GIcon name="chevron-right" size="xs" color="#94A3B8" />
           </button>
@@ -507,7 +583,9 @@ async function quickDemoLogin(): Promise<void> {
               <GIcon name="close" size="sm" color="#EF4444" />
             </div>
             <div class="item-body">
-              <strong class="text-danger">{{ signingOut ? 'Keluar Akun…' : 'Keluar dari Akun' }}</strong>
+              <strong class="text-danger">{{
+                signingOut ? 'Keluar Akun…' : 'Keluar dari Akun'
+              }}</strong>
             </div>
             <GIcon name="chevron-right" size="xs" color="#EF4444" />
           </button>
@@ -524,7 +602,8 @@ async function quickDemoLogin(): Promise<void> {
       </div>
       <h2 class="guest-title">Buka Fitur Lengkap GowesKit</h2>
       <p class="guest-sub">
-        Simpan sepeda di My Garage, verifikasi standar komponen, bagikan live tracking solo-ride, dan gabung mabar komunitas.
+        Simpan sepeda di My Garage, verifikasi standar komponen, bagikan live
+        tracking solo-ride, dan gabung mabar komunitas.
       </p>
 
       <div class="guest-perks-list">
@@ -550,7 +629,10 @@ async function quickDemoLogin(): Promise<void> {
           <NuxtLink class="button button--primary button--full" to="/login">
             Masuk ke Akun
           </NuxtLink>
-          <NuxtLink class="button button--secondary button--full" to="/register">
+          <NuxtLink
+            class="button button--secondary button--full"
+            to="/register"
+          >
             Daftar Akun Baru
           </NuxtLink>
         </div>
@@ -562,7 +644,9 @@ async function quickDemoLogin(): Promise<void> {
           @click="quickDemoLogin"
         >
           <GIcon name="bolt" size="xs" color="#D97706" filled />
-          <span>{{ demoLoggingIn ? 'Memuat Demo…' : 'Jelajahi Akun Demo (1-Klik)' }}</span>
+          <span>{{
+            demoLoggingIn ? 'Memuat Demo…' : 'Jelajahi Akun Demo (1-Klik)'
+          }}</span>
         </button>
       </div>
     </div>
@@ -1071,7 +1155,9 @@ async function quickDemoLogin(): Promise<void> {
   font-weight: 850;
   cursor: pointer;
   box-shadow: 0 2px 8px rgb(23 32 42 / 6%);
-  transition: transform 90ms ease, background-color 100ms ease;
+  transition:
+    transform 90ms ease,
+    background-color 100ms ease;
 }
 
 .google-action-btn:active {

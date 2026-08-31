@@ -80,8 +80,7 @@ export const createMaintenanceEventRequestSchema = z
       performedAtDistanceKm === undefined ||
       nextDueDistanceKm >= performedAtDistanceKm,
     {
-      message:
-        'Next due distance cannot be lower than the performed distance.',
+      message: 'Next due distance cannot be lower than the performed distance.',
       path: ['nextDueDistanceKm'],
     },
   );

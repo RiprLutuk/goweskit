@@ -1,5 +1,8 @@
 <script setup lang="ts">
-import type { TrustedContact, TrustedContactResponse } from '@goweskit/contracts/safety';
+import type {
+  TrustedContact,
+  TrustedContactResponse,
+} from '@goweskit/contracts/safety';
 
 const props = defineProps<{
   isOpen: boolean;
@@ -68,7 +71,10 @@ async function handleSubmit(): Promise<void> {
       },
     });
 
-    toast.success('Kontak Ditambahkan', `${response.contact.name} berhasil disimpan.`);
+    toast.success(
+      'Kontak Ditambahkan',
+      `${response.contact.name} berhasil disimpan.`,
+    );
     emit('created', response.contact);
     resetForm();
     emit('close');
@@ -100,8 +106,12 @@ async function handleSubmit(): Promise<void> {
                 <GIcon name="users" size="sm" color="#17202A" filled />
               </div>
               <div>
-                <h3 id="contact-modal-title" class="modal-title">Tambah Kontak Darurat</h3>
-                <p class="modal-subtitle">Keluarga atau rekan gowes untuk menerima tautan pemantauan.</p>
+                <h3 id="contact-modal-title" class="modal-title">
+                  Tambah Kontak Darurat
+                </h3>
+                <p class="modal-subtitle">
+                  Keluarga atau rekan gowes untuk menerima tautan pemantauan.
+                </p>
               </div>
             </div>
             <button
@@ -166,7 +176,11 @@ async function handleSubmit(): Promise<void> {
                 </label>
                 <div class="input-wrap">
                   <span class="input-icon">
-                    <GIcon name="share" size="xs" color="var(--color-asphalt)" />
+                    <GIcon
+                      name="share"
+                      size="xs"
+                      color="var(--color-asphalt)"
+                    />
                   </span>
                   <input
                     id="modal-contact-email"
@@ -184,7 +198,11 @@ async function handleSubmit(): Promise<void> {
                 </label>
                 <div class="input-wrap">
                   <span class="input-icon">
-                    <GIcon name="route" size="xs" color="var(--color-asphalt)" />
+                    <GIcon
+                      name="route"
+                      size="xs"
+                      color="var(--color-asphalt)"
+                    />
                   </span>
                   <input
                     id="modal-contact-note"
@@ -375,7 +393,10 @@ async function handleSubmit(): Promise<void> {
   font-size: 0.84rem;
   font-weight: 600;
   outline: none;
-  transition: border-color 150ms ease, box-shadow 150ms ease, background-color 150ms ease;
+  transition:
+    border-color 150ms ease,
+    box-shadow 150ms ease,
+    background-color 150ms ease;
 }
 
 .text-input:focus {
@@ -434,7 +455,9 @@ async function handleSubmit(): Promise<void> {
   display: inline-flex;
   align-items: center;
   gap: 0.35rem;
-  transition: transform 90ms ease, opacity 120ms ease;
+  transition:
+    transform 90ms ease,
+    opacity 120ms ease;
   box-shadow: 0 4px 14px rgba(23, 32, 42, 0.15);
 }
 
@@ -456,7 +479,9 @@ async function handleSubmit(): Promise<void> {
 
 .modal-fade-enter-active .modal-card,
 .modal-fade-leave-active .modal-card {
-  transition: transform 220ms cubic-bezier(0.16, 1, 0.3, 1), opacity 200ms ease;
+  transition:
+    transform 220ms cubic-bezier(0.16, 1, 0.3, 1),
+    opacity 200ms ease;
 }
 
 .modal-fade-enter-from,

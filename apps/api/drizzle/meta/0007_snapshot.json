@@ -53,9 +53,7 @@
         "bicycle_types_slug_unique": {
           "name": "bicycle_types_slug_unique",
           "nullsNotDistinct": false,
-          "columns": [
-            "slug"
-          ]
+          "columns": ["slug"]
         }
       },
       "policies": {},
@@ -180,12 +178,8 @@
           "name": "bike_component_installs_user_bike_id_user_bikes_id_fk",
           "tableFrom": "bike_component_installs",
           "tableTo": "user_bikes",
-          "columnsFrom": [
-            "user_bike_id"
-          ],
-          "columnsTo": [
-            "id"
-          ],
+          "columnsFrom": ["user_bike_id"],
+          "columnsTo": ["id"],
           "onDelete": "cascade",
           "onUpdate": "no action"
         },
@@ -193,12 +187,8 @@
           "name": "bike_component_installs_component_category_id_component_categories_id_fk",
           "tableFrom": "bike_component_installs",
           "tableTo": "component_categories",
-          "columnsFrom": [
-            "component_category_id"
-          ],
-          "columnsTo": [
-            "id"
-          ],
+          "columnsFrom": ["component_category_id"],
+          "columnsTo": ["id"],
           "onDelete": "no action",
           "onUpdate": "no action"
         }
@@ -301,12 +291,8 @@
           "name": "bike_specs_user_bike_id_user_bikes_id_fk",
           "tableFrom": "bike_specs",
           "tableTo": "user_bikes",
-          "columnsFrom": [
-            "user_bike_id"
-          ],
-          "columnsTo": [
-            "id"
-          ],
+          "columnsFrom": ["user_bike_id"],
+          "columnsTo": ["id"],
           "onDelete": "cascade",
           "onUpdate": "no action"
         },
@@ -314,12 +300,8 @@
           "name": "bike_specs_standard_code_standard_definitions_code_fk",
           "tableFrom": "bike_specs",
           "tableTo": "standard_definitions",
-          "columnsFrom": [
-            "standard_code"
-          ],
-          "columnsTo": [
-            "code"
-          ],
+          "columnsFrom": ["standard_code"],
+          "columnsTo": ["code"],
           "onDelete": "no action",
           "onUpdate": "no action"
         }
@@ -480,12 +462,8 @@
           "name": "communities_created_by_users_id_fk",
           "tableFrom": "communities",
           "tableTo": "users",
-          "columnsFrom": [
-            "created_by"
-          ],
-          "columnsTo": [
-            "id"
-          ],
+          "columnsFrom": ["created_by"],
+          "columnsTo": ["id"],
           "onDelete": "no action",
           "onUpdate": "no action"
         }
@@ -622,12 +600,8 @@
           "name": "community_memberships_community_id_communities_id_fk",
           "tableFrom": "community_memberships",
           "tableTo": "communities",
-          "columnsFrom": [
-            "community_id"
-          ],
-          "columnsTo": [
-            "id"
-          ],
+          "columnsFrom": ["community_id"],
+          "columnsTo": ["id"],
           "onDelete": "cascade",
           "onUpdate": "no action"
         },
@@ -635,12 +609,8 @@
           "name": "community_memberships_user_id_users_id_fk",
           "tableFrom": "community_memberships",
           "tableTo": "users",
-          "columnsFrom": [
-            "user_id"
-          ],
-          "columnsTo": [
-            "id"
-          ],
+          "columnsFrom": ["user_id"],
+          "columnsTo": ["id"],
           "onDelete": "cascade",
           "onUpdate": "no action"
         }
@@ -749,12 +719,8 @@
           "name": "community_moderation_audits_community_id_communities_id_fk",
           "tableFrom": "community_moderation_audits",
           "tableTo": "communities",
-          "columnsFrom": [
-            "community_id"
-          ],
-          "columnsTo": [
-            "id"
-          ],
+          "columnsFrom": ["community_id"],
+          "columnsTo": ["id"],
           "onDelete": "cascade",
           "onUpdate": "no action"
         },
@@ -762,12 +728,8 @@
           "name": "community_moderation_audits_membership_id_community_memberships_id_fk",
           "tableFrom": "community_moderation_audits",
           "tableTo": "community_memberships",
-          "columnsFrom": [
-            "membership_id"
-          ],
-          "columnsTo": [
-            "id"
-          ],
+          "columnsFrom": ["membership_id"],
+          "columnsTo": ["id"],
           "onDelete": "cascade",
           "onUpdate": "no action"
         },
@@ -775,12 +737,8 @@
           "name": "community_moderation_audits_reviewer_id_users_id_fk",
           "tableFrom": "community_moderation_audits",
           "tableTo": "users",
-          "columnsFrom": [
-            "reviewer_id"
-          ],
-          "columnsTo": [
-            "id"
-          ],
+          "columnsFrom": ["reviewer_id"],
+          "columnsTo": ["id"],
           "onDelete": "no action",
           "onUpdate": "no action"
         }
@@ -828,9 +786,7 @@
         "component_categories_slug_unique": {
           "name": "component_categories_slug_unique",
           "nullsNotDistinct": false,
-          "columns": [
-            "slug"
-          ]
+          "columns": ["slug"]
         }
       },
       "policies": {},
@@ -946,12 +902,8 @@
           "name": "explore_moderation_audits_moderator_user_id_users_id_fk",
           "tableFrom": "explore_moderation_audits",
           "tableTo": "users",
-          "columnsFrom": [
-            "moderator_user_id"
-          ],
-          "columnsTo": [
-            "id"
-          ],
+          "columnsFrom": ["moderator_user_id"],
+          "columnsTo": ["id"],
           "onDelete": "no action",
           "onUpdate": "no action"
         }
@@ -1117,12 +1069,8 @@
           "name": "hazard_reports_reporter_user_id_users_id_fk",
           "tableFrom": "hazard_reports",
           "tableTo": "users",
-          "columnsFrom": [
-            "reporter_user_id"
-          ],
-          "columnsTo": [
-            "id"
-          ],
+          "columnsFrom": ["reporter_user_id"],
+          "columnsTo": ["id"],
           "onDelete": "cascade",
           "onUpdate": "no action"
         },
@@ -1130,12 +1078,8 @@
           "name": "hazard_reports_route_id_routes_id_fk",
           "tableFrom": "hazard_reports",
           "tableTo": "routes",
-          "columnsFrom": [
-            "route_id"
-          ],
-          "columnsTo": [
-            "id"
-          ],
+          "columnsFrom": ["route_id"],
+          "columnsTo": ["id"],
           "onDelete": "set null",
           "onUpdate": "no action"
         },
@@ -1143,12 +1087,8 @@
           "name": "hazard_reports_moderated_by_users_id_fk",
           "tableFrom": "hazard_reports",
           "tableTo": "users",
-          "columnsFrom": [
-            "moderated_by"
-          ],
-          "columnsTo": [
-            "id"
-          ],
+          "columnsFrom": ["moderated_by"],
+          "columnsTo": ["id"],
           "onDelete": "set null",
           "onUpdate": "no action"
         }
@@ -1288,12 +1228,8 @@
           "name": "maintenance_events_user_id_users_id_fk",
           "tableFrom": "maintenance_events",
           "tableTo": "users",
-          "columnsFrom": [
-            "user_id"
-          ],
-          "columnsTo": [
-            "id"
-          ],
+          "columnsFrom": ["user_id"],
+          "columnsTo": ["id"],
           "onDelete": "cascade",
           "onUpdate": "no action"
         },
@@ -1301,12 +1237,8 @@
           "name": "maintenance_events_user_bike_id_user_bikes_id_fk",
           "tableFrom": "maintenance_events",
           "tableTo": "user_bikes",
-          "columnsFrom": [
-            "user_bike_id"
-          ],
-          "columnsTo": [
-            "id"
-          ],
+          "columnsFrom": ["user_bike_id"],
+          "columnsTo": ["id"],
           "onDelete": "cascade",
           "onUpdate": "no action"
         }
@@ -1439,12 +1371,8 @@
           "name": "place_reviews_reporter_user_id_users_id_fk",
           "tableFrom": "place_reviews",
           "tableTo": "users",
-          "columnsFrom": [
-            "reporter_user_id"
-          ],
-          "columnsTo": [
-            "id"
-          ],
+          "columnsFrom": ["reporter_user_id"],
+          "columnsTo": ["id"],
           "onDelete": "cascade",
           "onUpdate": "no action"
         },
@@ -1452,12 +1380,8 @@
           "name": "place_reviews_place_id_places_id_fk",
           "tableFrom": "place_reviews",
           "tableTo": "places",
-          "columnsFrom": [
-            "place_id"
-          ],
-          "columnsTo": [
-            "id"
-          ],
+          "columnsFrom": ["place_id"],
+          "columnsTo": ["id"],
           "onDelete": "cascade",
           "onUpdate": "no action"
         },
@@ -1465,12 +1389,8 @@
           "name": "place_reviews_moderated_by_users_id_fk",
           "tableFrom": "place_reviews",
           "tableTo": "users",
-          "columnsFrom": [
-            "moderated_by"
-          ],
-          "columnsTo": [
-            "id"
-          ],
+          "columnsFrom": ["moderated_by"],
+          "columnsTo": ["id"],
           "onDelete": "set null",
           "onUpdate": "no action"
         }
@@ -1731,12 +1651,8 @@
           "name": "ride_event_participations_event_id_ride_events_id_fk",
           "tableFrom": "ride_event_participations",
           "tableTo": "ride_events",
-          "columnsFrom": [
-            "event_id"
-          ],
-          "columnsTo": [
-            "id"
-          ],
+          "columnsFrom": ["event_id"],
+          "columnsTo": ["id"],
           "onDelete": "cascade",
           "onUpdate": "no action"
         },
@@ -1744,12 +1660,8 @@
           "name": "ride_event_participations_user_id_users_id_fk",
           "tableFrom": "ride_event_participations",
           "tableTo": "users",
-          "columnsFrom": [
-            "user_id"
-          ],
-          "columnsTo": [
-            "id"
-          ],
+          "columnsFrom": ["user_id"],
+          "columnsTo": ["id"],
           "onDelete": "cascade",
           "onUpdate": "no action"
         }
@@ -1934,12 +1846,8 @@
           "name": "ride_events_community_id_communities_id_fk",
           "tableFrom": "ride_events",
           "tableTo": "communities",
-          "columnsFrom": [
-            "community_id"
-          ],
-          "columnsTo": [
-            "id"
-          ],
+          "columnsFrom": ["community_id"],
+          "columnsTo": ["id"],
           "onDelete": "cascade",
           "onUpdate": "no action"
         },
@@ -1947,12 +1855,8 @@
           "name": "ride_events_route_id_routes_id_fk",
           "tableFrom": "ride_events",
           "tableTo": "routes",
-          "columnsFrom": [
-            "route_id"
-          ],
-          "columnsTo": [
-            "id"
-          ],
+          "columnsFrom": ["route_id"],
+          "columnsTo": ["id"],
           "onDelete": "set null",
           "onUpdate": "no action"
         },
@@ -1960,12 +1864,8 @@
           "name": "ride_events_created_by_users_id_fk",
           "tableFrom": "ride_events",
           "tableTo": "users",
-          "columnsFrom": [
-            "created_by"
-          ],
-          "columnsTo": [
-            "id"
-          ],
+          "columnsFrom": ["created_by"],
+          "columnsTo": ["id"],
           "onDelete": "no action",
           "onUpdate": "no action"
         }
@@ -2104,12 +2004,8 @@
           "name": "route_reports_reporter_user_id_users_id_fk",
           "tableFrom": "route_reports",
           "tableTo": "users",
-          "columnsFrom": [
-            "reporter_user_id"
-          ],
-          "columnsTo": [
-            "id"
-          ],
+          "columnsFrom": ["reporter_user_id"],
+          "columnsTo": ["id"],
           "onDelete": "cascade",
           "onUpdate": "no action"
         },
@@ -2117,12 +2013,8 @@
           "name": "route_reports_route_id_routes_id_fk",
           "tableFrom": "route_reports",
           "tableTo": "routes",
-          "columnsFrom": [
-            "route_id"
-          ],
-          "columnsTo": [
-            "id"
-          ],
+          "columnsFrom": ["route_id"],
+          "columnsTo": ["id"],
           "onDelete": "cascade",
           "onUpdate": "no action"
         },
@@ -2130,12 +2022,8 @@
           "name": "route_reports_moderated_by_users_id_fk",
           "tableFrom": "route_reports",
           "tableTo": "users",
-          "columnsFrom": [
-            "moderated_by"
-          ],
-          "columnsTo": [
-            "id"
-          ],
+          "columnsFrom": ["moderated_by"],
+          "columnsTo": ["id"],
           "onDelete": "set null",
           "onUpdate": "no action"
         }
@@ -2398,12 +2286,8 @@
           "name": "safety_audits_session_id_safety_sessions_id_fk",
           "tableFrom": "safety_audits",
           "tableTo": "safety_sessions",
-          "columnsFrom": [
-            "session_id"
-          ],
-          "columnsTo": [
-            "id"
-          ],
+          "columnsFrom": ["session_id"],
+          "columnsTo": ["id"],
           "onDelete": "set null",
           "onUpdate": "no action"
         },
@@ -2411,12 +2295,8 @@
           "name": "safety_audits_actor_user_id_users_id_fk",
           "tableFrom": "safety_audits",
           "tableTo": "users",
-          "columnsFrom": [
-            "actor_user_id"
-          ],
-          "columnsTo": [
-            "id"
-          ],
+          "columnsFrom": ["actor_user_id"],
+          "columnsTo": ["id"],
           "onDelete": "set null",
           "onUpdate": "no action"
         }
@@ -2512,12 +2392,8 @@
           "name": "safety_locations_session_id_safety_sessions_id_fk",
           "tableFrom": "safety_locations",
           "tableTo": "safety_sessions",
-          "columnsFrom": [
-            "session_id"
-          ],
-          "columnsTo": [
-            "id"
-          ],
+          "columnsFrom": ["session_id"],
+          "columnsTo": ["id"],
           "onDelete": "cascade",
           "onUpdate": "no action"
         }
@@ -2680,12 +2556,8 @@
           "name": "safety_sessions_user_id_users_id_fk",
           "tableFrom": "safety_sessions",
           "tableTo": "users",
-          "columnsFrom": [
-            "user_id"
-          ],
-          "columnsTo": [
-            "id"
-          ],
+          "columnsFrom": ["user_id"],
+          "columnsTo": ["id"],
           "onDelete": "cascade",
           "onUpdate": "no action"
         },
@@ -2693,12 +2565,8 @@
           "name": "safety_sessions_trusted_contact_id_trusted_contacts_id_fk",
           "tableFrom": "safety_sessions",
           "tableTo": "trusted_contacts",
-          "columnsFrom": [
-            "trusted_contact_id"
-          ],
-          "columnsTo": [
-            "id"
-          ],
+          "columnsFrom": ["trusted_contact_id"],
+          "columnsTo": ["id"],
           "onDelete": "set null",
           "onUpdate": "no action"
         }
@@ -2811,12 +2679,8 @@
           "name": "sessions_user_id_users_id_fk",
           "tableFrom": "sessions",
           "tableTo": "users",
-          "columnsFrom": [
-            "user_id"
-          ],
-          "columnsTo": [
-            "id"
-          ],
+          "columnsFrom": ["user_id"],
+          "columnsTo": ["id"],
           "onDelete": "cascade",
           "onUpdate": "no action"
         }
@@ -2973,12 +2837,8 @@
           "name": "trusted_contacts_user_id_users_id_fk",
           "tableFrom": "trusted_contacts",
           "tableTo": "users",
-          "columnsFrom": [
-            "user_id"
-          ],
-          "columnsTo": [
-            "id"
-          ],
+          "columnsFrom": ["user_id"],
+          "columnsTo": ["id"],
           "onDelete": "cascade",
           "onUpdate": "no action"
         }
@@ -3090,12 +2950,8 @@
           "name": "user_bikes_user_id_users_id_fk",
           "tableFrom": "user_bikes",
           "tableTo": "users",
-          "columnsFrom": [
-            "user_id"
-          ],
-          "columnsTo": [
-            "id"
-          ],
+          "columnsFrom": ["user_id"],
+          "columnsTo": ["id"],
           "onDelete": "cascade",
           "onUpdate": "no action"
         },
@@ -3103,12 +2959,8 @@
           "name": "user_bikes_bicycle_type_id_bicycle_types_id_fk",
           "tableFrom": "user_bikes",
           "tableTo": "bicycle_types",
-          "columnsFrom": [
-            "bicycle_type_id"
-          ],
-          "columnsTo": [
-            "id"
-          ],
+          "columnsFrom": ["bicycle_type_id"],
+          "columnsTo": ["id"],
           "onDelete": "no action",
           "onUpdate": "no action"
         }

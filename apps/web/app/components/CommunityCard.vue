@@ -19,9 +19,10 @@ const initials = computed(() => {
   return props.community.name.slice(0, 2).toUpperCase();
 });
 
-const isVerified = computed(() =>
-  props.community.verificationStatus === 'staff_verified' ||
-  props.community.verificationStatus === 'community_verified',
+const isVerified = computed(
+  () =>
+    props.community.verificationStatus === 'staff_verified' ||
+    props.community.verificationStatus === 'community_verified',
 );
 </script>
 
@@ -52,7 +53,8 @@ const isVerified = computed(() =>
         <span>{{ community.locality }}</span>
         <span class="dot-sep">·</span>
         <span>
-          <GIcon name="community" size="xs" /> {{ community.memberCount }} Anggota
+          <GIcon name="community" size="xs" />
+          {{ community.memberCount }} Anggota
         </span>
         <span class="dot-sep">·</span>
         <span>{{ community.joinMode === 'open' ? 'Publik' : 'Privat' }}</span>
@@ -92,7 +94,10 @@ const isVerified = computed(() =>
   box-shadow: 0 2px 10px rgb(23 32 42 / 3%);
   text-decoration: none;
   color: inherit;
-  transition: transform 90ms ease, box-shadow 90ms ease, border-color 90ms ease;
+  transition:
+    transform 90ms ease,
+    box-shadow 90ms ease,
+    border-color 90ms ease;
   position: relative;
 }
 

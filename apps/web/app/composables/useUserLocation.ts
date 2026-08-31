@@ -5,7 +5,8 @@ export interface UserLocation {
   longitude: number;
 }
 
-export type GpsStatus = 'idle' | 'requesting' | 'granted' | 'denied' | 'unavailable';
+export type GpsStatus =
+  'idle' | 'requesting' | 'granted' | 'denied' | 'unavailable';
 
 const DEFAULT_COORDS: UserLocation = {
   latitude: -6.9175,
@@ -23,30 +24,36 @@ if (import.meta.client && typeof navigator !== 'undefined') {
     gpsStatus.value = 'unavailable';
   } else if ('permissions' in navigator) {
     try {
-      navigator.permissions.query({ name: 'geolocation' }).then((status) => {
-        if (status.state === 'granted') {
-          gpsStatus.value = 'granted';
-        } else if (status.state === 'denied') {
-          gpsStatus.value = 'denied';
-        }
-        status.onchange = () => {
+      navigator.permissions
+        .query({ name: 'geolocation' })
+        .then((status) => {
           if (status.state === 'granted') {
             gpsStatus.value = 'granted';
           } else if (status.state === 'denied') {
             gpsStatus.value = 'denied';
-            isLiveGps.value = false;
           }
-        };
-      }).catch(() => {
-        // Permissions query not supported for geolocation on some engines
-      });
+          status.onchange = () => {
+            if (status.state === 'granted') {
+              gpsStatus.value = 'granted';
+            } else if (status.state === 'denied') {
+              gpsStatus.value = 'denied';
+              isLiveGps.value = false;
+            }
+          };
+        })
+        .catch(() => {
+          // Permissions query not supported for geolocation on some engines
+        });
     } catch {
       // Ignored
     }
   }
 }
 
-export async function reverseGeocodeCity(latitude: number, longitude: number): Promise<string> {
+export async function reverseGeocodeCity(
+  latitude: number,
+  longitude: number,
+): Promise<string> {
   try {
     const url = `https://api.bigdatacloud.net/data/reverse-geocode-client?latitude=${latitude}&longitude=${longitude}&localityLanguage=id`;
     const response = await fetch(url, { signal: AbortSignal.timeout(3500) });
@@ -56,7 +63,9 @@ export async function reverseGeocodeCity(latitude: number, longitude: number): P
       locality?: string;
       principalSubdivision?: string;
     };
-    return data.city || data.locality || data.principalSubdivision || 'Lokasimu';
+    return (
+      data.city || data.locality || data.principalSubdivision || 'Lokasimu'
+    );
   } catch {
     return 'Lokasimu';
   }

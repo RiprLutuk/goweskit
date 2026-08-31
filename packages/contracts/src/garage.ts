@@ -141,7 +141,34 @@ export const bikeVisualSchema = z
   .strict();
 export type BikeVisual = z.infer<typeof bikeVisualSchema>;
 
-export const bikeVisualResponseSchema = z
-  .object({ bike: bikeVisualSchema })
-  .strict();
+export const bikeVisualResponseSchema = z.object({
+  bike: bikeVisualSchema,
+});
+
 export type BikeVisualResponse = z.infer<typeof bikeVisualResponseSchema>;
+
+export const publicBikePassportSchema = z.object({
+  id: z.uuid(),
+  nickname: z.string(),
+  bicycleType: z.string(),
+  brand: z.string().nullable().optional(),
+  model: z.string().nullable().optional(),
+  modelYear: z.number().nullable().optional(),
+  photoUrl: z.string().nullable().optional(),
+  avatarPreset: z.string().nullable().optional(),
+  notes: z.string().nullable().optional(),
+  specs: z.array(bikeSpecSchema),
+  registeredAt: z.string(),
+  ownershipStatus: z.enum(['verified_owner', 'legitimate', 'reported_stolen']),
+  passportUid: z.string(),
+});
+
+export type PublicBikePassport = z.infer<typeof publicBikePassportSchema>;
+
+export const publicBikePassportResponseSchema = z.object({
+  bike: publicBikePassportSchema,
+});
+
+export type PublicBikePassportResponse = z.infer<
+  typeof publicBikePassportResponseSchema
+>;

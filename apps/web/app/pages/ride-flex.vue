@@ -14,7 +14,9 @@ const initialNote = String(route.query.note || 'Morning Gravel Loop Sentul');
 const initialBike = String(route.query.bike || 'Polygon Siskiu T7');
 
 // Active studio tab
-const activeTool = ref<'style' | 'route' | 'backdrop' | 'stickers' | 'ai' | 'edit'>('style');
+const activeTool = ref<
+  'style' | 'route' | 'backdrop' | 'stickers' | 'ai' | 'edit'
+>('style');
 
 const STICKER_LABELS: Record<string, string> = {
   kom: '👑 KOM HUNTER',
@@ -40,7 +42,13 @@ interface RoutePreset {
   distanceKm: number;
   elevationM: number;
   pathD: string; // Real road SVG coordinate string
-  waypoints: Array<{ name: string; icon: string; x: number; y: number; type: 'coffee' | 'climb' | 'photo' | 'sprint' }>;
+  waypoints: Array<{
+    name: string;
+    icon: string;
+    x: number;
+    y: number;
+    type: 'coffee' | 'climb' | 'photo' | 'sprint';
+  }>;
 }
 
 const ROUTE_PRESETS: RoutePreset[] = [
@@ -50,12 +58,31 @@ const ROUTE_PRESETS: RoutePreset[] = [
     location: 'Tangerang Kota',
     distanceKm: 9.8,
     elevationM: 68,
-    pathD: 'M 105 270 L 108 220 L 102 170 L 112 120 L 138 80 L 175 60 L 218 55 L 255 72 L 282 102 L 292 150 L 298 200 L 290 245 L 262 265 L 222 250 L 182 260 L 142 275 Z',
+    pathD:
+      'M 105 270 L 108 220 L 102 170 L 112 120 L 138 80 L 175 60 L 218 55 L 255 72 L 282 102 L 292 150 L 298 200 L 290 245 L 262 265 L 222 250 L 182 260 L 142 275 Z',
     waypoints: [
-      { name: 'Start Cisadane (KM 0)', icon: '🚩', x: 105, y: 270, type: 'photo' },
+      {
+        name: 'Start Cisadane (KM 0)',
+        icon: '🚩',
+        x: 105,
+        y: 270,
+        type: 'photo',
+      },
       { name: 'Jembatan Berendeng', icon: '🌉', x: 138, y: 80, type: 'photo' },
-      { name: 'Pasar Lama Street Food', icon: '☕', x: 292, y: 150, type: 'coffee' },
-      { name: 'Benteng Heritage Finish', icon: '🏁', x: 182, y: 260, type: 'sprint' },
+      {
+        name: 'Pasar Lama Street Food',
+        icon: '☕',
+        x: 292,
+        y: 150,
+        type: 'coffee',
+      },
+      {
+        name: 'Benteng Heritage Finish',
+        icon: '🏁',
+        x: 182,
+        y: 260,
+        type: 'sprint',
+      },
     ],
   },
   {
@@ -64,11 +91,24 @@ const ROUTE_PRESETS: RoutePreset[] = [
     location: 'Sentul, Bogor',
     distanceKm: 45.8,
     elevationM: 580,
-    pathD: 'M 75 270 L 90 230 L 115 205 L 105 180 L 130 160 L 170 175 L 205 150 L 220 120 L 255 105 L 285 70 L 315 65 L 340 90 L 325 130 L 335 165 L 310 200 L 280 215 L 250 200 L 230 230 L 195 245 L 160 235 L 130 260 L 95 275 Z',
+    pathD:
+      'M 75 270 L 90 230 L 115 205 L 105 180 L 130 160 L 170 175 L 205 150 L 220 120 L 255 105 L 285 70 L 315 65 L 340 90 L 325 130 L 335 165 L 310 200 L 280 215 L 250 200 L 230 230 L 195 245 L 160 235 L 130 260 L 95 275 Z',
     waypoints: [
       { name: 'Start KM 0 Sentul', icon: '🚩', x: 75, y: 270, type: 'photo' },
-      { name: 'Tanjakan Rainbow (+420m)', icon: '⛰️', x: 255, y: 105, type: 'climb' },
-      { name: 'Warung Kopi & Sate', icon: '☕', x: 325, y: 130, type: 'coffee' },
+      {
+        name: 'Tanjakan Rainbow (+420m)',
+        icon: '⛰️',
+        x: 255,
+        y: 105,
+        type: 'climb',
+      },
+      {
+        name: 'Warung Kopi & Sate',
+        icon: '☕',
+        x: 325,
+        y: 130,
+        type: 'coffee',
+      },
       { name: 'Sprint Finish', icon: '🏁', x: 195, y: 245, type: 'sprint' },
     ],
   },
@@ -78,12 +118,25 @@ const ROUTE_PRESETS: RoutePreset[] = [
     location: 'Babakan Madang',
     distanceKm: 28.4,
     elevationM: 720,
-    pathD: 'M 60 270 L 85 240 L 115 250 L 135 220 L 165 225 L 180 195 L 215 190 L 230 155 L 265 145 L 280 105 L 310 95 L 330 65 L 340 45 L 315 40 L 285 55 L 250 85 L 215 105 L 180 135 L 150 160 L 120 195 L 90 225 L 60 270 Z',
+    pathD:
+      'M 60 270 L 85 240 L 115 250 L 135 220 L 165 225 L 180 195 L 215 190 L 230 155 L 265 145 L 280 105 L 310 95 L 330 65 L 340 45 L 315 40 L 285 55 L 250 85 L 215 105 L 180 135 L 150 160 L 120 195 L 90 225 L 60 270 Z',
     waypoints: [
-      { name: 'Check-in Gate Sentul', icon: '🚩', x: 60, y: 270, type: 'photo' },
+      {
+        name: 'Check-in Gate Sentul',
+        icon: '🚩',
+        x: 60,
+        y: 270,
+        type: 'photo',
+      },
       { name: 'Hairpin S1 Climb', icon: '⚡', x: 180, y: 195, type: 'climb' },
       { name: 'KM 0 Summit (+720m)', icon: '👑', x: 340, y: 45, type: 'climb' },
-      { name: 'Kopi Daong Pitstop', icon: '☕', x: 215, y: 105, type: 'coffee' },
+      {
+        name: 'Kopi Daong Pitstop',
+        icon: '☕',
+        x: 215,
+        y: 105,
+        type: 'coffee',
+      },
     ],
   },
   {
@@ -92,11 +145,18 @@ const ROUTE_PRESETS: RoutePreset[] = [
     location: 'DKI Jakarta',
     distanceKm: 32.0,
     elevationM: 45,
-    pathD: 'M 130 280 L 130 180 L 130 110 L 140 80 L 180 60 L 230 60 L 270 80 L 280 110 L 280 180 L 280 280 L 250 285 L 205 280 L 160 285 Z',
+    pathD:
+      'M 130 280 L 130 180 L 130 110 L 140 80 L 180 60 L 230 60 L 270 80 L 280 110 L 280 180 L 280 280 L 250 285 L 205 280 L 160 285 Z',
     waypoints: [
       { name: 'Bundaran HI', icon: '🚩', x: 130, y: 180, type: 'photo' },
       { name: 'Monas Sprint Lap', icon: '⚡', x: 205, y: 60, type: 'sprint' },
-      { name: 'GBK Senayan Pitstop', icon: '☕', x: 280, y: 230, type: 'coffee' },
+      {
+        name: 'GBK Senayan Pitstop',
+        icon: '☕',
+        x: 280,
+        y: 230,
+        type: 'coffee',
+      },
     ],
   },
   {
@@ -105,11 +165,18 @@ const ROUTE_PRESETS: RoutePreset[] = [
     location: 'Bandung Utara',
     distanceKm: 38.5,
     elevationM: 890,
-    pathD: 'M 80 280 L 105 245 L 130 240 L 145 200 L 175 185 L 195 150 L 225 140 L 250 100 L 280 85 L 310 55 L 330 70 L 315 110 L 285 145 L 255 180 L 220 210 L 185 235 L 145 260 L 110 285 Z',
+    pathD:
+      'M 80 280 L 105 245 L 130 240 L 145 200 L 175 185 L 195 150 L 225 140 L 250 100 L 280 85 L 310 55 L 330 70 L 315 110 L 285 145 L 255 180 L 220 210 L 185 235 L 145 260 L 110 285 Z',
     waypoints: [
       { name: 'Dago Bawah Start', icon: '🚩', x: 80, y: 280, type: 'photo' },
       { name: 'Tahura Pine Forest', icon: '🌲', x: 195, y: 150, type: 'photo' },
-      { name: 'Tebing Keraton Peak (+1274m)', icon: '⛰️', x: 310, y: 55, type: 'climb' },
+      {
+        name: 'Tebing Keraton Peak (+1274m)',
+        icon: '⛰️',
+        x: 310,
+        y: 55,
+        type: 'climb',
+      },
       { name: 'Armor Kopi Tahura', icon: '☕', x: 220, y: 210, type: 'coffee' },
     ],
   },
@@ -119,11 +186,24 @@ const ROUTE_PRESETS: RoutePreset[] = [
     location: 'Tengger, Jawa Timur',
     distanceKm: 52.0,
     elevationM: 1450,
-    pathD: 'M 60 130 L 95 100 L 140 85 L 185 95 L 230 75 L 275 80 L 315 105 L 340 140 L 330 180 L 295 215 L 250 235 L 200 245 L 155 230 L 115 240 L 80 210 L 60 170 Z',
+    pathD:
+      'M 60 130 L 95 100 L 140 85 L 185 95 L 230 75 L 275 80 L 315 105 L 340 140 L 330 180 L 295 215 L 250 235 L 200 245 L 155 230 L 115 240 L 80 210 L 60 170 Z',
     waypoints: [
       { name: 'Cemoro Lawang Gate', icon: '🚩', x: 60, y: 130, type: 'photo' },
-      { name: 'Lautan Pasir Berbisik', icon: '⚡', x: 230, y: 75, type: 'sprint' },
-      { name: 'Kawah Bromo Peak (+2329m)', icon: '🌋', x: 340, y: 140, type: 'climb' },
+      {
+        name: 'Lautan Pasir Berbisik',
+        icon: '⚡',
+        x: 230,
+        y: 75,
+        type: 'sprint',
+      },
+      {
+        name: 'Kawah Bromo Peak (+2329m)',
+        icon: '🌋',
+        x: 340,
+        y: 140,
+        type: 'climb',
+      },
       { name: 'Bukit Teletubbies', icon: '☕', x: 155, y: 230, type: 'coffee' },
     ],
   },
@@ -132,16 +212,32 @@ const ROUTE_PRESETS: RoutePreset[] = [
 // Determine matching preset from URL params
 const detectedPreset = computed(() => {
   const noteLower = (initialNote || '').toLowerCase();
-  if (noteLower.includes('cisadane') || noteLower.includes('tangerang') || initialDistance < 15) {
+  if (
+    noteLower.includes('cisadane') ||
+    noteLower.includes('tangerang') ||
+    initialDistance < 15
+  ) {
     return ROUTE_PRESETS[0];
   }
-  if (noteLower.includes('sudirman') || noteLower.includes('monas') || noteLower.includes('jakarta')) {
+  if (
+    noteLower.includes('sudirman') ||
+    noteLower.includes('monas') ||
+    noteLower.includes('jakarta')
+  ) {
     return ROUTE_PRESETS[3];
   }
-  if (noteLower.includes('bojong') || noteLower.includes('km 0') || noteLower.includes('km0')) {
+  if (
+    noteLower.includes('bojong') ||
+    noteLower.includes('km 0') ||
+    noteLower.includes('km0')
+  ) {
     return ROUTE_PRESETS[2];
   }
-  if (noteLower.includes('dago') || noteLower.includes('tahura') || noteLower.includes('bandung')) {
+  if (
+    noteLower.includes('dago') ||
+    noteLower.includes('tahura') ||
+    noteLower.includes('bandung')
+  ) {
     return ROUTE_PRESETS[4];
   }
   if (noteLower.includes('bromo') || noteLower.includes('tengger')) {
@@ -156,11 +252,14 @@ const rideForm = reactive({
   distanceKm: initialDistance,
   elevationM: initialElevation,
   durationMinutes: initialDuration,
-  avgSpeedKmH: Number((initialDistance / Math.max(initialDuration / 60, 0.05)).toFixed(1)),
+  avgSpeedKmH: Number(
+    (initialDistance / Math.max(initialDuration / 60, 0.05)).toFixed(1),
+  ),
   caloriesKcal: 980,
   temperatureC: 25,
   bikeName: initialBike,
-  templateStyle: 'strava_bold' as 'strava_bold' | 'rapha_editorial' | 'cyber_hud' | 'cafe_santai',
+  templateStyle: 'strava_bold' as
+    'strava_bold' | 'rapha_editorial' | 'cyber_hud' | 'cafe_santai',
   aspectRatio: 'story' as 'story' | 'post' | 'landscape',
   activeSticker: 'kom' as
     | 'kom'
@@ -173,12 +272,14 @@ const rideForm = reactive({
     | 'fuel'
     | 'podium'
     | 'none',
-  bgPreset: 'alpine' as 'alpine' | 'gravel' | 'sunset' | 'crit' | 'cafe' | 'topo' | 'custom',
+  bgPreset: 'alpine' as
+    'alpine' | 'gravel' | 'sunset' | 'crit' | 'cafe' | 'topo' | 'custom',
   customPhotoUrl: '',
   // GPS Route Customizations
   showGpsRoute: true,
   selectedRoutePresetId: detectedPreset.value?.id || 'cisadane_intro',
-  routeRenderStyle: 'spectrum_elevation' as 'spectrum_elevation' | 'kinetic_neon' | 'topo_radar' | 'minimal_wire',
+  routeRenderStyle: 'spectrum_elevation' as
+    'spectrum_elevation' | 'kinetic_neon' | 'topo_radar' | 'minimal_wire',
   showWaypoints: true,
 });
 
@@ -188,7 +289,10 @@ const currentRoute = computed(() => {
   if (customGpxRoute.value && rideForm.selectedRoutePresetId === 'custom_gpx') {
     return customGpxRoute.value;
   }
-  return ROUTE_PRESETS.find((r) => r.id === rideForm.selectedRoutePresetId) || ROUTE_PRESETS[0];
+  return (
+    ROUTE_PRESETS.find((r) => r.id === rideForm.selectedRoutePresetId) ||
+    ROUTE_PRESETS[0]
+  );
 });
 
 function selectRoutePreset(preset: RoutePreset) {
@@ -196,8 +300,15 @@ function selectRoutePreset(preset: RoutePreset) {
   rideForm.title = preset.name;
   rideForm.distanceKm = preset.distanceKm;
   rideForm.elevationM = preset.elevationM;
-  rideForm.avgSpeedKmH = Number((preset.distanceKm / Math.max(rideForm.durationMinutes / 60, 0.05)).toFixed(1));
-  toast.success('Rute GPS Diterapkan!', `${preset.name} (${preset.distanceKm} km, +${preset.elevationM}m)`);
+  rideForm.avgSpeedKmH = Number(
+    (preset.distanceKm / Math.max(rideForm.durationMinutes / 60, 0.05)).toFixed(
+      1,
+    ),
+  );
+  toast.success(
+    'Rute GPS Diterapkan!',
+    `${preset.name} (${preset.distanceKm} km, +${preset.elevationM}m)`,
+  );
 }
 
 const isSyncingGps = ref(false);
@@ -205,15 +316,27 @@ const isSyncingGps = ref(false);
 async function syncFromDeviceGpsOrSession() {
   isSyncingGps.value = true;
   try {
-    const sessionRes = await api<{ sessions: Array<{ id: string; status: string; startedAt: string; routeNote?: string | null }> }>('/safety/sessions').catch(() => null);
-    
+    const sessionRes = await api<{
+      sessions: Array<{
+        id: string;
+        status: string;
+        startedAt: string;
+        routeNote?: string | null;
+      }>;
+    }>('/safety/sessions').catch(() => null);
+
     if (sessionRes?.sessions && sessionRes.sessions.length > 0) {
       const latest = sessionRes.sessions[0];
       if (latest) {
         // Attempt to fetch actual GPS tracking breadcrumbs
-        const locationsRes = await api<{ locations: Array<{ latitude: number; longitude: number; altitude?: number | null; recordedAt: string }> }>(
-          `/safety/sessions/${latest.id}/locations`,
-        ).catch(() => null);
+        const locationsRes = await api<{
+          locations: Array<{
+            latitude: number;
+            longitude: number;
+            altitude?: number | null;
+            recordedAt: string;
+          }>;
+        }>(`/safety/sessions/${latest.id}/locations`).catch(() => null);
 
         if (locationsRes?.locations && locationsRes.locations.length >= 2) {
           const gpxPoints = locationsRes.locations.map((loc) => ({
@@ -222,8 +345,14 @@ async function syncFromDeviceGpsOrSession() {
             altitude: loc.altitude ?? null,
             time: loc.recordedAt,
           }));
-          const gpxXml = generateGpxXml(latest.routeNote || 'Sesi Gowes Solo', gpxPoints);
-          const parsed = parseGpxToRoute(gpxXml, latest.routeNote || 'Sesi Gowes Solo');
+          const gpxXml = generateGpxXml(
+            latest.routeNote || 'Sesi Gowes Solo',
+            gpxPoints,
+          );
+          const parsed = parseGpxToRoute(
+            gpxXml,
+            latest.routeNote || 'Sesi Gowes Solo',
+          );
 
           customGpxRoute.value = {
             id: 'custom_gpx',
@@ -240,16 +369,26 @@ async function syncFromDeviceGpsOrSession() {
           rideForm.distanceKm = parsed.distanceKm;
           rideForm.elevationM = parsed.elevationM;
           rideForm.durationMinutes = parsed.durationMinutes;
-          rideForm.avgSpeedKmH = Number((parsed.distanceKm / Math.max(parsed.durationMinutes / 60, 0.05)).toFixed(1));
+          rideForm.avgSpeedKmH = Number(
+            (
+              parsed.distanceKm / Math.max(parsed.durationMinutes / 60, 0.05)
+            ).toFixed(1),
+          );
           rideForm.showGpsRoute = true;
 
-          toast.success('✨ Jejak GPS Sesi Solo Berhasil Ditarik!', `${parsed.name} (${parsed.distanceKm} km, +${parsed.elevationM}m)`);
+          toast.success(
+            '✨ Jejak GPS Sesi Solo Berhasil Ditarik!',
+            `${parsed.name} (${parsed.distanceKm} km, +${parsed.elevationM}m)`,
+          );
           isSyncingGps.value = false;
           return;
         }
 
         if (latest.routeNote) rideForm.title = latest.routeNote;
-        toast.success('✨ Sesi Gowes Asli Tersinkron!', `Data dari catatan sesi "${latest.routeNote || 'Sesi Gowes'}" berhasil dimuat.`);
+        toast.success(
+          '✨ Sesi Gowes Asli Tersinkron!',
+          `Data dari catatan sesi "${latest.routeNote || 'Sesi Gowes'}" berhasil dimuat.`,
+        );
         isSyncingGps.value = false;
         return;
       }
@@ -260,16 +399,24 @@ async function syncFromDeviceGpsOrSession() {
         (pos) => {
           const lat = pos.coords.latitude.toFixed(4);
           const lng = pos.coords.longitude.toFixed(4);
-          const speedKmh = pos.coords.speed ? Number((pos.coords.speed * 3.6).toFixed(1)) : rideForm.avgSpeedKmH;
+          const speedKmh = pos.coords.speed
+            ? Number((pos.coords.speed * 3.6).toFixed(1))
+            : rideForm.avgSpeedKmH;
           if (speedKmh > 0) rideForm.avgSpeedKmH = speedKmh;
-          toast.success('📍 GPS HP Terkoneksi!', `Posisi realtime terdeteksi di (${lat}, ${lng}). Sesi aktif langsung disinkronkan.`);
+          toast.success(
+            '📍 GPS HP Terkoneksi!',
+            `Posisi realtime terdeteksi di (${lat}, ${lng}). Sesi aktif langsung disinkronkan.`,
+          );
           isSyncingGps.value = false;
         },
         () => {
-          toast.info('GPS Tersedia', 'Memakai estimasi rute lokal & telemetri sensor sepeda.');
+          toast.info(
+            'GPS Tersedia',
+            'Memakai estimasi rute lokal & telemetri sensor sepeda.',
+          );
           isSyncingGps.value = false;
         },
-        { enableHighAccuracy: true, timeout: 5000 }
+        { enableHighAccuracy: true, timeout: 5000 },
       );
     } else {
       toast.info('Info Telemetri', 'Browser tidak mendukung GPS langsung.');
@@ -281,13 +428,16 @@ async function syncFromDeviceGpsOrSession() {
   }
 }
 
-const selectedPersona = ref<'athlete' | 'humor' | 'technical' | 'gravel'>('athlete');
+const selectedPersona = ref<'athlete' | 'humor' | 'technical' | 'gravel'>(
+  'athlete',
+);
 const isAiGenerating = ref(false);
 const isExporting = ref(false);
 
 const aiRecap = ref({
   title: 'Morning Gravel Rush: Menaklukkan Tanjakan Kopi Sentul',
-  highlight: 'Kamu membakar 980 kalori dan menaklukkan elevasi +580m! Output tenaga rata-rata luar biasa stabil.',
+  highlight:
+    'Kamu membakar 980 kalori dan menaklukkan elevasi +580m! Output tenaga rata-rata luar biasa stabil.',
   foodEquivalency: '1 porsi Sate Maranggi + Es Kelapa Muda 🍢🥥',
   climbGradeScore: 'Cat 2 Mountain Pass (~6-8%) ⛰️',
   captions: {
@@ -299,7 +449,13 @@ const aiRecap = ref({
   photoVisualInsight: '',
   trainingInsight: '',
   mechanicTip: `💡 Saran AI Mekanik: Setelah elevasi +${initialElevation}m, rantai dan cassette menahan torsi tinggi. Cek tegangan rantai dan lumasi kembali drivetrain malam ini.`,
-  hashtags: ['#GowesKit', '#RideFlex', '#CyclingIndonesia', '#KOMHunter', '#SentulLoop'],
+  hashtags: [
+    '#GowesKit',
+    '#RideFlex',
+    '#CyclingIndonesia',
+    '#KOMHunter',
+    '#SentulLoop',
+  ],
 });
 
 function handlePhotoUpload(event: Event) {
@@ -311,7 +467,10 @@ function handlePhotoUpload(event: Event) {
     if (typeof e.target?.result === 'string') {
       rideForm.customPhotoUrl = e.target.result;
       rideForm.bgPreset = 'custom';
-      toast.success('Foto Dipasang!', 'Foto dianalisis oleh AI Vision saat meracik cerita.');
+      toast.success(
+        'Foto Dipasang!',
+        'Foto dianalisis oleh AI Vision saat meracik cerita.',
+      );
     }
   };
   reader.readAsDataURL(file);
@@ -343,12 +502,22 @@ function handleGpxUpload(event: Event) {
       rideForm.distanceKm = parsed.distanceKm;
       rideForm.elevationM = parsed.elevationM;
       rideForm.durationMinutes = parsed.durationMinutes;
-      rideForm.avgSpeedKmH = Number((parsed.distanceKm / Math.max(parsed.durationMinutes / 60, 0.05)).toFixed(1));
+      rideForm.avgSpeedKmH = Number(
+        (
+          parsed.distanceKm / Math.max(parsed.durationMinutes / 60, 0.05)
+        ).toFixed(1),
+      );
       rideForm.showGpsRoute = true;
 
-      toast.success('✨ Rute GPX Solo Berhasil Dimuat!', `${parsed.name} (${parsed.distanceKm} km, +${parsed.elevationM}m)`);
+      toast.success(
+        '✨ Rute GPX Solo Berhasil Dimuat!',
+        `${parsed.name} (${parsed.distanceKm} km, +${parsed.elevationM}m)`,
+      );
     } catch (err: unknown) {
-      toast.error('Gagal Membaca GPX', err instanceof Error ? err.message : 'Format file GPX tidak valid.');
+      toast.error(
+        'Gagal Membaca GPX',
+        err instanceof Error ? err.message : 'Format file GPX tidak valid.',
+      );
     }
   };
   reader.readAsText(file);
@@ -373,8 +542,13 @@ async function generateAiStory() {
           durationMinutes: rideForm.durationMinutes,
           bikeName: rideForm.bikeName || undefined,
           weatherTempC: rideForm.temperatureC || undefined,
-          cyclistPersona: selectedPersona.value === 'technical' ? 'gearhead' : selectedPersona.value,
-          photoBase64: rideForm.customPhotoUrl.startsWith('data:') ? rideForm.customPhotoUrl : undefined,
+          cyclistPersona:
+            selectedPersona.value === 'technical'
+              ? 'gearhead'
+              : selectedPersona.value,
+          photoBase64: rideForm.customPhotoUrl.startsWith('data:')
+            ? rideForm.customPhotoUrl
+            : undefined,
           photoMimeType: 'image/jpeg',
         },
       },
@@ -397,16 +571,24 @@ async function generateAiStory() {
         athlete: res.captions.athlete,
         humor: res.captions.humor,
         technical: res.captions.technical,
-        gravel: res.captions.gravel || `🌲 Petualangan rute ${res.title} sangat berkesan bersama ${rideForm.bikeName || 'sepeda kesayangan'}!`,
+        gravel:
+          res.captions.gravel ||
+          `🌲 Petualangan rute ${res.title} sangat berkesan bersama ${rideForm.bikeName || 'sepeda kesayangan'}!`,
       },
       photoVisualInsight: res.photoVisualInsight || '',
       trainingInsight: res.trainingInsight || '',
       mechanicTip: `💡 Saran AI Mekanik: ${res.mechanicTip}`,
       hashtags: res.suggestedHashtags,
     };
-    toast.success('✨ Cerita AI Gemini Dihasilkan!', 'Caption dan analisa performa berhasil diperbarui secara cerdas.');
+    toast.success(
+      '✨ Cerita AI Gemini Dihasilkan!',
+      'Caption dan analisa performa berhasil diperbarui secara cerdas.',
+    );
   } catch {
-    toast.info('Mode Offline Heuristic', 'AI story dihasilkan dari engine lokal.');
+    toast.info(
+      'Mode Offline Heuristic',
+      'AI story dihasilkan dari engine lokal.',
+    );
   } finally {
     isAiGenerating.value = false;
   }
@@ -424,7 +606,9 @@ async function copyCaption(text: string) {
 // -------------------------------------------------------------
 // High-End Modern Canvas Exporter with GPS Route & Elevation Spectrum
 // -------------------------------------------------------------
-async function renderCanvas(aspectRatio: 'story' | 'post' | 'landscape'): Promise<HTMLCanvasElement> {
+async function renderCanvas(
+  aspectRatio: 'story' | 'post' | 'landscape',
+): Promise<HTMLCanvasElement> {
   if (typeof document !== 'undefined' && document.fonts) {
     try {
       await document.fonts.ready;
@@ -451,7 +635,8 @@ async function renderCanvas(aspectRatio: 'story' | 'post' | 'landscape'): Promis
   const ctx = canvas.getContext('2d');
   if (!ctx) throw new Error('Canvas 2D context not available');
 
-  const FONT_UI = '"Outfit", "Plus Jakarta Sans", "Inter", -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif';
+  const FONT_UI =
+    '"Outfit", "Plus Jakarta Sans", "Inter", -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif';
   const FONT_MONO = '"JetBrains Mono", "Space Grotesk", monospace';
   const FONT_SERIF = 'Georgia, "Playfair Display", "Times New Roman", serif';
 
@@ -465,7 +650,11 @@ async function renderCanvas(aspectRatio: 'story' | 'post' | 'landscape'): Promis
     topo: ['#0c1527', '#080d19', '#03060a'],
   };
 
-  const defaultColors: [string, string, string] = ['#0f2b48', '#081726', '#020617'];
+  const defaultColors: [string, string, string] = [
+    '#0f2b48',
+    '#081726',
+    '#020617',
+  ];
   const currentColors = bgGradients[rideForm.bgPreset] ?? defaultColors;
   const bgGrad = ctx.createLinearGradient(0, 0, 0, canvas.height);
   bgGrad.addColorStop(0, currentColors[0]);
@@ -482,7 +671,10 @@ async function renderCanvas(aspectRatio: 'story' | 'post' | 'landscape'): Promis
         img.onload = () => resolve();
         img.onerror = () => reject();
       });
-      const scale = Math.max(canvas.width / img.width, canvas.height / img.height);
+      const scale = Math.max(
+        canvas.width / img.width,
+        canvas.height / img.height,
+      );
       const x = (canvas.width - img.width * scale) / 2;
       const y = (canvas.height - img.height * scale) / 2;
       ctx.globalAlpha = 0.85;
@@ -550,7 +742,9 @@ async function renderCanvas(aspectRatio: 'story' | 'post' | 'landscape'): Promis
     ctx.roundRect(0, 0, 42, 42, 10);
     ctx.fill();
 
-    const kineticChainringPath = new Path2D('M28 13.5C25.5 10.2 21 8.8 17 10.2C12.2 11.8 9.5 17 11 22C12.5 27 17.5 30 22.8 28.5C26.5 27.2 29.2 23.8 29.5 19.8');
+    const kineticChainringPath = new Path2D(
+      'M28 13.5C25.5 10.2 21 8.8 17 10.2C12.2 11.8 9.5 17 11 22C12.5 27 17.5 30 22.8 28.5C26.5 27.2 29.2 23.8 29.5 19.8',
+    );
     const velocityArrowPath = new Path2D('M20 15.5L26.5 20L20 24.5');
 
     ctx.scale(42 / 40, 42 / 40);
@@ -611,7 +805,13 @@ async function renderCanvas(aspectRatio: 'story' | 'post' | 'landscape'): Promis
   };
 
   // Helper to draw GPS Route Artwork on any sub-box
-  const drawGpsRouteArt = (boxX: number, boxY: number, boxW: number, boxH: number, scaleFactor: number) => {
+  const drawGpsRouteArt = (
+    boxX: number,
+    boxY: number,
+    boxW: number,
+    boxH: number,
+    scaleFactor: number,
+  ) => {
     if (!rideForm.showGpsRoute || !currentRoute.value) return;
     ctx.save();
     ctx.translate(boxX, boxY);
@@ -622,9 +822,15 @@ async function renderCanvas(aspectRatio: 'story' | 'post' | 'landscape'): Promis
     ctx.lineWidth = 1.2;
     ctx.setLineDash([4, 4]);
 
-    const topo1 = new Path2D('M 40 100 Q 120 40 200 70 T 360 80 Q 380 180 340 260 T 180 300 Q 80 280 40 200 Z');
-    const topo2 = new Path2D('M 70 120 Q 140 70 210 90 T 330 110 Q 350 170 310 230 T 190 270 Q 100 250 70 180 Z');
-    const topo3 = new Path2D('M 110 140 Q 160 100 220 120 T 290 140 Q 300 180 280 210 T 200 240 Q 140 220 110 180 Z');
+    const topo1 = new Path2D(
+      'M 40 100 Q 120 40 200 70 T 360 80 Q 380 180 340 260 T 180 300 Q 80 280 40 200 Z',
+    );
+    const topo2 = new Path2D(
+      'M 70 120 Q 140 70 210 90 T 330 110 Q 350 170 310 230 T 190 270 Q 100 250 70 180 Z',
+    );
+    const topo3 = new Path2D(
+      'M 110 140 Q 160 100 220 120 T 290 140 Q 300 180 280 210 T 200 240 Q 140 220 110 180 Z',
+    );
 
     ctx.stroke(topo1);
     ctx.stroke(topo2);
@@ -643,9 +849,13 @@ async function renderCanvas(aspectRatio: 'story' | 'post' | 'landscape'): Promis
 
     // Ambient Glow
     ctx.shadowBlur = 24;
-    ctx.shadowColor = rideForm.routeRenderStyle === 'kinetic_neon' ? '#C9F36A' : '#38BDF8';
+    ctx.shadowColor =
+      rideForm.routeRenderStyle === 'kinetic_neon' ? '#C9F36A' : '#38BDF8';
     ctx.lineWidth = 14;
-    ctx.strokeStyle = rideForm.routeRenderStyle === 'kinetic_neon' ? 'rgba(201, 243, 106, 0.35)' : 'rgba(56, 189, 248, 0.35)';
+    ctx.strokeStyle =
+      rideForm.routeRenderStyle === 'kinetic_neon'
+        ? 'rgba(201, 243, 106, 0.35)'
+        : 'rgba(56, 189, 248, 0.35)';
     ctx.lineCap = 'round';
     ctx.lineJoin = 'round';
     ctx.stroke(routePath);
@@ -679,7 +889,12 @@ async function renderCanvas(aspectRatio: 'story' | 'post' | 'landscape'): Promis
     if (rideForm.showWaypoints && currentRoute.value.waypoints) {
       currentRoute.value.waypoints.forEach((wp) => {
         ctx.fillStyle = '#0F172A';
-        ctx.strokeStyle = wp.type === 'climb' ? '#FF8C75' : (wp.type === 'coffee' ? '#F59E0B' : '#C9F36A');
+        ctx.strokeStyle =
+          wp.type === 'climb'
+            ? '#FF8C75'
+            : wp.type === 'coffee'
+              ? '#F59E0B'
+              : '#C9F36A';
         ctx.lineWidth = 2.5;
         ctx.beginPath();
         ctx.arc(wp.x, wp.y, 13, 0, 2 * Math.PI);
@@ -714,7 +929,11 @@ async function renderCanvas(aspectRatio: 'story' | 'post' | 'landscape'): Promis
     ctx.textBaseline = 'middle';
     ctx.shadowColor = 'rgba(0, 0, 0, 0.9)';
     ctx.shadowBlur = 8;
-    ctx.fillText(`📍 ${currentRoute.value?.name || 'Rute Gowes'} · +${rideForm.elevationM}m Climb`, 80, 960);
+    ctx.fillText(
+      `📍 ${currentRoute.value?.name || 'Rute Gowes'} · +${rideForm.elevationM}m Climb`,
+      80,
+      960,
+    );
     ctx.restore();
 
     // 2. Right Data Cockpit (Directly floating, NO nested card boxes!)
@@ -736,11 +955,21 @@ async function renderCanvas(aspectRatio: 'story' | 'post' | 'landscape'): Promis
     // Session Title & Specs
     ctx.fillStyle = '#FFFFFF';
     ctx.font = `800 32px ${FONT_UI}`;
-    ctx.fillText(rideForm.title.length > 32 ? `${rideForm.title.slice(0, 30)}…` : rideForm.title, rightX, 360);
+    ctx.fillText(
+      rideForm.title.length > 32
+        ? `${rideForm.title.slice(0, 30)}…`
+        : rideForm.title,
+      rightX,
+      360,
+    );
 
     ctx.fillStyle = '#94A3B8';
     ctx.font = `600 20px ${FONT_UI}`;
-    ctx.fillText(`🚴 ${rideForm.bikeName} · ${rideForm.temperatureC}°C Cerah`, rightX, 405);
+    ctx.fillText(
+      `🚴 ${rideForm.bikeName} · ${rideForm.temperatureC}°C Cerah`,
+      rightX,
+      405,
+    );
 
     // Seamless Telemetry Grid (Clean Typography with Subtle Dividers, NO BOXES!)
     const statsStartX = rightX;
@@ -820,7 +1049,11 @@ async function renderCanvas(aspectRatio: 'story' | 'post' | 'landscape'): Promis
     ctx.textAlign = 'center';
     ctx.shadowColor = 'rgba(0, 0, 0, 0.9)';
     ctx.shadowBlur = 8;
-    ctx.fillText(`📍 ${currentRoute.value?.name || 'Rute Gowes'} · +${rideForm.elevationM}m Climb`, canvas.width / 2, 590);
+    ctx.fillText(
+      `📍 ${currentRoute.value?.name || 'Rute Gowes'} · +${rideForm.elevationM}m Climb`,
+      canvas.width / 2,
+      590,
+    );
     ctx.restore();
 
     // 3. Lower Hero Row (y: 630 - 745)
@@ -839,12 +1072,19 @@ async function renderCanvas(aspectRatio: 'story' | 'post' | 'landscape'): Promis
     const titleX = Math.max(60 + distW + 90, 360);
     ctx.fillStyle = '#FFFFFF';
     ctx.font = `850 28px ${FONT_UI}`;
-    const displayTitle = rideForm.title.length > 28 ? `${rideForm.title.slice(0, 26)}…` : rideForm.title;
+    const displayTitle =
+      rideForm.title.length > 28
+        ? `${rideForm.title.slice(0, 26)}…`
+        : rideForm.title;
     ctx.fillText(displayTitle, titleX, heroY - 24);
 
     ctx.fillStyle = '#94A3B8';
     ctx.font = `600 20px ${FONT_UI}`;
-    ctx.fillText(`🚴 ${rideForm.bikeName} · ${rideForm.temperatureC}°C Cerah`, titleX, heroY + 12);
+    ctx.fillText(
+      `🚴 ${rideForm.bikeName} · ${rideForm.temperatureC}°C Cerah`,
+      titleX,
+      heroY + 12,
+    );
 
     // 4. 4-Pill Glass Telemetry Deck (y: 765 - 915)
     const deckX = 60;
@@ -861,8 +1101,16 @@ async function renderCanvas(aspectRatio: 'story' | 'post' | 'landscape'): Promis
     ctx.stroke();
 
     const sqMetrics = [
-      { lbl: 'WAKTU', val: formatDuration(rideForm.durationMinutes), color: '#FFFFFF' },
-      { lbl: 'AVG SPEED', val: `${rideForm.avgSpeedKmH} km/h`, color: '#C9F36A' },
+      {
+        lbl: 'WAKTU',
+        val: formatDuration(rideForm.durationMinutes),
+        color: '#FFFFFF',
+      },
+      {
+        lbl: 'AVG SPEED',
+        val: `${rideForm.avgSpeedKmH} km/h`,
+        color: '#C9F36A',
+      },
       { lbl: 'CLIMB', val: `+${rideForm.elevationM}m`, color: '#38BDF8' },
       { lbl: 'KALORI', val: `~${rideForm.caloriesKcal}`, color: '#FF8C75' },
     ];
@@ -895,7 +1143,11 @@ async function renderCanvas(aspectRatio: 'story' | 'post' | 'landscape'): Promis
     ctx.fillStyle = 'rgba(201, 243, 106, 0.85)';
     ctx.font = `800 18px ${FONT_UI}`;
     ctx.textAlign = 'center';
-    ctx.fillText('⚡ VERIFIED BY GOWESKIT ENGINE · GOWESKIT.ID', canvas.width / 2, 995);
+    ctx.fillText(
+      '⚡ VERIFIED BY GOWESKIT ENGINE · GOWESKIT.ID',
+      canvas.width / 2,
+      995,
+    );
     ctx.textAlign = 'left';
 
     return canvas;
@@ -941,7 +1193,14 @@ async function renderCanvas(aspectRatio: 'story' | 'post' | 'landscape'): Promis
   const distNumberStr = `${rideForm.distanceKm}`;
   const isSerif = rideForm.templateStyle === 'rapha_editorial';
   ctx.font = isSerif ? `900 160px ${FONT_SERIF}` : `900 160px ${FONT_UI}`;
-  ctx.fillStyle = rideForm.templateStyle === 'cyber_hud' ? '#38BDF8' : (rideForm.templateStyle === 'cafe_santai' ? '#F59E0B' : (rideForm.templateStyle === 'rapha_editorial' ? '#FFFFFF' : '#C9F36A'));
+  ctx.fillStyle =
+    rideForm.templateStyle === 'cyber_hud'
+      ? '#38BDF8'
+      : rideForm.templateStyle === 'cafe_santai'
+        ? '#F59E0B'
+        : rideForm.templateStyle === 'rapha_editorial'
+          ? '#FFFFFF'
+          : '#C9F36A';
   ctx.fillText(distNumberStr, heroX, heroY);
 
   const numWidth = ctx.measureText(distNumberStr).width;
@@ -951,11 +1210,21 @@ async function renderCanvas(aspectRatio: 'story' | 'post' | 'landscape'): Promis
 
   ctx.fillStyle = '#FFFFFF';
   ctx.font = `850 46px ${FONT_UI}`;
-  ctx.fillText(rideForm.title.length > 32 ? `${rideForm.title.slice(0, 30)}…` : rideForm.title, heroX, heroY + 58);
+  ctx.fillText(
+    rideForm.title.length > 32
+      ? `${rideForm.title.slice(0, 30)}…`
+      : rideForm.title,
+    heroX,
+    heroY + 58,
+  );
 
   ctx.fillStyle = '#CBD5E1';
   ctx.font = `600 28px ${FONT_UI}`;
-  ctx.fillText(`🚴 ${rideForm.bikeName} · ${rideForm.temperatureC}°C Cerah`, heroX, heroY + 104);
+  ctx.fillText(
+    `🚴 ${rideForm.bikeName} · ${rideForm.temperatureC}°C Cerah`,
+    heroX,
+    heroY + 104,
+  );
 
   // Bottom Telemetry Card
   const cardX = 70;
@@ -994,9 +1263,12 @@ async function renderCanvas(aspectRatio: 'story' | 'post' | 'landscape'): Promis
   ctx.beginPath();
   ctx.moveTo(curveStartX, curveY + 10);
   ctx.bezierCurveTo(
-    curveStartX + (curveEndX - curveStartX) * 0.35, curveY + 8,
-    curveStartX + (curveEndX - curveStartX) * 0.65, curveY - 10,
-    curveEndX, curveY - 14
+    curveStartX + (curveEndX - curveStartX) * 0.35,
+    curveY + 8,
+    curveStartX + (curveEndX - curveStartX) * 0.65,
+    curveY - 10,
+    curveEndX,
+    curveY - 14,
   );
   ctx.stroke();
 
@@ -1027,9 +1299,17 @@ async function renderCanvas(aspectRatio: 'story' | 'post' | 'landscape'): Promis
   const vDivBottom = cardY + cardH - 35;
 
   const statsList = [
-    { label: 'WAKTU', val: formatDuration(rideForm.durationMinutes), color: '#FFFFFF' },
+    {
+      label: 'WAKTU',
+      val: formatDuration(rideForm.durationMinutes),
+      color: '#FFFFFF',
+    },
     { label: 'SPEED', val: `${rideForm.avgSpeedKmH} km/h`, color: '#C9F36A' },
-    { label: 'KALORI', val: `~${rideForm.caloriesKcal} kcal`, color: '#FF8C75' },
+    {
+      label: 'KALORI',
+      val: `~${rideForm.caloriesKcal} kcal`,
+      color: '#FF8C75',
+    },
   ];
 
   statsList.forEach((stat, idx) => {
@@ -1062,7 +1342,11 @@ async function renderCanvas(aspectRatio: 'story' | 'post' | 'landscape'): Promis
   ctx.fillStyle = 'rgba(201, 243, 106, 0.85)';
   ctx.font = `900 24px ${FONT_UI}`;
   ctx.textAlign = 'center';
-  ctx.fillText('⚡ VERIFIED BY GOWESKIT ENGINE · GOWESKIT.ID', canvas.width / 2, canvas.height - 45);
+  ctx.fillText(
+    '⚡ VERIFIED BY GOWESKIT ENGINE · GOWESKIT.ID',
+    canvas.width / 2,
+    canvas.height - 45,
+  );
   ctx.textAlign = 'left';
 
   return canvas;
@@ -1118,7 +1402,10 @@ async function shareToMedia() {
         title: rideForm.title,
         text: `${rideForm.title} · ${rideForm.distanceKm}km (+${rideForm.elevationM}m) bersama GowesKit!`,
       });
-      toast.success('Berhasil Dibagikan!', 'Poster gowes siap diposting ke medsos.');
+      toast.success(
+        'Berhasil Dibagikan!',
+        'Poster gowes siap diposting ke medsos.',
+      );
     } else {
       await copyCaption(aiRecap.value.captions[selectedPersona.value]);
       await downloadStoryImage();
@@ -1179,7 +1466,11 @@ async function shareToMedia() {
             `bg--${rideForm.bgPreset}`,
             `theme--${rideForm.templateStyle}`,
           ]"
-          :style="rideForm.bgPreset === 'custom' && rideForm.customPhotoUrl ? { backgroundImage: `url(${rideForm.customPhotoUrl})` } : {}"
+          :style="
+            rideForm.bgPreset === 'custom' && rideForm.customPhotoUrl
+              ? { backgroundImage: `url(${rideForm.customPhotoUrl})` }
+              : {}
+          "
         >
           <!-- Cyber HUD Overlays -->
           <template v-if="rideForm.templateStyle === 'cyber_hud'">
@@ -1198,34 +1489,91 @@ async function shareToMedia() {
           <template v-if="rideForm.aspectRatio === 'landscape'">
             <div class="banner-strava-shell">
               <!-- Left GPS Route Overlay (Directly over the image, NO card box!) -->
-              <div v-if="rideForm.showGpsRoute && currentRoute" class="banner-seamless-map">
-                <svg viewBox="0 0 400 320" class="gps-route-svg" fill="none" aria-hidden="true">
+              <div
+                v-if="rideForm.showGpsRoute && currentRoute"
+                class="banner-seamless-map"
+              >
+                <svg
+                  viewBox="0 0 400 320"
+                  class="gps-route-svg"
+                  fill="none"
+                  aria-hidden="true"
+                >
                   <defs>
-                    <linearGradient id="spectrumElevationL" x1="0%" y1="0%" x2="100%" y2="100%">
+                    <linearGradient
+                      id="spectrumElevationL"
+                      x1="0%"
+                      y1="0%"
+                      x2="100%"
+                      y2="100%"
+                    >
                       <stop offset="0%" stop-color="#C9F36A" />
                       <stop offset="35%" stop-color="#8EDDF4" />
                       <stop offset="70%" stop-color="#F59E0B" />
                       <stop offset="100%" stop-color="#FF8C75" />
                     </linearGradient>
-                    <filter id="routeGlowL" x="-20%" y="-20%" width="140%" height="140%">
+                    <filter
+                      id="routeGlowL"
+                      x="-20%"
+                      y="-20%"
+                      width="140%"
+                      height="140%"
+                    >
                       <feGaussianBlur stdDeviation="6" result="blur" />
-                      <feComposite in="SourceGraphic" in2="blur" operator="over" />
+                      <feComposite
+                        in="SourceGraphic"
+                        in2="blur"
+                        operator="over"
+                      />
                     </filter>
                   </defs>
 
                   <!-- Topo Contours & Coordinates -->
                   <g opacity="0.22">
-                    <path d="M 40 100 Q 120 40 200 70 T 360 80 Q 380 180 340 260 T 180 300 Q 80 280 40 200 Z" stroke="#C9F36A" stroke-width="1.2" stroke-dasharray="3 3" />
-                    <path d="M 70 120 Q 140 70 210 90 T 330 110 Q 350 170 310 230 T 190 270 Q 100 250 70 180 Z" stroke="#C9F36A" stroke-width="1.5" stroke-dasharray="3 3" />
-                    <text x="40" y="24" fill="#C9F36A" font-size="9" font-family="var(--font-mono)" font-weight="800">LAT -6°10'48"S · LON 106°37'52"E</text>
-                    <text x="360" y="24" text-anchor="end" fill="#C9F36A" font-size="9.5" font-family="var(--font-mono)" font-weight="900">🧭 N ▲</text>
+                    <path
+                      d="M 40 100 Q 120 40 200 70 T 360 80 Q 380 180 340 260 T 180 300 Q 80 280 40 200 Z"
+                      stroke="#C9F36A"
+                      stroke-width="1.2"
+                      stroke-dasharray="3 3"
+                    />
+                    <path
+                      d="M 70 120 Q 140 70 210 90 T 330 110 Q 350 170 310 230 T 190 270 Q 100 250 70 180 Z"
+                      stroke="#C9F36A"
+                      stroke-width="1.5"
+                      stroke-dasharray="3 3"
+                    />
+                    <text
+                      x="40"
+                      y="24"
+                      fill="#C9F36A"
+                      font-size="9"
+                      font-family="var(--font-mono)"
+                      font-weight="800"
+                    >
+                      LAT -6°10'48"S · LON 106°37'52"E
+                    </text>
+                    <text
+                      x="360"
+                      y="24"
+                      text-anchor="end"
+                      fill="#C9F36A"
+                      font-size="9.5"
+                      font-family="var(--font-mono)"
+                      font-weight="900"
+                    >
+                      🧭 N ▲
+                    </text>
                   </g>
 
                   <!-- Ambient Glow -->
                   <path
                     :d="currentRoute.pathD"
                     fill="none"
-                    :stroke="rideForm.routeRenderStyle === 'kinetic_neon' ? '#C9F36A' : 'url(#spectrumElevationL)'"
+                    :stroke="
+                      rideForm.routeRenderStyle === 'kinetic_neon'
+                        ? '#C9F36A'
+                        : 'url(#spectrumElevationL)'
+                    "
                     stroke-width="14"
                     stroke-linecap="round"
                     stroke-linejoin="round"
@@ -1234,13 +1582,26 @@ async function shareToMedia() {
                   />
 
                   <!-- Asphalt Casing -->
-                  <path :d="currentRoute.pathD" fill="none" stroke="#070D18" stroke-width="9" stroke-linecap="round" stroke-linejoin="round" />
+                  <path
+                    :d="currentRoute.pathD"
+                    fill="none"
+                    stroke="#070D18"
+                    stroke-width="9"
+                    stroke-linecap="round"
+                    stroke-linejoin="round"
+                  />
 
                   <!-- Core Ribbon -->
                   <path
                     :d="currentRoute.pathD"
                     fill="none"
-                    :stroke="rideForm.routeRenderStyle === 'spectrum_elevation' ? 'url(#spectrumElevationL)' : (rideForm.routeRenderStyle === 'kinetic_neon' ? '#C9F36A' : '#38BDF8')"
+                    :stroke="
+                      rideForm.routeRenderStyle === 'spectrum_elevation'
+                        ? 'url(#spectrumElevationL)'
+                        : rideForm.routeRenderStyle === 'kinetic_neon'
+                          ? '#C9F36A'
+                          : '#38BDF8'
+                    "
                     stroke-width="4.5"
                     stroke-linecap="round"
                     stroke-linejoin="round"
@@ -1248,15 +1609,44 @@ async function shareToMedia() {
 
                   <!-- Waypoints -->
                   <g v-if="rideForm.showWaypoints && currentRoute.waypoints">
-                    <g v-for="(wp, wIdx) in currentRoute.waypoints" :key="wIdx" :transform="`translate(${wp.x}, ${wp.y})`">
-                      <circle r="12" fill="#0F172A" :stroke="wp.type === 'climb' ? '#FF8C75' : (wp.type === 'coffee' ? '#F59E0B' : '#C9F36A')" stroke-width="2.5" />
-                      <text y="4" text-anchor="middle" font-size="10">{{ wp.icon }}</text>
-                      <text y="20" text-anchor="middle" font-size="8.5" font-weight="900" fill="#FFFFFF" font-family="var(--font-sans)">{{ wp.name }}</text>
+                    <g
+                      v-for="(wp, wIdx) in currentRoute.waypoints"
+                      :key="wIdx"
+                      :transform="`translate(${wp.x}, ${wp.y})`"
+                    >
+                      <circle
+                        r="12"
+                        fill="#0F172A"
+                        :stroke="
+                          wp.type === 'climb'
+                            ? '#FF8C75'
+                            : wp.type === 'coffee'
+                              ? '#F59E0B'
+                              : '#C9F36A'
+                        "
+                        stroke-width="2.5"
+                      />
+                      <text y="4" text-anchor="middle" font-size="10">
+                        {{ wp.icon }}
+                      </text>
+                      <text
+                        y="20"
+                        text-anchor="middle"
+                        font-size="8.5"
+                        font-weight="900"
+                        fill="#FFFFFF"
+                        font-family="var(--font-sans)"
+                      >
+                        {{ wp.name }}
+                      </text>
                     </g>
                   </g>
                 </svg>
                 <div class="banner-floating-loc">
-                  📍 {{ currentRoute?.name || 'Rute Gowes' }} · <span class="text-sky">+{{ rideForm.elevationM }}m Climb</span>
+                  📍 {{ currentRoute?.name || 'Rute Gowes' }} ·
+                  <span class="text-sky"
+                    >+{{ rideForm.elevationM }}m Climb</span
+                  >
                 </div>
               </div>
 
@@ -1265,17 +1655,39 @@ async function shareToMedia() {
                 <div class="banner-top-row">
                   <div class="brand-chip-seamless">
                     <div class="brand-mark-mini">
-                      <svg viewBox="0 0 40 40" fill="none" width="13" height="13" aria-hidden="true">
+                      <svg
+                        viewBox="0 0 40 40"
+                        fill="none"
+                        width="13"
+                        height="13"
+                        aria-hidden="true"
+                      >
                         <rect width="40" height="40" rx="10" fill="#0F172A" />
-                        <path d="M28 13.5C25.5 10.2 21 8.8 17 10.2C12.2 11.8 9.5 17 11 22C12.5 27 17.5 30 22.8 28.5C26.5 27.2 29.2 23.8 29.5 19.8" stroke="#C9F36A" stroke-width="3.2" stroke-linecap="round" />
-                        <path d="M20 15.5L26.5 20L20 24.5" stroke="#38BDF8" stroke-width="2.8" stroke-linecap="round" stroke-linejoin="round" />
+                        <path
+                          d="M28 13.5C25.5 10.2 21 8.8 17 10.2C12.2 11.8 9.5 17 11 22C12.5 27 17.5 30 22.8 28.5C26.5 27.2 29.2 23.8 29.5 19.8"
+                          stroke="#C9F36A"
+                          stroke-width="3.2"
+                          stroke-linecap="round"
+                        />
+                        <path
+                          d="M20 15.5L26.5 20L20 24.5"
+                          stroke="#38BDF8"
+                          stroke-width="2.8"
+                          stroke-linecap="round"
+                          stroke-linejoin="round"
+                        />
                         <circle cx="17.5" cy="20" r="2.2" fill="#FFFFFF" />
                       </svg>
                     </div>
-                    <span class="brand-text-seamless">Gowes<span class="brand-kit-accent">Kit</span></span>
+                    <span class="brand-text-seamless"
+                      >Gowes<span class="brand-kit-accent">Kit</span></span
+                    >
                   </div>
 
-                  <div v-if="rideForm.activeSticker !== 'none'" class="sticker-chip-seamless">
+                  <div
+                    v-if="rideForm.activeSticker !== 'none'"
+                    class="sticker-chip-seamless"
+                  >
                     {{ getStickerLabel(rideForm.activeSticker) }}
                   </div>
                 </div>
@@ -1286,26 +1698,37 @@ async function shareToMedia() {
                     <span class="mileage-unit">KM</span>
                   </div>
                   <h2 class="session-name">{{ rideForm.title }}</h2>
-                  <div class="session-specs">🚴 {{ rideForm.bikeName }} · {{ rideForm.temperatureC }}°C Cerah</div>
+                  <div class="session-specs">
+                    🚴 {{ rideForm.bikeName }} · {{ rideForm.temperatureC }}°C
+                    Cerah
+                  </div>
                 </div>
 
                 <!-- Seamless Telemetry Deck (Clean Typography, NO Card Boxes!) -->
                 <div class="banner-telemetry-seamless">
                   <div class="b-stat-block">
                     <span class="b-stat-lbl">WAKTU</span>
-                    <strong class="b-stat-val">{{ formatDuration(rideForm.durationMinutes) }}</strong>
+                    <strong class="b-stat-val">{{
+                      formatDuration(rideForm.durationMinutes)
+                    }}</strong>
                   </div>
                   <div class="b-stat-block">
                     <span class="b-stat-lbl">AVG SPEED</span>
-                    <strong class="b-stat-val text-lime">{{ rideForm.avgSpeedKmH }} km/h</strong>
+                    <strong class="b-stat-val text-lime"
+                      >{{ rideForm.avgSpeedKmH }} km/h</strong
+                    >
                   </div>
                   <div class="b-stat-block">
                     <span class="b-stat-lbl">CLIMB</span>
-                    <strong class="b-stat-val text-sky">+{{ rideForm.elevationM }}m</strong>
+                    <strong class="b-stat-val text-sky"
+                      >+{{ rideForm.elevationM }}m</strong
+                    >
                   </div>
                   <div class="b-stat-block">
                     <span class="b-stat-lbl">KALORI</span>
-                    <strong class="b-stat-val text-coral">~{{ rideForm.caloriesKcal }}</strong>
+                    <strong class="b-stat-val text-coral"
+                      >~{{ rideForm.caloriesKcal }}</strong
+                    >
                   </div>
                 </div>
 
@@ -1324,10 +1747,27 @@ async function shareToMedia() {
               <div class="poster-card-top">
                 <div class="brand-chip">
                   <div class="brand-mark-mini">
-                    <svg viewBox="0 0 40 40" fill="none" width="13" height="13" aria-hidden="true">
+                    <svg
+                      viewBox="0 0 40 40"
+                      fill="none"
+                      width="13"
+                      height="13"
+                      aria-hidden="true"
+                    >
                       <rect width="40" height="40" rx="10" fill="#0F172A" />
-                      <path d="M28 13.5C25.5 10.2 21 8.8 17 10.2C12.2 11.8 9.5 17 11 22C12.5 27 17.5 30 22.8 28.5C26.5 27.2 29.2 23.8 29.5 19.8" stroke="#C9F36A" stroke-width="3.2" stroke-linecap="round" />
-                      <path d="M20 15.5L26.5 20L20 24.5" stroke="#38BDF8" stroke-width="2.8" stroke-linecap="round" stroke-linejoin="round" />
+                      <path
+                        d="M28 13.5C25.5 10.2 21 8.8 17 10.2C12.2 11.8 9.5 17 11 22C12.5 27 17.5 30 22.8 28.5C26.5 27.2 29.2 23.8 29.5 19.8"
+                        stroke="#C9F36A"
+                        stroke-width="3.2"
+                        stroke-linecap="round"
+                      />
+                      <path
+                        d="M20 15.5L26.5 20L20 24.5"
+                        stroke="#38BDF8"
+                        stroke-width="2.8"
+                        stroke-linecap="round"
+                        stroke-linejoin="round"
+                      />
                       <circle cx="17.5" cy="20" r="2.2" fill="#FFFFFF" />
                     </svg>
                   </div>
@@ -1335,66 +1775,167 @@ async function shareToMedia() {
                     Gowes<span class="brand-kit-accent">Kit</span>
                   </span>
                 </div>
-                <div v-if="rideForm.activeSticker !== 'none'" class="sticker-chip">
+                <div
+                  v-if="rideForm.activeSticker !== 'none'"
+                  class="sticker-chip"
+                >
                   {{ getStickerLabel(rideForm.activeSticker) }}
                 </div>
               </div>
 
               <!-- Center Radar Map Stage (Seamless floating) -->
               <div class="square-map-stage">
-                <div v-if="rideForm.showGpsRoute && currentRoute" class="square-svg-wrap">
-                  <svg viewBox="0 0 400 320" class="gps-route-svg" fill="none" aria-hidden="true">
+                <div
+                  v-if="rideForm.showGpsRoute && currentRoute"
+                  class="square-svg-wrap"
+                >
+                  <svg
+                    viewBox="0 0 400 320"
+                    class="gps-route-svg"
+                    fill="none"
+                    aria-hidden="true"
+                  >
                     <defs>
-                      <linearGradient id="spectrumElevationS" x1="0%" y1="0%" x2="100%" y2="100%">
+                      <linearGradient
+                        id="spectrumElevationS"
+                        x1="0%"
+                        y1="0%"
+                        x2="100%"
+                        y2="100%"
+                      >
                         <stop offset="0%" stop-color="#C9F36A" />
                         <stop offset="35%" stop-color="#8EDDF4" />
                         <stop offset="70%" stop-color="#F59E0B" />
                         <stop offset="100%" stop-color="#FF8C75" />
                       </linearGradient>
-                      <filter id="routeGlowS" x="-20%" y="-20%" width="140%" height="140%">
+                      <filter
+                        id="routeGlowS"
+                        x="-20%"
+                        y="-20%"
+                        width="140%"
+                        height="140%"
+                      >
                         <feGaussianBlur stdDeviation="6" result="blur" />
-                        <feComposite in="SourceGraphic" in2="blur" operator="over" />
+                        <feComposite
+                          in="SourceGraphic"
+                          in2="blur"
+                          operator="over"
+                        />
                       </filter>
                     </defs>
 
                     <g opacity="0.2">
-                      <path d="M 40 100 Q 120 40 200 70 T 360 80 Q 380 180 340 260 T 180 300 Q 80 280 40 200 Z" stroke="#C9F36A" stroke-width="1.2" stroke-dasharray="3 3" />
-                      <path d="M 70 120 Q 140 70 210 90 T 330 110 Q 350 170 310 230 T 190 270 Q 100 250 70 180 Z" stroke="#C9F36A" stroke-width="1.5" stroke-dasharray="3 3" />
-                      <text x="40" y="24" fill="#C9F36A" font-size="9" font-family="var(--font-mono)" font-weight="800">LAT -6°10'48"S · LON 106°37'52"E</text>
-                      <text x="360" y="24" text-anchor="end" fill="#C9F36A" font-size="9.5" font-family="var(--font-mono)" font-weight="900">🧭 N ▲</text>
+                      <path
+                        d="M 40 100 Q 120 40 200 70 T 360 80 Q 380 180 340 260 T 180 300 Q 80 280 40 200 Z"
+                        stroke="#C9F36A"
+                        stroke-width="1.2"
+                        stroke-dasharray="3 3"
+                      />
+                      <path
+                        d="M 70 120 Q 140 70 210 90 T 330 110 Q 350 170 310 230 T 190 270 Q 100 250 70 180 Z"
+                        stroke="#C9F36A"
+                        stroke-width="1.5"
+                        stroke-dasharray="3 3"
+                      />
+                      <text
+                        x="40"
+                        y="24"
+                        fill="#C9F36A"
+                        font-size="9"
+                        font-family="var(--font-mono)"
+                        font-weight="800"
+                      >
+                        LAT -6°10'48"S · LON 106°37'52"E
+                      </text>
+                      <text
+                        x="360"
+                        y="24"
+                        text-anchor="end"
+                        fill="#C9F36A"
+                        font-size="9.5"
+                        font-family="var(--font-mono)"
+                        font-weight="900"
+                      >
+                        🧭 N ▲
+                      </text>
                     </g>
 
                     <path
                       :d="currentRoute.pathD"
                       fill="none"
-                      :stroke="rideForm.routeRenderStyle === 'kinetic_neon' ? '#C9F36A' : 'url(#spectrumElevationS)'"
+                      :stroke="
+                        rideForm.routeRenderStyle === 'kinetic_neon'
+                          ? '#C9F36A'
+                          : 'url(#spectrumElevationS)'
+                      "
                       stroke-width="14"
                       stroke-linecap="round"
                       stroke-linejoin="round"
                       opacity="0.4"
                       filter="url(#routeGlowS)"
                     />
-                    <path :d="currentRoute.pathD" fill="none" stroke="#070D18" stroke-width="9" stroke-linecap="round" stroke-linejoin="round" />
                     <path
                       :d="currentRoute.pathD"
                       fill="none"
-                      :stroke="rideForm.routeRenderStyle === 'spectrum_elevation' ? 'url(#spectrumElevationS)' : (rideForm.routeRenderStyle === 'kinetic_neon' ? '#C9F36A' : '#38BDF8')"
+                      stroke="#070D18"
+                      stroke-width="9"
+                      stroke-linecap="round"
+                      stroke-linejoin="round"
+                    />
+                    <path
+                      :d="currentRoute.pathD"
+                      fill="none"
+                      :stroke="
+                        rideForm.routeRenderStyle === 'spectrum_elevation'
+                          ? 'url(#spectrumElevationS)'
+                          : rideForm.routeRenderStyle === 'kinetic_neon'
+                            ? '#C9F36A'
+                            : '#38BDF8'
+                      "
                       stroke-width="4.5"
                       stroke-linecap="round"
                       stroke-linejoin="round"
                     />
 
                     <g v-if="rideForm.showWaypoints && currentRoute.waypoints">
-                      <g v-for="(wp, wIdx) in currentRoute.waypoints" :key="wIdx" :transform="`translate(${wp.x}, ${wp.y})`">
-                        <circle r="12" fill="#0F172A" :stroke="wp.type === 'climb' ? '#FF8C75' : (wp.type === 'coffee' ? '#F59E0B' : '#C9F36A')" stroke-width="2.5" />
-                        <text y="4" text-anchor="middle" font-size="10">{{ wp.icon }}</text>
-                        <text y="20" text-anchor="middle" font-size="8.5" font-weight="900" fill="#FFFFFF" font-family="var(--font-sans)">{{ wp.name }}</text>
+                      <g
+                        v-for="(wp, wIdx) in currentRoute.waypoints"
+                        :key="wIdx"
+                        :transform="`translate(${wp.x}, ${wp.y})`"
+                      >
+                        <circle
+                          r="12"
+                          fill="#0F172A"
+                          :stroke="
+                            wp.type === 'climb'
+                              ? '#FF8C75'
+                              : wp.type === 'coffee'
+                                ? '#F59E0B'
+                                : '#C9F36A'
+                          "
+                          stroke-width="2.5"
+                        />
+                        <text y="4" text-anchor="middle" font-size="10">
+                          {{ wp.icon }}
+                        </text>
+                        <text
+                          y="20"
+                          text-anchor="middle"
+                          font-size="8.5"
+                          font-weight="900"
+                          fill="#FFFFFF"
+                          font-family="var(--font-sans)"
+                        >
+                          {{ wp.name }}
+                        </text>
                       </g>
                     </g>
                   </svg>
                 </div>
                 <div class="square-floating-loc">
-                  📍 {{ currentRoute?.name || 'Rute Gowes' }} · +{{ rideForm.elevationM }}m
+                  📍 {{ currentRoute?.name || 'Rute Gowes' }} · +{{
+                    rideForm.elevationM
+                  }}m
                 </div>
               </div>
 
@@ -1407,29 +1948,40 @@ async function shareToMedia() {
                   </div>
                   <div class="square-title-group">
                     <h2 class="session-name">{{ rideForm.title }}</h2>
-                    <div class="session-specs">🚴 {{ rideForm.bikeName }} · {{ rideForm.temperatureC }}°C Cerah</div>
+                    <div class="session-specs">
+                      🚴 {{ rideForm.bikeName }} · {{ rideForm.temperatureC }}°C
+                      Cerah
+                    </div>
                   </div>
                 </div>
 
                 <div class="square-metrics-row">
                   <div class="sq-pill">
                     <span class="sq-lbl">WAKTU</span>
-                    <strong class="sq-val">{{ formatDuration(rideForm.durationMinutes) }}</strong>
+                    <strong class="sq-val">{{
+                      formatDuration(rideForm.durationMinutes)
+                    }}</strong>
                   </div>
                   <div class="sq-div" />
                   <div class="sq-pill">
                     <span class="sq-lbl">AVG SPEED</span>
-                    <strong class="sq-val text-lime">{{ rideForm.avgSpeedKmH }} km/h</strong>
+                    <strong class="sq-val text-lime"
+                      >{{ rideForm.avgSpeedKmH }} km/h</strong
+                    >
                   </div>
                   <div class="sq-div" />
                   <div class="sq-pill">
                     <span class="sq-lbl">CLIMB</span>
-                    <strong class="sq-val text-sky">+{{ rideForm.elevationM }}m</strong>
+                    <strong class="sq-val text-sky"
+                      >+{{ rideForm.elevationM }}m</strong
+                    >
                   </div>
                   <div class="sq-div" />
                   <div class="sq-pill">
                     <span class="sq-lbl">KALORI</span>
-                    <strong class="sq-val text-coral">~{{ rideForm.caloriesKcal }}</strong>
+                    <strong class="sq-val text-coral"
+                      >~{{ rideForm.caloriesKcal }}</strong
+                    >
                   </div>
                 </div>
               </div>
@@ -1445,37 +1997,113 @@ async function shareToMedia() {
                ========================================================= -->
           <template v-else>
             <!-- Dynamic GowesKit Signature GPS Route Ribbon Canvas / SVG Layer -->
-            <div v-if="rideForm.showGpsRoute && currentRoute" class="gps-route-art-layer">
-              <svg viewBox="0 0 400 350" class="gps-route-svg" fill="none" aria-hidden="true">
+            <div
+              v-if="rideForm.showGpsRoute && currentRoute"
+              class="gps-route-art-layer"
+            >
+              <svg
+                viewBox="0 0 400 350"
+                class="gps-route-svg"
+                fill="none"
+                aria-hidden="true"
+              >
                 <defs>
-                  <linearGradient id="spectrumElevation" x1="0%" y1="0%" x2="100%" y2="100%">
+                  <linearGradient
+                    id="spectrumElevation"
+                    x1="0%"
+                    y1="0%"
+                    x2="100%"
+                    y2="100%"
+                  >
                     <stop offset="0%" stop-color="#C9F36A" />
                     <stop offset="35%" stop-color="#8EDDF4" />
                     <stop offset="70%" stop-color="#F59E0B" />
                     <stop offset="100%" stop-color="#FF8C75" />
                   </linearGradient>
-                  <filter id="routeGlow" x="-20%" y="-20%" width="140%" height="140%">
+                  <filter
+                    id="routeGlow"
+                    x="-20%"
+                    y="-20%"
+                    width="140%"
+                    height="140%"
+                  >
                     <feGaussianBlur stdDeviation="6" result="blur" />
-                    <feComposite in="SourceGraphic" in2="blur" operator="over" />
+                    <feComposite
+                      in="SourceGraphic"
+                      in2="blur"
+                      operator="over"
+                    />
                   </filter>
                 </defs>
 
                 <!-- Topographic Contour Loops & Map Coordinate Mesh -->
                 <g opacity="0.18">
-                  <path d="M 40 100 Q 120 40 200 70 T 360 80 Q 380 180 340 260 T 180 300 Q 80 280 40 200 Z" stroke="#C9F36A" stroke-width="1.2" stroke-dasharray="3 3" />
-                  <path d="M 70 120 Q 140 70 210 90 T 330 110 Q 350 170 310 230 T 190 270 Q 100 250 70 180 Z" stroke="#C9F36A" stroke-width="1.5" stroke-dasharray="3 3" />
-                  <path d="M 110 140 Q 160 100 220 120 T 290 140 Q 300 180 280 210 T 200 240 Q 140 220 110 180 Z" stroke="#C9F36A" stroke-width="1.2" stroke-dasharray="4 4" />
-                  <line x1="40" y1="40" x2="360" y2="40" stroke="rgba(255,255,255,0.06)" stroke-width="1" />
-                  <line x1="40" y1="310" x2="360" y2="310" stroke="rgba(255,255,255,0.06)" stroke-width="1" />
-                  <text x="40" y="24" fill="#C9F36A" font-size="9" font-family="var(--font-mono)" font-weight="800">LAT -6°10'48"S · LON 106°37'52"E</text>
-                  <text x="360" y="24" text-anchor="end" fill="#C9F36A" font-size="9.5" font-family="var(--font-mono)" font-weight="900">🧭 N ▲</text>
+                  <path
+                    d="M 40 100 Q 120 40 200 70 T 360 80 Q 380 180 340 260 T 180 300 Q 80 280 40 200 Z"
+                    stroke="#C9F36A"
+                    stroke-width="1.2"
+                    stroke-dasharray="3 3"
+                  />
+                  <path
+                    d="M 70 120 Q 140 70 210 90 T 330 110 Q 350 170 310 230 T 190 270 Q 100 250 70 180 Z"
+                    stroke="#C9F36A"
+                    stroke-width="1.5"
+                    stroke-dasharray="3 3"
+                  />
+                  <path
+                    d="M 110 140 Q 160 100 220 120 T 290 140 Q 300 180 280 210 T 200 240 Q 140 220 110 180 Z"
+                    stroke="#C9F36A"
+                    stroke-width="1.2"
+                    stroke-dasharray="4 4"
+                  />
+                  <line
+                    x1="40"
+                    y1="40"
+                    x2="360"
+                    y2="40"
+                    stroke="rgba(255,255,255,0.06)"
+                    stroke-width="1"
+                  />
+                  <line
+                    x1="40"
+                    y1="310"
+                    x2="360"
+                    y2="310"
+                    stroke="rgba(255,255,255,0.06)"
+                    stroke-width="1"
+                  />
+                  <text
+                    x="40"
+                    y="24"
+                    fill="#C9F36A"
+                    font-size="9"
+                    font-family="var(--font-mono)"
+                    font-weight="800"
+                  >
+                    LAT -6°10'48"S · LON 106°37'52"E
+                  </text>
+                  <text
+                    x="360"
+                    y="24"
+                    text-anchor="end"
+                    fill="#C9F36A"
+                    font-size="9.5"
+                    font-family="var(--font-mono)"
+                    font-weight="900"
+                  >
+                    🧭 N ▲
+                  </text>
                 </g>
 
                 <!-- Outer Glowing Ambient Track -->
                 <path
                   :d="currentRoute.pathD"
                   fill="none"
-                  :stroke="rideForm.routeRenderStyle === 'kinetic_neon' ? '#C9F36A' : 'url(#spectrumElevation)'"
+                  :stroke="
+                    rideForm.routeRenderStyle === 'kinetic_neon'
+                      ? '#C9F36A'
+                      : 'url(#spectrumElevation)'
+                  "
                   stroke-width="14"
                   stroke-linecap="round"
                   stroke-linejoin="round"
@@ -1497,7 +2125,13 @@ async function shareToMedia() {
                 <path
                   :d="currentRoute.pathD"
                   fill="none"
-                  :stroke="rideForm.routeRenderStyle === 'spectrum_elevation' ? 'url(#spectrumElevation)' : (rideForm.routeRenderStyle === 'kinetic_neon' ? '#C9F36A' : '#38BDF8')"
+                  :stroke="
+                    rideForm.routeRenderStyle === 'spectrum_elevation'
+                      ? 'url(#spectrumElevation)'
+                      : rideForm.routeRenderStyle === 'kinetic_neon'
+                        ? '#C9F36A'
+                        : '#38BDF8'
+                  "
                   stroke-width="4.5"
                   stroke-linecap="round"
                   stroke-linejoin="round"
@@ -1505,10 +2139,36 @@ async function shareToMedia() {
 
                 <!-- Checkpoint & Pitstop Waypoints -->
                 <g v-if="rideForm.showWaypoints && currentRoute.waypoints">
-                  <g v-for="(wp, wIdx) in currentRoute.waypoints" :key="wIdx" :transform="`translate(${wp.x}, ${wp.y})`">
-                    <circle r="13" fill="#0F172A" :stroke="wp.type === 'climb' ? '#FF8C75' : (wp.type === 'coffee' ? '#F59E0B' : '#C9F36A')" stroke-width="2.5" />
-                    <text y="4" text-anchor="middle" font-size="11">{{ wp.icon }}</text>
-                    <text y="22" text-anchor="middle" font-size="9" font-weight="900" fill="#FFFFFF" font-family="var(--font-sans)">{{ wp.name }}</text>
+                  <g
+                    v-for="(wp, wIdx) in currentRoute.waypoints"
+                    :key="wIdx"
+                    :transform="`translate(${wp.x}, ${wp.y})`"
+                  >
+                    <circle
+                      r="13"
+                      fill="#0F172A"
+                      :stroke="
+                        wp.type === 'climb'
+                          ? '#FF8C75'
+                          : wp.type === 'coffee'
+                            ? '#F59E0B'
+                            : '#C9F36A'
+                      "
+                      stroke-width="2.5"
+                    />
+                    <text y="4" text-anchor="middle" font-size="11">
+                      {{ wp.icon }}
+                    </text>
+                    <text
+                      y="22"
+                      text-anchor="middle"
+                      font-size="9"
+                      font-weight="900"
+                      fill="#FFFFFF"
+                      font-family="var(--font-sans)"
+                    >
+                      {{ wp.name }}
+                    </text>
                   </g>
                 </g>
               </svg>
@@ -1518,10 +2178,27 @@ async function shareToMedia() {
             <div class="poster-card-top">
               <div class="brand-chip">
                 <div class="brand-mark-mini">
-                  <svg viewBox="0 0 40 40" fill="none" width="13" height="13" aria-hidden="true">
+                  <svg
+                    viewBox="0 0 40 40"
+                    fill="none"
+                    width="13"
+                    height="13"
+                    aria-hidden="true"
+                  >
                     <rect width="40" height="40" rx="10" fill="#0F172A" />
-                    <path d="M28 13.5C25.5 10.2 21 8.8 17 10.2C12.2 11.8 9.5 17 11 22C12.5 27 17.5 30 22.8 28.5C26.5 27.2 29.2 23.8 29.5 19.8" stroke="#C9F36A" stroke-width="3.2" stroke-linecap="round" />
-                    <path d="M20 15.5L26.5 20L20 24.5" stroke="#38BDF8" stroke-width="2.8" stroke-linecap="round" stroke-linejoin="round" />
+                    <path
+                      d="M28 13.5C25.5 10.2 21 8.8 17 10.2C12.2 11.8 9.5 17 11 22C12.5 27 17.5 30 22.8 28.5C26.5 27.2 29.2 23.8 29.5 19.8"
+                      stroke="#C9F36A"
+                      stroke-width="3.2"
+                      stroke-linecap="round"
+                    />
+                    <path
+                      d="M20 15.5L26.5 20L20 24.5"
+                      stroke="#38BDF8"
+                      stroke-width="2.8"
+                      stroke-linecap="round"
+                      stroke-linejoin="round"
+                    />
                     <circle cx="17.5" cy="20" r="2.2" fill="#FFFFFF" />
                   </svg>
                 </div>
@@ -1540,13 +2217,22 @@ async function shareToMedia() {
 
             <!-- Poster Hero Typography -->
             <div class="poster-card-center">
-              <div v-if="rideForm.templateStyle === 'rapha_editorial'" class="rapha-etappe-tag">
+              <div
+                v-if="rideForm.templateStyle === 'rapha_editorial'"
+                class="rapha-etappe-tag"
+              >
                 STAGE 01 · FINISHED ETAPPE
               </div>
-              <div v-else-if="rideForm.templateStyle === 'cyber_hud'" class="cyber-telemetry-tag">
+              <div
+                v-else-if="rideForm.templateStyle === 'cyber_hud'"
+                class="cyber-telemetry-tag"
+              >
                 GPS: LOCKED (14 SATS) · CAD: 88 RPM
               </div>
-              <div v-else-if="rideForm.templateStyle === 'cafe_santai'" class="cafe-fuel-tag">
+              <div
+                v-else-if="rideForm.templateStyle === 'cafe_santai'"
+                class="cafe-fuel-tag"
+              >
                 ☕ RECOVERY MODE · KULINERAN
               </div>
 
@@ -1555,7 +2241,9 @@ async function shareToMedia() {
                 <span class="mileage-unit">KM</span>
               </div>
               <h2 class="session-name">{{ rideForm.title }}</h2>
-              <div class="session-specs">🚴 {{ rideForm.bikeName }} · {{ rideForm.temperatureC }}°C Cerah</div>
+              <div class="session-specs">
+                🚴 {{ rideForm.bikeName }} · {{ rideForm.temperatureC }}°C Cerah
+              </div>
             </div>
 
             <!-- Poster Glass Telemetry Strip -->
@@ -1564,32 +2252,76 @@ async function shareToMedia() {
                 <span class="elev-lbl">ELEVASI PROFILE</span>
                 <span class="elev-val">+{{ rideForm.elevationM }}m Climb</span>
               </div>
-              <svg viewBox="0 0 300 24" class="elev-curve-svg" aria-hidden="true">
+              <svg
+                viewBox="0 0 300 24"
+                class="elev-curve-svg"
+                aria-hidden="true"
+              >
                 <path
                   d="M0 20 Q 70 18, 140 8 T 260 5 L 300 2"
                   fill="none"
-                  :stroke="rideForm.templateStyle === 'cafe_santai' ? '#F59E0B' : (rideForm.templateStyle === 'rapha_editorial' ? '#FF8C75' : '#38BDF8')"
+                  :stroke="
+                    rideForm.templateStyle === 'cafe_santai'
+                      ? '#F59E0B'
+                      : rideForm.templateStyle === 'rapha_editorial'
+                        ? '#FF8C75'
+                        : '#38BDF8'
+                  "
                   stroke-width="2.8"
                   stroke-linecap="round"
                 />
-                <circle cx="0" cy="20" r="2.5" :fill="rideForm.templateStyle === 'cafe_santai' ? '#F59E0B' : '#38BDF8'" />
-                <circle cx="300" cy="2" r="3.5" :fill="rideForm.templateStyle === 'cafe_santai' ? '#FDE68A' : (rideForm.templateStyle === 'rapha_editorial' ? '#FFD1C9' : '#C9F36A')" />
+                <circle
+                  cx="0"
+                  cy="20"
+                  r="2.5"
+                  :fill="
+                    rideForm.templateStyle === 'cafe_santai'
+                      ? '#F59E0B'
+                      : '#38BDF8'
+                  "
+                />
+                <circle
+                  cx="300"
+                  cy="2"
+                  r="3.5"
+                  :fill="
+                    rideForm.templateStyle === 'cafe_santai'
+                      ? '#FDE68A'
+                      : rideForm.templateStyle === 'rapha_editorial'
+                        ? '#FFD1C9'
+                        : '#C9F36A'
+                  "
+                />
               </svg>
 
               <div class="pillars-row">
                 <div class="p-col">
                   <span class="p-lbl">WAKTU</span>
-                  <strong class="p-val">{{ formatDuration(rideForm.durationMinutes) }}</strong>
+                  <strong class="p-val">{{
+                    formatDuration(rideForm.durationMinutes)
+                  }}</strong>
                 </div>
                 <div class="p-div" />
                 <div class="p-col">
                   <span class="p-lbl">SPEED</span>
-                  <strong class="p-val" :class="rideForm.templateStyle === 'cafe_santai' ? 'text-amber' : (rideForm.templateStyle === 'rapha_editorial' ? 'text-coral' : 'text-lime')">{{ rideForm.avgSpeedKmH }} km/h</strong>
+                  <strong
+                    class="p-val"
+                    :class="
+                      rideForm.templateStyle === 'cafe_santai'
+                        ? 'text-amber'
+                        : rideForm.templateStyle === 'rapha_editorial'
+                          ? 'text-coral'
+                          : 'text-lime'
+                    "
+                    >{{ rideForm.avgSpeedKmH }} km/h</strong
+                  >
                 </div>
                 <div class="p-div" />
                 <div class="p-col">
                   <span class="p-lbl">KALORI</span>
-                  <strong class="p-val text-coral">~{{ rideForm.caloriesKcal }} kcal</strong>
+                  <strong class="p-val text-coral"
+                    >~{{ rideForm.caloriesKcal }} kcal</strong
+                  >
                 </div>
               </div>
             </div>
@@ -1601,7 +2333,11 @@ async function shareToMedia() {
         </div>
 
         <!-- Aspect Ratio Controls -->
-        <div class="aspect-ratio-segmented" role="tablist" aria-label="Pilihan Rasio Flex">
+        <div
+          class="aspect-ratio-segmented"
+          role="tablist"
+          aria-label="Pilihan Rasio Flex"
+        >
           <button
             type="button"
             class="ratio-pill-btn"
@@ -1675,7 +2411,12 @@ async function shareToMedia() {
             :class="{ active: activeTool === 'ai' }"
             @click="activeTool = 'ai'"
           >
-            <GIcon name="bolt" size="xs" filled color="var(--color-chain-lime)" />
+            <GIcon
+              name="bolt"
+              size="xs"
+              filled
+              color="var(--color-chain-lime)"
+            />
             <span>Caption AI</span>
           </button>
           <button
@@ -1699,7 +2440,10 @@ async function shareToMedia() {
               :class="{ active: rideForm.templateStyle === 'strava_bold' }"
               @click="rideForm.templateStyle = 'strava_bold'"
             >
-              <span class="chip-card-tag"><GIcon name="bolt" size="xs" filled color="#C9F36A" /> BOLD</span>
+              <span class="chip-card-tag"
+                ><GIcon name="bolt" size="xs" filled color="#C9F36A" />
+                BOLD</span
+              >
               <strong>Strava Pro</strong>
               <small>Kinetic Neon Green</small>
             </button>
@@ -1709,7 +2453,10 @@ async function shareToMedia() {
               :class="{ active: rideForm.templateStyle === 'rapha_editorial' }"
               @click="rideForm.templateStyle = 'rapha_editorial'"
             >
-              <span class="chip-card-tag"><GIcon name="mountain" size="xs" color="#FF8C75" /> CLASSIC</span>
+              <span class="chip-card-tag"
+                ><GIcon name="mountain" size="xs" color="#FF8C75" />
+                CLASSIC</span
+              >
               <strong>Rapha Editorial</strong>
               <small>Serif &amp; Clean GPS</small>
             </button>
@@ -1719,7 +2466,9 @@ async function shareToMedia() {
               :class="{ active: rideForm.templateStyle === 'cyber_hud' }"
               @click="rideForm.templateStyle = 'cyber_hud'"
             >
-              <span class="chip-card-tag"><GIcon name="radar" size="xs" color="#38BDF8" /> CYBER</span>
+              <span class="chip-card-tag"
+                ><GIcon name="radar" size="xs" color="#38BDF8" /> CYBER</span
+              >
               <strong>Cyber Telemetry</strong>
               <small>HUD Grid &amp; Sensor</small>
             </button>
@@ -1729,7 +2478,9 @@ async function shareToMedia() {
               :class="{ active: rideForm.templateStyle === 'cafe_santai' }"
               @click="rideForm.templateStyle = 'cafe_santai'"
             >
-              <span class="chip-card-tag"><GIcon name="coffee" size="xs" color="#F59E0B" /> COFFEE</span>
+              <span class="chip-card-tag"
+                ><GIcon name="coffee" size="xs" color="#F59E0B" /> COFFEE</span
+              >
               <strong>Kopi &amp; Sate</strong>
               <small>Golden Amber Fuel</small>
             </button>
@@ -1753,7 +2504,9 @@ async function shareToMedia() {
               <button
                 type="button"
                 class="r-style-btn"
-                :class="{ active: rideForm.routeRenderStyle === 'spectrum_elevation' }"
+                :class="{
+                  active: rideForm.routeRenderStyle === 'spectrum_elevation',
+                }"
                 @click="rideForm.routeRenderStyle = 'spectrum_elevation'"
               >
                 <GIcon name="route" size="xs" />
@@ -1762,7 +2515,9 @@ async function shareToMedia() {
               <button
                 type="button"
                 class="r-style-btn"
-                :class="{ active: rideForm.routeRenderStyle === 'kinetic_neon' }"
+                :class="{
+                  active: rideForm.routeRenderStyle === 'kinetic_neon',
+                }"
                 @click="rideForm.routeRenderStyle = 'kinetic_neon'"
               >
                 <GIcon name="bolt" size="xs" filled />
@@ -1780,7 +2535,9 @@ async function shareToMedia() {
               <button
                 type="button"
                 class="r-style-btn"
-                :class="{ active: rideForm.routeRenderStyle === 'minimal_wire' }"
+                :class="{
+                  active: rideForm.routeRenderStyle === 'minimal_wire',
+                }"
                 @click="rideForm.routeRenderStyle = 'minimal_wire'"
               >
                 <GIcon name="map" size="xs" />
@@ -1796,7 +2553,11 @@ async function shareToMedia() {
               @click="syncFromDeviceGpsOrSession"
             >
               <GIcon name="radar" size="sm" color="var(--color-chain-lime)" />
-              <span>{{ isSyncingGps ? 'Menyambungkan GPS...' : '📡 Tarik Jejak GPS Sesi Solo / HP' }}</span>
+              <span>{{
+                isSyncingGps
+                  ? 'Menyambungkan GPS...'
+                  : '📡 Tarik Jejak GPS Sesi Solo / HP'
+              }}</span>
             </button>
 
             <!-- Iconic Route Presets & Custom Uploaded Route -->
@@ -1804,7 +2565,9 @@ async function shareToMedia() {
               <div
                 v-if="customGpxRoute"
                 class="preset-item-card active-custom"
-                :class="{ active: rideForm.selectedRoutePresetId === 'custom_gpx' }"
+                :class="{
+                  active: rideForm.selectedRoutePresetId === 'custom_gpx',
+                }"
                 @click="rideForm.selectedRoutePresetId = 'custom_gpx'"
               >
                 <div class="preset-icon-col">
@@ -1812,9 +2575,17 @@ async function shareToMedia() {
                 </div>
                 <div class="preset-info-col">
                   <strong>📍 {{ customGpxRoute.name }}</strong>
-                  <small>{{ customGpxRoute.location }} · {{ customGpxRoute.distanceKm }} km · +{{ customGpxRoute.elevationM }}m</small>
+                  <small
+                    >{{ customGpxRoute.location }} ·
+                    {{ customGpxRoute.distanceKm }} km · +{{
+                      customGpxRoute.elevationM
+                    }}m</small
+                  >
                 </div>
-                <div v-if="rideForm.selectedRoutePresetId === 'custom_gpx'" class="preset-active-check">
+                <div
+                  v-if="rideForm.selectedRoutePresetId === 'custom_gpx'"
+                  class="preset-active-check"
+                >
                   <GIcon name="check" size="xs" color="#080d19" />
                 </div>
               </div>
@@ -1823,17 +2594,30 @@ async function shareToMedia() {
                 v-for="preset in ROUTE_PRESETS"
                 :key="preset.id"
                 class="preset-item-card"
-                :class="{ active: rideForm.selectedRoutePresetId === preset.id }"
+                :class="{
+                  active: rideForm.selectedRoutePresetId === preset.id,
+                }"
                 @click="selectRoutePreset(preset)"
               >
                 <div class="preset-icon-col">
-                  <GIcon name="route" size="sm" color="var(--color-chain-lime)" />
+                  <GIcon
+                    name="route"
+                    size="sm"
+                    color="var(--color-chain-lime)"
+                  />
                 </div>
                 <div class="preset-info-col">
                   <strong>{{ preset.name }}</strong>
-                  <small>{{ preset.location }} · {{ preset.distanceKm }} km · +{{ preset.elevationM }}m</small>
+                  <small
+                    >{{ preset.location }} · {{ preset.distanceKm }} km · +{{
+                      preset.elevationM
+                    }}m</small
+                  >
                 </div>
-                <div v-if="rideForm.selectedRoutePresetId === preset.id" class="preset-active-check">
+                <div
+                  v-if="rideForm.selectedRoutePresetId === preset.id"
+                  class="preset-active-check"
+                >
                   <GIcon name="check" size="xs" color="#080d19" />
                 </div>
               </div>
@@ -1841,7 +2625,12 @@ async function shareToMedia() {
 
             <!-- GPX Import CTA -->
             <label class="btn-upload-clean">
-              <input type="file" accept=".gpx,.geojson" class="sr-only" @change="handleGpxUpload" />
+              <input
+                type="file"
+                accept=".gpx,.geojson"
+                class="sr-only"
+                @change="handleGpxUpload"
+              />
               <GIcon name="route" size="xs" />
               <span>📂 Unggah File GPX (.gpx) dari Garmin / Strava</span>
             </label>
@@ -1907,7 +2696,12 @@ async function shareToMedia() {
             </div>
 
             <label class="btn-upload-clean">
-              <input type="file" accept="image/*" class="sr-only" @change="handlePhotoUpload" />
+              <input
+                type="file"
+                accept="image/*"
+                class="sr-only"
+                @change="handlePhotoUpload"
+              />
               <GIcon name="camera" size="xs" />
               <span>Unggah Foto Jepretan Sendiri</span>
             </label>
@@ -1921,7 +2715,8 @@ async function shareToMedia() {
               :class="{ active: rideForm.activeSticker === 'kom' }"
               @click="rideForm.activeSticker = 'kom'"
             >
-              <GIcon name="trophy" size="xs" color="#EAB308" filled /> KOM Hunter
+              <GIcon name="trophy" size="xs" color="#EAB308" filled /> KOM
+              Hunter
             </button>
             <button
               type="button"
@@ -2046,7 +2841,9 @@ async function shareToMedia() {
             </div>
 
             <div class="ai-caption-card">
-              <p class="ai-caption-body">{{ aiRecap.captions[selectedPersona] }}</p>
+              <p class="ai-caption-body">
+                {{ aiRecap.captions[selectedPersona] }}
+              </p>
               <button
                 type="button"
                 class="btn-copy-clean"
@@ -2067,6 +2864,13 @@ async function shareToMedia() {
               <GIcon name="coffee" size="xs" color="#F59E0B" />
               <span>{{ aiRecap.foodEquivalency }}</span>
             </div>
+
+            <!-- Interactive Elevation Profile Chart -->
+            <ElevationProfileChart
+              :distance-km="rideForm.distanceKm"
+              :elevation-gain-m="rideForm.elevationM"
+              :climb-category="aiRecap.climbGradeScore"
+            />
           </div>
 
           <!-- 6. EDIT DATA -->
@@ -2078,7 +2882,11 @@ async function shareToMedia() {
               @click="syncFromDeviceGpsOrSession"
             >
               <GIcon name="radar" size="sm" color="var(--color-chain-lime)" />
-              <span>{{ isSyncingGps ? 'Menyambungkan GPS...' : 'Tarik Data Sesi Gowes Asli / GPS Saya' }}</span>
+              <span>{{
+                isSyncingGps
+                  ? 'Menyambungkan GPS...'
+                  : 'Tarik Data Sesi Gowes Asli / GPS Saya'
+              }}</span>
             </button>
             <div class="field-item">
               <label>Judul Sesi</label>
@@ -2090,7 +2898,11 @@ async function shareToMedia() {
             </div>
             <div class="field-item">
               <label>Jarak (km)</label>
-              <input v-model.number="rideForm.distanceKm" type="number" step="0.1" />
+              <input
+                v-model.number="rideForm.distanceKm"
+                type="number"
+                step="0.1"
+              />
             </div>
             <div class="field-item">
               <label>Elevasi (m)</label>
@@ -2222,7 +3034,9 @@ async function shareToMedia() {
   flex-direction: column;
   justify-content: space-between;
   padding: 1.15rem 1.15rem 0.95rem;
-  box-shadow: 0 20px 50px -10px rgba(0, 0, 0, 0.8), 0 0 30px rgba(201, 243, 106, 0.06);
+  box-shadow:
+    0 20px 50px -10px rgba(0, 0, 0, 0.8),
+    0 0 30px rgba(201, 243, 106, 0.06);
   border: 1px solid rgba(255, 255, 255, 0.15);
   background-size: cover;
   background-position: center;
@@ -2268,7 +3082,7 @@ async function shareToMedia() {
   font-family: var(--font-ui);
   font-size: 0.48rem;
   font-weight: 800;
-  color: #FFFFFF;
+  color: #ffffff;
   text-shadow: 0 1px 4px rgba(0, 0, 0, 0.9);
   white-space: nowrap;
   overflow: hidden;
@@ -2308,7 +3122,7 @@ async function shareToMedia() {
   font-weight: 800;
   letter-spacing: 0.02em;
   line-height: 1;
-  color: #FFFFFF;
+  color: #ffffff;
   white-space: nowrap;
 }
 
@@ -2342,7 +3156,7 @@ async function shareToMedia() {
 .banner-seamless-hero .mileage-unit {
   font-size: 0.75rem;
   font-weight: 800;
-  color: #FFFFFF;
+  color: #ffffff;
   margin-left: 0.15rem;
 }
 
@@ -2350,7 +3164,7 @@ async function shareToMedia() {
   font-size: 0.64rem;
   font-weight: 800;
   margin-top: 0.1rem;
-  color: #FFFFFF;
+  color: #ffffff;
   line-height: 1.2;
   white-space: normal;
   overflow: hidden;
@@ -2386,7 +3200,7 @@ async function shareToMedia() {
   font-family: var(--font-ui);
   font-size: 0.38rem;
   font-weight: 800;
-  color: #94A3B8;
+  color: #94a3b8;
   letter-spacing: 0.05em;
 }
 
@@ -2394,7 +3208,7 @@ async function shareToMedia() {
   font-family: var(--font-ui);
   font-size: 0.64rem;
   font-weight: 900;
-  color: #FFFFFF;
+  color: #ffffff;
   line-height: 1.1;
 }
 
@@ -2472,7 +3286,7 @@ async function shareToMedia() {
 .square-hero-row .mileage-unit {
   font-size: 0.8rem;
   font-weight: 800;
-  color: #FFFFFF;
+  color: #ffffff;
 }
 
 .square-title-group {
@@ -2484,7 +3298,7 @@ async function shareToMedia() {
 .square-title-group .session-name {
   font-size: 0.68rem;
   font-weight: 800;
-  color: #FFFFFF;
+  color: #ffffff;
   line-height: 1.2;
 }
 
@@ -2521,7 +3335,7 @@ async function shareToMedia() {
   font-family: var(--font-ui);
   font-size: 0.36rem;
   font-weight: 800;
-  color: #94A3B8;
+  color: #94a3b8;
   letter-spacing: 0.04em;
 }
 
@@ -2530,10 +3344,12 @@ async function shareToMedia() {
   font-size: 0.66rem;
   font-weight: 900;
   line-height: 1.1;
-  color: #F8FAFC;
+  color: #f8fafc;
 }
 
-.text-sky { color: #38BDF8; }
+.text-sky {
+  color: #38bdf8;
+}
 
 /* ========================================================
    GPS ROUTE SIGNATURE ART LAYER
@@ -2563,16 +3379,18 @@ async function shareToMedia() {
 .theme--rapha_editorial {
   font-family: Georgia, Cambria, 'Times New Roman', serif;
   border-color: rgba(255, 140, 117, 0.35);
-  box-shadow: 0 20px 50px -10px rgba(0, 0, 0, 0.8), 0 0 30px rgba(255, 140, 117, 0.1);
+  box-shadow:
+    0 20px 50px -10px rgba(0, 0, 0, 0.8),
+    0 0 30px rgba(255, 140, 117, 0.1);
 }
 
 .theme--rapha_editorial .mileage-val {
   font-family: Georgia, serif;
-  color: #FFFFFF;
+  color: #ffffff;
 }
 
 .theme--rapha_editorial .mileage-unit {
-  color: #FF8C75;
+  color: #ff8c75;
 }
 
 .theme--rapha_editorial .session-name {
@@ -2590,27 +3408,29 @@ async function shareToMedia() {
   font-size: 0.58rem;
   font-weight: 900;
   letter-spacing: 0.08em;
-  color: #FF8C75;
+  color: #ff8c75;
   margin-bottom: 0.2rem;
 }
 
 .theme--cyber_hud {
   font-family: var(--font-ui);
   border-color: rgba(56, 189, 248, 0.4);
-  box-shadow: 0 20px 50px -10px rgba(0, 0, 0, 0.8), 0 0 30px rgba(56, 189, 248, 0.15);
+  box-shadow:
+    0 20px 50px -10px rgba(0, 0, 0, 0.8),
+    0 0 30px rgba(56, 189, 248, 0.15);
 }
 
 .theme--cyber_hud .mileage-val {
-  color: #38BDF8;
+  color: #38bdf8;
   text-shadow: 0 0 16px rgba(56, 189, 248, 0.6);
 }
 
 .theme--cyber_hud .mileage-unit {
-  color: #00FF66;
+  color: #00ff66;
 }
 
 .theme--cyber_hud .session-name {
-  color: #38BDF8;
+  color: #38bdf8;
 }
 
 .theme--cyber_hud .poster-card-glass {
@@ -2622,7 +3442,7 @@ async function shareToMedia() {
   font-family: var(--font-ui);
   font-size: 0.58rem;
   font-weight: 900;
-  color: #00FF66;
+  color: #00ff66;
   letter-spacing: 0.05em;
   margin-bottom: 0.2rem;
 }
@@ -2638,16 +3458,29 @@ async function shareToMedia() {
   line-height: 1;
 }
 
-.hud-tl { top: 0.5rem; left: 0.5rem; }
-.hud-tr { top: 0.5rem; right: 0.5rem; }
-.hud-bl { bottom: 0.5rem; left: 0.5rem; }
-.hud-br { bottom: 0.5rem; right: 0.5rem; }
+.hud-tl {
+  top: 0.5rem;
+  left: 0.5rem;
+}
+.hud-tr {
+  top: 0.5rem;
+  right: 0.5rem;
+}
+.hud-bl {
+  bottom: 0.5rem;
+  left: 0.5rem;
+}
+.hud-br {
+  bottom: 0.5rem;
+  right: 0.5rem;
+}
 
 .hud-grid-overlay {
   position: absolute;
   inset: 0;
-  background-image: linear-gradient(rgba(56, 189, 248, 0.05) 1px, transparent 1px),
-                    linear-gradient(90deg, rgba(56, 189, 248, 0.05) 1px, transparent 1px);
+  background-image:
+    linear-gradient(rgba(56, 189, 248, 0.05) 1px, transparent 1px),
+    linear-gradient(90deg, rgba(56, 189, 248, 0.05) 1px, transparent 1px);
   background-size: 20px 20px;
   pointer-events: none;
   z-index: 1;
@@ -2655,16 +3488,18 @@ async function shareToMedia() {
 
 .theme--cafe_santai {
   border-color: rgba(245, 158, 11, 0.4);
-  box-shadow: 0 20px 50px -10px rgba(0, 0, 0, 0.8), 0 0 30px rgba(245, 158, 11, 0.15);
+  box-shadow:
+    0 20px 50px -10px rgba(0, 0, 0, 0.8),
+    0 0 30px rgba(245, 158, 11, 0.15);
 }
 
 .theme--cafe_santai .mileage-val {
-  color: #F59E0B;
+  color: #f59e0b;
   text-shadow: 0 0 16px rgba(245, 158, 11, 0.4);
 }
 
 .theme--cafe_santai .mileage-unit {
-  color: #FDE68A;
+  color: #fde68a;
 }
 
 .theme--cafe_santai .poster-card-glass {
@@ -2675,45 +3510,99 @@ async function shareToMedia() {
 .cafe-fuel-tag {
   font-size: 0.58rem;
   font-weight: 900;
-  color: #FDE68A;
+  color: #fde68a;
   margin-bottom: 0.2rem;
 }
 
 /* Background Presets */
 .bg--alpine {
-  background: linear-gradient(180deg, rgba(8, 23, 38, 0.85) 0%, rgba(2, 6, 23, 0.98) 100%),
-              radial-gradient(circle at 50% 15%, rgba(56, 189, 248, 0.35) 0%, transparent 60%),
-              #0f2b48;
+  background:
+    linear-gradient(
+      180deg,
+      rgba(8, 23, 38, 0.85) 0%,
+      rgba(2, 6, 23, 0.98) 100%
+    ),
+    radial-gradient(
+      circle at 50% 15%,
+      rgba(56, 189, 248, 0.35) 0%,
+      transparent 60%
+    ),
+    #0f2b48;
 }
 
 .bg--gravel {
-  background: linear-gradient(180deg, rgba(10, 35, 20, 0.85) 0%, rgba(2, 10, 5, 0.98) 100%),
-              radial-gradient(circle at 50% 15%, rgba(201, 243, 106, 0.3) 0%, transparent 60%),
-              #143823;
+  background:
+    linear-gradient(
+      180deg,
+      rgba(10, 35, 20, 0.85) 0%,
+      rgba(2, 10, 5, 0.98) 100%
+    ),
+    radial-gradient(
+      circle at 50% 15%,
+      rgba(201, 243, 106, 0.3) 0%,
+      transparent 60%
+    ),
+    #143823;
 }
 
 .bg--sunset {
-  background: linear-gradient(180deg, rgba(59, 13, 6, 0.85) 0%, rgba(15, 4, 2, 0.98) 100%),
-              radial-gradient(circle at 50% 20%, rgba(251, 146, 60, 0.45) 0%, transparent 65%),
-              #581c10;
+  background:
+    linear-gradient(
+      180deg,
+      rgba(59, 13, 6, 0.85) 0%,
+      rgba(15, 4, 2, 0.98) 100%
+    ),
+    radial-gradient(
+      circle at 50% 20%,
+      rgba(251, 146, 60, 0.45) 0%,
+      transparent 65%
+    ),
+    #581c10;
 }
 
 .bg--crit {
-  background: linear-gradient(180deg, rgba(33, 5, 51, 0.85) 0%, rgba(8, 1, 13, 0.98) 100%),
-              radial-gradient(circle at 50% 15%, rgba(168, 85, 247, 0.4) 0%, transparent 60%),
-              #3b1154;
+  background:
+    linear-gradient(
+      180deg,
+      rgba(33, 5, 51, 0.85) 0%,
+      rgba(8, 1, 13, 0.98) 100%
+    ),
+    radial-gradient(
+      circle at 50% 15%,
+      rgba(168, 85, 247, 0.4) 0%,
+      transparent 60%
+    ),
+    #3b1154;
 }
 
 .bg--cafe {
-  background: linear-gradient(180deg, rgba(35, 17, 6, 0.85) 0%, rgba(13, 6, 2, 0.98) 100%),
-              radial-gradient(circle at 50% 20%, rgba(217, 119, 6, 0.35) 0%, transparent 60%),
-              #3d2111;
+  background:
+    linear-gradient(
+      180deg,
+      rgba(35, 17, 6, 0.85) 0%,
+      rgba(13, 6, 2, 0.98) 100%
+    ),
+    radial-gradient(
+      circle at 50% 20%,
+      rgba(217, 119, 6, 0.35) 0%,
+      transparent 60%
+    ),
+    #3d2111;
 }
 
 .bg--topo {
-  background: linear-gradient(180deg, rgba(8, 13, 25, 0.85) 0%, rgba(3, 6, 10, 0.98) 100%),
-              radial-gradient(circle at 50% 15%, rgba(201, 243, 106, 0.22) 0%, transparent 60%),
-              #0c1527;
+  background:
+    linear-gradient(
+      180deg,
+      rgba(8, 13, 25, 0.85) 0%,
+      rgba(3, 6, 10, 0.98) 100%
+    ),
+    radial-gradient(
+      circle at 50% 15%,
+      rgba(201, 243, 106, 0.22) 0%,
+      transparent 60%
+    ),
+    #0c1527;
 }
 
 .poster-topo-bg {
@@ -2775,7 +3664,7 @@ async function shareToMedia() {
 }
 
 .brand-text-gowes {
-  color: #FFFFFF;
+  color: #ffffff;
 }
 
 .brand-text-kit {
@@ -2916,9 +3805,15 @@ async function shareToMedia() {
   color: #f8fafc;
 }
 
-.text-lime { color: var(--color-chain-lime); }
-.text-amber { color: #f59e0b; }
-.text-coral { color: #ff8c75; }
+.text-lime {
+  color: var(--color-chain-lime);
+}
+.text-amber {
+  color: #f59e0b;
+}
+.text-coral {
+  color: #ff8c75;
+}
 
 .poster-watermark {
   position: relative;

@@ -292,14 +292,25 @@ onMounted(async () => {
       <!-- A. If a place / route is selected -->
       <div v-if="selectedItem" class="selected-item-box">
         <div class="selected-item-tag">
-          {{ selectedItem.kind === 'place' ? 'Spot Terpilih' : 'Rute Terpilih' }}
+          {{
+            selectedItem.kind === 'place' ? 'Spot Terpilih' : 'Rute Terpilih'
+          }}
         </div>
-        <strong class="selected-item-name">{{ selectedItem.name.replace(/^Demo\s+/i, '') }}</strong>
+        <strong class="selected-item-name">{{
+          selectedItem.name.replace(/^Demo\s+/i, '')
+        }}</strong>
       </div>
 
       <!-- Approved Reviews List -->
-      <div v-if="publicLoading" class="mini-status-card">Memuat laporan komunitas…</div>
-      <div v-else-if="publicError" class="mini-status-card mini-status-card--error">{{ publicError }}</div>
+      <div v-if="publicLoading" class="mini-status-card">
+        Memuat laporan komunitas…
+      </div>
+      <div
+        v-else-if="publicError"
+        class="mini-status-card mini-status-card--error"
+      >
+        {{ publicError }}
+      </div>
       <div v-else class="reviews-stack">
         <!-- Place Reviews -->
         <template v-if="selectedItem?.kind === 'place'">
@@ -309,7 +320,9 @@ onMounted(async () => {
           <div v-for="review in reviews" :key="review.id" class="review-card">
             <div class="review-header">
               <span class="rating-badge">★ {{ review.rating }}.0</span>
-              <small class="review-date">{{ contributionDate(review.createdAt) }}</small>
+              <small class="review-date">{{
+                contributionDate(review.createdAt)
+              }}</small>
             </div>
             <p class="review-text">{{ cleanText(review.notes) }}</p>
           </div>
@@ -322,7 +335,13 @@ onMounted(async () => {
                 <label>
                   Rating:
                   <select v-model="rating">
-                    <option v-for="val in [5, 4, 3, 2, 1]" :key="val" :value="val">★ {{ val }} Bintang</option>
+                    <option
+                      v-for="val in [5, 4, 3, 2, 1]"
+                      :key="val"
+                      :value="val"
+                    >
+                      ★ {{ val }} Bintang
+                    </option>
                   </select>
                 </label>
               </div>
@@ -332,34 +351,62 @@ onMounted(async () => {
                 required
                 maxlength="500"
               />
-              <button class="button button--primary button--full" :disabled="submitting" type="submit">
+              <button
+                class="button button--primary button--full"
+                :disabled="submitting"
+                type="submit"
+              >
                 {{ submitting ? 'Mengirim…' : 'Kirim Ulasan' }}
               </button>
             </form>
           </div>
           <div v-else class="login-prompt-banner">
             <span>Masuk untuk menulis ulasan tempat ini.</span>
-            <NuxtLink class="button button--secondary button--sm" to="/login">Sign In</NuxtLink>
+            <NuxtLink class="button button--secondary button--sm" to="/login"
+              >Sign In</NuxtLink
+            >
           </div>
         </template>
 
         <!-- Route Reports & Route Hazards -->
         <template v-else-if="selectedItem?.kind === 'route'">
-          <div v-if="routeReports.length === 0 && selectedRouteHazards.length === 0" class="empty-bulletin">
+          <div
+            v-if="
+              routeReports.length === 0 && selectedRouteHazards.length === 0
+            "
+            class="empty-bulletin"
+          >
             Belum ada laporan kendala pada rute ini.
           </div>
-          <div v-for="report in routeReports" :key="report.id" class="review-card">
+          <div
+            v-for="report in routeReports"
+            :key="report.id"
+            class="review-card"
+          >
             <div class="review-header">
-              <span class="pill-tag">{{ contributionLabel(report.reportType) }}</span>
-              <small class="review-date">{{ contributionDate(report.observedAt) }}</small>
+              <span class="pill-tag">{{
+                contributionLabel(report.reportType)
+              }}</span>
+              <small class="review-date">{{
+                contributionDate(report.observedAt)
+              }}</small>
             </div>
             <p class="review-text">{{ cleanText(report.notes) }}</p>
           </div>
 
-          <div v-for="hz in selectedRouteHazards" :key="hz.id" class="review-card review-card--hazard">
+          <div
+            v-for="hz in selectedRouteHazards"
+            :key="hz.id"
+            class="review-card review-card--hazard"
+          >
             <div class="review-header">
-              <span class="hazard-tag">⚠️ {{ contributionLabel(hz.severity) }} · {{ contributionLabel(hz.hazardType) }}</span>
-              <small class="review-date">{{ contributionDate(hz.observedAt) }}</small>
+              <span class="hazard-tag"
+                >⚠️ {{ contributionLabel(hz.severity) }} ·
+                {{ contributionLabel(hz.hazardType) }}</span
+              >
+              <small class="review-date">{{
+                contributionDate(hz.observedAt)
+              }}</small>
             </div>
             <p class="review-text">{{ cleanText(hz.notes) }}</p>
           </div>
@@ -369,7 +416,11 @@ onMounted(async () => {
             <h4>Lapor Kondisi Jalur Ini</h4>
             <form class="clean-form" @submit.prevent="submitRouteReport">
               <select v-model="reportType">
-                <option v-for="val in ROUTE_REPORT_TYPES" :key="val" :value="val">
+                <option
+                  v-for="val in ROUTE_REPORT_TYPES"
+                  :key="val"
+                  :value="val"
+                >
                   {{ contributionLabel(val) }}
                 </option>
               </select>
@@ -379,14 +430,20 @@ onMounted(async () => {
                 required
                 maxlength="500"
               />
-              <button class="button button--primary button--full" :disabled="submitting" type="submit">
+              <button
+                class="button button--primary button--full"
+                :disabled="submitting"
+                type="submit"
+              >
                 {{ submitting ? 'Mengirim…' : 'Kirim Laporan Rute' }}
               </button>
             </form>
           </div>
           <div v-else class="login-prompt-banner">
             <span>Masuk untuk melaporkan kondisi rute.</span>
-            <NuxtLink class="button button--secondary button--sm" to="/login">Sign In</NuxtLink>
+            <NuxtLink class="button button--secondary button--sm" to="/login"
+              >Sign In</NuxtLink
+            >
           </div>
         </template>
 
@@ -396,11 +453,22 @@ onMounted(async () => {
             <strong>Pantauan Bahaya Jalan Terkini</strong>
             <span class="count-pill">{{ hazards.length }}</span>
           </div>
-          <div v-if="hazards.length === 0" class="empty-bulletin">Tidak ada laporan bahaya aktif saat ini.</div>
-          <div v-for="hz in hazards.slice(0, 6)" :key="hz.id" class="review-card review-card--hazard">
+          <div v-if="hazards.length === 0" class="empty-bulletin">
+            Tidak ada laporan bahaya aktif saat ini.
+          </div>
+          <div
+            v-for="hz in hazards.slice(0, 6)"
+            :key="hz.id"
+            class="review-card review-card--hazard"
+          >
             <div class="review-header">
-              <span class="hazard-tag">⚠️ {{ contributionLabel(hz.severity) }} · {{ contributionLabel(hz.hazardType) }}</span>
-              <small class="review-date">{{ contributionDate(hz.observedAt) }}</small>
+              <span class="hazard-tag"
+                >⚠️ {{ contributionLabel(hz.severity) }} ·
+                {{ contributionLabel(hz.hazardType) }}</span
+              >
+              <small class="review-date">{{
+                contributionDate(hz.observedAt)
+              }}</small>
             </div>
             <p class="review-text">{{ cleanText(hz.notes) }}</p>
           </div>
@@ -412,12 +480,15 @@ onMounted(async () => {
     <section v-else-if="activeTab === 'hazard'" class="tab-pane">
       <div class="form-card-box">
         <p class="tab-intro-copy">
-          Laporkan jalan berlubang, tumpahan oli, atau pohon tumbang demi keselamatan sesama pesepeda.
+          Laporkan jalan berlubang, tumpahan oli, atau pohon tumbang demi
+          keselamatan sesama pesepeda.
         </p>
 
         <div v-if="!user" class="login-prompt-banner">
           <span>Masuk untuk mengirimkan laporan bahaya jalan.</span>
-          <NuxtLink class="button button--secondary button--sm" to="/login">Sign In</NuxtLink>
+          <NuxtLink class="button button--secondary button--sm" to="/login"
+            >Sign In</NuxtLink
+          >
         </div>
 
         <form v-else class="clean-form" @submit.prevent="submitHazard">
@@ -425,7 +496,10 @@ onMounted(async () => {
           <div class="hazard-location-picker">
             <div class="location-picker-header">
               <span class="picker-label">Titik Koordinat Bahaya:</span>
-              <span class="picker-coords font-mono">{{ hazardLatitude.toFixed(4) }}, {{ hazardLongitude.toFixed(4) }}</span>
+              <span class="picker-coords font-mono"
+                >{{ hazardLatitude.toFixed(4) }},
+                {{ hazardLongitude.toFixed(4) }}</span
+              >
             </div>
             <div class="location-picker-actions">
               <button
@@ -435,10 +509,15 @@ onMounted(async () => {
                 @click="useCurrentGpsForHazard"
               >
                 <GIcon name="pin" size="xs" />
-                <span>{{ locatingHazard ? 'Mengambil GPS…' : 'Gunakan Lokasi GPS Saya Saat Ini' }}</span>
+                <span>{{
+                  locatingHazard
+                    ? 'Mengambil GPS…'
+                    : 'Gunakan Lokasi GPS Saya Saat Ini'
+                }}</span>
               </button>
               <span v-if="props.selectedItem" class="selected-target-hint">
-                <GIcon name="route" size="xs" /> Terkait Rute: {{ props.selectedItem.name.replace(/^Demo\s+/i, '') }}
+                <GIcon name="route" size="xs" /> Terkait Rute:
+                {{ props.selectedItem.name.replace(/^Demo\s+/i, '') }}
               </span>
             </div>
           </div>
@@ -455,7 +534,11 @@ onMounted(async () => {
             <label>
               Tingkat Urgensi
               <select v-model="hazardSeverity">
-                <option v-for="val in HAZARD_SEVERITIES" :key="val" :value="val">
+                <option
+                  v-for="val in HAZARD_SEVERITIES"
+                  :key="val"
+                  :value="val"
+                >
                   {{ val }}
                 </option>
               </select>
@@ -472,7 +555,11 @@ onMounted(async () => {
             />
           </label>
 
-          <button class="button button--primary button--full" :disabled="submitting" type="submit">
+          <button
+            class="button button--primary button--full"
+            :disabled="submitting"
+            type="submit"
+          >
             {{ submitting ? 'Mengirimkan…' : 'Kirim Laporan Bahaya' }}
           </button>
         </form>
@@ -483,12 +570,15 @@ onMounted(async () => {
     <section v-else-if="activeTab === 'gpx'" class="tab-pane">
       <div class="form-card-box">
         <p class="tab-intro-copy">
-          Upload file rute GPX (maks. 2 MB) untuk mengecek jarak, elevasi, dan koordinat jalur.
+          Upload file rute GPX (maks. 2 MB) untuk mengecek jarak, elevasi, dan
+          koordinat jalur.
         </p>
 
         <div v-if="!user" class="login-prompt-banner">
           <span>Masuk akun terlebih dahulu untuk preview file GPX.</span>
-          <NuxtLink class="button button--secondary button--sm" to="/login">Sign In</NuxtLink>
+          <NuxtLink class="button button--secondary button--sm" to="/login"
+            >Sign In</NuxtLink
+          >
         </div>
 
         <form v-else class="clean-form" @submit.prevent="importGpx">
@@ -503,8 +593,12 @@ onMounted(async () => {
               <div class="gpx-icon-box">
                 <GIcon name="route" size="lg" color="#0F766E" />
               </div>
-              <span class="gpx-name">{{ gpxFileName || 'Pilih atau sentuh file GPX' }}</span>
-              <span class="gpx-hint">Format .gpx hingga 10.000 titik koordinat</span>
+              <span class="gpx-name">{{
+                gpxFileName || 'Pilih atau sentuh file GPX'
+              }}</span>
+              <span class="gpx-hint"
+                >Format .gpx hingga 10.000 titik koordinat</span
+              >
             </div>
           </div>
 
@@ -516,7 +610,11 @@ onMounted(async () => {
             {{ gpxLoading ? 'Memproses GPX…' : 'Periksa & Preview GPX' }}
           </button>
 
-          <p v-if="gpxError" class="form-message form-message--error" role="alert">
+          <p
+            v-if="gpxError"
+            class="form-message form-message--error"
+            role="alert"
+          >
             {{ gpxError }}
           </p>
 
@@ -528,11 +626,15 @@ onMounted(async () => {
             </div>
             <div class="summary-metric">
               <span class="metric-label">Jumlah Titik</span>
-              <strong>{{ gpxResult.pointCount.toLocaleString() }} waypoints</strong>
+              <strong
+                >{{ gpxResult.pointCount.toLocaleString() }} waypoints</strong
+              >
             </div>
             <div class="summary-metric">
               <span class="metric-label">Total Jarak</span>
-              <strong class="highlight-metric">{{ (gpxResult.distanceMeters / 1000).toFixed(1) }} km</strong>
+              <strong class="highlight-metric"
+                >{{ (gpxResult.distanceMeters / 1000).toFixed(1) }} km</strong
+              >
             </div>
           </div>
         </form>
@@ -540,10 +642,18 @@ onMounted(async () => {
     </section>
 
     <!-- Global Feedback Notification -->
-    <p v-if="submissionMessage" class="form-message form-message--success" role="status">
+    <p
+      v-if="submissionMessage"
+      class="form-message form-message--success"
+      role="status"
+    >
       ✓ {{ submissionMessage }}
     </p>
-    <p v-if="submissionError" class="form-message form-message--error" role="alert">
+    <p
+      v-if="submissionError"
+      class="form-message form-message--error"
+      role="alert"
+    >
       {{ submissionError }}
     </p>
   </div>

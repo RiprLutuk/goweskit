@@ -94,6 +94,38 @@ export function parseCadence(
   };
 }
 
+interface BluetoothGattServerLike {
+  connected: boolean;
+  connect: () => Promise<BluetoothGattServerLike>;
+  disconnect: () => void;
+  getPrimaryService: (service: string) => Promise<BluetoothServiceLike>;
+}
+
+interface BluetoothServiceLike {
+  getCharacteristic: (
+    characteristic: string,
+  ) => Promise<BluetoothCharacteristicLike>;
+}
+
+interface BluetoothCharacteristicLike {
+  startNotifications: () => Promise<void>;
+  addEventListener: (event: string, listener: (e: Event) => void) => void;
+}
+
+interface BluetoothDeviceLike {
+  name?: string;
+  gatt?: BluetoothGattServerLike;
+  addEventListener: (event: string, listener: () => void) => void;
+}
+
+interface NavigatorBluetoothLike {
+  bluetooth: {
+    requestDevice: (options: {
+      filters: Array<{ services: string[] }>;
+    }) => Promise<BluetoothDeviceLike>;
+  };
+}
+
 export function useBluetoothSensors() {
   const heartRate = ref<number | null>(null);
   const cadenceRpm = ref<number | null>(null);
@@ -108,9 +140,9 @@ export function useBluetoothSensors() {
   const isPowerConnected = ref(false);
   const errorMessage = ref<string | null>(null);
 
-  let hrDevice: any = null;
-  let cscDevice: any = null;
-  let powerDevice: any = null;
+  let hrDevice: BluetoothDeviceLike | null = null;
+  let cscDevice: BluetoothDeviceLike | null = null;
+  let powerDevice: BluetoothDeviceLike | null = null;
 
   let prevCrank: { lastRevs: number; lastTime: number } | null = null;
 
@@ -126,7 +158,8 @@ export function useBluetoothSensors() {
     }
     errorMessage.value = null;
     try {
-      const device = await (navigator as any).bluetooth.requestDevice({
+      const nav = navigator as unknown as NavigatorBluetoothLike;
+      const device = await nav.bluetooth.requestDevice({
         filters: [{ services: ['heart_rate'] }],
       });
 
@@ -139,6 +172,7 @@ export function useBluetoothSensors() {
         hrDeviceName.value = null;
       });
 
+      if (!device.gatt) return false;
       const server = await device.gatt.connect();
       const service = await server.getPrimaryService('heart_rate');
       const characteristic = await service.getCharacteristic(
@@ -148,17 +182,18 @@ export function useBluetoothSensors() {
       await characteristic.startNotifications();
       characteristic.addEventListener(
         'characteristicvaluechanged',
-        (e: any) => {
-          const value = e.target.value as DataView;
-          heartRate.value = parseHeartRate(value);
+        (e: Event) => {
+          const target = e.target as unknown as { value: DataView };
+          heartRate.value = parseHeartRate(target.value);
         },
       );
 
       isHrConnected.value = true;
       return true;
-    } catch (err: any) {
-      if (err.name !== 'NotFoundError') {
-        errorMessage.value = `Gagal menghubungkan sensor detak jantung: ${err.message}`;
+    } catch (err: unknown) {
+      const error = err as { name?: string; message?: string };
+      if (error.name !== 'NotFoundError') {
+        errorMessage.value = `Gagal menghubungkan sensor detak jantung: ${error.message ?? 'Error'}`;
       }
       return false;
     }
@@ -166,13 +201,13 @@ export function useBluetoothSensors() {
 
   async function connectCadence(): Promise<boolean> {
     if (!isBluetoothAvailable()) {
-      errorMessage.value =
-        'Web Bluetooth API tidak didukung pada browser ini.';
+      errorMessage.value = 'Web Bluetooth API tidak didukung pada browser ini.';
       return false;
     }
     errorMessage.value = null;
     try {
-      const device = await (navigator as any).bluetooth.requestDevice({
+      const nav = navigator as unknown as NavigatorBluetoothLike;
+      const device = await nav.bluetooth.requestDevice({
         filters: [{ services: ['cycling_speed_and_cadence'] }],
       });
 
@@ -186,20 +221,19 @@ export function useBluetoothSensors() {
         prevCrank = null;
       });
 
+      if (!device.gatt) return false;
       const server = await device.gatt.connect();
       const service = await server.getPrimaryService(
         'cycling_speed_and_cadence',
       );
-      const characteristic = await service.getCharacteristic(
-        'csc_measurement',
-      );
+      const characteristic = await service.getCharacteristic('csc_measurement');
 
       await characteristic.startNotifications();
       characteristic.addEventListener(
         'characteristicvaluechanged',
-        (e: any) => {
-          const value = e.target.value as DataView;
-          const res = parseCadence(value, prevCrank);
+        (e: Event) => {
+          const target = e.target as unknown as { value: DataView };
+          const res = parseCadence(target.value, prevCrank);
           if (res) {
             cadenceRpm.value = res.cadenceRpm;
             prevCrank = { lastRevs: res.revs, lastTime: res.time };
@@ -209,9 +243,10 @@ export function useBluetoothSensors() {
 
       isCscConnected.value = true;
       return true;
-    } catch (err: any) {
-      if (err.name !== 'NotFoundError') {
-        errorMessage.value = `Gagal menghubungkan sensor kadens: ${err.message}`;
+    } catch (err: unknown) {
+      const error = err as { name?: string; message?: string };
+      if (error.name !== 'NotFoundError') {
+        errorMessage.value = `Gagal menghubungkan sensor kadens: ${error.message ?? 'Error'}`;
       }
       return false;
     }
@@ -219,13 +254,13 @@ export function useBluetoothSensors() {
 
   async function connectPower(): Promise<boolean> {
     if (!isBluetoothAvailable()) {
-      errorMessage.value =
-        'Web Bluetooth API tidak didukung pada browser ini.';
+      errorMessage.value = 'Web Bluetooth API tidak didukung pada browser ini.';
       return false;
     }
     errorMessage.value = null;
     try {
-      const device = await (navigator as any).bluetooth.requestDevice({
+      const nav = navigator as unknown as NavigatorBluetoothLike;
+      const device = await nav.bluetooth.requestDevice({
         filters: [{ services: ['cycling_power'] }],
       });
 
@@ -238,6 +273,7 @@ export function useBluetoothSensors() {
         powerDeviceName.value = null;
       });
 
+      if (!device.gatt) return false;
       const server = await device.gatt.connect();
       const service = await server.getPrimaryService('cycling_power');
       const characteristic = await service.getCharacteristic(
@@ -247,17 +283,18 @@ export function useBluetoothSensors() {
       await characteristic.startNotifications();
       characteristic.addEventListener(
         'characteristicvaluechanged',
-        (e: any) => {
-          const value = e.target.value as DataView;
-          powerWatts.value = parseCyclingPower(value);
+        (e: Event) => {
+          const target = e.target as unknown as { value: DataView };
+          powerWatts.value = parseCyclingPower(target.value);
         },
       );
 
       isPowerConnected.value = true;
       return true;
-    } catch (err: any) {
-      if (err.name !== 'NotFoundError') {
-        errorMessage.value = `Gagal menghubungkan power meter: ${err.message}`;
+    } catch (err: unknown) {
+      const error = err as { name?: string; message?: string };
+      if (error.name !== 'NotFoundError') {
+        errorMessage.value = `Gagal menghubungkan power meter: ${error.message ?? 'Error'}`;
       }
       return false;
     }

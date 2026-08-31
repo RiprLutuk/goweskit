@@ -153,6 +153,43 @@ export class GarageService {
     return mapBike(await this.getOwnedBike(user, bikeId));
   }
 
+  public async getPublicPassport(bikeId: string): Promise<{
+    id: string;
+    nickname: string;
+    bicycleType: string;
+    brand?: string | null;
+    model?: string | null;
+    modelYear?: number | null;
+    photoUrl?: string | null;
+    avatarPreset?: string | null;
+    notes?: string | null;
+    specs: BikeSpec[];
+    registeredAt: string;
+    ownershipStatus: 'verified_owner' | 'legitimate' | 'reported_stolen';
+    passportUid: string;
+  }> {
+    const stored = await this.repository.findBikeById(bikeId);
+    if (stored === null) throw this.notFound();
+
+    const passportUid = `GWK-${stored.id.replace(/-/g, '').slice(0, 6).toUpperCase()}`;
+
+    return {
+      id: stored.id,
+      nickname: stored.nickname,
+      bicycleType: stored.bicycleType.name,
+      brand: stored.brand,
+      model: stored.model,
+      modelYear: stored.modelYear,
+      photoUrl: stored.photoUrl,
+      avatarPreset: stored.avatarPreset,
+      notes: stored.notes,
+      specs: stored.specs.map(mapSpec),
+      registeredAt: stored.createdAt.toISOString(),
+      ownershipStatus: 'verified_owner',
+      passportUid,
+    };
+  }
+
   public async updateBike(
     user: User,
     bikeId: string,

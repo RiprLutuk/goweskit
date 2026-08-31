@@ -9,6 +9,7 @@ import {
   type BikeSpecListResponse,
   type BikeSpecResponse,
   type BikeVisualResponse,
+  type PublicBikePassportResponse,
   type SuccessResponse,
 } from '@goweskit/contracts';
 import type { FastifyInstance, FastifyRequest } from 'fastify';
@@ -48,6 +49,16 @@ export function registerGarageRoutes(
     );
     return reply.status(201).send({ bike });
   });
+
+  app.get<{ Reply: PublicBikePassportResponse }>(
+    '/api/v1/bikes/:bikeId/public-passport',
+    async (request) => {
+      const { bikeId } = parseInput(bikeParamsSchema, request.params);
+      return {
+        bike: await garageService.getPublicPassport(bikeId),
+      };
+    },
+  );
 
   app.get<{ Reply: BikeResponse }>('/api/v1/bikes/:bikeId', async (request) => {
     const { bikeId } = parseInput(bikeParamsSchema, request.params);

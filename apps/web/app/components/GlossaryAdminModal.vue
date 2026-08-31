@@ -1,5 +1,8 @@
 <script setup lang="ts">
-import type { CreateGlossaryTermRequest, GlossaryTerm } from '@goweskit/contracts';
+import type {
+  CreateGlossaryTermRequest,
+  GlossaryTerm,
+} from '@goweskit/contracts';
 
 defineProps<{
   isOpen: boolean;
@@ -23,7 +26,10 @@ const errorMessage = ref('');
 
 // Auto-generate slug from term name
 watch(termName, (name) => {
-  if (!termSlug.value || termSlug.value === slugify(termName.value.slice(0, -1))) {
+  if (
+    !termSlug.value ||
+    termSlug.value === slugify(termName.value.slice(0, -1))
+  ) {
     termSlug.value = slugify(name);
   }
 });
@@ -46,7 +52,12 @@ function resetForm(): void {
 }
 
 async function handleSubmit(): Promise<void> {
-  if (!termName.value || !termSlug.value || !plainDefinition.value || !technicalDefinition.value) {
+  if (
+    !termName.value ||
+    !termSlug.value ||
+    !plainDefinition.value ||
+    !technicalDefinition.value
+  ) {
     errorMessage.value = 'Semua field wajib diisi.';
     return;
   }
@@ -73,7 +84,10 @@ async function handleSubmit(): Promise<void> {
       method: 'POST',
       body: payload,
     });
-    toast.success('Istilah Berhasil Ditambahkan', `"${created.term}" kini tersedia di kamus GowesKit.`);
+    toast.success(
+      'Istilah Berhasil Ditambahkan',
+      `"${created.term}" kini tersedia di kamus GowesKit.`,
+    );
     emit('termCreated', created);
     resetForm();
     emit('close');
@@ -101,7 +115,9 @@ async function handleSubmit(): Promise<void> {
         <div class="admin-modal__header">
           <div>
             <span class="admin-tag">Admin &amp; Curator Workflow</span>
-            <h2 id="glossary-admin-title" class="admin-title">Tambah Istilah Kamus Baru</h2>
+            <h2 id="glossary-admin-title" class="admin-title">
+              Tambah Istilah Kamus Baru
+            </h2>
           </div>
           <button
             type="button"
@@ -153,7 +169,9 @@ async function handleSubmit(): Promise<void> {
           </div>
 
           <div class="form-group">
-            <label for="admin-tech-def">Definisi Teknis &amp; Kompatibilitas</label>
+            <label for="admin-tech-def"
+              >Definisi Teknis &amp; Kompatibilitas</label
+            >
             <textarea
               id="admin-tech-def"
               v-model="technicalDefinition"
@@ -164,7 +182,9 @@ async function handleSubmit(): Promise<void> {
           </div>
 
           <div class="form-group">
-            <label for="admin-aliases">Alias / Sinonim (Pisahkan dengan koma)</label>
+            <label for="admin-aliases"
+              >Alias / Sinonim (Pisahkan dengan koma)</label
+            >
             <input
               id="admin-aliases"
               v-model="aliasesInput"
@@ -213,7 +233,7 @@ async function handleSubmit(): Promise<void> {
   position: relative;
   width: 100%;
   max-width: 32rem;
-  background: #FFFFFF;
+  background: #ffffff;
   border-radius: 1.25rem;
   box-shadow: 0 20px 40px rgba(0, 0, 0, 0.2);
   display: flex;
@@ -227,15 +247,15 @@ async function handleSubmit(): Promise<void> {
   align-items: flex-start;
   justify-content: space-between;
   padding: 1.25rem 1.5rem;
-  border-bottom: 1px solid #E2E8F0;
+  border-bottom: 1px solid #e2e8f0;
 }
 
 .admin-tag {
   font-size: 0.65rem;
   font-weight: 850;
-  color: #0F766E;
-  background: #F0FDFA;
-  border: 1px solid #CCFBF1;
+  color: #0f766e;
+  background: #f0fdfa;
+  border: 1px solid #ccfbf1;
   padding: 0.2rem 0.6rem;
   border-radius: 9999px;
   text-transform: uppercase;
@@ -248,13 +268,13 @@ async function handleSubmit(): Promise<void> {
   margin: 0;
   font-size: 1.25rem;
   font-weight: 900;
-  color: #17202A;
+  color: #17202a;
   letter-spacing: -0.02em;
 }
 
 .close-btn {
-  background: #F1F5F9;
-  border: 1px solid #E2E8F0;
+  background: #f1f5f9;
+  border: 1px solid #e2e8f0;
   width: 2rem;
   height: 2rem;
   border-radius: 50%;
@@ -275,9 +295,9 @@ async function handleSubmit(): Promise<void> {
 .error-banner {
   margin: 0;
   padding: 0.65rem 0.85rem;
-  background: #FEE2E2;
-  border: 1px solid #FCA5A5;
-  color: #991B1B;
+  background: #fee2e2;
+  border: 1px solid #fca5a5;
+  color: #991b1b;
   border-radius: 0.5rem;
   font-size: 0.8rem;
   font-weight: 700;
@@ -298,17 +318,17 @@ async function handleSubmit(): Promise<void> {
 .form-group textarea {
   width: 100%;
   padding: 0.65rem 0.85rem;
-  border: 1.5px solid #CBD5E1;
+  border: 1.5px solid #cbd5e1;
   border-radius: 0.65rem;
   font-size: 0.85rem;
-  color: #17202A;
+  color: #17202a;
   outline: none;
   font-family: inherit;
 }
 
 .form-group input:focus,
 .form-group textarea:focus {
-  border-color: #17202A;
+  border-color: #17202a;
 }
 
 .admin-actions {
@@ -316,7 +336,7 @@ async function handleSubmit(): Promise<void> {
   gap: 0.65rem;
   margin-top: 0.5rem;
   padding-top: 0.75rem;
-  border-top: 1px solid #E2E8F0;
+  border-top: 1px solid #e2e8f0;
 }
 
 .admin-actions button {

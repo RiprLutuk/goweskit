@@ -34,6 +34,7 @@ const beginnerOnly = ref(false);
 const searchQuery = ref('');
 const showFilterModal = ref(false);
 const showContributionsModal = ref(false);
+const showOfflineMapModal = ref(false);
 const isDesktopSidebarOpen = ref(true);
 
 const places = ref<NearbyPlace[]>([]);
@@ -132,7 +133,10 @@ function toggleSheetPosition(): void {
 }
 
 function cleanName(rawName: string): string {
-  return rawName.replace(/^\[(Place|Route)\]\s*/i, '').replace(/^Demo\s+/i, '').trim();
+  return rawName
+    .replace(/^\[(Place|Route)\]\s*/i, '')
+    .replace(/^Demo\s+/i, '')
+    .trim();
 }
 
 function cleanDescription(rawDesc: string | null | undefined): string {
@@ -246,7 +250,10 @@ function useMyLocation(): void {
     () => {
       locating.value = false;
       locationMessage.value = 'GPS tidak tersedia. Menggunakan Area Default.';
-      toast.info('GPS Tidak Tersedia', 'Menampilkan rute & tempat gowes area Tangerang/BSD.');
+      toast.info(
+        'GPS Tidak Tersedia',
+        'Menampilkan rute & tempat gowes area Tangerang/BSD.',
+      );
       void loadNearby();
     },
     { enableHighAccuracy: false, timeout: 10_000, maximumAge: 60_000 },
@@ -254,11 +261,8 @@ function useMyLocation(): void {
 }
 
 const { user } = useAuth();
-const {
-  saveRouteOffline,
-  isRouteSavedOffline,
-  removeOfflineRoute,
-} = useOfflineNavigator();
+const { saveRouteOffline, isRouteSavedOffline, removeOfflineRoute } =
+  useOfflineNavigator();
 const showOfflineModal = ref(false);
 
 const elevationData = ref<RouteElevationResponse | null>(null);
@@ -283,11 +287,17 @@ function toggleOfflineRoute(item: ExploreItem): void {
       coordinates: item.geometry.coordinates as [number, number][],
       elevationProfile: elevationData.value?.elevationProfile ?? undefined,
     });
-    toast.success('Rute Tersimpan Offline ✓', 'Siap digunakan di area tanpa sinyal.');
+    toast.success(
+      'Rute Tersimpan Offline ✓',
+      'Siap digunakan di area tanpa sinyal.',
+    );
   }
 }
 
-async function selectItem(selection: { kind: 'place' | 'route'; id: string }): Promise<void> {
+async function selectItem(selection: {
+  kind: 'place' | 'route';
+  id: string;
+}): Promise<void> {
   selectedId.value = selection.id;
   sheetPosition.value = 'half';
   elevationData.value = null;
@@ -324,7 +334,10 @@ async function saveSelectedItem(item: ExploreItem): Promise<void> {
     });
     savedItems.value.add(item.id);
     saveToast.value = '✓ Disimpan ke Profil!';
-    toast.success('Tersimpan', `${cleanName(item.name)} ditambahkan ke favorit.`);
+    toast.success(
+      'Tersimpan',
+      `${cleanName(item.name)} ditambahkan ke favorit.`,
+    );
     setTimeout(() => {
       saveToast.value = '';
     }, 2500);
@@ -333,46 +346,6 @@ async function saveSelectedItem(item: ExploreItem): Promise<void> {
   } finally {
     savingItem.value = false;
   }
-}
-
-const elevationSvgPath = computed(() => {
-  if (!elevationData.value || elevationData.value.elevationProfile.length < 2) return '';
-  const pts = elevationData.value.elevationProfile;
-  const lastPt = pts[pts.length - 1];
-  const maxDist = (lastPt ? lastPt.distanceMeters : 1) || 1;
-  const minElev = Math.min(...pts.map((p) => p.elevationMeters));
-  const maxElev = Math.max(...pts.map((p) => p.elevationMeters));
-  const elevRange = maxElev - minElev || 1;
-
-  const w = 300;
-  const h = 50;
-  const padding = 6;
-
-  const coords = pts.map((p) => {
-    const x = Math.round((p.distanceMeters / maxDist) * w);
-    const y = Math.round(
-      h - padding - ((p.elevationMeters - minElev) / elevRange) * (h - padding * 2),
-    );
-    return `${x},${y}`;
-  });
-
-  return `M ${coords.join(' L ')}`;
-});
-
-const elevationFillPath = computed(() => {
-  if (!elevationSvgPath.value) return '';
-  return `${elevationSvgPath.value} L 300 50 L 0 50 Z`;
-});
-
-function onElevationChartMouseMove(e: MouseEvent): void {
-  if (!selectedItem.value || selectedItem.value.kind !== 'route') return;
-  const rect = (e.currentTarget as HTMLElement).getBoundingClientRect();
-  const relX = Math.max(0, Math.min(1, (e.clientX - rect.left) / rect.width));
-  hoveredElevationDistance.value = relX * selectedItem.value.distanceMeters;
-}
-
-function onElevationChartMouseLeave(): void {
-  hoveredElevationDistance.value = null;
 }
 
 function formatDistance(meters: number): string {
@@ -446,7 +419,10 @@ ${url}
         text,
         url,
       });
-      toast.success('Rute Dibagikan!', 'Siap diposting atau dikirim ke teman gowes.');
+      toast.success(
+        'Rute Dibagikan!',
+        'Siap diposting atau dikirim ke teman gowes.',
+      );
       return;
     } catch {
       // ignore abort
@@ -455,7 +431,10 @@ ${url}
 
   try {
     await navigator.clipboard.writeText(text);
-    toast.success('Rute Disalin!', 'Siap ditempel ke WhatsApp atau media sosial.');
+    toast.success(
+      'Rute Disalin!',
+      'Siap ditempel ke WhatsApp atau media sosial.',
+    );
   } catch {
     toast.info('Gagal menyalin otomatis', 'Silakan salin manual.');
   }
@@ -493,12 +472,16 @@ function getSuitableBikes(item: ExploreItem): string[] {
   }
   if (item.type === 'bike_park') return ['MTB', 'Dirt Jump', 'BMX'];
   if (item.type === 'trailhead') return ['MTB', 'Gravel'];
-  if (item.type === 'coffee' || item.type === 'rest') return ['Semua Sepeda', 'Road', 'Gravel', 'Folding'];
-  if (item.type === 'workshop' || item.type === 'store') return ['Semua Sepeda'];
+  if (item.type === 'coffee' || item.type === 'rest')
+    return ['Semua Sepeda', 'Road', 'Gravel', 'Folding'];
+  if (item.type === 'workshop' || item.type === 'store')
+    return ['Semua Sepeda'];
   return ['Semua Sepeda'];
 }
 
-function getPlaceAmenities(item: ExploreItem): { icon: string; label: string }[] {
+function getPlaceAmenities(
+  item: ExploreItem,
+): { icon: string; label: string }[] {
   if (item.kind === 'place') {
     switch (item.type) {
       case 'workshop':
@@ -603,7 +586,10 @@ onBeforeUnmount(() => {
             :title="isDesktopSidebarOpen ? 'Tutup sidebar' : 'Buka sidebar'"
             @click="isDesktopSidebarOpen = !isDesktopSidebarOpen"
           >
-            <GIcon :name="isDesktopSidebarOpen ? 'chevron-left' : 'chevron-right'" size="xs" />
+            <GIcon
+              :name="isDesktopSidebarOpen ? 'chevron-left' : 'chevron-right'"
+              size="xs"
+            />
           </button>
         </div>
 
@@ -633,7 +619,11 @@ onBeforeUnmount(() => {
             :disabled="locating"
             @click="useMyLocation"
           >
-            <GIcon name="radar" size="xs" :color="userLocation !== null ? '#16A34A' : 'currentColor'" />
+            <GIcon
+              name="radar"
+              size="xs"
+              :color="userLocation !== null ? '#16A34A' : 'currentColor'"
+            />
           </button>
           <button
             class="overlay-icon-btn"
@@ -642,6 +632,14 @@ onBeforeUnmount(() => {
             @click="showFilterModal = !showFilterModal"
           >
             <GIcon name="filter" size="xs" />
+          </button>
+          <button
+            class="overlay-icon-btn"
+            type="button"
+            title="Cache Peta Offline"
+            @click="showOfflineMapModal = true"
+          >
+            <GIcon name="map" size="xs" />
           </button>
           <button
             class="overlay-icon-btn overlay-icon-btn--primary"
@@ -721,83 +719,95 @@ onBeforeUnmount(() => {
           <!-- Top Tag Stack & Dismiss Button -->
           <div class="card-headline-row">
             <div class="pill-badge-stack">
-              <span class="type-pill" :class="`type-pill--${selectedItem.kind === 'place' ? selectedItem.type : selectedItem.routeType}`">
+              <span
+                class="type-pill"
+                :class="`type-pill--${selectedItem.kind === 'place' ? selectedItem.type : selectedItem.routeType}`"
+              >
                 {{ typeLabel(selectedItem) }}
               </span>
-              <span class="dist-pill">📍 {{ formatDistance(itemDistance(selectedItem)) }}</span>
-              <span v-if="selectedItem.verificationStatus === 'staff_verified'" class="verified-pill">
+              <span class="dist-pill"
+                >📍 {{ formatDistance(itemDistance(selectedItem)) }}</span
+              >
+              <span
+                v-if="selectedItem.verificationStatus === 'staff_verified'"
+                class="verified-pill"
+              >
                 ✓ Terverifikasi
               </span>
               <span v-if="selectedItem.beginnerFriendly" class="beginner-pill">
                 🌱 Ramah Pemula
               </span>
             </div>
-            <button class="dismiss-circle-btn" type="button" title="Tutup" @click="selectedId = null">✕</button>
+            <button
+              class="dismiss-circle-btn"
+              type="button"
+              title="Tutup"
+              @click="selectedId = null"
+            >
+              ✕
+            </button>
           </div>
 
           <div class="card-title-group">
             <h2 class="card-item-title">{{ cleanName(selectedItem.name) }}</h2>
-            <p class="card-item-desc">{{ cleanDescription(selectedItem.description) || 'Spot gowes rekomendasi komunitas.' }}</p>
+            <p class="card-item-desc">
+              {{
+                cleanDescription(selectedItem.description) ||
+                'Spot gowes rekomendasi komunitas.'
+              }}
+            </p>
           </div>
 
           <!-- Quick Telemetry Stats Grid for Routes -->
           <div v-if="selectedItem.kind === 'route'" class="route-metrics-grid">
             <div class="metric-pill">
               <span class="metric-label">Jarak</span>
-              <span class="metric-val">{{ (selectedItem.distanceMeters / 1000).toFixed(1) }} <small>km</small></span>
+              <span class="metric-val"
+                >{{ (selectedItem.distanceMeters / 1000).toFixed(1) }}
+                <small>km</small></span
+              >
             </div>
             <div class="metric-pill">
               <span class="metric-label">Elevasi</span>
-              <span class="metric-val">+{{ selectedItem.elevationGainMeters }} <small>m</small></span>
+              <span class="metric-val"
+                >+{{ selectedItem.elevationGainMeters }} <small>m</small></span
+              >
             </div>
             <div class="metric-pill">
               <span class="metric-label">Estimasi</span>
-              <span class="metric-val">{{ estimatedRideTime(selectedItem.distanceMeters) }}</span>
+              <span class="metric-val">{{
+                estimatedRideTime(selectedItem.distanceMeters)
+              }}</span>
             </div>
             <div class="metric-pill">
               <span class="metric-label">Kalori</span>
-              <span class="metric-val">{{ estimatedCalories(selectedItem.distanceMeters, selectedItem.elevationGainMeters) }}</span>
+              <span class="metric-val">{{
+                estimatedCalories(
+                  selectedItem.distanceMeters,
+                  selectedItem.elevationGainMeters,
+                )
+              }}</span>
             </div>
           </div>
 
-          <!-- Route Elevation Interactive Sparkline -->
+          <!-- Route Elevation Interactive Chart -->
           <div
             v-if="selectedItem.kind === 'route'"
-            class="route-spark-box"
-            @mousemove="onElevationChartMouseMove"
-            @mouseleave="onElevationChartMouseLeave"
+            class="route-elevation-wrapper"
           >
-            <div class="spark-labels">
-              <span>Profil Elevasi (+{{ selectedItem.elevationGainMeters }}m)</span>
-              <span v-if="hoveredElevationDistance !== null" class="spark-hover-indicator">
-                {{ (hoveredElevationDistance / 1000).toFixed(1) }} km
-              </span>
-              <span v-else-if="elevationData" class="spark-gradient">
-                Avg {{ elevationData.averageGradientPercent }}% · Max {{ elevationData.maxGradientPercent }}%
-              </span>
-              <span v-else class="spark-difficulty">{{ selectedItem.difficulty }} · {{ selectedItem.surface }}</span>
-            </div>
-
-            <svg viewBox="0 0 300 50" class="spark-svg" aria-hidden="true">
-              <defs>
-                <linearGradient id="elevGradDesktop" x1="0" y1="0" x2="0" y2="1">
-                  <stop offset="0%" stop-color="#0284c7" stop-opacity="0.45" />
-                  <stop offset="100%" stop-color="#0284c7" stop-opacity="0.05" />
-                </linearGradient>
-              </defs>
-              <path
-                :d="elevationFillPath || 'M0 40 Q 60 30, 120 22 T 240 10 L 300 6 L 300 50 L 0 50 Z'"
-                fill="url(#elevGradDesktop)"
-              />
-              <path
-                :d="elevationSvgPath || 'M0 40 Q 60 30, 120 22 T 240 10 L 300 6'"
-                fill="none"
-                stroke="#0284c7"
-                stroke-width="2.5"
-                stroke-linecap="round"
-              />
-            </svg>
-            <span class="spark-hint-text">Arahkan kursor untuk menelusuri titik elevasi di peta</span>
+            <ElevationProfileChart
+              :distance-km="
+                Number((selectedItem.distanceMeters / 1000).toFixed(1))
+              "
+              :elevation-gain-m="selectedItem.elevationGainMeters"
+              :climb-category="
+                selectedItem.elevationGainMeters > 500
+                  ? 'Cat 2 Mountain Pass'
+                  : selectedItem.elevationGainMeters > 200
+                    ? 'Cat 3 Punchy Climb'
+                    : 'Cat 4 Rolling Hills'
+              "
+            />
           </div>
 
           <!-- Spot & Cycling Specs Card -->
@@ -805,16 +815,28 @@ onBeforeUnmount(() => {
             <div class="spec-row">
               <span class="spec-label">🚲 Rekomendasi Sepeda</span>
               <div class="spec-chips">
-                <span v-for="bike in getSuitableBikes(selectedItem)" :key="bike" class="bike-spec-chip">
+                <span
+                  v-for="bike in getSuitableBikes(selectedItem)"
+                  :key="bike"
+                  class="bike-spec-chip"
+                >
                   {{ bike }}
                 </span>
               </div>
             </div>
 
             <div class="spec-row">
-              <span class="spec-label">{{ selectedItem.kind === 'place' ? '✨ Fasilitas Spot' : '🛣️ Karakter Rute' }}</span>
+              <span class="spec-label">{{
+                selectedItem.kind === 'place'
+                  ? '✨ Fasilitas Spot'
+                  : '🛣️ Karakter Rute'
+              }}</span>
               <div class="amenities-wrap">
-                <span v-for="amenity in getPlaceAmenities(selectedItem)" :key="amenity.label" class="amenity-badge">
+                <span
+                  v-for="amenity in getPlaceAmenities(selectedItem)"
+                  :key="amenity.label"
+                  class="amenity-badge"
+                >
                   <span>{{ amenity.icon }}</span>
                   <span>{{ amenity.label }}</span>
                 </span>
@@ -822,7 +844,9 @@ onBeforeUnmount(() => {
             </div>
           </div>
 
-          <p v-if="saveToast" class="save-toast-chip" role="status">{{ saveToast }}</p>
+          <p v-if="saveToast" class="save-toast-chip" role="status">
+            {{ saveToast }}
+          </p>
 
           <!-- Ergonomic Two-Tier Action Layout -->
           <div class="detail-action-hub">
@@ -868,13 +892,24 @@ onBeforeUnmount(() => {
 
               <button
                 class="card-action-pill"
-                :class="{ 'card-action-pill--active': savedItems.has(selectedItem.id) }"
+                :class="{
+                  'card-action-pill--active': savedItems.has(selectedItem.id),
+                }"
                 type="button"
                 :disabled="savingItem"
                 @click="saveSelectedItem(selectedItem)"
               >
-                <GIcon :name="savedItems.has(selectedItem.id) ? 'bookmark-filled' : 'bookmark'" size="xs" />
-                <span>{{ savedItems.has(selectedItem.id) ? 'Tersimpan' : 'Simpan' }}</span>
+                <GIcon
+                  :name="
+                    savedItems.has(selectedItem.id)
+                      ? 'bookmark-filled'
+                      : 'bookmark'
+                  "
+                  size="xs"
+                />
+                <span>{{
+                  savedItems.has(selectedItem.id) ? 'Tersimpan' : 'Simpan'
+                }}</span>
               </button>
 
               <NuxtLink
@@ -885,6 +920,25 @@ onBeforeUnmount(() => {
                 <GIcon name="camera" size="xs" />
                 <span>Poster AI</span>
               </NuxtLink>
+
+              <button
+                v-if="selectedItem.kind === 'route'"
+                class="card-action-pill"
+                :class="{
+                  'card-action-pill--active': isRouteSavedOffline(
+                    selectedItem.id,
+                  ),
+                }"
+                type="button"
+                @click="toggleOfflineRoute(selectedItem)"
+              >
+                <GIcon name="map" size="xs" />
+                <span>{{
+                  isRouteSavedOffline(selectedItem.id)
+                    ? 'Offline ✓'
+                    : 'Unduh Offline'
+                }}</span>
+              </button>
 
               <button
                 v-else
@@ -902,20 +956,45 @@ onBeforeUnmount(() => {
         <!-- B. Default Scrollable Spot & Track Feed -->
         <div v-else class="desktop-feed-wrapper">
           <div class="desktop-feed-meta">
-            <span>Ditemukan <strong>{{ allItems.length }}</strong> tempat &amp; rute</span>
+            <span
+              >Ditemukan <strong>{{ allItems.length }}</strong> tempat &amp;
+              rute</span
+            >
             <span class="active-radar-pill">● Radar Aktif</span>
           </div>
 
           <!-- Skeleton Shimmer Feed during Loading -->
           <div v-if="loading" class="desktop-feed-list">
-            <div v-for="i in 4" :key="i" class="feed-card-row" style="pointer-events: none; border: 1px solid rgb(23 32 42 / 8%);">
-              <div class="skeleton-shimmer" style="width: 2.35rem; height: 2.35rem; border-radius: 0.65rem; flex-shrink: 0;" />
-              <div style="flex: 1; display: grid; gap: 0.35rem;">
-                <div style="display: flex; justify-content: space-between;">
-                  <div class="skeleton-shimmer" style="width: 55%; height: 1rem; border-radius: 0.3rem;" />
-                  <div class="skeleton-shimmer" style="width: 20%; height: 0.85rem; border-radius: 0.3rem;" />
+            <div
+              v-for="i in 4"
+              :key="i"
+              class="feed-card-row"
+              style="pointer-events: none; border: 1px solid rgb(23 32 42 / 8%)"
+            >
+              <div
+                class="skeleton-shimmer"
+                style="
+                  width: 2.35rem;
+                  height: 2.35rem;
+                  border-radius: 0.65rem;
+                  flex-shrink: 0;
+                "
+              />
+              <div style="flex: 1; display: grid; gap: 0.35rem">
+                <div style="display: flex; justify-content: space-between">
+                  <div
+                    class="skeleton-shimmer"
+                    style="width: 55%; height: 1rem; border-radius: 0.3rem"
+                  />
+                  <div
+                    class="skeleton-shimmer"
+                    style="width: 20%; height: 0.85rem; border-radius: 0.3rem"
+                  />
                 </div>
-                <div class="skeleton-shimmer" style="width: 85%; height: 0.75rem; border-radius: 0.3rem;" />
+                <div
+                  class="skeleton-shimmer"
+                  style="width: 85%; height: 0.75rem; border-radius: 0.3rem"
+                />
               </div>
             </div>
           </div>
@@ -931,19 +1010,45 @@ onBeforeUnmount(() => {
               type="button"
               @click="selectItem({ kind: item.kind, id: item.id })"
             >
-              <div class="feed-card-icon" :style="{ background: item.kind === 'route' ? '#E0F2FE' : '#F7F4EB' }">
-                <GIcon :name="getItemIconName(item)" size="md" color="#17202A" />
+              <div
+                class="feed-card-icon"
+                :style="{
+                  background: item.kind === 'route' ? '#E0F2FE' : '#F7F4EB',
+                }"
+              >
+                <GIcon
+                  :name="getItemIconName(item)"
+                  size="md"
+                  color="#17202A"
+                />
               </div>
               <div class="feed-card-body">
                 <div class="feed-card-top">
-                  <span class="feed-card-title">{{ cleanName(item.name) }}</span>
-                  <span class="feed-card-dist">{{ formatDistance(itemDistance(item)) }}</span>
+                  <span class="feed-card-title">{{
+                    cleanName(item.name)
+                  }}</span>
+                  <span class="feed-card-dist">{{
+                    formatDistance(itemDistance(item))
+                  }}</span>
                 </div>
-                <p class="feed-card-desc">{{ cleanDescription(item.description) || 'Informasi rute & tempat gowes terverifikasi' }}</p>
+                <p class="feed-card-desc">
+                  {{
+                    cleanDescription(item.description) ||
+                    'Informasi rute & tempat gowes terverifikasi'
+                  }}
+                </p>
                 <div class="feed-card-tags">
                   <span class="tag-chip">{{ typeLabel(item) }}</span>
-                  <span v-if="item.kind === 'route'" class="tag-chip tag-chip--highlight">+{{ item.elevationGainMeters }}m</span>
-                  <span v-if="item.beginnerFriendly" class="tag-chip tag-chip--beginner">Ramah Pemula</span>
+                  <span
+                    v-if="item.kind === 'route'"
+                    class="tag-chip tag-chip--highlight"
+                    >+{{ item.elevationGainMeters }}m</span
+                  >
+                  <span
+                    v-if="item.beginnerFriendly"
+                    class="tag-chip tag-chip--beginner"
+                    >Ramah Pemula</span
+                  >
                 </div>
               </div>
             </button>
@@ -980,7 +1085,11 @@ onBeforeUnmount(() => {
           :disabled="locating"
           @click="useMyLocation"
         >
-          <GIcon name="radar" size="xs" :color="userLocation !== null ? '#16A34A' : 'currentColor'" />
+          <GIcon
+            name="radar"
+            size="xs"
+            :color="userLocation !== null ? '#16A34A' : 'currentColor'"
+          />
         </button>
         <button
           class="overlay-icon-btn"
@@ -1069,7 +1178,11 @@ onBeforeUnmount(() => {
         { 'mobile-bottom-sheet--dragging': isDraggingSheet },
         { 'mobile-bottom-sheet--selected': selectedItem !== null },
       ]"
-      :style="sheetCustomHeight && !selectedItem ? { height: `${sheetCustomHeight}px` } : {}"
+      :style="
+        sheetCustomHeight && !selectedItem
+          ? { height: `${sheetCustomHeight}px` }
+          : {}
+      "
     >
       <!-- Touch/Grabber Area -->
       <div
@@ -1091,81 +1204,95 @@ onBeforeUnmount(() => {
         <!-- Top Tag Stack & Dismiss Button -->
         <div class="card-headline-row">
           <div class="pill-badge-stack">
-            <span class="type-pill" :class="`type-pill--${selectedItem.kind === 'place' ? selectedItem.type : selectedItem.routeType}`">
+            <span
+              class="type-pill"
+              :class="`type-pill--${selectedItem.kind === 'place' ? selectedItem.type : selectedItem.routeType}`"
+            >
               {{ typeLabel(selectedItem) }}
             </span>
-            <span class="dist-pill">📍 {{ formatDistance(itemDistance(selectedItem)) }}</span>
-            <span v-if="selectedItem.verificationStatus === 'staff_verified'" class="verified-pill">
+            <span class="dist-pill"
+              >📍 {{ formatDistance(itemDistance(selectedItem)) }}</span
+            >
+            <span
+              v-if="selectedItem.verificationStatus === 'staff_verified'"
+              class="verified-pill"
+            >
               ✓ Terverifikasi
             </span>
             <span v-if="selectedItem.beginnerFriendly" class="beginner-pill">
               🌱 Ramah Pemula
             </span>
           </div>
-          <button class="dismiss-circle-btn" type="button" title="Tutup" @click="selectedId = null">✕</button>
+          <button
+            class="dismiss-circle-btn"
+            type="button"
+            title="Tutup"
+            @click="selectedId = null"
+          >
+            ✕
+          </button>
         </div>
 
         <div class="card-title-group">
           <h2 class="card-item-title">{{ cleanName(selectedItem.name) }}</h2>
-          <p class="card-item-desc">{{ cleanDescription(selectedItem.description) || 'Spot gowes rekomendasi komunitas.' }}</p>
+          <p class="card-item-desc">
+            {{
+              cleanDescription(selectedItem.description) ||
+              'Spot gowes rekomendasi komunitas.'
+            }}
+          </p>
         </div>
 
         <!-- Quick Telemetry Stats Grid for Routes (Mobile) -->
         <div v-if="selectedItem.kind === 'route'" class="route-metrics-grid">
           <div class="metric-pill">
             <span class="metric-label">Jarak</span>
-            <span class="metric-val">{{ (selectedItem.distanceMeters / 1000).toFixed(1) }} <small>km</small></span>
+            <span class="metric-val"
+              >{{ (selectedItem.distanceMeters / 1000).toFixed(1) }}
+              <small>km</small></span
+            >
           </div>
           <div class="metric-pill">
             <span class="metric-label">Elevasi</span>
-            <span class="metric-val">+{{ selectedItem.elevationGainMeters }} <small>m</small></span>
+            <span class="metric-val"
+              >+{{ selectedItem.elevationGainMeters }} <small>m</small></span
+            >
           </div>
           <div class="metric-pill">
             <span class="metric-label">Estimasi</span>
-            <span class="metric-val">{{ estimatedRideTime(selectedItem.distanceMeters) }}</span>
+            <span class="metric-val">{{
+              estimatedRideTime(selectedItem.distanceMeters)
+            }}</span>
           </div>
           <div class="metric-pill">
             <span class="metric-label">Kalori</span>
-            <span class="metric-val">{{ estimatedCalories(selectedItem.distanceMeters, selectedItem.elevationGainMeters) }}</span>
+            <span class="metric-val">{{
+              estimatedCalories(
+                selectedItem.distanceMeters,
+                selectedItem.elevationGainMeters,
+              )
+            }}</span>
           </div>
         </div>
 
-        <!-- Elevation Sparkline (Mobile) -->
+        <!-- Elevation Chart (Mobile) -->
         <div
           v-if="selectedItem.kind === 'route'"
-          class="route-spark-box"
-          @mousemove="onElevationChartMouseMove"
-          @mouseleave="onElevationChartMouseLeave"
+          class="route-elevation-wrapper mb-3"
         >
-          <div class="spark-labels">
-            <span>+{{ selectedItem.elevationGainMeters }}m Elevasi</span>
-            <span v-if="hoveredElevationDistance !== null" class="spark-hover-indicator">
-              {{ (hoveredElevationDistance / 1000).toFixed(1) }} km
-            </span>
-            <span v-else-if="elevationData" class="spark-gradient">
-              Avg {{ elevationData.averageGradientPercent }}% · Max {{ elevationData.maxGradientPercent }}%
-            </span>
-            <span v-else class="spark-difficulty">{{ selectedItem.difficulty }} · {{ selectedItem.surface }}</span>
-          </div>
-          <svg viewBox="0 0 300 50" class="spark-svg" aria-hidden="true">
-            <defs>
-              <linearGradient id="elevGradMobile" x1="0" y1="0" x2="0" y2="1">
-                <stop offset="0%" stop-color="#0284c7" stop-opacity="0.45" />
-                <stop offset="100%" stop-color="#0284c7" stop-opacity="0.05" />
-              </linearGradient>
-            </defs>
-            <path
-              :d="elevationFillPath || 'M0 40 Q 60 30, 120 22 T 240 10 L 300 6 L 300 50 L 0 50 Z'"
-              fill="url(#elevGradMobile)"
-            />
-            <path
-              :d="elevationSvgPath || 'M0 40 Q 60 30, 120 22 T 240 10 L 300 6'"
-              fill="none"
-              stroke="#0284c7"
-              stroke-width="2.5"
-              stroke-linecap="round"
-            />
-          </svg>
+          <ElevationProfileChart
+            :distance-km="
+              Number((selectedItem.distanceMeters / 1000).toFixed(1))
+            "
+            :elevation-gain-m="selectedItem.elevationGainMeters"
+            :climb-category="
+              selectedItem.elevationGainMeters > 500
+                ? 'Cat 2 Mountain Pass'
+                : selectedItem.elevationGainMeters > 200
+                  ? 'Cat 3 Punchy Climb'
+                  : 'Cat 4 Rolling Hills'
+            "
+          />
         </div>
 
         <!-- Spot & Cycling Specs Card (Mobile) -->
@@ -1173,16 +1300,28 @@ onBeforeUnmount(() => {
           <div class="spec-row">
             <span class="spec-label">🚲 Rekomendasi Sepeda</span>
             <div class="spec-chips">
-              <span v-for="bike in getSuitableBikes(selectedItem)" :key="bike" class="bike-spec-chip">
+              <span
+                v-for="bike in getSuitableBikes(selectedItem)"
+                :key="bike"
+                class="bike-spec-chip"
+              >
                 {{ bike }}
               </span>
             </div>
           </div>
 
           <div class="spec-row">
-            <span class="spec-label">{{ selectedItem.kind === 'place' ? '✨ Fasilitas Spot' : '🛣️ Karakter Rute' }}</span>
+            <span class="spec-label">{{
+              selectedItem.kind === 'place'
+                ? '✨ Fasilitas Spot'
+                : '🛣️ Karakter Rute'
+            }}</span>
             <div class="amenities-wrap">
-              <span v-for="amenity in getPlaceAmenities(selectedItem)" :key="amenity.label" class="amenity-badge">
+              <span
+                v-for="amenity in getPlaceAmenities(selectedItem)"
+                :key="amenity.label"
+                class="amenity-badge"
+              >
                 <span>{{ amenity.icon }}</span>
                 <span>{{ amenity.label }}</span>
               </span>
@@ -1190,7 +1329,9 @@ onBeforeUnmount(() => {
           </div>
         </div>
 
-        <p v-if="saveToast" class="save-toast-chip" role="status">{{ saveToast }}</p>
+        <p v-if="saveToast" class="save-toast-chip" role="status">
+          {{ saveToast }}
+        </p>
 
         <!-- Ergonomic Two-Tier Action Layout (Mobile) -->
         <div class="detail-action-hub">
@@ -1236,13 +1377,24 @@ onBeforeUnmount(() => {
 
             <button
               class="card-action-pill"
-              :class="{ 'card-action-pill--active': savedItems.has(selectedItem.id) }"
+              :class="{
+                'card-action-pill--active': savedItems.has(selectedItem.id),
+              }"
               type="button"
               :disabled="savingItem"
               @click="saveSelectedItem(selectedItem)"
             >
-              <GIcon :name="savedItems.has(selectedItem.id) ? 'bookmark-filled' : 'bookmark'" size="xs" />
-              <span>{{ savedItems.has(selectedItem.id) ? 'Tersimpan' : 'Simpan' }}</span>
+              <GIcon
+                :name="
+                  savedItems.has(selectedItem.id)
+                    ? 'bookmark-filled'
+                    : 'bookmark'
+                "
+                size="xs"
+              />
+              <span>{{
+                savedItems.has(selectedItem.id) ? 'Tersimpan' : 'Simpan'
+              }}</span>
             </button>
 
             <NuxtLink
@@ -1278,7 +1430,9 @@ onBeforeUnmount(() => {
           <strong>Spot &amp; Rute Gowes</strong>
           <div class="header-right-pills">
             <span class="feed-count-badge">{{ allItems.length }}</span>
-            <span class="sheet-expand-hint">{{ sheetPosition === 'expanded' ? '▼' : '▲' }}</span>
+            <span class="sheet-expand-hint">{{
+              sheetPosition === 'expanded' ? '▼' : '▲'
+            }}</span>
           </div>
         </div>
 
@@ -1290,18 +1444,31 @@ onBeforeUnmount(() => {
             type="button"
             @click="selectItem({ kind: item.kind, id: item.id })"
           >
-            <div class="feed-card-icon" :style="{ background: item.kind === 'route' ? '#E0F2FE' : '#F7F4EB' }">
+            <div
+              class="feed-card-icon"
+              :style="{
+                background: item.kind === 'route' ? '#E0F2FE' : '#F7F4EB',
+              }"
+            >
               <GIcon :name="getItemIconName(item)" size="md" color="#17202A" />
             </div>
             <div class="feed-card-body">
               <div class="feed-card-top">
                 <span class="feed-card-title">{{ cleanName(item.name) }}</span>
-                <span class="feed-card-dist">{{ formatDistance(itemDistance(item)) }}</span>
+                <span class="feed-card-dist">{{
+                  formatDistance(itemDistance(item))
+                }}</span>
               </div>
-              <p class="feed-card-desc">{{ cleanDescription(item.description) }}</p>
+              <p class="feed-card-desc">
+                {{ cleanDescription(item.description) }}
+              </p>
               <div class="feed-card-tags">
                 <span class="tag-chip">{{ typeLabel(item) }}</span>
-                <span v-if="item.kind === 'route'" class="tag-chip tag-chip--highlight">+{{ item.elevationGainMeters }}m</span>
+                <span
+                  v-if="item.kind === 'route'"
+                  class="tag-chip tag-chip--highlight"
+                  >+{{ item.elevationGainMeters }}m</span
+                >
               </div>
             </div>
           </button>
@@ -1310,11 +1477,21 @@ onBeforeUnmount(() => {
     </div>
 
     <!-- 5. FILTER & RADIUS MODAL -->
-    <div v-if="showFilterModal" class="native-modal-backdrop" @click.self="showFilterModal = false">
+    <div
+      v-if="showFilterModal"
+      class="native-modal-backdrop"
+      @click.self="showFilterModal = false"
+    >
       <div class="native-modal-sheet">
         <div class="modal-header">
           <h2>Filter &amp; Jarak Radar</h2>
-          <button class="modal-close" type="button" @click="showFilterModal = false">✕</button>
+          <button
+            class="modal-close"
+            type="button"
+            @click="showFilterModal = false"
+          >
+            ✕
+          </button>
         </div>
         <div class="modal-body-grid">
           <label>
@@ -1331,7 +1508,9 @@ onBeforeUnmount(() => {
             Tingkat Kesulitan
             <select v-model="difficulty" @change="loadNearby">
               <option value="all">Semua Tingkat</option>
-              <option v-for="d in ROUTE_DIFFICULTIES" :key="d" :value="d">{{ d.toUpperCase() }}</option>
+              <option v-for="d in ROUTE_DIFFICULTIES" :key="d" :value="d">
+                {{ d.toUpperCase() }}
+              </option>
             </select>
           </label>
           <label>
@@ -1345,7 +1524,11 @@ onBeforeUnmount(() => {
             </select>
           </label>
         </div>
-        <button class="button button--primary button--full" type="button" @click="showFilterModal = false">
+        <button
+          class="button button--primary button--full"
+          type="button"
+          @click="showFilterModal = false"
+        >
           Terapkan Filter
         </button>
       </div>
@@ -1360,7 +1543,13 @@ onBeforeUnmount(() => {
       <div class="native-modal-sheet native-modal-sheet--large">
         <div class="modal-header">
           <h2>Kontribusi &amp; Ulasan Komunitas</h2>
-          <button class="modal-close" type="button" @click="showContributionsModal = false">✕</button>
+          <button
+            class="modal-close"
+            type="button"
+            @click="showContributionsModal = false"
+          >
+            ✕
+          </button>
         </div>
         <div class="modal-scroll-body">
           <ExploreContributions :selected-item="selectedItem" />
@@ -1372,6 +1561,15 @@ onBeforeUnmount(() => {
     <OfflineRoutesModal
       :is-open="showOfflineModal"
       @close="showOfflineModal = false"
+    />
+
+    <!-- Offline Map Vector Tile Cache Modal -->
+    <OfflineMapCacheModal
+      :is-open="showOfflineMapModal"
+      :center-lat="userLocation?.latitude || -6.595"
+      :center-lon="userLocation?.longitude || 106.816"
+      area-name="Jabodetabek & Sentul Hills"
+      @close="showOfflineMapModal = false"
     />
   </div>
 </template>
@@ -1694,7 +1892,9 @@ onBeforeUnmount(() => {
   font-size: 0.85rem;
   font-weight: 850;
   cursor: pointer;
-  transition: transform 90ms ease, background 120ms ease;
+  transition:
+    transform 90ms ease,
+    background 120ms ease;
   flex-shrink: 0;
 }
 
@@ -1735,18 +1935,51 @@ onBeforeUnmount(() => {
   text-transform: uppercase;
 }
 
-.type-pill--workshop { background: #c9f36a; color: #17202a; }
-.type-pill--store { background: #8eddf4; color: #17202a; }
-.type-pill--coffee { background: #fde68a; color: #92400e; }
-.type-pill--water { background: #a5f3fc; color: #155e75; }
-.type-pill--trailhead { background: #a7f3d0; color: #065f46; }
-.type-pill--bike_park { background: #fecdd3; color: #9f1239; }
-.type-pill--meeting_point { background: #ddd6fe; color: #5b21b6; }
-.type-pill--rest { background: #ede4d2; color: #17202a; }
+.type-pill--workshop {
+  background: #c9f36a;
+  color: #17202a;
+}
+.type-pill--store {
+  background: #8eddf4;
+  color: #17202a;
+}
+.type-pill--coffee {
+  background: #fde68a;
+  color: #92400e;
+}
+.type-pill--water {
+  background: #a5f3fc;
+  color: #155e75;
+}
+.type-pill--trailhead {
+  background: #a7f3d0;
+  color: #065f46;
+}
+.type-pill--bike_park {
+  background: #fecdd3;
+  color: #9f1239;
+}
+.type-pill--meeting_point {
+  background: #ddd6fe;
+  color: #5b21b6;
+}
+.type-pill--rest {
+  background: #ede4d2;
+  color: #17202a;
+}
 
-.type-pill--road { background: #bae6fd; color: #0369a1; }
-.type-pill--gravel { background: #fed7aa; color: #9a3412; }
-.type-pill--mtb { background: #bbf7d0; color: #166534; }
+.type-pill--road {
+  background: #bae6fd;
+  color: #0369a1;
+}
+.type-pill--gravel {
+  background: #fed7aa;
+  color: #9a3412;
+}
+.type-pill--mtb {
+  background: #bbf7d0;
+  color: #166534;
+}
 
 .dist-pill {
   padding: 0.15rem 0.45rem;
@@ -1874,7 +2107,9 @@ onBeforeUnmount(() => {
   text-decoration: none;
   border: 1.5px solid var(--color-ink);
   box-shadow: 0 4px 12px rgb(201 243 106 / 45%);
-  transition: transform 90ms ease, box-shadow 120ms ease;
+  transition:
+    transform 90ms ease,
+    box-shadow 120ms ease;
   user-select: none;
 }
 

@@ -66,7 +66,12 @@ function buildCommunityApp() {
         event: {
           id: '10000000-0000-4000-8000-000000000030',
           slug: eventId,
-          community: { id: communityId, slug: 'demo-community', name: 'Demo Community', verificationStatus: 'verified' },
+          community: {
+            id: communityId,
+            slug: 'demo-community',
+            name: 'Demo Community',
+            verificationStatus: 'verified',
+          },
           title: 'Demo Sunday Loop',
           description: 'Santai rolling.',
           status: 'scheduled',

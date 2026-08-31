@@ -1,8 +1,6 @@
 import { describe, expect, it } from 'vitest';
 
-import {
-  reverseGeocodeCity,
-} from './composables/useUserLocation.js';
+import { reverseGeocodeCity } from './composables/useUserLocation.js';
 
 describe('useUserLocation', () => {
   it('has a robust reverse geocoder fallback', async () => {

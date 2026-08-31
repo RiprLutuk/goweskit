@@ -13,7 +13,13 @@ const route = useRoute();
 const api = useApi();
 const { user, initialized, refresh } = useAuth();
 const { toast } = useNotify();
-const { isReminderActive, toggleReminder, getGoogleCalendarUrl, downloadIcsFile, getCountdownText } = useEventReminder();
+const {
+  isReminderActive,
+  toggleReminder,
+  getGoogleCalendarUrl,
+  downloadIcsFile,
+  getCountdownText,
+} = useEventReminder();
 
 const detail = ref<EventDetailResponse | null>(null);
 const loading = ref(true);
@@ -123,7 +129,9 @@ async function loadEvent(): Promise<void> {
   errorMessage.value = '';
   try {
     if (!initialized.value) await refresh();
-    detail.value = await api<EventDetailResponse>(`/events/${eventIdentifier.value}`);
+    detail.value = await api<EventDetailResponse>(
+      `/events/${eventIdentifier.value}`,
+    );
     if (
       detail.value?.event.slug &&
       typeof window !== 'undefined' &&
@@ -144,7 +152,9 @@ async function loadEvent(): Promise<void> {
 
 async function joinEvent(): Promise<void> {
   if (!user.value) {
-    await navigateTo(`/login?redirect=/community/events/${eventIdentifier.value}`);
+    await navigateTo(
+      `/login?redirect=/community/events/${eventIdentifier.value}`,
+    );
     return;
   }
   joining.value = true;
@@ -193,7 +203,10 @@ ${url}
         text,
         url,
       });
-      toast.success('Undangan Dibagikan!', 'Siap dibagikan ke WhatsApp Group atau medsos.');
+      toast.success(
+        'Undangan Dibagikan!',
+        'Siap dibagikan ke WhatsApp Group atau medsos.',
+      );
       return;
     } catch {
       // fallback
@@ -202,7 +215,10 @@ ${url}
 
   try {
     await navigator.clipboard.writeText(text);
-    toast.success('Undangan Disalin!', 'Siap ditempel ke WhatsApp Group komunitas.');
+    toast.success(
+      'Undangan Disalin!',
+      'Siap ditempel ke WhatsApp Group komunitas.',
+    );
   } catch {
     toast.info('Gagal menyalin otomatis', 'Silakan salin manual.');
   }
@@ -219,19 +235,49 @@ onMounted(loadEvent);
     </NuxtLink>
 
     <!-- Skeleton Event Detail Shimmer during Loading -->
-    <div v-if="loading" style="display: grid; gap: 1rem;">
-      <div class="native-event-hero" style="padding: 1.5rem; display: grid; gap: 0.85rem; border-radius: 1.25rem; background: var(--color-white); border: 1px solid rgb(23 32 42 / 8%);">
-        <div style="display: flex; gap: 0.5rem;">
-          <div class="skeleton-shimmer" style="width: 35%; height: 1.2rem; border-radius: 0.35rem;" />
+    <div v-if="loading" style="display: grid; gap: 1rem">
+      <div
+        class="native-event-hero"
+        style="
+          padding: 1.5rem;
+          display: grid;
+          gap: 0.85rem;
+          border-radius: 1.25rem;
+          background: var(--color-white);
+          border: 1px solid rgb(23 32 42 / 8%);
+        "
+      >
+        <div style="display: flex; gap: 0.5rem">
+          <div
+            class="skeleton-shimmer"
+            style="width: 35%; height: 1.2rem; border-radius: 0.35rem"
+          />
         </div>
-        <div style="display: flex; gap: 1rem; align-items: center;">
-          <div class="skeleton-shimmer" style="width: 4rem; height: 4rem; border-radius: 0.75rem; flex-shrink: 0;" />
-          <div style="flex: 1; display: grid; gap: 0.4rem;">
-            <div class="skeleton-shimmer" style="width: 70%; height: 1.5rem; border-radius: 0.4rem;" />
-            <div class="skeleton-shimmer" style="width: 50%; height: 0.9rem; border-radius: 0.3rem;" />
+        <div style="display: flex; gap: 1rem; align-items: center">
+          <div
+            class="skeleton-shimmer"
+            style="
+              width: 4rem;
+              height: 4rem;
+              border-radius: 0.75rem;
+              flex-shrink: 0;
+            "
+          />
+          <div style="flex: 1; display: grid; gap: 0.4rem">
+            <div
+              class="skeleton-shimmer"
+              style="width: 70%; height: 1.5rem; border-radius: 0.4rem"
+            />
+            <div
+              class="skeleton-shimmer"
+              style="width: 50%; height: 0.9rem; border-radius: 0.3rem"
+            />
           </div>
         </div>
-        <div class="skeleton-shimmer" style="width: 100%; height: 3.5rem; border-radius: 0.85rem;" />
+        <div
+          class="skeleton-shimmer"
+          style="width: 100%; height: 3.5rem; border-radius: 0.85rem"
+        />
       </div>
     </div>
     <div
@@ -256,8 +302,15 @@ onMounted(loadEvent);
             <GIcon name="bike" size="xs" />
             <span>{{ detail.event.community.name }}</span>
           </NuxtLink>
-          <span class="status-badge" :class="`status-badge--${detail.event.status}`">
-            {{ detail.event.status === 'scheduled' ? 'Terjadwal' : detail.event.status }}
+          <span
+            class="status-badge"
+            :class="`status-badge--${detail.event.status}`"
+          >
+            {{
+              detail.event.status === 'scheduled'
+                ? 'Terjadwal'
+                : detail.event.status
+            }}
           </span>
         </div>
 
@@ -272,7 +325,11 @@ onMounted(loadEvent);
             <h1 class="event-title">{{ detail.event.title }}</h1>
             <p class="event-schedule">
               <GIcon name="history" size="xs" />
-              <span>{{ dayName }}, {{ formatCommunityDate(detail.event.startsAt) }} · {{ timeLabel }} WIB</span>
+              <span
+                >{{ dayName }},
+                {{ formatCommunityDate(detail.event.startsAt) }} ·
+                {{ timeLabel }} WIB</span
+              >
             </p>
           </div>
         </div>
@@ -282,7 +339,9 @@ onMounted(loadEvent);
           <div class="join-counter">
             <strong class="counter-num">
               {{ detail.event.participantCount }}
-              <span v-if="detail.event.capacity">/ {{ detail.event.capacity }}</span>
+              <span v-if="detail.event.capacity"
+                >/ {{ detail.event.capacity }}</span
+              >
             </strong>
             <span class="counter-lbl">Riders Terdaftar</span>
           </div>
@@ -316,8 +375,18 @@ onMounted(loadEvent);
         <!-- Reminder & Calendar Sync Action Strip -->
         <div class="event-calendar-strip">
           <div class="calendar-strip-left">
-            <span class="countdown-badge" :class="{ 'countdown-badge--urgent': countdown?.isUrgent }">
-              <GIcon name="bell" size="xs" :filled="isReminderActive(detail.event.id)" :color="isReminderActive(detail.event.id) ? '#16A34A' : '#64748B'" />
+            <span
+              class="countdown-badge"
+              :class="{ 'countdown-badge--urgent': countdown?.isUrgent }"
+            >
+              <GIcon
+                name="bell"
+                size="xs"
+                :filled="isReminderActive(detail.event.id)"
+                :color="
+                  isReminderActive(detail.event.id) ? '#16A34A' : '#64748B'
+                "
+              />
               <span>{{ countdown?.label }}</span>
             </span>
           </div>
@@ -325,12 +394,22 @@ onMounted(loadEvent);
           <div class="calendar-strip-actions">
             <button
               class="cal-action-btn"
-              :class="{ 'cal-action-btn--active': isReminderActive(detail.event.id) }"
+              :class="{
+                'cal-action-btn--active': isReminderActive(detail.event.id),
+              }"
               type="button"
               @click="toggleReminder(detail.event)"
             >
-              <GIcon name="bell" size="xs" :filled="isReminderActive(detail.event.id)" />
-              <span>{{ isReminderActive(detail.event.id) ? 'Pengingat Aktif' : 'Set Pengingat' }}</span>
+              <GIcon
+                name="bell"
+                size="xs"
+                :filled="isReminderActive(detail.event.id)"
+              />
+              <span>{{
+                isReminderActive(detail.event.id)
+                  ? 'Pengingat Aktif'
+                  : 'Set Pengingat'
+              }}</span>
             </button>
 
             <a
@@ -366,7 +445,9 @@ onMounted(loadEvent);
 
       <!-- 2. Details & Specs -->
       <section class="native-section" aria-labelledby="ride-plan-title">
-        <h3 id="ride-plan-title" class="section-title">Informasi &amp; Rencana Gowes</h3>
+        <h3 id="ride-plan-title" class="section-title">
+          Informasi &amp; Rencana Gowes
+        </h3>
 
         <div class="specs-grid">
           <div class="spec-tile">
@@ -380,8 +461,19 @@ onMounted(loadEvent);
           <div class="spec-tile">
             <span class="tile-lbl">Tingkat Kesulitan</span>
             <strong class="tile-val capitalize">
-              <GIcon :name="detail.event.difficulty === 'hard' ? 'mountain' : 'route'" size="xs" />
-              <span>{{ detail.event.difficulty === 'easy' ? 'Santai (Easy)' : detail.event.difficulty === 'moderate' ? 'Sedang (Moderate)' : 'Nanjak (Hard)' }}</span>
+              <GIcon
+                :name="
+                  detail.event.difficulty === 'hard' ? 'mountain' : 'route'
+                "
+                size="xs"
+              />
+              <span>{{
+                detail.event.difficulty === 'easy'
+                  ? 'Santai (Easy)'
+                  : detail.event.difficulty === 'moderate'
+                    ? 'Sedang (Moderate)'
+                    : 'Nanjak (Hard)'
+              }}</span>
             </strong>
           </div>
 
@@ -389,15 +481,28 @@ onMounted(loadEvent);
             <span class="tile-lbl">Tipe Sepeda</span>
             <strong class="tile-val capitalize">
               <GIcon name="bike" size="xs" />
-              <span>{{ detail.event.bicycleTypes.map((v) => v.replaceAll('_', ' ')).join(', ') }}</span>
+              <span>{{
+                detail.event.bicycleTypes
+                  .map((v) => v.replaceAll('_', ' '))
+                  .join(', ')
+              }}</span>
             </strong>
           </div>
 
           <div class="spec-tile">
             <span class="tile-lbl">Visibilitas</span>
             <strong class="tile-val capitalize">
-              <GIcon :name="detail.event.visibility === 'public' ? 'community' : 'shield'" size="xs" />
-              <span>{{ detail.event.visibility === 'public' ? 'Terbuka Umum' : 'Khusus Member' }}</span>
+              <GIcon
+                :name="
+                  detail.event.visibility === 'public' ? 'community' : 'shield'
+                "
+                size="xs"
+              />
+              <span>{{
+                detail.event.visibility === 'public'
+                  ? 'Terbuka Umum'
+                  : 'Khusus Member'
+              }}</span>
             </strong>
           </div>
         </div>
@@ -445,7 +550,9 @@ onMounted(loadEvent);
       <aside class="native-safety-disclaimer">
         <strong>🛡️ Komunitas Mandiri:</strong>
         <p>
-          Kegiatan gowes diselenggarakan secara sukarela oleh komunitas. GowesKit bukan penyedia layanan darurat jalan raya. Pastikan kondisi rem, ban, helm, dan penerangan siap sebelum berangkat.
+          Kegiatan gowes diselenggarakan secara sukarela oleh komunitas.
+          GowesKit bukan penyedia layanan darurat jalan raya. Pastikan kondisi
+          rem, ban, helm, dan penerangan siap sebelum berangkat.
         </p>
       </aside>
     </template>
@@ -619,7 +726,7 @@ onMounted(loadEvent);
   padding: 0.45rem 0.85rem;
   font-size: 0.78rem;
   font-weight: 850;
-  color: #15803D;
+  color: #15803d;
   background: rgba(22, 163, 74, 0.12);
   border: 1px solid rgba(22, 163, 74, 0.25);
   border-radius: 0.65rem;
@@ -680,7 +787,7 @@ onMounted(loadEvent);
 
 .countdown-badge--urgent {
   background: rgba(22, 163, 74, 0.1);
-  color: #15803D;
+  color: #15803d;
   border-color: rgba(22, 163, 74, 0.3);
 }
 
@@ -713,7 +820,7 @@ onMounted(loadEvent);
 
 .cal-action-btn--active {
   background: rgba(22, 163, 74, 0.12);
-  color: #15803D;
+  color: #15803d;
   border-color: rgba(22, 163, 74, 0.3);
 }
 
@@ -811,7 +918,7 @@ onMounted(loadEvent);
   cursor: pointer;
 }
 
-.gear-item input[type="checkbox"] {
+.gear-item input[type='checkbox'] {
   accent-color: #16a34a;
 }
 

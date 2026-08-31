@@ -12,7 +12,11 @@ import type {
 const api = useApi();
 const { user, initialized, refresh } = useAuth();
 const { weather, fetchLiveWeather } = useWeather();
-const { cityName: userCityName, isLiveGps, requestLocation } = useUserLocation();
+const {
+  cityName: userCityName,
+  isLiveGps,
+  requestLocation,
+} = useUserLocation();
 
 const bikes = ref<Bike[]>([]);
 const routes = ref<NearbyRoute[]>([]);
@@ -28,7 +32,8 @@ const fallbackFeaturedRoute: NearbyRoute = {
   id: '30000000-0000-4000-8000-000000000001',
   kind: 'route',
   name: 'Dago Pakar Morning Climb',
-  description: 'Rute tanjakan legendaris Bandung dari Dago Cikapayang menuju Dago Pakar dengan panorama sejuk.',
+  description:
+    'Rute tanjakan legendaris Bandung dari Dago Cikapayang menuju Dago Pakar dengan panorama sejuk.',
   bicycleTypes: ['road', 'gravel'],
   beginnerFriendly: false,
   verificationStatus: 'staff_verified',
@@ -102,7 +107,10 @@ const fallbackEvents: NearbyEvent[] = [
 
 const detectingLocation = ref(false);
 
-async function loadNearbyForCoordinates(center: { latitude: number; longitude: number }): Promise<void> {
+async function loadNearbyForCoordinates(center: {
+  latitude: number;
+  longitude: number;
+}): Promise<void> {
   // 1. Fetch nearby explore routes & workshops around location
   try {
     const exploreRes = await api<NearbyExploreResponse>('/explore/nearby', {
@@ -139,7 +147,11 @@ async function handleRefreshLocation(): Promise<void> {
   try {
     const loc = await requestLocation(true);
     const center = { latitude: loc.latitude, longitude: loc.longitude };
-    void fetchLiveWeather(center.latitude, center.longitude, userCityName.value);
+    void fetchLiveWeather(
+      center.latitude,
+      center.longitude,
+      userCityName.value,
+    );
     await loadNearbyForCoordinates(center);
   } finally {
     detectingLocation.value = false;
@@ -182,21 +194,53 @@ function formatKm(meters: number): string {
     <header class="rider-cockpit-bar">
       <div class="cockpit-left">
         <span class="cockpit-eyebrow">
-          {{ user ? `Halo, ${user.displayName.split(' ')[0]}` : 'Selamat Pagi, Rider' }}
+          {{
+            user
+              ? `Halo, ${user.displayName.split(' ')[0]}`
+              : 'Selamat Pagi, Rider'
+          }}
         </span>
         <button
           type="button"
           class="weather-chip"
-          :class="{ 'weather-chip--interactive': true, 'weather-chip--live': isLiveGps }"
-          :title="isLiveGps ? `GPS Aktif (${weather.cityName}). Klik untuk perbarui cuaca.` : 'Klik untuk mengaktifkan izin GPS & mendeteksi kotamu'"
+          :class="{
+            'weather-chip--interactive': true,
+            'weather-chip--live': isLiveGps,
+          }"
+          :title="
+            isLiveGps
+              ? `GPS Aktif (${weather.cityName}). Klik untuk perbarui cuaca.`
+              : 'Klik untuk mengaktifkan izin GPS & mendeteksi kotamu'
+          "
           :disabled="detectingLocation"
           @click="handleRefreshLocation"
         >
-          <GIcon :name="weather.icon === '☀️' ? 'sun' : (weather.icon === '🌧️' ? 'rain' : 'cloud')" size="sm" class="weather-icon-svg" />
+          <GIcon
+            :name="
+              weather.icon === '☀️'
+                ? 'sun'
+                : weather.icon === '🌧️'
+                  ? 'rain'
+                  : 'cloud'
+            "
+            size="sm"
+            class="weather-icon-svg"
+          />
           <span class="weather-text">
-            {{ detectingLocation ? 'Mendeteksi GPS…' : `${weather.cityName} · ${weather.temperatureC}°C · ${weather.cyclingAdvice}` }}
+            {{
+              detectingLocation
+                ? 'Mendeteksi GPS…'
+                : `${weather.cityName} · ${weather.temperatureC}°C · ${weather.cyclingAdvice}`
+            }}
           </span>
-          <GIcon v-if="isLiveGps" name="radar" size="xs" color="#16A34A" class="live-gps-dot" title="GPS Terverifikasi" />
+          <GIcon
+            v-if="isLiveGps"
+            name="radar"
+            size="xs"
+            color="#16A34A"
+            class="live-gps-dot"
+            title="GPS Terverifikasi"
+          />
           <span v-else-if="!detectingLocation" class="gps-ask-badge">
             <GIcon name="pin" size="xs" /> Izinkan GPS
           </span>
@@ -245,11 +289,15 @@ function formatKm(meters: number): string {
     <section class="home-flex-spotlight">
       <div class="flex-spotlight-content">
         <span class="spotlight-chip">
-          <GIcon name="sparkles" size="xs" color="#C9F36A" /> AGENTIC AI &amp; STRAVA-STYLE FLEX
+          <GIcon name="sparkles" size="xs" color="#C9F36A" /> AGENTIC AI &amp;
+          STRAVA-STYLE FLEX
         </span>
-        <h2 class="spotlight-title">Pamerkan Hasil Gowes dengan Poster Sinematik</h2>
+        <h2 class="spotlight-title">
+          Pamerkan Hasil Gowes dengan Poster Sinematik
+        </h2>
         <p class="spotlight-desc">
-          Gabungkan foto gowes, telemetri live, sticker KOM, dan caption AI otomatis untuk Instagram Story &amp; WhatsApp.
+          Gabungkan foto gowes, telemetri live, sticker KOM, dan caption AI
+          otomatis untuk Instagram Story &amp; WhatsApp.
         </p>
       </div>
       <NuxtLink to="/ride-flex" class="spotlight-action-btn">
@@ -262,36 +310,55 @@ function formatKm(meters: number): string {
     <!-- 3. FEATURED ROUTE HERO (Komoot & Strava Elevation Style) -->
     <section class="home-section" aria-labelledby="sec-featured-route">
       <div class="section-topline">
-        <h2 id="sec-featured-route" class="section-title">Rute Pilihan Hari Ini</h2>
+        <h2 id="sec-featured-route" class="section-title">
+          Rute Pilihan Hari Ini
+        </h2>
         <NuxtLink to="/explore" class="section-link">Semua Rute →</NuxtLink>
       </div>
 
       <!-- Skeleton Route Shimmer during Loading -->
-      <article v-if="loading" class="clean-featured-route-card skeleton-card-box">
+      <article
+        v-if="loading"
+        class="clean-featured-route-card skeleton-card-box"
+      >
         <div class="route-header-tags">
           <div class="skeleton-shimmer skeleton-badge" />
           <div class="skeleton-shimmer skeleton-badge skeleton-badge--sm" />
         </div>
         <div class="skeleton-shimmer skeleton-title-bar" />
         <div class="skeleton-shimmer skeleton-desc-line" />
-        <div class="skeleton-shimmer skeleton-desc-line skeleton-desc-line--short" />
+        <div
+          class="skeleton-shimmer skeleton-desc-line skeleton-desc-line--short"
+        />
         <div class="skeleton-shimmer skeleton-spark-box" />
         <div class="route-metrics-strip">
-          <div class="metric-col"><div class="skeleton-shimmer skeleton-metric-val" /></div>
+          <div class="metric-col">
+            <div class="skeleton-shimmer skeleton-metric-val" />
+          </div>
           <div class="metric-divider" />
-          <div class="metric-col"><div class="skeleton-shimmer skeleton-metric-val" /></div>
+          <div class="metric-col">
+            <div class="skeleton-shimmer skeleton-metric-val" />
+          </div>
           <div class="metric-divider" />
-          <div class="metric-col"><div class="skeleton-shimmer skeleton-metric-val" /></div>
+          <div class="metric-col">
+            <div class="skeleton-shimmer skeleton-metric-val" />
+          </div>
         </div>
         <div class="skeleton-shimmer skeleton-btn-bar" />
       </article>
 
       <!-- Loaded Featured Route -->
-      <article v-else-if="featuredRoute || fallbackFeaturedRoute" class="clean-featured-route-card">
+      <article
+        v-else-if="featuredRoute || fallbackFeaturedRoute"
+        class="clean-featured-route-card"
+      >
         <!-- Top Tags -->
         <div class="route-header-tags">
           <span class="route-type-badge">
-            <GIcon name="bike" size="xs" /> {{ (featuredRoute || fallbackFeaturedRoute).routeType.toUpperCase() }}
+            <GIcon name="bike" size="xs" />
+            {{
+              (featuredRoute || fallbackFeaturedRoute).routeType.toUpperCase()
+            }}
           </span>
           <span class="route-surface-badge">
             {{ (featuredRoute || fallbackFeaturedRoute).surface }}
@@ -302,14 +369,27 @@ function formatKm(meters: number): string {
         </div>
 
         <!-- Title & Bio -->
-        <h3 class="route-hero-title">{{ (featuredRoute || fallbackFeaturedRoute).name }}</h3>
-        <p class="route-hero-desc">{{ (featuredRoute || fallbackFeaturedRoute).description }}</p>
+        <h3 class="route-hero-title">
+          {{ (featuredRoute || fallbackFeaturedRoute).name }}
+        </h3>
+        <p class="route-hero-desc">
+          {{ (featuredRoute || fallbackFeaturedRoute).description }}
+        </p>
 
         <!-- Clean Integrated Elevation Sparkline -->
         <div class="elevation-spark-box">
           <div class="spark-labels">
-            <span class="spark-gain">+{{ (featuredRoute || fallbackFeaturedRoute).elevationGainMeters }}m Climb</span>
-            <span class="spark-diff capitalize">{{ (featuredRoute || fallbackFeaturedRoute).difficulty }} Pace</span>
+            <span class="spark-gain"
+              >+{{
+                (featuredRoute || fallbackFeaturedRoute).elevationGainMeters
+              }}m Climb</span
+            >
+            <span class="spark-diff capitalize"
+              >{{
+                (featuredRoute || fallbackFeaturedRoute).difficulty
+              }}
+              Pace</span
+            >
           </div>
           <svg viewBox="0 0 300 40" class="spark-svg" aria-hidden="true">
             <path
@@ -330,17 +410,25 @@ function formatKm(meters: number): string {
         <div class="route-metrics-strip">
           <div class="metric-col">
             <span class="metric-label">JARAK</span>
-            <strong class="metric-value">{{ formatKm((featuredRoute || fallbackFeaturedRoute).distanceMeters) }}</strong>
+            <strong class="metric-value">{{
+              formatKm((featuredRoute || fallbackFeaturedRoute).distanceMeters)
+            }}</strong>
           </div>
           <div class="metric-divider" />
           <div class="metric-col">
             <span class="metric-label">ELEVASI</span>
-            <strong class="metric-value">+{{ (featuredRoute || fallbackFeaturedRoute).elevationGainMeters }}m</strong>
+            <strong class="metric-value"
+              >+{{
+                (featuredRoute || fallbackFeaturedRoute).elevationGainMeters
+              }}m</strong
+            >
           </div>
           <div class="metric-divider" />
           <div class="metric-col">
             <span class="metric-label">TINGKAT</span>
-            <strong class="metric-value capitalize">{{ (featuredRoute || fallbackFeaturedRoute).difficulty }}</strong>
+            <strong class="metric-value capitalize">{{
+              (featuredRoute || fallbackFeaturedRoute).difficulty
+            }}</strong>
           </div>
         </div>
 
@@ -364,7 +452,11 @@ function formatKm(meters: number): string {
             <span class="mini-diff-tag">{{ r.difficulty }}</span>
           </div>
           <strong class="mini-route-name">{{ r.name }}</strong>
-          <span class="mini-route-stats">{{ formatKm(r.distanceMeters) }} · +{{ r.elevationGainMeters }}m</span>
+          <span class="mini-route-stats"
+            >{{ formatKm(r.distanceMeters) }} · +{{
+              r.elevationGainMeters
+            }}m</span
+          >
         </NuxtLink>
       </div>
     </section>
@@ -387,7 +479,7 @@ function formatKm(meters: number): string {
 
       <div v-else class="events-feed-list">
         <RideEventCard
-          v-for="evt in (events.length ? events.slice(0, 2) : fallbackEvents)"
+          v-for="evt in events.length ? events.slice(0, 2) : fallbackEvents"
           :key="evt.id"
           :event="evt"
         />
@@ -411,7 +503,11 @@ function formatKm(meters: number): string {
       </div>
 
       <!-- Logged In: Active Bike Snapshot -->
-      <NuxtLink v-else-if="activeBike" :to="`/garage/${activeBike.id}`" class="active-bike-banner">
+      <NuxtLink
+        v-else-if="activeBike"
+        :to="`/garage/${activeBike.id}`"
+        class="active-bike-banner"
+      >
         <div class="bike-banner-icon">
           <GIcon name="bike" size="lg" color="#17202A" />
         </div>
@@ -420,7 +516,10 @@ function formatKm(meters: number): string {
             <strong class="bike-banner-name">{{ activeBike.nickname }}</strong>
             <span class="bike-health-badge">🟢 Siap Gowes</span>
           </div>
-          <span class="bike-banner-sub">{{ activeBike.brand }} {{ activeBike.model }} · Standar Terverifikasi</span>
+          <span class="bike-banner-sub"
+            >{{ activeBike.brand }} {{ activeBike.model }} · Standar
+            Terverifikasi</span
+          >
         </div>
         <span class="banner-chevron">›</span>
       </NuxtLink>
@@ -429,11 +528,12 @@ function formatKm(meters: number): string {
       <div v-else class="guest-garage-banner">
         <div class="guest-banner-text">
           <strong>Digitalisasikan Sepeda Anda</strong>
-          <p>Catat standar as roda, headset, BB, dan riwayat servis tanpa tebak merek.</p>
+          <p>
+            Catat standar as roda, headset, BB, dan riwayat servis tanpa tebak
+            merek.
+          </p>
         </div>
-        <NuxtLink to="/login" class="guest-banner-btn">
-          Buka Garasi
-        </NuxtLink>
+        <NuxtLink to="/login" class="guest-banner-btn"> Buka Garasi </NuxtLink>
       </div>
     </section>
   </div>
@@ -479,7 +579,9 @@ function formatKm(meters: number): string {
   padding: 0.15rem 0.35rem 0.15rem 0;
   text-align: left;
   border-radius: 0.5rem;
-  transition: transform 90ms ease, opacity 90ms ease;
+  transition:
+    transform 90ms ease,
+    opacity 90ms ease;
 }
 
 .weather-chip--interactive {
@@ -494,7 +596,7 @@ function formatKm(meters: number): string {
   font-family: var(--font-mono);
   font-size: 0.6rem;
   font-weight: 900;
-  color: #17202A;
+  color: #17202a;
   background: var(--color-chain-lime);
   padding: 0.1rem 0.35rem;
   border-radius: 0.35rem;
@@ -504,7 +606,8 @@ function formatKm(meters: number): string {
 }
 
 @keyframes pulseGps {
-  0%, 100% {
+  0%,
+  100% {
     transform: scale(1);
   }
   50% {
@@ -583,7 +686,7 @@ function formatKm(meters: number): string {
 
 /* 2.5 Agentic AI Flex Spotlight */
 .home-flex-spotlight {
-  background: linear-gradient(135deg, #17202A 0%, #0F172A 100%);
+  background: linear-gradient(135deg, #17202a 0%, #0f172a 100%);
   border: 1.5px solid rgba(201, 243, 106, 0.4);
   border-radius: 1.25rem;
   padding: 1.15rem;
@@ -623,14 +726,14 @@ function formatKm(meters: number): string {
   margin: 0;
   font-size: 1.05rem;
   font-weight: 900;
-  color: #FFFFFF;
+  color: #ffffff;
   letter-spacing: -0.02em;
 }
 
 .spotlight-desc {
   margin: 0;
   font-size: 0.78rem;
-  color: #94A3B8;
+  color: #94a3b8;
   line-height: 1.4;
 }
 
@@ -642,7 +745,7 @@ function formatKm(meters: number): string {
   padding: 0.65rem 1.15rem;
   border-radius: 0.75rem;
   background: var(--color-chain-lime);
-  color: #17202A;
+  color: #17202a;
   font-size: 0.8rem;
   font-weight: 900;
   text-decoration: none;
@@ -1000,7 +1103,9 @@ function formatKm(meters: number): string {
   white-space: nowrap;
   flex-shrink: 0;
   box-shadow: 0 2px 6px rgb(23 32 42 / 12%);
-  transition: transform 90ms ease, opacity 90ms ease;
+  transition:
+    transform 90ms ease,
+    opacity 90ms ease;
 }
 
 .guest-banner-btn:active {

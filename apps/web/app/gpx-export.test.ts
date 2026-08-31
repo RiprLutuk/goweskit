@@ -4,8 +4,18 @@ import { generateGpxXml, parseGpxToRoute } from './gpx-export.js';
 describe('GPX XML Generator', () => {
   it('generates a valid GPX 1.1 XML string from track points', () => {
     const points = [
-      { latitude: -6.2088, longitude: 106.8456, altitude: 25.4, time: '2026-08-30T10:00:00Z' },
-      { latitude: -6.2100, longitude: 106.8470, altitude: 28.1, time: '2026-08-30T10:05:00Z' },
+      {
+        latitude: -6.2088,
+        longitude: 106.8456,
+        altitude: 25.4,
+        time: '2026-08-30T10:00:00Z',
+      },
+      {
+        latitude: -6.21,
+        longitude: 106.847,
+        altitude: 28.1,
+        time: '2026-08-30T10:05:00Z',
+      },
     ];
 
     const xml = generateGpxXml('Morning Sentul Loop', points);

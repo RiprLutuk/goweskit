@@ -1,9 +1,6 @@
 import { describe, expect, it } from 'vitest';
 
-import {
-  getCyclingAdvice,
-  parseWmoWeather,
-} from './composables/useWeather.js';
+import { getCyclingAdvice, parseWmoWeather } from './composables/useWeather.js';
 
 describe('Weather Interpretation & Cycling Advice', () => {
   it('parses WMO weather codes accurately', () => {
@@ -29,6 +26,8 @@ describe('Weather Interpretation & Cycling Advice', () => {
     // Extreme weather
     expect(getCyclingAdvice(25, 32, 1)).toBe('Angin Kencang');
     expect(getCyclingAdvice(35, 10, 0)).toBe('Suhu Terik, Hidrasi Ekstra');
-    expect(getCyclingAdvice(14, 10, 0)).toBe('Suhu Dingin, Siapkan Windbreaker');
+    expect(getCyclingAdvice(14, 10, 0)).toBe(
+      'Suhu Dingin, Siapkan Windbreaker',
+    );
   });
 });

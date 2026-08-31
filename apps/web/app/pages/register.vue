@@ -94,8 +94,11 @@ async function requestOtp(): Promise<void> {
       method: 'POST',
       body: { email: email.value.trim().toLowerCase(), purpose: 'register' },
     });
-    
-    toast.success('Kode OTP Terkirim', `Kode verifikasi 6-digit telah dikirim ke ${email.value}`);
+
+    toast.success(
+      'Kode OTP Terkirim',
+      `Kode verifikasi 6-digit telah dikirim ke ${email.value}`,
+    );
     if (res.demoOtp) {
       demoOtpHint.value = res.demoOtp;
     }
@@ -145,9 +148,9 @@ async function submitOtpRegistration(): Promise<void> {
       password: password.value,
       otp: otpCode.value.trim(),
     });
-    
+
     toast.success('Pendaftaran Berhasil!', 'Selamat datang di GowesKit.');
-    
+
     // Auto login after successful registration
     await login({
       email: email.value.trim().toLowerCase(),
@@ -175,7 +178,11 @@ async function submitOtpRegistration(): Promise<void> {
           {{ step === 1 ? 'Daftar Akun Baru' : 'Verifikasi Kode OTP' }}
         </h1>
         <p class="auth-sub">
-          {{ step === 1 ? 'Mulai catat spesifikasi sepeda, kompatibilitas komponen, dan rute gowes Anda.' : `Masukkan 6-digit kode verifikasi yang dikirim ke ${email}` }}
+          {{
+            step === 1
+              ? 'Mulai catat spesifikasi sepeda, kompatibilitas komponen, dan rute gowes Anda.'
+              : `Masukkan 6-digit kode verifikasi yang dikirim ke ${email}`
+          }}
         </p>
       </div>
 
@@ -189,7 +196,12 @@ async function submitOtpRegistration(): Promise<void> {
       </div>
 
       <!-- STEP 1: Registration Form (No Native HTML Tooltips) -->
-      <form v-if="step === 1" class="auth-form" novalidate @submit.prevent="requestOtp">
+      <form
+        v-if="step === 1"
+        class="auth-form"
+        novalidate
+        @submit.prevent="requestOtp"
+      >
         <div class="form-field">
           <label>
             <span class="field-label">Nama Lengkap / Panggilan</span>
@@ -259,11 +271,25 @@ async function submitOtpRegistration(): Promise<void> {
       </form>
 
       <!-- STEP 2: OTP Verification Form (No Native HTML Tooltips) -->
-      <form v-else class="auth-form" novalidate @submit.prevent="submitOtpRegistration">
+      <form
+        v-else
+        class="auth-form"
+        novalidate
+        @submit.prevent="submitOtpRegistration"
+      >
         <!-- Demo OTP quick helper if available -->
         <div v-if="demoOtpHint" class="demo-otp-helper">
-          <span>Kode verifikasi Anda: <strong>{{ demoOtpHint }}</strong></span>
-          <button type="button" class="btn-copy-otp" @click="otpCode = demoOtpHint; errors.otp = ''">
+          <span
+            >Kode verifikasi Anda: <strong>{{ demoOtpHint }}</strong></span
+          >
+          <button
+            type="button"
+            class="btn-copy-otp"
+            @click="
+              otpCode = demoOtpHint;
+              errors.otp = '';
+            "
+          >
             Gunakan Kode
           </button>
         </div>
@@ -296,14 +322,14 @@ async function submitOtpRegistration(): Promise<void> {
             :disabled="resendCountdown > 0 || sendingOtp"
             @click="resendOtp"
           >
-            {{ resendCountdown > 0 ? `Kirim ulang kode (${resendCountdown}d)` : 'Kirim Ulang Kode OTP' }}
+            {{
+              resendCountdown > 0
+                ? `Kirim ulang kode (${resendCountdown}d)`
+                : 'Kirim Ulang Kode OTP'
+            }}
           </button>
 
-          <button
-            type="button"
-            class="otp-back-btn"
-            @click="step = 1"
-          >
+          <button type="button" class="otp-back-btn" @click="step = 1">
             ← Ubah Email
           </button>
         </div>
@@ -318,7 +344,10 @@ async function submitOtpRegistration(): Promise<void> {
       </form>
 
       <div class="auth-footer">
-        <span>Sudah punya akun? <NuxtLink to="/login">Masuk ke Akun</NuxtLink></span>
+        <span
+          >Sudah punya akun?
+          <NuxtLink to="/login">Masuk ke Akun</NuxtLink></span
+        >
       </div>
     </section>
   </div>
@@ -531,4 +560,3 @@ async function submitOtpRegistration(): Promise<void> {
   font-weight: 850;
 }
 </style>
-

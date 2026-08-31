@@ -274,10 +274,7 @@ function distanceMetersBetween(
   return R * c;
 }
 
-function calculateBearing(
-  p1: [number, number],
-  p2: [number, number],
-): number {
+function calculateBearing(p1: [number, number], p2: [number, number]): number {
   const lng1 = (p1[0] * Math.PI) / 180;
   const lat1 = (p1[1] * Math.PI) / 180;
   const lng2 = (p2[0] * Math.PI) / 180;
@@ -291,13 +288,18 @@ function calculateBearing(
 }
 
 function getRouteCoordinates(route: NearbyRoute): [number, number][] {
-  return snappedGeometries.get(route.id) ?? (route.geometry.coordinates as [number, number][]);
+  return (
+    snappedGeometries.get(route.id) ??
+    (route.geometry.coordinates as [number, number][])
+  );
 }
 
 /**
  * Automated Road Snapper via OSRM Bicycle Routing
  */
-async function snapRouteToRoads(route: NearbyRoute): Promise<[number, number][]> {
+async function snapRouteToRoads(
+  route: NearbyRoute,
+): Promise<[number, number][]> {
   if (snappedGeometries.has(route.id)) {
     return snappedGeometries.get(route.id)!;
   }
@@ -314,14 +316,17 @@ async function snapRouteToRoads(route: NearbyRoute): Promise<[number, number][]>
     sampled.push(rawCoords[rawCoords.length - 1]!);
   }
 
-  const waypointsStr = sampled.map(([lng, lat]) => `${lng.toFixed(5)},${lat.toFixed(5)}`).join(';');
+  const waypointsStr = sampled
+    .map(([lng, lat]) => `${lng.toFixed(5)},${lat.toFixed(5)}`)
+    .join(';');
   const url = `https://router.project-osrm.org/route/v1/bicycle/${waypointsStr}?overview=full&geometries=geojson`;
 
   try {
     const res = await fetch(url, { signal: AbortSignal.timeout(6000) });
     if (res.ok) {
       const data = await res.json();
-      const coords = data.routes?.[0]?.geometry?.coordinates as [number, number][] | undefined;
+      const coords = data.routes?.[0]?.geometry?.coordinates as
+        [number, number][] | undefined;
       if (coords && coords.length >= 2) {
         snappedGeometries.set(route.id, coords);
         return coords;
@@ -466,7 +471,10 @@ async function registerAllMapIcons(m: MapLibreMap): Promise<void> {
 
 // ── GeoJSON Generation ─────────────────────────────────────────
 function cleanName(rawName: string): string {
-  return rawName.replace(/^\[(Place|Route)\]\s*/i, '').replace(/^Demo\s+/i, '').trim();
+  return rawName
+    .replace(/^\[(Place|Route)\]\s*/i, '')
+    .replace(/^Demo\s+/i, '')
+    .trim();
 }
 
 function getPlaceThemeColor(type: string): string {
@@ -671,7 +679,9 @@ function setupSimulationRiders(): void {
       currentSpeedKmh: seed.baseSpeedKmh,
       distanceTraveledMeters: Math.round(initialDistance),
       movingSeconds: Math.round(initialDistance / (seed.baseSpeedKmh / 3.6)),
-      currentAltitudeMeters: Math.round(20 + Math.sin(initialProgress * Math.PI * 2) * 12),
+      currentAltitudeMeters: Math.round(
+        20 + Math.sin(initialProgress * Math.PI * 2) * 12,
+      ),
       bearing: pt.bearing,
       currentCoord: pt.coord,
     });
@@ -686,7 +696,12 @@ function animationTick(timestamp: number): void {
   const deltaSeconds = Math.min((timestamp - lastTimestamp) / 1000, 0.1);
   lastTimestamp = timestamp;
 
-  if (isSimulationPlaying.value && activeRiders.value.length > 0 && mapLoaded && map) {
+  if (
+    isSimulationPlaying.value &&
+    activeRiders.value.length > 0 &&
+    mapLoaded &&
+    map
+  ) {
     const speedMult = simulationSpeedMultiplier.value;
 
     for (const rider of activeRiders.value) {
@@ -695,7 +710,8 @@ function animationTick(timestamp: number): void {
 
       const coords = getRouteCoordinates(route);
       const metersPerSec = (rider.baseSpeedKmh / 3.6) * speedMult;
-      const progressDelta = (metersPerSec * deltaSeconds) / route.distanceMeters;
+      const progressDelta =
+        (metersPerSec * deltaSeconds) / route.distanceMeters;
 
       rider.progress = (rider.progress + progressDelta) % 1;
 
@@ -703,11 +719,18 @@ function animationTick(timestamp: number): void {
       rider.currentCoord = pt.coord;
       rider.bearing = pt.bearing;
       rider.currentSpeedKmh =
-        rider.baseSpeedKmh + Math.sin(timestamp / 1000 + rider.progress * 10) * 2.5;
+        rider.baseSpeedKmh +
+        Math.sin(timestamp / 1000 + rider.progress * 10) * 2.5;
 
-      rider.distanceTraveledMeters = Math.round(rider.progress * route.distanceMeters);
-      rider.movingSeconds = Math.round(rider.distanceTraveledMeters / (rider.baseSpeedKmh / 3.6));
-      rider.currentAltitudeMeters = Math.round(20 + Math.sin(rider.progress * Math.PI * 2) * 12);
+      rider.distanceTraveledMeters = Math.round(
+        rider.progress * route.distanceMeters,
+      );
+      rider.movingSeconds = Math.round(
+        rider.distanceTraveledMeters / (rider.baseSpeedKmh / 3.6),
+      );
+      rider.currentAltitudeMeters = Math.round(
+        20 + Math.sin(rider.progress * Math.PI * 2) * 12,
+      );
 
       if (
         isFollowCamera.value &&
@@ -890,7 +913,13 @@ async function addGowesKitLayers(): Promise<void> {
         'icon-allow-overlap': true,
         'icon-ignore-placement': true,
         'icon-anchor': 'center',
-        'text-field': ['concat', ['get', 'name'], ' (', ['get', 'distanceText'], ')'],
+        'text-field': [
+          'concat',
+          ['get', 'name'],
+          ' (',
+          ['get', 'distanceText'],
+          ')',
+        ],
         'text-size': 11,
         'text-font': ['Open Sans Bold', 'Arial Unicode MS Bold'],
         'text-anchor': 'top',
@@ -1026,7 +1055,11 @@ async function addGowesKitLayers(): Promise<void> {
   map.on('click', 'goweskit-cyclists-symbol', onCyclistClick);
 
   // Cursors
-  ['goweskit-route-lines', 'goweskit-places-symbol', 'goweskit-cyclists-symbol'].forEach((layerId) => {
+  [
+    'goweskit-route-lines',
+    'goweskit-places-symbol',
+    'goweskit-cyclists-symbol',
+  ].forEach((layerId) => {
     map?.on('mouseenter', layerId, () => {
       if (map !== null) map.getCanvas().style.cursor = 'pointer';
     });
@@ -1304,14 +1337,19 @@ onBeforeUnmount(() => {
       </button>
 
       <!-- 4. Play / Pause & Speed Multiplier for Simulation -->
-      <div v-if="showRiders && activeRiders.length > 0" class="hud-simulation-controls">
+      <div
+        v-if="showRiders && activeRiders.length > 0"
+        class="hud-simulation-controls"
+      >
         <button
           class="map-hud-btn"
           type="button"
           :title="isSimulationPlaying ? 'Jeda Simulasi' : 'Jalankan Simulasi'"
           @click="isSimulationPlaying = !isSimulationPlaying"
         >
-          <span class="hud-main-text">{{ isSimulationPlaying ? '⏸' : '▶' }}</span>
+          <span class="hud-main-text">{{
+            isSimulationPlaying ? '⏸' : '▶'
+          }}</span>
         </button>
         <button
           class="map-hud-btn"
@@ -1345,27 +1383,46 @@ onBeforeUnmount(() => {
           <div class="rider-avatar-large">{{ selectedRider.avatar }}</div>
           <div class="rider-title-stack">
             <h3>{{ selectedRider.name }}</h3>
-            <span class="rider-status-pill">● Sedang Gowes · {{ selectedRider.routeName }}</span>
+            <span class="rider-status-pill"
+              >● Sedang Gowes · {{ selectedRider.routeName }}</span
+            >
           </div>
-          <button class="telemetry-close-btn" type="button" @click="selectedRider = null">✕</button>
+          <button
+            class="telemetry-close-btn"
+            type="button"
+            @click="selectedRider = null"
+          >
+            ✕
+          </button>
         </div>
 
         <div class="telemetry-grid">
           <div class="telemetry-item">
             <span class="telemetry-label">Kecepatan (GPS)</span>
-            <span class="telemetry-value highlight">{{ selectedRider.currentSpeedKmh.toFixed(1) }} <small>km/h</small></span>
+            <span class="telemetry-value highlight"
+              >{{ selectedRider.currentSpeedKmh.toFixed(1) }}
+              <small>km/h</small></span
+            >
           </div>
           <div class="telemetry-item">
             <span class="telemetry-label">Jarak Sesi</span>
-            <span class="telemetry-value">{{ (selectedRider.distanceTraveledMeters / 1000).toFixed(1) }} <small>km</small></span>
+            <span class="telemetry-value"
+              >{{ (selectedRider.distanceTraveledMeters / 1000).toFixed(1) }}
+              <small>km</small></span
+            >
           </div>
           <div class="telemetry-item">
             <span class="telemetry-label">Waktu Gowes</span>
-            <span class="telemetry-value">{{ formatDuration(selectedRider.movingSeconds) }}</span>
+            <span class="telemetry-value">{{
+              formatDuration(selectedRider.movingSeconds)
+            }}</span>
           </div>
           <div class="telemetry-item">
             <span class="telemetry-label">Elevasi (GPS)</span>
-            <span class="telemetry-value">{{ selectedRider.currentAltitudeMeters }} <small>mdpl</small></span>
+            <span class="telemetry-value"
+              >{{ selectedRider.currentAltitudeMeters }}
+              <small>mdpl</small></span
+            >
           </div>
         </div>
 
@@ -1373,7 +1430,9 @@ onBeforeUnmount(() => {
           <div class="telemetry-bike-icon">🚲</div>
           <div class="telemetry-bike-info">
             <span class="telemetry-bike-label">Sepeda Terpasang</span>
-            <span class="telemetry-bike-name">{{ selectedRider.bikeModel }}</span>
+            <span class="telemetry-bike-name">{{
+              selectedRider.bikeModel
+            }}</span>
           </div>
         </div>
 
@@ -1449,7 +1508,9 @@ onBeforeUnmount(() => {
   color: var(--color-ink);
   cursor: pointer;
   box-shadow: 0 4px 14px rgb(0 0 0 / 14%);
-  transition: transform 100ms ease, background-color 140ms ease;
+  transition:
+    transform 100ms ease,
+    background-color 140ms ease;
   user-select: none;
 }
 

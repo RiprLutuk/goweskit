@@ -1,5 +1,12 @@
 <script setup lang="ts">
-const { canInstall, isStandalone, isIOS, showInstallGuide, installApp, triggerHaptic } = usePwa();
+const {
+  canInstall,
+  isStandalone,
+  isIOS,
+  showInstallGuide,
+  installApp,
+  triggerHaptic,
+} = usePwa();
 const dismissed = ref(false);
 
 const shouldShowBanner = computed(() => {
@@ -31,9 +38,29 @@ function dismissBanner(): void {
       <div class="pwa-banner__icon">
         <svg viewBox="0 0 48 48" width="32" height="32" aria-hidden="true">
           <rect width="48" height="48" rx="10" fill="#17202a" />
-          <circle cx="14" cy="30" r="8" fill="none" stroke="#8eddf4" stroke-width="3" />
-          <circle cx="34" cy="30" r="8" fill="none" stroke="#8eddf4" stroke-width="3" />
-          <path d="m14 30 8-14 7 14H14Zm8-14h8m-11-4h6" fill="none" stroke="#c9f36a" stroke-width="3" stroke-linecap="round" />
+          <circle
+            cx="14"
+            cy="30"
+            r="8"
+            fill="none"
+            stroke="#8eddf4"
+            stroke-width="3"
+          />
+          <circle
+            cx="34"
+            cy="30"
+            r="8"
+            fill="none"
+            stroke="#8eddf4"
+            stroke-width="3"
+          />
+          <path
+            d="m14 30 8-14 7 14H14Zm8-14h8m-11-4h6"
+            fill="none"
+            stroke="#c9f36a"
+            stroke-width="3"
+            stroke-linecap="round"
+          />
         </svg>
       </div>
 
@@ -99,7 +126,8 @@ function dismissBanner(): void {
         </div>
 
         <p class="pwa-modal__desc">
-          Install GowesKit on your home screen for full-screen offline access without browser address bars:
+          Install GowesKit on your home screen for full-screen offline access
+          without browser address bars:
         </p>
 
         <ol class="ios-steps-list">
@@ -107,21 +135,32 @@ function dismissBanner(): void {
             <span class="ios-step__num">1</span>
             <div>
               <strong>Tap the Share button</strong>
-              <p>In Safari's bottom or top navigation bar (the square with an arrow pointing up <span class="ios-icon">⎙</span>).</p>
+              <p>
+                In Safari's bottom or top navigation bar (the square with an
+                arrow pointing up <span class="ios-icon">⎙</span>).
+              </p>
             </div>
           </li>
           <li class="ios-step">
             <span class="ios-step__num">2</span>
             <div>
               <strong>Select "Add to Home Screen"</strong>
-              <p>Scroll down the share sheet and tap <strong>Add to Home Screen</strong> (<span class="ios-icon">⊞</span>).</p>
+              <p>
+                Scroll down the share sheet and tap
+                <strong>Add to Home Screen</strong> (<span class="ios-icon"
+                  >⊞</span
+                >).
+              </p>
             </div>
           </li>
           <li class="ios-step">
             <span class="ios-step__num">3</span>
             <div>
               <strong>Tap "Add" in top-right</strong>
-              <p>Confirm the name. GowesKit will appear on your home screen ready to ride!</p>
+              <p>
+                Confirm the name. GowesKit will appear on your home screen ready
+                to ride!
+              </p>
             </div>
           </li>
         </ol>
@@ -245,8 +284,12 @@ function dismissBanner(): void {
 }
 
 @keyframes fadeIn {
-  from { opacity: 0; }
-  to { opacity: 1; }
+  from {
+    opacity: 0;
+  }
+  to {
+    opacity: 1;
+  }
 }
 
 .pwa-modal {
@@ -262,8 +305,14 @@ function dismissBanner(): void {
 }
 
 @keyframes popIn {
-  from { transform: scale(0.94); opacity: 0; }
-  to { transform: scale(1); opacity: 1; }
+  from {
+    transform: scale(0.94);
+    opacity: 0;
+  }
+  to {
+    transform: scale(1);
+    opacity: 1;
+  }
 }
 
 .pwa-modal__header {

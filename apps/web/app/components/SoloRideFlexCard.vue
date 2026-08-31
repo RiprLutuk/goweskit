@@ -32,7 +32,9 @@ const durationMinutes = computed(() => {
 });
 
 async function copyShareText() {
-  const note = props.session?.note ? `\n📍 Rute/Rencana: ${props.session.note}` : '';
+  const note = props.session?.note
+    ? `\n📍 Rute/Rencana: ${props.session.note}`
+    : '';
   const text = `🚴 GOWESKIT SAFE RIDER PASS
 ━━━━━━━━━━━━━━━━━━━━
 🛡️ Sesi Solo Ride Aktif & Terpantau
@@ -46,7 +48,10 @@ ${activeShareUrl.value}
 
   try {
     await navigator.clipboard.writeText(text);
-    toast.success('Pesan Status Disalin!', 'Siap dibagikan ke WhatsApp Status atau Grup Komunitas.');
+    toast.success(
+      'Pesan Status Disalin!',
+      'Siap dibagikan ke WhatsApp Status atau Grup Komunitas.',
+    );
   } catch {
     toast.info('Gagal menyalin otomatis', 'Silakan salin manual.');
   }
@@ -104,12 +109,22 @@ async function renderCanvas(): Promise<HTMLCanvasElement> {
   ctx.fillStyle = '#FFFFFF';
   ctx.font = '900 48px sans-serif';
   ctx.textAlign = 'center';
-  ctx.fillText(props.riderName ? `Gowes ${props.riderName}` : 'Gowes Solo Nyaman & Terpantau', 540, 740);
+  ctx.fillText(
+    props.riderName
+      ? `Gowes ${props.riderName}`
+      : 'Gowes Solo Nyaman & Terpantau',
+    540,
+    740,
+  );
 
   ctx.fillStyle = '#94A3B8';
   ctx.font = '32px sans-serif';
   const ruteText = props.session?.note || 'Eksplorasi Rute Gowes Mandiri';
-  ctx.fillText(ruteText.length > 36 ? ruteText.slice(0, 36) + '…' : ruteText, 540, 800);
+  ctx.fillText(
+    ruteText.length > 36 ? ruteText.slice(0, 36) + '…' : ruteText,
+    540,
+    800,
+  );
 
   // Metrics Bar
   ctx.fillStyle = '#0F172A';
@@ -159,7 +174,9 @@ async function downloadStoryImage() {
   isGenerating.value = true;
   try {
     const canvas = await renderCanvas();
-    const blob = await new Promise<Blob | null>((resolve) => canvas.toBlob(resolve, 'image/png'));
+    const blob = await new Promise<Blob | null>((resolve) =>
+      canvas.toBlob(resolve, 'image/png'),
+    );
     if (!blob) throw new Error('Blob creation failed');
 
     const url = URL.createObjectURL(blob);
@@ -169,7 +186,10 @@ async function downloadStoryImage() {
     link.click();
     URL.revokeObjectURL(url);
 
-    toast.success('Poster Story Terunduh!', 'Format pas untuk WhatsApp Status atau Instagram Story.');
+    toast.success(
+      'Poster Story Terunduh!',
+      'Format pas untuk WhatsApp Status atau Instagram Story.',
+    );
   } catch (err) {
     console.error('Download error:', err);
     toast.error('Gagal mengunduh', 'Silakan gunakan tombol salin teks.');
@@ -182,10 +202,14 @@ async function shareToMedia() {
   isGenerating.value = true;
   try {
     const canvas = await renderCanvas();
-    const blob = await new Promise<Blob | null>((resolve) => canvas.toBlob(resolve, 'image/png'));
+    const blob = await new Promise<Blob | null>((resolve) =>
+      canvas.toBlob(resolve, 'image/png'),
+    );
     if (!blob) throw new Error('Blob creation failed');
 
-    const file = new File([blob], 'GowesKit_Safe_Rider_Pass.png', { type: 'image/png' });
+    const file = new File([blob], 'GowesKit_Safe_Rider_Pass.png', {
+      type: 'image/png',
+    });
 
     if (navigator.canShare && navigator.canShare({ files: [file] })) {
       await navigator.share({
@@ -238,7 +262,7 @@ async function shareToMedia() {
         <div class="pass-preview">
           <div class="pass-header">
             <div class="pass-badge">
-              <span class="pass-dot"/>
+              <span class="pass-dot" />
               <span>GOWESKIT SAFE RIDER</span>
             </div>
             <span class="pass-chip">LIVE SESSION</span>
@@ -250,7 +274,10 @@ async function shareToMedia() {
               {{ riderName ? `Gowes ${riderName}` : 'Solo Rider Terlindungi' }}
             </h2>
             <p class="pass-sub">
-              {{ session?.note || 'Sesi gowes solo dengan proteksi live tracking dan kontak darurat aktif.' }}
+              {{
+                session?.note ||
+                'Sesi gowes solo dengan proteksi live tracking dan kontak darurat aktif.'
+              }}
             </p>
           </div>
 
@@ -322,7 +349,7 @@ async function shareToMedia() {
   position: relative;
   width: 100%;
   max-width: 28rem;
-  background: #17202A;
+  background: #17202a;
   border: 1.5px solid rgba(201, 243, 106, 0.3);
   border-radius: 1.5rem;
   overflow: hidden;
@@ -341,7 +368,7 @@ async function shareToMedia() {
   border-radius: 50%;
   background: rgba(255, 255, 255, 0.15);
   border: 1px solid rgba(255, 255, 255, 0.2);
-  color: #FFFFFF;
+  color: #ffffff;
   font-size: 0.9rem;
   cursor: pointer;
   display: flex;
@@ -354,7 +381,7 @@ async function shareToMedia() {
   display: flex;
   flex-direction: column;
   gap: 1.25rem;
-  background: radial-gradient(circle at top right, #243447 0%, #17202A 100%);
+  background: radial-gradient(circle at top right, #243447 0%, #17202a 100%);
 }
 
 .pass-header {
@@ -389,7 +416,7 @@ async function shareToMedia() {
   font-family: var(--font-mono);
   font-size: 0.65rem;
   font-weight: 850;
-  color: #38BDF8;
+  color: #38bdf8;
 }
 
 .pass-hero-center {
@@ -409,13 +436,13 @@ async function shareToMedia() {
   margin: 0;
   font-size: 1.4rem;
   font-weight: 900;
-  color: #FFFFFF;
+  color: #ffffff;
 }
 
 .pass-sub {
   margin: 0;
   font-size: 0.8rem;
-  color: #94A3B8;
+  color: #94a3b8;
   line-height: 1.4;
   max-width: 22rem;
 }
@@ -440,7 +467,7 @@ async function shareToMedia() {
 .stat-lbl {
   font-family: var(--font-mono);
   font-size: 0.62rem;
-  color: #94A3B8;
+  color: #94a3b8;
   text-transform: uppercase;
 }
 
@@ -462,7 +489,7 @@ async function shareToMedia() {
 
 .feature-line {
   font-size: 0.75rem;
-  color: #CBD5E1;
+  color: #cbd5e1;
   font-weight: 700;
 }
 
@@ -472,7 +499,7 @@ async function shareToMedia() {
   grid-template-columns: 1.2fr 1fr 1fr;
   gap: 0.45rem;
   padding: 0.85rem 1rem;
-  background: #0F172A;
+  background: #0f172a;
   border-top: 1px solid rgba(255, 255, 255, 0.1);
 }
 
@@ -497,17 +524,17 @@ async function shareToMedia() {
 
 .action-btn--primary {
   background: var(--color-chain-lime);
-  color: #17202A;
+  color: #17202a;
 }
 
 .action-btn--secondary {
   background: rgba(255, 255, 255, 0.15);
-  color: #FFFFFF;
+  color: #ffffff;
   border: 1px solid rgba(255, 255, 255, 0.2);
 }
 
 .action-btn--ghost {
   background: rgba(255, 255, 255, 0.08);
-  color: #CBD5E1;
+  color: #cbd5e1;
 }
 </style>

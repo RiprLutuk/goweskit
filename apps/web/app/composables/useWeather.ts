@@ -52,7 +52,11 @@ export function parseWmoWeather(code: number): { label: string; icon: string } {
   }
 }
 
-export function getCyclingAdvice(temp: number, wind: number, code: number): string {
+export function getCyclingAdvice(
+  temp: number,
+  wind: number,
+  code: number,
+): string {
   if (code >= 95) return 'Waspada Badai Petir';
   if (code >= 61) return 'Jalan Licin & Basah';
   if (code >= 51) return 'Gerimis Tipis';
@@ -93,7 +97,8 @@ export function useWeather() {
     try {
       const url = `https://api.open-meteo.com/v1/forecast?latitude=${latitude}&longitude=${longitude}&current=temperature_2m,relative_humidity_2m,apparent_temperature,weather_code,wind_speed_10m`;
       const response = await fetch(url, { signal: AbortSignal.timeout(5000) });
-      if (!response.ok) throw new Error(`Weather API returned ${response.status}`);
+      if (!response.ok)
+        throw new Error(`Weather API returned ${response.status}`);
 
       const data = (await response.json()) as {
         current?: {

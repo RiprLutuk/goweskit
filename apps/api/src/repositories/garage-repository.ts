@@ -150,8 +150,7 @@ export class DrizzleGarageRepository implements GarageRepository {
       patch.photoStorageKey = input.photoStorageKey;
     if (input.avatarPreset !== undefined)
       patch.avatarPreset = input.avatarPreset;
-    if (input.notes !== undefined)
-      patch.notes = encryptNullable(input.notes);
+    if (input.notes !== undefined) patch.notes = encryptNullable(input.notes);
 
     await this.database
       .update(userBikes)

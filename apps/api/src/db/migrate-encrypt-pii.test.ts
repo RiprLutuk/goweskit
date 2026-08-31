@@ -1,5 +1,10 @@
 import { describe, expect, it } from 'vitest';
-import { decryptNullable, decryptText, encryptNullable, encryptText } from '../crypto/encryption.js';
+import {
+  decryptNullable,
+  decryptText,
+  encryptNullable,
+  encryptText,
+} from '../crypto/encryption.js';
 
 describe('migrateEncryptPii Logic', () => {
   it('correctly identifies unencrypted strings and encrypts them', () => {

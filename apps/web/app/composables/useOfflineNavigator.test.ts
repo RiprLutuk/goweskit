@@ -26,7 +26,12 @@ describe('useOfflineNavigator', () => {
   });
 
   it('saves, checks, and removes routes offline correctly', () => {
-    const { saveRouteOffline, isRouteSavedOffline, removeOfflineRoute, savedRoutes } = useOfflineNavigator();
+    const {
+      saveRouteOffline,
+      isRouteSavedOffline,
+      removeOfflineRoute,
+      savedRoutes,
+    } = useOfflineNavigator();
 
     const success = saveRouteOffline({
       id: 'route-dago-atas',
@@ -49,7 +54,9 @@ describe('useOfflineNavigator', () => {
     expect(success).toBe(true);
     expect(isRouteSavedOffline('route-dago-atas')).toBe(true);
     expect(savedRoutes.value).toHaveLength(1);
-    expect(savedRoutes.value[0]?.title).toBe('Tanjakan Dago Atas & Tebing Keraton');
+    expect(savedRoutes.value[0]?.title).toBe(
+      'Tanjakan Dago Atas & Tebing Keraton',
+    );
 
     removeOfflineRoute('route-dago-atas');
     expect(isRouteSavedOffline('route-dago-atas')).toBe(false);

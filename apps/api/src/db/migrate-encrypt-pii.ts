@@ -1,6 +1,11 @@
 import { eq } from 'drizzle-orm';
 
-import { decryptNullable, decryptText, encryptNullable, encryptText } from '../crypto/encryption.js';
+import {
+  decryptNullable,
+  decryptText,
+  encryptNullable,
+  encryptText,
+} from '../crypto/encryption.js';
 import type { Database } from './client.js';
 import { safetySessions, trustedContacts, userBikes, users } from './schema.js';
 
@@ -15,7 +20,9 @@ export interface PiiMigrationSummary {
  * Idempotently scans and encrypts legacy plaintext PII fields across all database tables.
  * Safe to run multiple times. Skips fields already prefixed with enc:v1:cbc:.
  */
-export async function migrateEncryptPii(database: Database): Promise<PiiMigrationSummary> {
+export async function migrateEncryptPii(
+  database: Database,
+): Promise<PiiMigrationSummary> {
   let usersMigrated = 0;
   let contactsMigrated = 0;
   let sessionsMigrated = 0;

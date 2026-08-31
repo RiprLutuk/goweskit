@@ -99,7 +99,10 @@ function drawGowesKitIcon(x, y, w, h) {
   if (!inBounds) return [0, 0, 0, 0];
 
   // Base background: #17202A
-  let r = 23, g = 32, b = 42, a = 255;
+  let r = 23,
+    g = 32,
+    b = 42,
+    a = 255;
 
   // Wheel 1 (Rear Wheel at nx: 0.31, ny: 0.65)
   const d1 = Math.hypot(nx - 0.31, ny - 0.65);
@@ -119,12 +122,30 @@ function drawGowesKitIcon(x, y, w, h) {
   // Frame Diamond & Geometry lines (Chain Lime #C9F36A)
   // Rear axle: (0.31, 0.65), BB: (0.51, 0.65), Seat: (0.43, 0.39), Head: (0.64, 0.39), Fork drop: (0.69, 0.65)
   const lines = [
-    [[0.31, 0.65], [0.51, 0.65]], // Chainstay
-    [[0.31, 0.65], [0.43, 0.39]], // Seatstay
-    [[0.51, 0.65], [0.43, 0.39]], // Seattube
-    [[0.51, 0.65], [0.64, 0.39]], // Downtube
-    [[0.43, 0.39], [0.64, 0.39]], // Toptube
-    [[0.64, 0.39], [0.69, 0.65]], // Fork
+    [
+      [0.31, 0.65],
+      [0.51, 0.65],
+    ], // Chainstay
+    [
+      [0.31, 0.65],
+      [0.43, 0.39],
+    ], // Seatstay
+    [
+      [0.51, 0.65],
+      [0.43, 0.39],
+    ], // Seattube
+    [
+      [0.51, 0.65],
+      [0.64, 0.39],
+    ], // Downtube
+    [
+      [0.43, 0.39],
+      [0.64, 0.39],
+    ], // Toptube
+    [
+      [0.64, 0.39],
+      [0.69, 0.65],
+    ], // Fork
   ];
 
   for (const [[x1, y1], [x2, y2]] of lines) {
@@ -136,14 +157,18 @@ function drawGowesKitIcon(x, y, w, h) {
 
   // Handlebar & Saddle (White #FFFFFF)
   // Handlebar at (0.64, 0.30)
-  if (distToSegment(nx, ny, 0.64, 0.39, 0.63, 0.30) <= 0.018 ||
-      distToSegment(nx, ny, 0.58, 0.30, 0.69, 0.30) <= 0.018) {
+  if (
+    distToSegment(nx, ny, 0.64, 0.39, 0.63, 0.3) <= 0.018 ||
+    distToSegment(nx, ny, 0.58, 0.3, 0.69, 0.3) <= 0.018
+  ) {
     return [255, 255, 255, 255];
   }
 
   // Saddle at (0.41, 0.31)
-  if (distToSegment(nx, ny, 0.43, 0.39, 0.41, 0.31) <= 0.018 ||
-      distToSegment(nx, ny, 0.35, 0.31, 0.46, 0.31) <= 0.018) {
+  if (
+    distToSegment(nx, ny, 0.43, 0.39, 0.41, 0.31) <= 0.018 ||
+    distToSegment(nx, ny, 0.35, 0.31, 0.46, 0.31) <= 0.018
+  ) {
     return [255, 255, 255, 255];
   }
 

@@ -6,7 +6,6 @@ import type {
   SafetySessionResponse,
   TrustedContact,
   TrustedContactListResponse,
-  TrustedContactResponse,
 } from '@goweskit/contracts/safety';
 
 import { buildSafetyShareUrl, SOS_HOLD_DURATION_MS } from '../../safety';
@@ -21,16 +20,12 @@ const {
   heartRate,
   cadenceRpm,
   powerWatts,
-  hrDeviceName,
-  cscDeviceName,
-  powerDeviceName,
   isHrConnected,
   isCscConnected,
   isPowerConnected,
   connectHeartRate,
   connectCadence,
   connectPower,
-  disconnectAll,
 } = useBluetoothSensors();
 
 const contacts = ref<TrustedContact[]>([]);
@@ -50,8 +45,13 @@ const isAutoTracking = ref(true);
 const wakeLockActive = ref(false);
 const gpxExporting = ref<string | null>(null);
 
+interface WakeLockSentinelLike {
+  release: () => Promise<void>;
+  addEventListener: (event: string, cb: () => void) => void;
+}
+
 let watchId: number | null = null;
-let wakeLockSentinel: any = null;
+let wakeLockSentinel: WakeLockSentinelLike | null = null;
 let lastSentCoords: { lat: number; lng: number } | null = null;
 let lastSentTime = 0;
 
@@ -78,6 +78,7 @@ const DURATION_OPTIONS = [
 
 let sosTimer: ReturnType<typeof setTimeout> | undefined;
 const showFlexModal = ref(false);
+const showOfflineMapModal = ref(false);
 
 const activeSession = computed(
   () =>
@@ -95,7 +96,10 @@ const pastSessions = computed(() =>
 async function requestWakeLock(): Promise<void> {
   if (typeof navigator !== 'undefined' && 'wakeLock' in navigator) {
     try {
-      wakeLockSentinel = await (navigator as any).wakeLock.request('screen');
+      const nav = navigator as unknown as {
+        wakeLock: { request: (type: string) => Promise<WakeLockSentinelLike> };
+      };
+      wakeLockSentinel = await nav.wakeLock.request('screen');
       wakeLockActive.value = true;
       wakeLockSentinel.addEventListener('release', () => {
         wakeLockActive.value = false;
@@ -110,7 +114,9 @@ function releaseWakeLock(): void {
   if (wakeLockSentinel) {
     try {
       wakeLockSentinel.release().catch(() => {});
-    } catch {}
+    } catch {
+      // ignore release error
+    }
     wakeLockSentinel = null;
   }
   wakeLockActive.value = false;
@@ -254,10 +260,7 @@ async function exportSessionGpx(session: SafetySession): Promise<void> {
         `Gowes Solo ${new Date(session.startedAt).toLocaleDateString('id-ID')}`,
       points,
     );
-    downloadGpxFile(
-      `GowesKit_Track_${session.id.slice(0, 8)}.gpx`,
-      gpxXml,
-    );
+    downloadGpxFile(`GowesKit_Track_${session.id.slice(0, 8)}.gpx`, gpxXml);
     toast.success(
       'GPX Berhasil Diunduh',
       `${points.length} titik koordinat rute diekspor.`,
@@ -509,7 +512,10 @@ function formatDate(value: string | null): string {
   }).format(new Date(value));
 }
 
-function statusBadge(status: SafetySession['status']): { label: string; class: string } {
+function statusBadge(status: SafetySession['status']): {
+  label: string;
+  class: string;
+} {
   switch (status) {
     case 'active':
       return { label: 'Sedang Berlangsung', class: 'badge--green' };
@@ -555,12 +561,26 @@ function openContactWhatsApp(phone: string): void {
           <GIcon name="radar" size="xs" color="var(--color-asphalt)" />
           <span>Keselamatan Solo-Ride</span>
         </span>
+        <button
+          type="button"
+          class="offline-map-cache-btn"
+          title="Cache Peta Offline"
+          @click="showOfflineMapModal = true"
+        >
+          <GIcon name="map" size="xs" color="var(--color-asphalt)" />
+          <span>📴 Peta Offline</span>
+        </button>
         <span
           v-if="activeSession"
           class="live-beacon-pill"
-          :class="activeSession.status === 'sos' ? 'live-beacon-pill--sos' : 'live-beacon-pill--active'"
+          :class="
+            activeSession.status === 'sos'
+              ? 'live-beacon-pill--sos'
+              : 'live-beacon-pill--active'
+          "
         >
-          <span class="beacon-dot" /> {{ activeSession.status === 'sos' ? 'SOS DARURAT' : 'LIVE TRACKING' }}
+          <span class="beacon-dot" />
+          {{ activeSession.status === 'sos' ? 'SOS DARURAT' : 'LIVE TRACKING' }}
         </span>
         <span v-else class="beacon-ready-pill">
           <span class="ready-dot" /> BEACON STANDBY
@@ -568,16 +588,25 @@ function openContactWhatsApp(phone: string): void {
       </div>
       <h1 class="native-title">Ride Safety Beacon</h1>
       <p class="native-sub">
-        Bagikan pantauan lokasi langsung sementara secara privat &amp; terenkripsi kepada keluarga/rekan saat gowes solo.
+        Bagikan pantauan lokasi langsung sementara secara privat &amp;
+        terenkripsi kepada keluarga/rekan saat gowes solo.
       </p>
     </header>
 
     <!-- Skeleton Safety Shimmer during Loading -->
     <div v-if="loading" class="safety-skeleton-grid">
-      <div class="skeleton-shimmer" style="width: 100%; height: 8rem; border-radius: 1.25rem;" />
-      <div class="skeleton-shimmer" style="width: 100%; height: 16rem; border-radius: 1.25rem;" />
+      <div
+        class="skeleton-shimmer"
+        style="width: 100%; height: 8rem; border-radius: 1.25rem"
+      />
+      <div
+        class="skeleton-shimmer"
+        style="width: 100%; height: 16rem; border-radius: 1.25rem"
+      />
     </div>
-    <p v-else-if="pageError" class="state-card state-card--error" role="alert">{{ pageError }}</p>
+    <p v-else-if="pageError" class="state-card state-card--error" role="alert">
+      {{ pageError }}
+    </p>
 
     <!-- Signed-out state -->
     <div v-else-if="!user" class="native-guest-box">
@@ -585,10 +614,17 @@ function openContactWhatsApp(phone: string): void {
         <GIcon name="shield" size="2xl" color="#FF8C75" filled />
       </div>
       <h2>Aktifkan Ride Safety Beacon</h2>
-      <p>Masuk ke akun GowesKit Anda untuk mendaftarkan kontak darurat dan memulai sesi pemantauan gowes solo.</p>
+      <p>
+        Masuk ke akun GowesKit Anda untuk mendaftarkan kontak darurat dan
+        memulai sesi pemantauan gowes solo.
+      </p>
       <div class="guest-actions">
-        <NuxtLink class="button button--primary button--full" to="/login">Masuk ke Akun</NuxtLink>
-        <NuxtLink class="button button--secondary button--full" to="/register">Daftar Akun Baru</NuxtLink>
+        <NuxtLink class="button button--primary button--full" to="/login"
+          >Masuk ke Akun</NuxtLink
+        >
+        <NuxtLink class="button button--secondary button--full" to="/register"
+          >Daftar Akun Baru</NuxtLink
+        >
       </div>
     </div>
 
@@ -605,43 +641,70 @@ function openContactWhatsApp(phone: string): void {
         <!-- Telemetry Top Row -->
         <div class="beacon-header-row">
           <div class="beacon-status-indicator">
-            <span class="beacon-pulse-circle" :class="{ 'beacon-pulse-circle--sos': activeSession.status === 'sos' }" />
+            <span
+              class="beacon-pulse-circle"
+              :class="{
+                'beacon-pulse-circle--sos': activeSession.status === 'sos',
+              }"
+            />
             <h2 class="beacon-heading">
-              {{ activeSession.status === 'sos' ? 'Darurat (SOS) Aktif' : 'Sesi Gowes Sedang Berjalan' }}
+              {{
+                activeSession.status === 'sos'
+                  ? 'Darurat (SOS) Aktif'
+                  : 'Sesi Gowes Sedang Berjalan'
+              }}
             </h2>
           </div>
-          <span class="beacon-status-tag" :class="activeSession.status === 'sos' ? 'tag-sos' : 'tag-active'">
-            <GIcon v-if="activeSession.status === 'sos'" name="sos" size="xs" filled />
+          <span
+            class="beacon-status-tag"
+            :class="activeSession.status === 'sos' ? 'tag-sos' : 'tag-active'"
+          >
+            <GIcon
+              v-if="activeSession.status === 'sos'"
+              name="sos"
+              size="xs"
+              filled
+            />
             <GIcon v-else name="radar" size="xs" color="#16A34A" />
             {{ activeSession.status === 'sos' ? 'SOS' : 'AKTIF' }}
           </span>
         </div>
 
         <p v-if="activeSession.status === 'sos'" class="sos-banner-note">
-          Status darurat telah dikirim ke kontak terpercaya Anda. Tetap tenang dan cari lokasi yang aman.
+          Status darurat telah dikirim ke kontak terpercaya Anda. Tetap tenang
+          dan cari lokasi yang aman.
         </p>
 
         <!-- Compact Time Strip -->
         <div class="beacon-timestrip">
           <div class="timestrip-col">
             <span class="timestrip-label">MULAI</span>
-            <strong class="timestrip-val">{{ formatDate(activeSession.startedAt) }}</strong>
+            <strong class="timestrip-val">{{
+              formatDate(activeSession.startedAt)
+            }}</strong>
           </div>
           <div class="timestrip-sep" />
           <div class="timestrip-col">
             <span class="timestrip-label">ESTIMASI</span>
-            <strong class="timestrip-val">{{ formatDate(activeSession.expectedEndAt) }}</strong>
+            <strong class="timestrip-val">{{
+              formatDate(activeSession.expectedEndAt)
+            }}</strong>
           </div>
           <div class="timestrip-sep" />
           <div class="timestrip-col">
             <span class="timestrip-label">KEDALUWARSA</span>
-            <strong class="timestrip-val">{{ formatDate(activeSession.shareExpiresAt) }}</strong>
+            <strong class="timestrip-val">{{
+              formatDate(activeSession.shareExpiresAt)
+            }}</strong>
           </div>
         </div>
 
         <!-- Live Bluetooth Cycling Telemetry HUD Strip (Web Bluetooth API) -->
         <div class="beacon-bluetooth-strip">
-          <div class="ble-metric-box" :class="{ 'ble-metric--live': isHrConnected }">
+          <div
+            class="ble-metric-box"
+            :class="{ 'ble-metric--live': isHrConnected }"
+          >
             <div class="ble-metric-header">
               <span class="ble-icon">❤️</span>
               <span class="ble-label">DETAK JANTUNG</span>
@@ -662,7 +725,10 @@ function openContactWhatsApp(phone: string): void {
             </div>
           </div>
 
-          <div class="ble-metric-box" :class="{ 'ble-metric--live': isCscConnected }">
+          <div
+            class="ble-metric-box"
+            :class="{ 'ble-metric--live': isCscConnected }"
+          >
             <div class="ble-metric-header">
               <span class="ble-icon">⚡</span>
               <span class="ble-label">KADENS</span>
@@ -683,7 +749,10 @@ function openContactWhatsApp(phone: string): void {
             </div>
           </div>
 
-          <div class="ble-metric-box" :class="{ 'ble-metric--live': isPowerConnected }">
+          <div
+            class="ble-metric-box"
+            :class="{ 'ble-metric--live': isPowerConnected }"
+          >
             <div class="ble-metric-header">
               <span class="ble-icon">🔋</span>
               <span class="ble-label">POWER</span>
@@ -721,11 +790,7 @@ function openContactWhatsApp(phone: string): void {
             >
               <GIcon name="camera" size="xs" /> Flex Pass
             </button>
-            <button
-              type="button"
-              class="share-btn-copy"
-              @click="copyShareLink"
-            >
+            <button type="button" class="share-btn-copy" @click="copyShareLink">
               <GIcon name="download" size="xs" /> Salin
             </button>
             <button
@@ -740,7 +805,10 @@ function openContactWhatsApp(phone: string): void {
         <p v-if="copyStatus" class="share-copy-toast">{{ copyStatus }}</p>
 
         <!-- Tactile SOS Beacon Area -->
-        <div v-if="activeSession.status === 'active'" class="beacon-sos-trigger-area">
+        <div
+          v-if="activeSession.status === 'active'"
+          class="beacon-sos-trigger-area"
+        >
           <button
             type="button"
             class="sos-round-btn"
@@ -758,24 +826,36 @@ function openContactWhatsApp(phone: string): void {
               <span class="sos-btn-icon">
                 <GIcon name="sos" size="xl" filled />
               </span>
-              <strong class="sos-btn-title">{{ holdingSos ? 'Tahan...' : 'SOS' }}</strong>
+              <strong class="sos-btn-title">{{
+                holdingSos ? 'Tahan...' : 'SOS'
+              }}</strong>
               <span class="sos-btn-sub">Tahan 3 Detik</span>
             </div>
             <div v-if="holdingSos" class="sos-hold-ring" />
           </button>
           <p class="sos-btn-caption">
-            Tekan dan tahan tombol untuk mengaktifkan sinyal darurat ke kontak terpercaya.
+            Tekan dan tahan tombol untuk mengaktifkan sinyal darurat ke kontak
+            terpercaya.
           </p>
         </div>
 
         <!-- Auto-Tracker & WakeLock Status Bar -->
         <div class="tracking-status-bar">
           <div class="tracking-mode-info">
-            <span class="tracking-dot" :class="{ 'tracking-dot--active': isAutoTracking }" />
+            <span
+              class="tracking-dot"
+              :class="{ 'tracking-dot--active': isAutoTracking }"
+            />
             <div class="tracking-labels">
-              <strong class="tracking-main-label">{{ isAutoTracking ? 'Auto GPS Streaming Aktif' : 'GPS Manual' }}</strong>
+              <strong class="tracking-main-label">{{
+                isAutoTracking ? 'Auto GPS Streaming Aktif' : 'GPS Manual'
+              }}</strong>
               <small class="tracking-sub-label">
-                {{ wakeLockActive ? 'Layar Terjaga (WakeLock Aktif)' : 'Kirim otomatis tiap >10m' }}
+                {{
+                  wakeLockActive
+                    ? 'Layar Terjaga (WakeLock Aktif)'
+                    : 'Kirim otomatis tiap >10m'
+                }}
               </small>
             </div>
           </div>
@@ -798,9 +878,7 @@ function openContactWhatsApp(phone: string): void {
             @click="updateLocation"
           >
             <span v-if="locationSaving">Memperbarui GPS…</span>
-            <span v-else>
-              <GIcon name="pin" size="xs" /> Update Lokasi
-            </span>
+            <span v-else> <GIcon name="pin" size="xs" /> Update Lokasi </span>
           </button>
 
           <button
@@ -810,9 +888,7 @@ function openContactWhatsApp(phone: string): void {
             @click="mutateSession('end')"
           >
             <span v-if="actionPending === 'end'">Menutup…</span>
-            <span v-else>
-              <GIcon name="check" size="xs" /> Selesaikan
-            </span>
+            <span v-else> <GIcon name="check" size="xs" /> Selesaikan </span>
           </button>
         </div>
 
@@ -824,11 +900,14 @@ function openContactWhatsApp(phone: string): void {
             :disabled="actionPending !== null"
             @click="mutateSession('revoke')"
           >
-            <GIcon name="close" size="xs" color="#EF4444" /> Cabut Akses Tautan (Revoke Token)
+            <GIcon name="close" size="xs" color="#EF4444" /> Cabut Akses Tautan
+            (Revoke Token)
           </button>
         </div>
 
-        <p v-if="sessionError" class="state-card state-card--error mt-2">{{ sessionError }}</p>
+        <p v-if="sessionError" class="state-card state-card--error mt-2">
+          {{ sessionError }}
+        </p>
       </section>
 
       <!-- ══════════════════════════════════════════════════════════
@@ -841,9 +920,12 @@ function openContactWhatsApp(phone: string): void {
             <GIcon name="shield" size="md" color="#EF4444" filled />
           </div>
           <div class="no-contact-alert-content">
-            <strong class="no-contact-alert-title">Belum Ada Kontak Terdaftar</strong>
+            <strong class="no-contact-alert-title"
+              >Belum Ada Kontak Terdaftar</strong
+            >
             <p class="no-contact-alert-text">
-              Tambahkan minimal 1 kontak darurat (keluarga / rekan peloton) agar koordinat GPS dapat dibagikan saat solo ride.
+              Tambahkan minimal 1 kontak darurat (keluarga / rekan peloton) agar
+              koordinat GPS dapat dibagikan saat solo ride.
             </p>
             <button
               type="button"
@@ -862,7 +944,9 @@ function openContactWhatsApp(phone: string): void {
           </div>
           <div>
             <h2 class="card-title">Mulai Sesi Gowes Aman</h2>
-            <p class="card-sub">Pilih kontak darurat dan bagikan koordinat langsung secara privat.</p>
+            <p class="card-sub">
+              Pilih kontak darurat dan bagikan koordinat langsung secara privat.
+            </p>
           </div>
         </div>
 
@@ -885,10 +969,15 @@ function openContactWhatsApp(phone: string): void {
                 :disabled="contacts.length === 0"
               >
                 <option value="" disabled>
-                  {{ contacts.length === 0 ? 'Belum ada kontak terdaftar' : 'Pilih kontak darurat…' }}
+                  {{
+                    contacts.length === 0
+                      ? 'Belum ada kontak terdaftar'
+                      : 'Pilih kontak darurat…'
+                  }}
                 </option>
                 <option v-for="c in contacts" :key="c.id" :value="c.id">
-                  {{ c.name }} {{ c.phone ? `(${c.phone})` : (c.email ? `(${c.email})` : '') }}
+                  {{ c.name }}
+                  {{ c.phone ? `(${c.phone})` : c.email ? `(${c.email})` : '' }}
                 </option>
               </select>
             </div>
@@ -899,14 +988,20 @@ function openContactWhatsApp(phone: string): void {
             <label class="field-label">
               <span class="field-label-text">DURASI TAUTAN PRIVAT</span>
             </label>
-            <div class="duration-pills-row" role="radiogroup" aria-label="Durasi Tautan">
+            <div
+              class="duration-pills-row"
+              role="radiogroup"
+              aria-label="Durasi Tautan"
+            >
               <button
                 v-for="opt in DURATION_OPTIONS"
                 :key="opt.value"
                 type="button"
                 role="radio"
                 class="duration-pill"
-                :class="{ active: startForm.shareDurationMinutes === opt.value }"
+                :class="{
+                  active: startForm.shareDurationMinutes === opt.value,
+                }"
                 :aria-checked="startForm.shareDurationMinutes === opt.value"
                 @click="startForm.shareDurationMinutes = opt.value"
               >
@@ -924,7 +1019,11 @@ function openContactWhatsApp(phone: string): void {
               </label>
               <div class="custom-input-wrap">
                 <span class="input-icon-prefix">
-                  <GIcon name="calendar" size="xs" color="var(--color-asphalt)" />
+                  <GIcon
+                    name="calendar"
+                    size="xs"
+                    color="var(--color-asphalt)"
+                  />
                 </span>
                 <input
                   id="expected-end-input"
@@ -958,40 +1057,78 @@ function openContactWhatsApp(phone: string): void {
           <div class="consent-cards-stack">
             <div
               class="consent-card"
-              :class="{ 'consent-card--checked': startForm.explicitLocationConsent }"
+              :class="{
+                'consent-card--checked': startForm.explicitLocationConsent,
+              }"
               tabindex="0"
               role="checkbox"
               :aria-checked="startForm.explicitLocationConsent"
-              @click="startForm.explicitLocationConsent = !startForm.explicitLocationConsent"
-              @keydown.space.prevent="startForm.explicitLocationConsent = !startForm.explicitLocationConsent"
+              @click="
+                startForm.explicitLocationConsent =
+                  !startForm.explicitLocationConsent
+              "
+              @keydown.space.prevent="
+                startForm.explicitLocationConsent =
+                  !startForm.explicitLocationConsent
+              "
             >
-              <div class="custom-check-box" :class="{ checked: startForm.explicitLocationConsent }">
-                <GIcon v-if="startForm.explicitLocationConsent" name="check" size="xs" color="#17202A" />
+              <div
+                class="custom-check-box"
+                :class="{ checked: startForm.explicitLocationConsent }"
+              >
+                <GIcon
+                  v-if="startForm.explicitLocationConsent"
+                  name="check"
+                  size="xs"
+                  color="#17202A"
+                />
               </div>
               <div class="consent-card-body">
-                <strong class="consent-card-title">Persetujuan Lokasi GPS Privat</strong>
+                <strong class="consent-card-title"
+                  >Persetujuan Lokasi GPS Privat</strong
+                >
                 <p class="consent-card-desc">
-                  Lokasi GPS saya dibagikan secara privat &amp; terenkripsi hanya kepada kontak terpercaya yang dipilih.
+                  Lokasi GPS saya dibagikan secara privat &amp; terenkripsi
+                  hanya kepada kontak terpercaya yang dipilih.
                 </p>
               </div>
             </div>
 
             <div
               class="consent-card"
-              :class="{ 'consent-card--checked': startForm.disclaimerAcknowledged }"
+              :class="{
+                'consent-card--checked': startForm.disclaimerAcknowledged,
+              }"
               tabindex="0"
               role="checkbox"
               :aria-checked="startForm.disclaimerAcknowledged"
-              @click="startForm.disclaimerAcknowledged = !startForm.disclaimerAcknowledged"
-              @keydown.space.prevent="startForm.disclaimerAcknowledged = !startForm.disclaimerAcknowledged"
+              @click="
+                startForm.disclaimerAcknowledged =
+                  !startForm.disclaimerAcknowledged
+              "
+              @keydown.space.prevent="
+                startForm.disclaimerAcknowledged =
+                  !startForm.disclaimerAcknowledged
+              "
             >
-              <div class="custom-check-box" :class="{ checked: startForm.disclaimerAcknowledged }">
-                <GIcon v-if="startForm.disclaimerAcknowledged" name="check" size="xs" color="#17202A" />
+              <div
+                class="custom-check-box"
+                :class="{ checked: startForm.disclaimerAcknowledged }"
+              >
+                <GIcon
+                  v-if="startForm.disclaimerAcknowledged"
+                  name="check"
+                  size="xs"
+                  color="#17202A"
+                />
               </div>
               <div class="consent-card-body">
-                <strong class="consent-card-title">Bukan Layanan Darurat Kepolisian (110/112)</strong>
+                <strong class="consent-card-title"
+                  >Bukan Layanan Darurat Kepolisian (110/112)</strong
+                >
                 <p class="consent-card-desc">
-                  GowesKit adalah sistem monitoring mandiri gowes, bukan pusat komando darurat atau ambulans resmi.
+                  GowesKit adalah sistem monitoring mandiri gowes, bukan pusat
+                  komando darurat atau ambulans resmi.
                 </p>
               </div>
             </div>
@@ -1001,14 +1138,27 @@ function openContactWhatsApp(phone: string): void {
           <button
             class="btn-start-ride"
             type="submit"
-            :disabled="sessionSaving || contacts.length === 0 || !startForm.explicitLocationConsent || !startForm.disclaimerAcknowledged"
+            :disabled="
+              sessionSaving ||
+              contacts.length === 0 ||
+              !startForm.explicitLocationConsent ||
+              !startForm.disclaimerAcknowledged
+            "
           >
             <GIcon name="shield" size="xs" color="currentColor" filled />
-            <span>{{ sessionSaving ? 'Memulai Sesi…' : 'Mulai Sesi Gowes Aman' }}</span>
+            <span>{{
+              sessionSaving ? 'Memulai Sesi…' : 'Mulai Sesi Gowes Aman'
+            }}</span>
           </button>
         </form>
 
-        <p v-if="sessionError" class="state-card state-card--error" role="alert">{{ sessionError }}</p>
+        <p
+          v-if="sessionError"
+          class="state-card state-card--error"
+          role="alert"
+        >
+          {{ sessionError }}
+        </p>
       </section>
 
       <!-- ══════════════════════════════════════════════════════════
@@ -1018,7 +1168,10 @@ function openContactWhatsApp(phone: string): void {
         <div class="contacts-header">
           <div>
             <h3 class="section-title">Kontak Darurat Terpercaya</h3>
-            <p class="section-desc">Keluarga atau rekan gowes yang akan menerima tautan pemantauan lokasi.</p>
+            <p class="section-desc">
+              Keluarga atau rekan gowes yang akan menerima tautan pemantauan
+              lokasi.
+            </p>
           </div>
           <button
             class="add-contact-btn"
@@ -1036,9 +1189,12 @@ function openContactWhatsApp(phone: string): void {
             <div class="empty-contacts-icon">
               <GIcon name="users" size="xl" color="var(--color-asphalt)" />
             </div>
-            <strong class="empty-contacts-title">Belum Ada Kontak Darurat</strong>
+            <strong class="empty-contacts-title"
+              >Belum Ada Kontak Darurat</strong
+            >
             <p class="empty-contacts-hint">
-              Daftarkan keluarga atau sahabat gowes Anda agar mereka dapat memantau perjalanan solo ride Anda secara aman.
+              Daftarkan keluarga atau sahabat gowes Anda agar mereka dapat
+              memantau perjalanan solo ride Anda secara aman.
             </p>
             <button
               type="button"
@@ -1062,7 +1218,9 @@ function openContactWhatsApp(phone: string): void {
             <div class="contact-body">
               <div class="contact-name-row">
                 <strong class="contact-name">{{ contact.name }}</strong>
-                <span v-if="contact.note" class="relation-badge">{{ contact.note }}</span>
+                <span v-if="contact.note" class="relation-badge">{{
+                  contact.note
+                }}</span>
               </div>
               <div class="contact-chips-row">
                 <span v-if="contact.phone" class="contact-chip">
@@ -1105,7 +1263,9 @@ function openContactWhatsApp(phone: string): void {
         <div class="history-header-row">
           <div>
             <h3 class="section-title">Riwayat Sesi Gowes</h3>
-            <p class="section-desc">Log pemantauan sesi solo ride sebelumnya.</p>
+            <p class="section-desc">
+              Log pemantauan sesi solo ride sebelumnya.
+            </p>
           </div>
           <NuxtLink class="studio-shortcut-link" to="/ride-flex">
             <GIcon name="camera" size="xs" />
@@ -1126,7 +1286,9 @@ function openContactWhatsApp(phone: string): void {
             </div>
             <p v-if="s.note" class="history-note">{{ s.note }}</p>
             <div class="history-footer-row">
-              <small class="history-ended">Selesai: {{ formatDate(s.endedAt) }}</small>
+              <small class="history-ended"
+                >Selesai: {{ formatDate(s.endedAt) }}</small
+              >
               <div class="history-actions-wrap">
                 <button
                   type="button"
@@ -1135,7 +1297,9 @@ function openContactWhatsApp(phone: string): void {
                   @click="exportSessionGpx(s)"
                 >
                   <GIcon name="download" size="xs" />
-                  <span>{{ gpxExporting === s.id ? 'Mengunduh…' : 'Unduh GPX' }}</span>
+                  <span>{{
+                    gpxExporting === s.id ? 'Mengunduh…' : 'Unduh GPX'
+                  }}</span>
                 </button>
                 <NuxtLink
                   class="card-flex-btn"
@@ -1160,7 +1324,10 @@ function openContactWhatsApp(phone: string): void {
         <div class="disclaimer-text">
           <strong>Pernyataan Privasi &amp; Batasan Layanan</strong>
           <p>
-            GowesKit membagikan koordinat GPS secara privat melalui tautan acak terenkripsi hanya kepada kontak yang Anda pilih. GowesKit bukan penyedia layanan darurat terpusat. Untuk kondisi kecelakaan gawat darurat, segera hubungi layanan 112 atau fasilitas medis terdekat.
+            GowesKit membagikan koordinat GPS secara privat melalui tautan acak
+            terenkripsi hanya kepada kontak yang Anda pilih. GowesKit bukan
+            penyedia layanan darurat terpusat. Untuk kondisi kecelakaan gawat
+            darurat, segera hubungi layanan 112 atau fasilitas medis terdekat.
           </p>
         </div>
       </aside>
@@ -1179,6 +1346,13 @@ function openContactWhatsApp(phone: string): void {
         :is-open="showAddModal"
         @close="showAddModal = false"
         @created="handleContactCreated"
+      />
+
+      <!-- Offline Map Tile Cache Modal -->
+      <OfflineMapCacheModal
+        :is-open="showOfflineMapModal"
+        area-name="Area Gowes Solo"
+        @close="showOfflineMapModal = false"
       />
     </template>
   </div>
@@ -1216,6 +1390,20 @@ function openContactWhatsApp(phone: string): void {
   display: inline-flex;
   align-items: center;
   gap: 0.35rem;
+}
+
+.offline-map-cache-btn {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.3rem;
+  background: var(--color-sand);
+  border: 1px solid rgba(0, 0, 0, 0.08);
+  border-radius: 9999px;
+  padding: 0.2rem 0.55rem;
+  font-size: 0.68rem;
+  font-weight: 800;
+  color: var(--color-ink);
+  cursor: pointer;
 }
 
 .live-beacon-pill {
@@ -1339,15 +1527,33 @@ function openContactWhatsApp(phone: string): void {
 }
 
 @keyframes beacon-pulse {
-  0% { transform: scale(0.95); box-shadow: 0 0 0 0 rgba(34, 197, 94, 0.7); }
-  70% { transform: scale(1); box-shadow: 0 0 0 8px rgba(34, 197, 94, 0); }
-  100% { transform: scale(0.95); box-shadow: 0 0 0 0 rgba(34, 197, 94, 0); }
+  0% {
+    transform: scale(0.95);
+    box-shadow: 0 0 0 0 rgba(34, 197, 94, 0.7);
+  }
+  70% {
+    transform: scale(1);
+    box-shadow: 0 0 0 8px rgba(34, 197, 94, 0);
+  }
+  100% {
+    transform: scale(0.95);
+    box-shadow: 0 0 0 0 rgba(34, 197, 94, 0);
+  }
 }
 
 @keyframes sos-pulse {
-  0% { transform: scale(0.95); box-shadow: 0 0 0 0 rgba(239, 68, 68, 0.8); }
-  70% { transform: scale(1.05); box-shadow: 0 0 0 10px rgba(239, 68, 68, 0); }
-  100% { transform: scale(0.95); box-shadow: 0 0 0 0 rgba(239, 68, 68, 0); }
+  0% {
+    transform: scale(0.95);
+    box-shadow: 0 0 0 0 rgba(239, 68, 68, 0.8);
+  }
+  70% {
+    transform: scale(1.05);
+    box-shadow: 0 0 0 10px rgba(239, 68, 68, 0);
+  }
+  100% {
+    transform: scale(0.95);
+    box-shadow: 0 0 0 0 rgba(239, 68, 68, 0);
+  }
 }
 
 .beacon-heading {
@@ -1606,7 +1812,9 @@ function openContactWhatsApp(phone: string): void {
   cursor: pointer;
   user-select: none;
   touch-action: none;
-  transition: transform 120ms ease, box-shadow 120ms ease;
+  transition:
+    transform 120ms ease,
+    box-shadow 120ms ease;
   display: grid;
   place-items: center;
 }
@@ -1866,7 +2074,9 @@ function openContactWhatsApp(phone: string): void {
   font-size: 0.84rem;
   font-weight: 600;
   outline: none;
-  transition: border-color 150ms ease, box-shadow 150ms ease;
+  transition:
+    border-color 150ms ease,
+    box-shadow 150ms ease;
 }
 
 .custom-select:focus,
@@ -1944,7 +2154,9 @@ function openContactWhatsApp(phone: string): void {
   border: 1.5px solid var(--color-sand);
   cursor: pointer;
   user-select: none;
-  transition: border-color 120ms ease, background-color 120ms ease;
+  transition:
+    border-color 120ms ease,
+    background-color 120ms ease;
 }
 
 .consent-card:hover {
@@ -2008,7 +2220,9 @@ function openContactWhatsApp(phone: string): void {
   align-items: center;
   justify-content: center;
   gap: 0.45rem;
-  transition: transform 90ms ease, opacity 120ms ease;
+  transition:
+    transform 90ms ease,
+    opacity 120ms ease;
   box-shadow: 0 4px 14px rgba(23, 32, 42, 0.15);
 }
 
@@ -2474,7 +2688,8 @@ function openContactWhatsApp(phone: string): void {
 }
 
 @keyframes pulse-dot {
-  0%, 100% {
+  0%,
+  100% {
     opacity: 1;
     transform: scale(1);
   }
@@ -2551,7 +2766,9 @@ function openContactWhatsApp(phone: string): void {
 /* Transitions */
 .fade-slide-enter-active,
 .fade-slide-leave-active {
-  transition: opacity 220ms cubic-bezier(0.16, 1, 0.3, 1), transform 220ms cubic-bezier(0.16, 1, 0.3, 1);
+  transition:
+    opacity 220ms cubic-bezier(0.16, 1, 0.3, 1),
+    transform 220ms cubic-bezier(0.16, 1, 0.3, 1);
 }
 
 .fade-slide-enter-from,

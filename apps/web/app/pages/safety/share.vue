@@ -72,7 +72,8 @@ function statusLabel(status: SafetyShareResponse['status']): string {
       </span>
       <h1>Status Pembaruan Ride Safety</h1>
       <p>
-        Halaman ini hanya dapat diakses oleh pemegang tautan privat resmi. Tidak melacak posisi secara live tanpa izin.
+        Halaman ini hanya dapat diakses oleh pemegang tautan privat resmi. Tidak
+        melacak posisi secara live tanpa izin.
       </p>
     </header>
 
@@ -81,16 +82,37 @@ function statusLabel(status: SafetyShareResponse['status']): string {
         <GIcon name="shield" size="xs" color="#B91C1C" filled />
       </div>
       <p>
-        <strong>Bukan layanan tanggap darurat kepolisian.</strong> GowesKit tidak melakukan panggilan atau pengiriman ambulans/polisi otomatis. Jika rekan Anda dalam bahaya, segera hubungi nomor darurat 112 atau fasilitas medis setempat.
+        <strong>Bukan layanan tanggap darurat kepolisian.</strong> GowesKit
+        tidak melakukan panggilan atau pengiriman ambulans/polisi otomatis. Jika
+        rekan Anda dalam bahaya, segera hubungi nomor darurat 112 atau fasilitas
+        medis setempat.
       </p>
     </aside>
 
     <!-- Skeleton Share Shimmer during Loading -->
-    <div v-if="loading" style="display: grid; gap: 1rem;">
-      <div style="padding: 1.5rem; display: grid; gap: 0.85rem; border-radius: 1.25rem; background: var(--color-white); border: 1px solid rgb(23 32 42 / 8%);">
-        <div class="skeleton-shimmer" style="width: 30%; height: 1.1rem; border-radius: 0.35rem;" />
-        <div class="skeleton-shimmer" style="width: 60%; height: 2rem; border-radius: 0.5rem;" />
-        <div class="skeleton-shimmer" style="width: 85%; height: 1rem; border-radius: 0.35rem;" />
+    <div v-if="loading" style="display: grid; gap: 1rem">
+      <div
+        style="
+          padding: 1.5rem;
+          display: grid;
+          gap: 0.85rem;
+          border-radius: 1.25rem;
+          background: var(--color-white);
+          border: 1px solid rgb(23 32 42 / 8%);
+        "
+      >
+        <div
+          class="skeleton-shimmer"
+          style="width: 30%; height: 1.1rem; border-radius: 0.35rem"
+        />
+        <div
+          class="skeleton-shimmer"
+          style="width: 60%; height: 2rem; border-radius: 0.5rem"
+        />
+        <div
+          class="skeleton-shimmer"
+          style="width: 85%; height: 1rem; border-radius: 0.35rem"
+        />
       </div>
     </div>
     <section
@@ -121,13 +143,18 @@ function statusLabel(status: SafetyShareResponse['status']): string {
             <h2 id="rider-status-title">{{ share.riderDisplayName }}</h2>
           </div>
           <span class="share-status" :class="`share-status--${share.status}`">
-            <GIcon :name="share.status === 'sos' ? 'sos' : 'radar'" size="xs" :filled="share.status === 'sos'" />
+            <GIcon
+              :name="share.status === 'sos' ? 'sos' : 'radar'"
+              size="xs"
+              :filled="share.status === 'sos'"
+            />
             <span>{{ statusLabel(share.status) }}</span>
           </span>
         </div>
 
         <p v-if="share.status === 'sos'" class="sos-notice">
-          Rider secara sadar menekan tombol SOS Darurat di aplikasi GowesKit. Tetap tenang dan segera hubungi rider secara langsung.
+          Rider secara sadar menekan tombol SOS Darurat di aplikasi GowesKit.
+          Tetap tenang dan segera hubungi rider secara langsung.
         </p>
 
         <dl class="share-facts">
@@ -177,17 +204,22 @@ function statusLabel(status: SafetyShareResponse['status']): string {
               {{ formatCoordinate(share.lastLocation.coordinate.longitude) }}
             </strong>
             <p>
-              Terekam pada {{ formatDate(share.lastLocation.recordedAt) }} dengan akurasi {{ formatAccuracy(share.lastLocation.accuracyMeters) }}.
+              Terekam pada
+              {{ formatDate(share.lastLocation.recordedAt) }} dengan akurasi
+              {{ formatAccuracy(share.lastLocation.accuracyMeters) }}.
             </p>
             <p class="snapshot-note">
-              Rider mungkin telah berpindah sejak koordinat ini dikirimkan. Halaman ini tidak melacak posisi secara kontinu demi menjaga privasi dan daya baterai rider.
+              Rider mungkin telah berpindah sejak koordinat ini dikirimkan.
+              Halaman ini tidak melacak posisi secara kontinu demi menjaga
+              privasi dan daya baterai rider.
             </p>
           </div>
         </article>
         <div v-else class="state-card empty-location">
           <strong>Belum Ada Koordinat yang Dikirimkan</strong>
           <p>
-            Rider telah memulai sesi keselamatan tetapi belum memperbarui titik koordinat GPS.
+            Rider telah memulai sesi keselamatan tetapi belum memperbarui titik
+            koordinat GPS.
           </p>
         </div>
       </section>
@@ -201,7 +233,9 @@ function statusLabel(status: SafetyShareResponse['status']): string {
         <span>Muat Ulang Pembaruan Terkini</span>
       </button>
       <p class="fragment-note">
-        Demi privasi dan keamanan, token rahasia tautan ini tersimpan pada fragmen browser (#) dan hanya dikirimkan via payload permintaan terlindungi.
+        Demi privasi dan keamanan, token rahasia tautan ini tersimpan pada
+        fragmen browser (#) dan hanya dikirimkan via payload permintaan
+        terlindungi.
       </p>
     </template>
   </div>

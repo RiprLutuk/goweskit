@@ -143,11 +143,17 @@ describe('Learn catalog contracts', () => {
       slug: 'udist_hanger',
       term: 'Universal Derailleur Hanger (UDH)',
       plainDefinition: 'Standar anting RD universal dari SRAM.',
-      technicalDefinition: 'SRAM Universal Derailleur Hanger standard for frame dropout alignment.',
+      technicalDefinition:
+        'SRAM Universal Derailleur Hanger standard for frame dropout alignment.',
       aliases: ['UDH', 'SRAM UDH'],
       relatedComponentSlugs: ['rear_derailleur', 'frame'],
     };
-    expect(createGlossaryTermSchema.parse(valid)).toMatchObject({ slug: 'udist_hanger' });
-    expect(createGlossaryTermSchema.safeParse({ ...valid, slug: 'Invalid Slug!' }).success).toBe(false);
+    expect(createGlossaryTermSchema.parse(valid)).toMatchObject({
+      slug: 'udist_hanger',
+    });
+    expect(
+      createGlossaryTermSchema.safeParse({ ...valid, slug: 'Invalid Slug!' })
+        .success,
+    ).toBe(false);
   });
 });

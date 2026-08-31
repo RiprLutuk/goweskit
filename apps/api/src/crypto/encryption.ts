@@ -12,7 +12,8 @@ const PREFIX_CBC = 'enc:v1:cbc:';
 const PREFIX_GCM = 'enc:v1:';
 
 // Default fallback key used for local development and unit tests if not supplied in env
-const DEFAULT_FALLBACK_SECRET = 'goweskit-dev-fallback-encryption-master-secret-key-32bytes';
+const DEFAULT_FALLBACK_SECRET =
+  'goweskit-dev-fallback-encryption-master-secret-key-32bytes';
 
 function getMasterKey(customKey?: string | Buffer): Buffer {
   if (customKey !== undefined) {
@@ -24,7 +25,10 @@ function getMasterKey(customKey?: string | Buffer): Buffer {
       .digest();
   }
 
-  const envKey = process.env.DATA_ENCRYPTION_KEY || process.env.ENCRYPTION_KEY || DEFAULT_FALLBACK_SECRET;
+  const envKey =
+    process.env.DATA_ENCRYPTION_KEY ??
+    process.env.ENCRYPTION_KEY ??
+    DEFAULT_FALLBACK_SECRET;
   return createHash('sha256').update(envKey).digest();
 }
 
@@ -33,7 +37,10 @@ function getMasterKey(customKey?: string | Buffer): Buffer {
  * Output format: enc:v1:cbc:<iv_hex>:<ciphertext_hex>
  * This format is 100% decryptable directly via PostgreSQL pgcrypto decrypt_iv() SQL query.
  */
-export function encryptText(plaintext: string, customKey?: string | Buffer): string {
+export function encryptText(
+  plaintext: string,
+  customKey?: string | Buffer,
+): string {
   if (!plaintext) {
     return plaintext;
   }
@@ -54,7 +61,10 @@ export function encryptText(plaintext: string, customKey?: string | Buffer): str
  * Decrypts an encrypted string (supports both enc:v1:cbc: and legacy enc:v1: GCM).
  * Gracefully returns original plaintext if not encrypted.
  */
-export function decryptText(ciphertext: string, customKey?: string | Buffer): string {
+export function decryptText(
+  ciphertext: string,
+  customKey?: string | Buffer,
+): string {
   if (!ciphertext || typeof ciphertext !== 'string') {
     return ciphertext;
   }
@@ -121,7 +131,10 @@ export function decryptText(ciphertext: string, customKey?: string | Buffer): st
 /**
  * Nullable helper to encrypt a field value if present.
  */
-export function encryptNullable(value: string | null | undefined, customKey?: string | Buffer): string | null {
+export function encryptNullable(
+  value: string | null | undefined,
+  customKey?: string | Buffer,
+): string | null {
   if (value === null || value === undefined || value.trim() === '') {
     return null;
   }
@@ -131,7 +144,10 @@ export function encryptNullable(value: string | null | undefined, customKey?: st
 /**
  * Nullable helper to decrypt a field value if present.
  */
-export function decryptNullable(value: string | null | undefined, customKey?: string | Buffer): string | null {
+export function decryptNullable(
+  value: string | null | undefined,
+  customKey?: string | Buffer,
+): string | null {
   if (value === null || value === undefined || value === '') {
     return null;
   }

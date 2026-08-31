@@ -39,16 +39,26 @@ export function useEventReminder() {
     return savedReminders.value.includes(eventId);
   }
 
-  async function toggleReminder(event: NearbyEvent | PublicEvent | EventReminderData): Promise<boolean> {
+  async function toggleReminder(
+    event: NearbyEvent | PublicEvent | EventReminderData,
+  ): Promise<boolean> {
     const eventId = event.id;
     const exists = isReminderActive(eventId);
 
     if (exists) {
-      savedReminders.value = savedReminders.value.filter((id) => id !== eventId);
+      savedReminders.value = savedReminders.value.filter(
+        (id) => id !== eventId,
+      );
       if (typeof window !== 'undefined') {
-        localStorage.setItem(REMINDERS_STORAGE_KEY, JSON.stringify(savedReminders.value));
+        localStorage.setItem(
+          REMINDERS_STORAGE_KEY,
+          JSON.stringify(savedReminders.value),
+        );
       }
-      toast.info('Pengingat Dihapus', `Pengingat untuk ${event.title} dinonaktifkan.`);
+      toast.info(
+        'Pengingat Dihapus',
+        `Pengingat untuk ${event.title} dinonaktifkan.`,
+      );
       return false;
     }
 
@@ -65,7 +75,10 @@ export function useEventReminder() {
 
     savedReminders.value = [...savedReminders.value, eventId];
     if (typeof window !== 'undefined') {
-      localStorage.setItem(REMINDERS_STORAGE_KEY, JSON.stringify(savedReminders.value));
+      localStorage.setItem(
+        REMINDERS_STORAGE_KEY,
+        JSON.stringify(savedReminders.value),
+      );
     }
 
     toast.success(
@@ -76,10 +89,15 @@ export function useEventReminder() {
   }
 
   function formatIcsDate(date: Date): string {
-    return date.toISOString().replace(/[-:]/g, '').replace(/\.\d{3}/, '');
+    return date
+      .toISOString()
+      .replace(/[-:]/g, '')
+      .replace(/\.\d{3}/, '');
   }
 
-  function getGoogleCalendarUrl(event: NearbyEvent | PublicEvent | EventReminderData): string {
+  function getGoogleCalendarUrl(
+    event: NearbyEvent | PublicEvent | EventReminderData,
+  ): string {
     const start = new Date(event.startsAt);
     const end = new Date(start.getTime() + 3 * 60 * 60 * 1000); // 3-hour default duration
     const startStr = formatIcsDate(start);
@@ -94,11 +112,16 @@ export function useEventReminder() {
     return `https://calendar.google.com/calendar/render?action=TEMPLATE&text=${title}&dates=${startStr}/${endStr}&details=${details}&location=${location}`;
   }
 
-  function downloadIcsFile(event: NearbyEvent | PublicEvent | EventReminderData): void {
+  function downloadIcsFile(
+    event: NearbyEvent | PublicEvent | EventReminderData,
+  ): void {
     const start = new Date(event.startsAt);
     const end = new Date(start.getTime() + 3 * 60 * 60 * 1000);
     const now = new Date();
-    const communityName = 'community' in event ? event.community.name : event.communityName || 'GowesKit';
+    const communityName =
+      'community' in event
+        ? event.community.name
+        : event.communityName || 'GowesKit';
 
     const icsContent = [
       'BEGIN:VCALENDAR',
@@ -129,7 +152,9 @@ export function useEventReminder() {
       'END:VCALENDAR',
     ].join('\r\n');
 
-    const blob = new Blob([icsContent], { type: 'text/calendar;charset=utf-8' });
+    const blob = new Blob([icsContent], {
+      type: 'text/calendar;charset=utf-8',
+    });
     const url = URL.createObjectURL(blob);
     const link = document.createElement('a');
     link.href = url;
@@ -140,16 +165,29 @@ export function useEventReminder() {
     document.body.removeChild(link);
     URL.revokeObjectURL(url);
 
-    toast.success('Kalender Disimpan! 📅', 'Buka file .ics di HP atau kalender Anda untuk alarm pengingat otomatis.');
+    toast.success(
+      'Kalender Disimpan! 📅',
+      'Buka file .ics di HP atau kalender Anda untuk alarm pengingat otomatis.',
+    );
   }
 
-  function getCountdownText(startsAtStr: string): { label: string; isUrgent: boolean; isToday: boolean; isPast: boolean } {
+  function getCountdownText(startsAtStr: string): {
+    label: string;
+    isUrgent: boolean;
+    isToday: boolean;
+    isPast: boolean;
+  } {
     const target = new Date(startsAtStr).getTime();
     const now = Date.now();
     const diffMs = target - now;
 
     if (diffMs <= 0) {
-      return { label: 'Selesai', isUrgent: false, isToday: false, isPast: true };
+      return {
+        label: 'Selesai',
+        isUrgent: false,
+        isToday: false,
+        isPast: true,
+      };
     }
 
     const diffHours = Math.floor(diffMs / (1000 * 60 * 60));
@@ -168,7 +206,12 @@ export function useEventReminder() {
       return { label: 'Besok', isUrgent: true, isToday: false, isPast: false };
     }
 
-    return { label: `${diffDays} Hari Lagi`, isUrgent: false, isToday: false, isPast: false };
+    return {
+      label: `${diffDays} Hari Lagi`,
+      isUrgent: false,
+      isToday: false,
+      isPast: false,
+    };
   }
 
   return {

@@ -16,10 +16,14 @@ async function run(): Promise<void> {
   const summary = await migrateEncryptPii(dbClient.database);
 
   console.log('✅ PII Database Encryption Migration Complete:');
-  console.log(`   - Users migrated: ${summary.usersMigrated}`);
-  console.log(`   - Trusted contacts migrated: ${summary.contactsMigrated}`);
-  console.log(`   - Safety sessions migrated: ${summary.sessionsMigrated}`);
-  console.log(`   - User bikes migrated: ${summary.bikesMigrated}`);
+  console.log(`   - Users migrated: ${String(summary.usersMigrated)}`);
+  console.log(
+    `   - Trusted contacts migrated: ${String(summary.contactsMigrated)}`,
+  );
+  console.log(
+    `   - Safety sessions migrated: ${String(summary.sessionsMigrated)}`,
+  );
+  console.log(`   - User bikes migrated: ${String(summary.bikesMigrated)}`);
 
   await dbClient.close();
 }

@@ -113,7 +113,9 @@ function mapSession(row: SafetySessionRow): StoredSafetySession {
   };
 }
 
-function mapTrustedContact(row: typeof trustedContacts.$inferSelect): StoredTrustedContact {
+function mapTrustedContact(
+  row: typeof trustedContacts.$inferSelect,
+): StoredTrustedContact {
   return {
     id: row.id,
     userId: row.userId,
@@ -129,7 +131,9 @@ function mapTrustedContact(row: typeof trustedContacts.$inferSelect): StoredTrus
 export class DrizzleSafetyRepository implements SafetyRepository {
   public constructor(private readonly database: Database) {}
 
-  public async listTrustedContacts(userId: string): Promise<StoredTrustedContact[]> {
+  public async listTrustedContacts(
+    userId: string,
+  ): Promise<StoredTrustedContact[]> {
     const rows = await this.database
       .select()
       .from(trustedContacts)
@@ -296,7 +300,9 @@ export class DrizzleSafetyRepository implements SafetyRepository {
     return this.requiredSession(sessionId);
   }
 
-  public async listSessionLocations(sessionId: string): Promise<SafetyLocation[]> {
+  public async listSessionLocations(
+    sessionId: string,
+  ): Promise<SafetyLocation[]> {
     const result = await this.database.execute(sql`
       SELECT 
         ST_X(location::geometry) AS longitude,
@@ -309,13 +315,13 @@ export class DrizzleSafetyRepository implements SafetyRepository {
       ORDER BY recorded_at ASC
     `);
     return (
-      result.rows as Array<{
+      result.rows as {
         longitude: number | string;
         latitude: number | string;
         accuracy_meters: number | string;
         battery_percent: number | string | null;
         recorded_at: Date | string;
-      }>
+      }[]
     ).map((row) => ({
       coordinate: {
         longitude: Number(row.longitude),

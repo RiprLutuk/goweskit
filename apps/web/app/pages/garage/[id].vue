@@ -25,6 +25,7 @@ const specGroupFilter = ref('all');
 const selections = reactive<Record<string, string>>({});
 const showPhotoModal = ref(false);
 const showPassportModal = ref(false);
+const showStickerModal = ref(false);
 const photoInputUrl = ref('');
 
 const bikeId = computed(() => String(route.params.id));
@@ -119,7 +120,8 @@ function handlePhotoFileUpload(event: Event): void {
   const file = input.files?.[0];
   if (!file) return;
   if (file.size > 700_000) {
-    errorMessage.value = 'Ukuran foto maksimal 700 KB untuk upload ke Cloudflare R2.';
+    errorMessage.value =
+      'Ukuran foto maksimal 700 KB untuk upload ke Cloudflare R2.';
     return;
   }
   const reader = new FileReader();
@@ -143,7 +145,10 @@ async function deleteBike(): Promise<void> {
 
   try {
     await api(`/bikes/${bikeId.value}`, { method: 'DELETE' });
-    toast.success('Sepeda Dihapus', 'Sepeda berhasil dihapus dari garasi Anda.');
+    toast.success(
+      'Sepeda Dihapus',
+      'Sepeda berhasil dihapus dari garasi Anda.',
+    );
     await navigateTo('/garage');
   } catch (error: unknown) {
     const msg = getApiErrorMessage(error);
@@ -180,18 +185,54 @@ function specStatus(code: string): 'known' | 'unknown' | 'missing' {
     <NuxtLink class="back-link" to="/garage">← Kembali ke My Garage</NuxtLink>
 
     <!-- Skeleton Bike Detail Shimmer during Loading -->
-    <div v-if="loading" class="page-stack" style="gap: 1.25rem;">
-      <div class="bike-hero-rich skeleton-card-box" style="padding: 1.5rem; display: flex; gap: 1.25rem; align-items: center;">
-        <div class="skeleton-shimmer" style="width: 5.5rem; height: 5.5rem; border-radius: 1.25rem; flex-shrink: 0;" />
-        <div style="flex: 1; display: grid; gap: 0.5rem;">
-          <div class="skeleton-shimmer" style="width: 30%; height: 1.1rem; border-radius: 0.35rem;" />
-          <div class="skeleton-shimmer" style="width: 60%; height: 1.8rem; border-radius: 0.5rem;" />
-          <div class="skeleton-shimmer" style="width: 45%; height: 0.9rem; border-radius: 0.35rem;" />
+    <div v-if="loading" class="page-stack" style="gap: 1.25rem">
+      <div
+        class="bike-hero-rich skeleton-card-box"
+        style="
+          padding: 1.5rem;
+          display: flex;
+          gap: 1.25rem;
+          align-items: center;
+        "
+      >
+        <div
+          class="skeleton-shimmer"
+          style="
+            width: 5.5rem;
+            height: 5.5rem;
+            border-radius: 1.25rem;
+            flex-shrink: 0;
+          "
+        />
+        <div style="flex: 1; display: grid; gap: 0.5rem">
+          <div
+            class="skeleton-shimmer"
+            style="width: 30%; height: 1.1rem; border-radius: 0.35rem"
+          />
+          <div
+            class="skeleton-shimmer"
+            style="width: 60%; height: 1.8rem; border-radius: 0.5rem"
+          />
+          <div
+            class="skeleton-shimmer"
+            style="width: 45%; height: 0.9rem; border-radius: 0.35rem"
+          />
         </div>
       </div>
-      <div class="content-card skeleton-card-box" style="padding: 1.5rem; display: grid; gap: 0.85rem;">
-        <div class="skeleton-shimmer" style="width: 40%; height: 1.4rem; border-radius: 0.4rem;" />
-        <div v-for="i in 4" :key="i" class="skeleton-shimmer" style="width: 100%; height: 2.8rem; border-radius: 0.65rem;" />
+      <div
+        class="content-card skeleton-card-box"
+        style="padding: 1.5rem; display: grid; gap: 0.85rem"
+      >
+        <div
+          class="skeleton-shimmer"
+          style="width: 40%; height: 1.4rem; border-radius: 0.4rem"
+        />
+        <div
+          v-for="i in 4"
+          :key="i"
+          class="skeleton-shimmer"
+          style="width: 100%; height: 2.8rem; border-radius: 0.65rem"
+        />
       </div>
     </div>
     <div v-else-if="!user" class="state-card signed-out-state">
@@ -224,7 +265,11 @@ function specStatus(code: string): 'known' | 'unknown' | 'missing' {
               class="bike-hero-photo"
             />
             <div v-else class="bike-hero-rich__icon" aria-hidden="true">
-              <GIcon :name="bikeTypeIconName(bike.bicycleType.slug)" size="2xl" color="#17202A" />
+              <GIcon
+                :name="bikeTypeIconName(bike.bicycleType.slug)"
+                size="2xl"
+                color="#17202A"
+              />
             </div>
             <span class="photo-edit-badge" aria-hidden="true">
               <GIcon name="camera" size="xs" color="#FFFFFF" />
@@ -232,7 +277,9 @@ function specStatus(code: string): 'known' | 'unknown' | 'missing' {
           </div>
 
           <div class="bike-hero-rich__info">
-            <span class="status-chip status-chip--lime">{{ bike.bicycleType.name }}</span>
+            <span class="status-chip status-chip--lime">{{
+              bike.bicycleType.name
+            }}</span>
             <h1>{{ bike.nickname }}</h1>
             <p>
               {{
@@ -246,9 +293,7 @@ function specStatus(code: string): 'known' | 'unknown' | 'missing' {
                 <GIcon name="route" size="xs" color="#0F766E" />
                 <strong>1.240 km Odometer</strong>
               </span>
-              <span class="hero-health-pill">
-                🟢 Kondisi Prima
-              </span>
+              <span class="hero-health-pill"> 🟢 Kondisi Prima </span>
             </div>
           </div>
           <div class="bike-hero-rich__actions">
@@ -259,11 +304,20 @@ function specStatus(code: string): 'known' | 'unknown' | 'missing' {
             >
               <GIcon name="camera" size="xs" /> Flex / Paspor Sepeda
             </button>
+            <button
+              class="button button--secondary button--sticker"
+              type="button"
+              @click="showStickerModal = true"
+            >
+              <GIcon name="qr-code" size="xs" color="#16A34A" /> Cetak Stiker QR
+              Frame
+            </button>
             <NuxtLink
               class="button button--secondary"
               :to="`/ride-flex?bike=${encodeURIComponent(bike.nickname)}`"
             >
-              <GIcon name="sparkles" size="xs" color="#16A34A" /> AI Ride Flex Poster
+              <GIcon name="sparkles" size="xs" color="#16A34A" /> AI Ride Flex
+              Poster
             </NuxtLink>
             <NuxtLink
               class="button button--primary"
@@ -289,12 +343,20 @@ function specStatus(code: string): 'known' | 'unknown' | 'missing' {
       <p v-if="errorMessage" class="state-card state-card--error" role="alert">
         {{ errorMessage }}
       </p>
-      <p v-if="successNotice" class="state-card state-card--success" role="status">
+      <p
+        v-if="successNotice"
+        class="state-card state-card--success"
+        role="status"
+      >
         ✓ {{ successNotice }}
       </p>
 
       <!-- Sub-navigation Tabs -->
-      <nav class="bike-tabs-bar" role="tablist" aria-label="Tab manajemen sepeda">
+      <nav
+        class="bike-tabs-bar"
+        role="tablist"
+        aria-label="Tab manajemen sepeda"
+      >
         <button
           class="bike-tab"
           :class="{ 'bike-tab--active': activeTab === 'specs' }"
@@ -361,7 +423,9 @@ function specStatus(code: string): 'known' | 'unknown' | 'missing' {
             </button>
             <button
               class="filter-pill"
-              :class="{ 'filter-pill--active': specGroupFilter === 'drivetrain' }"
+              :class="{
+                'filter-pill--active': specGroupFilter === 'drivetrain',
+              }"
               type="button"
               @click="specGroupFilter = 'drivetrain'"
             >
@@ -369,7 +433,9 @@ function specStatus(code: string): 'known' | 'unknown' | 'missing' {
             </button>
             <button
               class="filter-pill"
-              :class="{ 'filter-pill--active': specGroupFilter === 'fork_headset' }"
+              :class="{
+                'filter-pill--active': specGroupFilter === 'fork_headset',
+              }"
               type="button"
               @click="specGroupFilter = 'fork_headset'"
             >
@@ -385,7 +451,9 @@ function specStatus(code: string): 'known' | 'unknown' | 'missing' {
             </button>
             <button
               class="filter-pill"
-              :class="{ 'filter-pill--active': specGroupFilter === 'cockpit_seating' }"
+              :class="{
+                'filter-pill--active': specGroupFilter === 'cockpit_seating',
+              }"
               type="button"
               @click="specGroupFilter = 'cockpit_seating'"
             >
@@ -403,11 +471,23 @@ function specStatus(code: string): 'known' | 'unknown' | 'missing' {
           >
             <div class="spec-card-clean__header">
               <div class="spec-card-clean__topline">
-                <span class="spec-status-dot" :class="`dot--${specStatus(def.code)}`" />
+                <span
+                  class="spec-status-dot"
+                  :class="`dot--${specStatus(def.code)}`"
+                />
                 <h3 class="spec-card-clean__title">{{ def.label }}</h3>
               </div>
-              <span class="spec-tag" :class="`spec-tag--${specStatus(def.code)}`">
-                {{ specStatus(def.code) === 'known' ? 'Tervalidasi' : specStatus(def.code) === 'unknown' ? 'Belum Tahu' : 'Belum Diisi' }}
+              <span
+                class="spec-tag"
+                :class="`spec-tag--${specStatus(def.code)}`"
+              >
+                {{
+                  specStatus(def.code) === 'known'
+                    ? 'Tervalidasi'
+                    : specStatus(def.code) === 'unknown'
+                      ? 'Belum Tahu'
+                      : 'Belum Diisi'
+                }}
               </span>
             </div>
 
@@ -430,7 +510,9 @@ function specStatus(code: string): 'known' | 'unknown' | 'missing' {
                   {{ opt.label }}
                 </option>
               </select>
-              <span v-if="savingCode === def.code" class="save-indicator">Menyimpan…</span>
+              <span v-if="savingCode === def.code" class="save-indicator"
+                >Menyimpan…</span
+              >
             </div>
           </article>
         </div>
@@ -443,17 +525,28 @@ function specStatus(code: string): 'known' | 'unknown' | 'missing' {
 
       <!-- TAB 3: MAINTENANCE NOTEBOOK -->
       <section v-else-if="activeTab === 'maintenance'" class="tab-section">
-        <MaintenanceReminderBanner :bike="bike" style="margin-bottom: 1.25rem;" />
+        <MaintenanceReminderBanner
+          :bike="bike"
+          style="margin-bottom: 1.25rem"
+        />
         <MaintenanceLog :bike-id="bike.id" />
       </section>
     </template>
 
     <!-- PHOTO MODAL (GARAGE-007) -->
-    <div v-if="showPhotoModal" class="native-modal-backdrop" @click.self="showPhotoModal = false">
+    <div
+      v-if="showPhotoModal"
+      class="native-modal-backdrop"
+      @click.self="showPhotoModal = false"
+    >
       <div class="native-modal-sheet">
         <div class="modal-header">
           <h2>Foto Sepeda</h2>
-          <button class="modal-close" type="button" @click="showPhotoModal = false">
+          <button
+            class="modal-close"
+            type="button"
+            @click="showPhotoModal = false"
+          >
             <GIcon name="close" size="xs" />
           </button>
         </div>
@@ -461,7 +554,11 @@ function specStatus(code: string): 'known' | 'unknown' | 'missing' {
         <form class="clean-form" @submit.prevent="saveBikePhoto">
           <label>
             <span>Upload Foto dari Perangkat</span>
-            <input type="file" accept="image/*" @change="handlePhotoFileUpload" />
+            <input
+              type="file"
+              accept="image/*"
+              @change="handlePhotoFileUpload"
+            />
           </label>
 
           <label>
@@ -474,10 +571,18 @@ function specStatus(code: string): 'known' | 'unknown' | 'missing' {
           </label>
 
           <div v-if="photoInputUrl" class="photo-preview-box">
-            <img :src="photoInputUrl" alt="Preview foto sepeda" class="modal-photo-preview" />
+            <img
+              :src="photoInputUrl"
+              alt="Preview foto sepeda"
+              class="modal-photo-preview"
+            />
           </div>
 
-          <button class="button button--primary button--full" :disabled="savingPhoto" type="submit">
+          <button
+            class="button button--primary button--full"
+            :disabled="savingPhoto"
+            type="submit"
+          >
             {{ savingPhoto ? 'Menyimpan…' : 'Simpan Foto' }}
           </button>
         </form>
@@ -490,6 +595,14 @@ function specStatus(code: string): 'known' | 'unknown' | 'missing' {
       :bike="bike"
       :is-open="showPassportModal"
       @close="showPassportModal = false"
+    />
+
+    <!-- Bike Frame Sticker Modal -->
+    <BikePassportStickerModal
+      v-if="bike"
+      :bike="bike"
+      :is-open="showStickerModal"
+      @close="showStickerModal = false"
     />
   </div>
 </template>

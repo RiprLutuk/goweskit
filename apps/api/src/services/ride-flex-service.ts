@@ -46,7 +46,7 @@ export class RideFlexService {
       bikeName = 'Sepeda Kesayangan',
       routeName,
       weatherTempC,
-      cyclistPersona = 'balanced',
+      cyclistPersona,
       heartRateBpm,
       cadenceRpm,
       powerWatts,
@@ -177,7 +177,9 @@ export class RideFlexService {
     let finalTechnical = technicalCaption;
     let finalGravel: string | undefined = undefined;
     let finalPhotoVisualInsight: string | undefined = undefined;
-    let finalRecommendedTheme: 'alpine' | 'gravel' | 'sunset' | 'crit' | 'cafe' | 'topo' | undefined = undefined;
+    let finalRecommendedTheme:
+      'alpine' | 'gravel' | 'sunset' | 'crit' | 'cafe' | 'topo' | undefined =
+      undefined;
     let finalTrainingInsight: string | undefined = undefined;
 
     // 7. Generative LLM Enhancement (Google Gemini Multimodal / Vision)
@@ -207,16 +209,14 @@ export class RideFlexService {
       if (llmResult?.captions?.humor) finalHumor = llmResult.captions.humor;
       if (llmResult?.captions?.technical)
         finalTechnical = llmResult.captions.technical;
-      if (llmResult?.captions?.gravel)
-        finalGravel = llmResult.captions.gravel;
+      if (llmResult?.captions?.gravel) finalGravel = llmResult.captions.gravel;
       if (llmResult?.photoVisualInsight)
         finalPhotoVisualInsight = llmResult.photoVisualInsight;
       if (llmResult?.recommendedTheme)
         finalRecommendedTheme = llmResult.recommendedTheme;
       if (llmResult?.trainingInsight)
         finalTrainingInsight = llmResult.trainingInsight;
-      if (llmResult?.mechanicTip)
-        mechanicTip = llmResult.mechanicTip;
+      if (llmResult?.mechanicTip) mechanicTip = llmResult.mechanicTip;
     }
 
     return {
@@ -269,7 +269,9 @@ export class RideFlexService {
           : params.routeName;
 
       const telemetryStr = [
-        params.heartRateBpm ? `Heart Rate: ${String(params.heartRateBpm)} BPM` : null,
+        params.heartRateBpm
+          ? `Heart Rate: ${String(params.heartRateBpm)} BPM`
+          : null,
         params.cadenceRpm ? `Cadence: ${String(params.cadenceRpm)} RPM` : null,
         params.powerWatts ? `Power: ${String(params.powerWatts)} Watts` : null,
       ]
@@ -305,14 +307,20 @@ Kembalikan format JSON persis seperti ini:
   "mechanicTip": "Tips perawatan preventif mekanik sepeda berdasarkan rute & elevasi"
 }`;
 
-      const contentsParts: Array<{ text?: string; inline_data?: { mime_type: string; data: string } }> = [];
+      const contentsParts: {
+        text?: string;
+        inline_data?: { mime_type: string; data: string };
+      }[] = [];
 
       // If photo base64 provided, add vision inline_data part
       if (params.photoBase64) {
-        const cleanBase64 = params.photoBase64.replace(/^data:image\/[a-z]+;base64,/, '');
+        const cleanBase64 = params.photoBase64.replace(
+          /^data:image\/[a-z]+;base64,/,
+          '',
+        );
         contentsParts.push({
           inline_data: {
-            mime_type: params.photoMimeType || 'image/jpeg',
+            mime_type: params.photoMimeType ?? 'image/jpeg',
             data: cleanBase64,
           },
         });

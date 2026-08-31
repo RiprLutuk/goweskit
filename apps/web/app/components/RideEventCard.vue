@@ -4,7 +4,8 @@ import { formatCommunityDistance } from '../community-display';
 
 const props = defineProps<{ event: NearbyEvent | PublicEvent }>();
 
-const { isReminderActive, toggleReminder, getCountdownText } = useEventReminder();
+const { isReminderActive, toggleReminder, getCountdownText } =
+  useEventReminder();
 
 const distance = computed(() =>
   'distanceMeters' in props.event
@@ -52,7 +53,10 @@ const difficultyText = computed(() => {
 </script>
 
 <template>
-  <NuxtLink class="clean-ride-card" :to="`/community/events/${event.slug || event.id}`">
+  <NuxtLink
+    class="clean-ride-card"
+    :to="`/community/events/${event.slug || event.id}`"
+  >
     <!-- Left: Compact Date Box -->
     <div class="card-date-badge" aria-hidden="true">
       <span class="badge-month">{{ monthLabel }}</span>
@@ -78,7 +82,11 @@ const difficultyText = computed(() => {
             class="reminder-pill"
             :class="{ 'reminder-pill--active': isReminderActive(event.id) }"
             type="button"
-            :title="isReminderActive(event.id) ? 'Pengingat Aktif (Klik untuk mematikan)' : 'Pasang Pengingat Jadwal'"
+            :title="
+              isReminderActive(event.id)
+                ? 'Pengingat Aktif (Klik untuk mematikan)'
+                : 'Pasang Pengingat Jadwal'
+            "
             @click="toggleReminder(event)"
           >
             <GIcon
@@ -87,7 +95,9 @@ const difficultyText = computed(() => {
               :filled="isReminderActive(event.id)"
               :color="isReminderActive(event.id) ? '#15803D' : '#64748B'"
             />
-            <span>{{ isReminderActive(event.id) ? 'Aktif' : countdown.label }}</span>
+            <span>{{
+              isReminderActive(event.id) ? 'Aktif' : countdown.label
+            }}</span>
           </button>
           <span v-else class="past-pill">Selesai</span>
         </div>
@@ -112,16 +122,27 @@ const difficultyText = computed(() => {
       <!-- Category & Participant Chips -->
       <div class="card-pills-row">
         <span class="spec-pill spec-pill--diff">
-          <GIcon :name="event.difficulty === 'hard' ? 'mountain' : 'route'" size="xs" />
+          <GIcon
+            :name="event.difficulty === 'hard' ? 'mountain' : 'route'"
+            size="xs"
+          />
           <span>{{ difficultyText }}</span>
         </span>
         <span class="spec-pill">
           <GIcon name="users" size="xs" />
-          <span>{{ event.participantCount }}{{ event.capacity ? `/${event.capacity}` : '' }} Riders</span>
+          <span
+            >{{ event.participantCount
+            }}{{ event.capacity ? `/${event.capacity}` : '' }} Riders</span
+          >
         </span>
         <span v-if="event.bicycleTypes.length" class="spec-pill">
           <GIcon name="bike" size="xs" />
-          <span>{{ event.bicycleTypes.slice(0, 2).map((t) => t.replaceAll('_', ' ')).join(', ') }}</span>
+          <span>{{
+            event.bicycleTypes
+              .slice(0, 2)
+              .map((t) => t.replaceAll('_', ' '))
+              .join(', ')
+          }}</span>
         </span>
       </div>
     </div>
@@ -140,7 +161,10 @@ const difficultyText = computed(() => {
   box-shadow: 0 2px 10px rgb(23 32 42 / 3%);
   text-decoration: none;
   color: inherit;
-  transition: transform 90ms ease, box-shadow 90ms ease, border-color 90ms ease;
+  transition:
+    transform 90ms ease,
+    box-shadow 90ms ease,
+    border-color 90ms ease;
   position: relative;
 }
 
@@ -261,14 +285,14 @@ const difficultyText = computed(() => {
 
 .reminder-pill--active {
   background: rgba(22, 163, 74, 0.1);
-  color: #15803D;
+  color: #15803d;
   border-color: rgba(22, 163, 74, 0.3);
 }
 
 .past-pill {
   font-size: 0.66rem;
   font-weight: 750;
-  color: #94A3B8;
+  color: #94a3b8;
   background: var(--color-canvas);
   padding: 0.15rem 0.45rem;
   border-radius: 9999px;

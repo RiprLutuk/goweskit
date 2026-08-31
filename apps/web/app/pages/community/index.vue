@@ -111,7 +111,8 @@ function useMyLocation(): void {
     },
     () => {
       locating.value = false;
-      locationMessage.value = 'Lokasi tidak dapat diakses. Menampilkan area Bandung.';
+      locationMessage.value =
+        'Lokasi tidak dapat diakses. Menampilkan area Bandung.';
     },
     { enableHighAccuracy: false, timeout: 10_000, maximumAge: 60_000 },
   );
@@ -142,7 +143,11 @@ onMounted(() => {
     <!-- Clean Unified Action Bar: Tabs on Left, Filter on Right -->
     <div class="unified-control-bar">
       <!-- Segmented Tabs -->
-      <nav class="clean-segmented-tabs" role="tablist" aria-label="Tampilan Komunitas">
+      <nav
+        class="clean-segmented-tabs"
+        role="tablist"
+        aria-label="Tampilan Komunitas"
+      >
         <button
           class="tab-btn"
           :class="{ 'tab-btn--active': activeView === 'all' }"
@@ -186,21 +191,37 @@ onMounted(() => {
       </button>
     </div>
 
-    <p v-if="locationMessage" class="loc-toast" role="status">{{ locationMessage }}</p>
+    <p v-if="locationMessage" class="loc-toast" role="status">
+      {{ locationMessage }}
+    </p>
 
     <!-- Loading & Error States -->
     <div v-if="loading" class="content-feed-stack">
       <div class="feed-section">
         <div class="feed-cards-list">
-          <div v-for="i in 3" :key="i" class="skeleton-shimmer" style="width: 100%; height: 6.5rem; border-radius: 1.15rem;" />
+          <div
+            v-for="i in 3"
+            :key="i"
+            class="skeleton-shimmer"
+            style="width: 100%; height: 6.5rem; border-radius: 1.15rem"
+          />
         </div>
       </div>
     </div>
-    <p v-else-if="errorMessage" class="state-card state-card--error" role="alert">{{ errorMessage }}</p>
+    <p
+      v-else-if="errorMessage"
+      class="state-card state-card--error"
+      role="alert"
+    >
+      {{ errorMessage }}
+    </p>
 
     <div v-else class="content-feed-stack">
       <!-- 1. SCHEDULED RIDES / EVENTS -->
-      <section v-if="activeView === 'all' || activeView === 'events'" class="feed-section">
+      <section
+        v-if="activeView === 'all' || activeView === 'events'"
+        class="feed-section"
+      >
         <div v-if="activeView === 'all'" class="feed-section-header">
           <h2 class="feed-heading">
             <GIcon name="calendar" size="sm" color="#17202A" />
@@ -221,7 +242,10 @@ onMounted(() => {
       </section>
 
       <!-- 2. COMMUNITIES DIRECTORY -->
-      <section v-if="activeView === 'all' || activeView === 'communities'" class="feed-section">
+      <section
+        v-if="activeView === 'all' || activeView === 'communities'"
+        class="feed-section"
+      >
         <div v-if="activeView === 'all'" class="feed-section-header">
           <h2 class="feed-heading">
             <GIcon name="community" size="sm" /> Komunitas &amp; Klub Sepeda
@@ -229,7 +253,8 @@ onMounted(() => {
         </div>
 
         <p v-if="communities.length === 0" class="empty-feed-card">
-          Tidak ada komunitas yang cocok dengan filter di radius {{ radiusKm }} km.
+          Tidak ada komunitas yang cocok dengan filter di radius
+          {{ radiusKm }} km.
         </p>
         <div v-else class="feed-cards-list">
           <CommunityCard
@@ -248,12 +273,23 @@ onMounted(() => {
         class="native-modal-backdrop"
         @click.self="showFilterModal = false"
       >
-        <div class="native-modal-sheet" role="dialog" aria-modal="true" aria-labelledby="filter-sheet-title">
+        <div
+          class="native-modal-sheet"
+          role="dialog"
+          aria-modal="true"
+          aria-labelledby="filter-sheet-title"
+        >
           <div class="sheet-grabber" aria-hidden="true" />
 
           <div class="sheet-header">
-            <h3 id="filter-sheet-title" class="sheet-title">Filter &amp; Lokasi</h3>
-            <button class="sheet-close" type="button" @click="showFilterModal = false">
+            <h3 id="filter-sheet-title" class="sheet-title">
+              Filter &amp; Lokasi
+            </h3>
+            <button
+              class="sheet-close"
+              type="button"
+              @click="showFilterModal = false"
+            >
               <GIcon name="close" size="xs" />
             </button>
           </div>
@@ -274,14 +310,18 @@ onMounted(() => {
                   @click="useMyLocation"
                 >
                   <GIcon name="radar" size="xs" color="#16A34A" />
-                  <span>{{ locating ? 'Mencari GPS…' : 'Gunakan GPS Saya' }}</span>
+                  <span>{{
+                    locating ? 'Mencari GPS…' : 'Gunakan GPS Saya'
+                  }}</span>
                 </button>
               </div>
             </div>
 
             <!-- Radius Stepper / Selector -->
             <div class="filter-group">
-              <label class="group-label">Radius Jarak ({{ radiusKm }} km)</label>
+              <label class="group-label"
+                >Radius Jarak ({{ radiusKm }} km)</label
+              >
               <div class="radius-row">
                 <button
                   v-for="r in [5, 10, 15, 25, 50]"
@@ -304,7 +344,9 @@ onMounted(() => {
                   v-for="opt in bikeFilterOptions"
                   :key="opt.value"
                   class="bike-select-btn"
-                  :class="{ 'bike-select-btn--active': bicycleType === opt.value }"
+                  :class="{
+                    'bike-select-btn--active': bicycleType === opt.value,
+                  }"
                   type="button"
                   @click="bicycleType = opt.value"
                 >
@@ -332,12 +374,22 @@ onMounted(() => {
 
           <!-- Bottom Action Buttons -->
           <div class="sheet-actions">
-            <button class="action-btn action-btn--ghost" type="button" @click="resetAllFilters">
+            <button
+              class="action-btn action-btn--ghost"
+              type="button"
+              @click="resetAllFilters"
+            >
               Reset
             </button>
-            <button class="action-btn action-btn--primary" type="button" @click="applyModalFilters">
+            <button
+              class="action-btn action-btn--primary"
+              type="button"
+              @click="applyModalFilters"
+            >
               <GIcon name="check" size="xs" />
-              <span>Tampilkan {{ communities.length + events.length }} Hasil</span>
+              <span
+                >Tampilkan {{ communities.length + events.length }} Hasil</span
+              >
             </button>
           </div>
         </div>
@@ -562,8 +614,12 @@ onMounted(() => {
 }
 
 @keyframes slideUp {
-  from { transform: translateY(100%); }
-  to { transform: translateY(0); }
+  from {
+    transform: translateY(100%);
+  }
+  to {
+    transform: translateY(0);
+  }
 }
 
 .sheet-grabber {

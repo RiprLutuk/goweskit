@@ -195,7 +195,10 @@ async function deleteComponent(component: InstalledComponent): Promise<void> {
     });
     components.value = components.value.filter(({ id }) => id !== component.id);
     if (editingId.value === component.id) resetForm();
-    toast.success('Komponen Dihapus', `“${component.customName}” telah dihapus.`);
+    toast.success(
+      'Komponen Dihapus',
+      `“${component.customName}” telah dihapus.`,
+    );
   } catch (error: unknown) {
     const msg = getApiErrorMessage(error);
     errorMessage.value = msg;

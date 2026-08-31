@@ -1,5 +1,8 @@
 <script setup lang="ts">
-import type { ContributorReputationLevel, ContributorReputationResponse } from '@goweskit/contracts';
+import type {
+  ContributorReputationLevel,
+  ContributorReputationResponse,
+} from '@goweskit/contracts';
 
 const api = useApi();
 const { user, initialized, refresh } = useAuth();
@@ -9,7 +12,13 @@ const errorMessage = ref('');
 
 const LEVEL_CONFIG: Record<
   ContributorReputationLevel,
-  { label: string; tier: string; color: string; desc: string; nextScore: number }
+  {
+    label: string;
+    tier: string;
+    color: string;
+    desc: string;
+    nextScore: number;
+  }
 > = {
   new_contributor: {
     label: 'Goweser Baru',
@@ -36,7 +45,10 @@ const LEVEL_CONFIG: Record<
 
 const currentLevelConfig = computed(() => {
   if (!response.value) return LEVEL_CONFIG.new_contributor;
-  return LEVEL_CONFIG[response.value.reputation.level] ?? LEVEL_CONFIG.new_contributor;
+  return (
+    LEVEL_CONFIG[response.value.reputation.level] ??
+    LEVEL_CONFIG.new_contributor
+  );
 });
 
 const progressPercent = computed(() => {
@@ -85,7 +97,8 @@ onMounted(loadReputation);
       </div>
       <h1 class="page-title">Poin Kontribusi Komunitas</h1>
       <p class="page-desc">
-        Poin GowesKit dibangun murni dari aksi nyata di jalan: memimpin mabar, menyelesaikan rute bersama, dan menjaga keamanan komunitas.
+        Poin GowesKit dibangun murni dari aksi nyata di jalan: memimpin mabar,
+        menyelesaikan rute bersama, dan menjaga keamanan komunitas.
       </p>
     </header>
 
@@ -93,7 +106,11 @@ onMounted(loadReputation);
     <div v-if="loading" class="reputation-skeleton-stack">
       <div class="skeleton-shimmer score-skeleton-card" />
       <div class="grid-skeleton-row">
-        <div v-for="i in 3" :key="i" class="skeleton-shimmer metric-skeleton-card" />
+        <div
+          v-for="i in 3"
+          :key="i"
+          class="skeleton-shimmer metric-skeleton-card"
+        />
       </div>
     </div>
 
@@ -108,7 +125,9 @@ onMounted(loadReputation);
       </div>
       <div class="guest-content">
         <h2 id="reputation-sign-in-title">Masuk untuk Melihat Reputasi Anda</h2>
-        <p>Rekam jejak kontribusi tersimpan secara aman di akun pribadi Anda.</p>
+        <p>
+          Rekam jejak kontribusi tersimpan secara aman di akun pribadi Anda.
+        </p>
         <NuxtLink class="button button--primary" to="/login">
           <span>Masuk ke Akun</span>
           <span>→</span>
@@ -138,7 +157,9 @@ onMounted(loadReputation);
       <section class="reputation-card" aria-labelledby="reputation-level-title">
         <div class="score-circle-box">
           <div class="score-ring">
-            <span class="score-number font-mono">{{ response.reputation.score }}</span>
+            <span class="score-number font-mono">{{
+              response.reputation.score
+            }}</span>
             <span class="score-label">POIN</span>
           </div>
         </div>
@@ -158,7 +179,10 @@ onMounted(loadReputation);
           <div class="tier-progress-box">
             <div class="progress-labels">
               <span>Progres Tier</span>
-              <span class="font-mono">{{ response.reputation.score }} / {{ currentLevelConfig.nextScore }} Poin</span>
+              <span class="font-mono"
+                >{{ response.reputation.score }} /
+                {{ currentLevelConfig.nextScore }} Poin</span
+              >
             </div>
             <div class="progress-track">
               <div
@@ -171,7 +195,10 @@ onMounted(loadReputation);
       </section>
 
       <!-- Transparent Point Inputs Grid -->
-      <section class="metrics-section" aria-labelledby="reputation-inputs-title">
+      <section
+        class="metrics-section"
+        aria-labelledby="reputation-inputs-title"
+      >
         <div class="section-header">
           <div>
             <span class="section-eyebrow">METRIK TRANSPARAN</span>
@@ -190,7 +217,9 @@ onMounted(loadReputation);
               </div>
               <span class="point-rate-badge">+2 Poin</span>
             </div>
-            <div class="metric-value font-mono">{{ response.reputation.hostedEvents }}</div>
+            <div class="metric-value font-mono">
+              {{ response.reputation.hostedEvents }}
+            </div>
             <h3 class="metric-label">Gowes yang Dipimpin</h3>
             <p class="metric-sub">Penyelenggaraan event mabar publik.</p>
           </article>
@@ -203,7 +232,9 @@ onMounted(loadReputation);
               </div>
               <span class="point-rate-badge">+5 Poin</span>
             </div>
-            <div class="metric-value font-mono">{{ response.reputation.completedEvents }}</div>
+            <div class="metric-value font-mono">
+              {{ response.reputation.completedEvents }}
+            </div>
             <h3 class="metric-label">Gowes Diselesaikan</h3>
             <p class="metric-sub">Kehadiran dan penyelesaian rute mabar.</p>
           </article>
@@ -216,7 +247,9 @@ onMounted(loadReputation);
               </div>
               <span class="point-rate-badge">+1 Poin</span>
             </div>
-            <div class="metric-value font-mono">{{ response.reputation.moderationDecisions }}</div>
+            <div class="metric-value font-mono">
+              {{ response.reputation.moderationDecisions }}
+            </div>
             <h3 class="metric-label">Moderasi Komunitas</h3>
             <p class="metric-sub">Pemeriksaan &amp; persetujuan anggota.</p>
           </article>
@@ -231,7 +264,9 @@ onMounted(loadReputation);
         <div class="integrity-text">
           <strong>Sistem Terbuka &amp; Anti-Spam</strong>
           <p>
-            Reputasi GowesKit tidak dapat dibeli atau dimanipulasi dengan bot. Metrik ini murni mencerminkan partisipasi aktif goweser untuk menciptakan rasa saling percaya saat mabar.
+            Reputasi GowesKit tidak dapat dibeli atau dimanipulasi dengan bot.
+            Metrik ini murni mencerminkan partisipasi aktif goweser untuk
+            menciptakan rasa saling percaya saat mabar.
           </p>
         </div>
       </aside>
@@ -360,7 +395,7 @@ onMounted(loadReputation);
   gap: 1.5rem;
   padding: 1.5rem;
   border-radius: 1.35rem;
-  background: linear-gradient(135deg, rgba(201, 243, 106, 0.22), #FFFFFF 65%);
+  background: linear-gradient(135deg, rgba(201, 243, 106, 0.22), #ffffff 65%);
   border: 1.5px solid rgba(23, 32 42, 0.08);
   box-shadow: 0 8px 24px rgb(23 32 42 / 6%);
 }
@@ -378,7 +413,7 @@ onMounted(loadReputation);
   width: 6.5rem;
   height: 6.5rem;
   border-radius: 50%;
-  background: #FFFFFF;
+  background: #ffffff;
   border: 4px solid var(--color-chain-lime);
   box-shadow: 0 6px 20px rgb(201 243 106 / 35%);
   line-height: 1;
@@ -393,7 +428,7 @@ onMounted(loadReputation);
 .score-label {
   font-size: 0.62rem;
   font-weight: 850;
-  color: #64748B;
+  color: #64748b;
   letter-spacing: 0.06em;
   margin-top: 0.2rem;
 }
@@ -409,7 +444,7 @@ onMounted(loadReputation);
   font-weight: 800;
   text-transform: uppercase;
   letter-spacing: 0.06em;
-  color: #0F766E;
+  color: #0f766e;
   background: rgba(15, 118, 110, 0.12);
   padding: 0.15rem 0.5rem;
   border-radius: 9999px;
@@ -453,7 +488,7 @@ onMounted(loadReputation);
 
 .progress-fill {
   height: 100%;
-  background: #15803D;
+  background: #15803d;
   border-radius: 9999px;
   transition: width 300ms ease;
 }
@@ -577,7 +612,7 @@ onMounted(loadReputation);
   display: block;
   font-size: 0.85rem;
   font-weight: 850;
-  color: #0F766E;
+  color: #0f766e;
   margin-bottom: 0.2rem;
 }
 

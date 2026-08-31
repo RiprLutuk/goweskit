@@ -93,7 +93,8 @@ function specsBreakdown(bike: Bike): { known: number; unknown: number } {
           <div>
             <h1 class="garage-hero__title">My Garage</h1>
             <p class="garage-hero__subtitle">
-              Simpan anatomi sepeda, pantau standar teknis terverifikasi, dan catat servis secara digital tanpa tebak-tebakan merek.
+              Simpan anatomi sepeda, pantau standar teknis terverifikasi, dan
+              catat servis secara digital tanpa tebak-tebakan merek.
             </p>
           </div>
           <NuxtLink v-if="user" class="add-bike-btn" to="/garage/new">
@@ -108,11 +109,28 @@ function specsBreakdown(bike: Bike): { known: number; unknown: number } {
       <!-- Loading Skeleton State -->
       <div v-if="loading" class="bike-cards-grid">
         <div v-for="i in 2" :key="i" class="bike-card skeleton-card-box">
-          <div class="skeleton-shimmer" style="width: 100%; height: 11rem; border-radius: 0.85rem;" />
-          <div style="padding: 1rem; display: grid; gap: 0.65rem;">
-            <div class="skeleton-shimmer" style="width: 55%; height: 1.4rem; border-radius: 0.4rem;" />
-            <div class="skeleton-shimmer" style="width: 75%; height: 0.9rem; border-radius: 0.35rem;" />
-            <div class="skeleton-shimmer" style="width: 100%; height: 2.2rem; border-radius: 0.65rem; margin-top: 0.5rem;" />
+          <div
+            class="skeleton-shimmer"
+            style="width: 100%; height: 11rem; border-radius: 0.85rem"
+          />
+          <div style="padding: 1rem; display: grid; gap: 0.65rem">
+            <div
+              class="skeleton-shimmer"
+              style="width: 55%; height: 1.4rem; border-radius: 0.4rem"
+            />
+            <div
+              class="skeleton-shimmer"
+              style="width: 75%; height: 0.9rem; border-radius: 0.35rem"
+            />
+            <div
+              class="skeleton-shimmer"
+              style="
+                width: 100%;
+                height: 2.2rem;
+                border-radius: 0.65rem;
+                margin-top: 0.5rem;
+              "
+            />
           </div>
         </div>
       </div>
@@ -134,7 +152,9 @@ function specsBreakdown(bike: Bike): { known: number; unknown: number } {
             <span class="guest-pill">FITUR WORKSHOP</span>
             <h2>Buka Garasi Sepeda Anda</h2>
             <p>
-              Simpan spesifikasi 17 titik komponen (as roda, headset, BB, rantai) dan pantau jadwal servis berkala sepeda Anda secara digital di GowesKit.
+              Simpan spesifikasi 17 titik komponen (as roda, headset, BB,
+              rantai) dan pantau jadwal servis berkala sepeda Anda secara
+              digital di GowesKit.
             </p>
           </div>
 
@@ -188,9 +208,19 @@ function specsBreakdown(bike: Bike): { known: number; unknown: number } {
               :disabled="demoLoggingIn"
               @click="quickDemoLogin"
             >
-              <GIcon name="bolt" size="xs" color="#C9F36A" filled class="demo-bolt" />
+              <GIcon
+                name="bolt"
+                size="xs"
+                color="#C9F36A"
+                filled
+                class="demo-bolt"
+              />
               <span class="demo-text">
-                {{ demoLoggingIn ? 'Membuka Garasi Demo…' : 'Coba Garasi Demo (1-Klik Tanpa Daftar)' }}
+                {{
+                  demoLoggingIn
+                    ? 'Membuka Garasi Demo…'
+                    : 'Coba Garasi Demo (1-Klik Tanpa Daftar)'
+                }}
               </span>
             </button>
           </div>
@@ -257,7 +287,9 @@ function specsBreakdown(bike: Bike): { known: number; unknown: number } {
                 <span class="type-pill">
                   {{ bike.bicycleType.name }}
                 </span>
-                <span v-if="bike.modelYear" class="year-pill">{{ bike.modelYear }}</span>
+                <span v-if="bike.modelYear" class="year-pill">{{
+                  bike.modelYear
+                }}</span>
               </div>
             </div>
 
@@ -265,10 +297,15 @@ function specsBreakdown(bike: Bike): { known: number; unknown: number } {
             <div class="bike-card__body">
               <div class="bike-identity">
                 <h2 class="bike-name">
-                  <NuxtLink :to="`/garage/${bike.id}`">{{ bike.nickname }}</NuxtLink>
+                  <NuxtLink :to="`/garage/${bike.id}`">{{
+                    bike.nickname
+                  }}</NuxtLink>
                 </h2>
                 <p class="bike-spec-sub">
-                  {{ [bike.brand, bike.model].filter(Boolean).join(' · ') || 'Custom Build / Rakitan' }}
+                  {{
+                    [bike.brand, bike.model].filter(Boolean).join(' · ') ||
+                    'Custom Build / Rakitan'
+                  }}
                 </p>
               </div>
 
@@ -278,7 +315,10 @@ function specsBreakdown(bike: Bike): { known: number; unknown: number } {
                   <GIcon name="route" size="xs" color="#0F766E" />
                   <strong>1.240 km</strong>
                 </span>
-                <span class="health-chip health-chip--good" title="Kondisi Drivetrain & Rem">
+                <span
+                  class="health-chip health-chip--good"
+                  title="Kondisi Drivetrain & Rem"
+                >
                   <span class="health-dot" />
                   <span>Kondisi Prima</span>
                 </span>
@@ -288,27 +328,39 @@ function specsBreakdown(bike: Bike): { known: number; unknown: number } {
               <div class="standards-gauge">
                 <div class="gauge-labels">
                   <span class="gauge-known">
-                    <strong>{{ specsBreakdown(bike).known }}</strong> Standar Terverifikasi
+                    <strong>{{ specsBreakdown(bike).known }}</strong> Standar
+                    Terverifikasi
                   </span>
-                  <span v-if="specsBreakdown(bike).unknown" class="gauge-unknown">
+                  <span
+                    v-if="specsBreakdown(bike).unknown"
+                    class="gauge-unknown"
+                  >
                     {{ specsBreakdown(bike).unknown }} belum tahu
                   </span>
                 </div>
                 <div class="gauge-track">
                   <div
                     class="gauge-fill"
-                    :style="{ width: `${Math.min(100, Math.round((specsBreakdown(bike).known / 17) * 100))}%` }"
+                    :style="{
+                      width: `${Math.min(100, Math.round((specsBreakdown(bike).known / 17) * 100))}%`,
+                    }"
                   />
                 </div>
               </div>
 
               <!-- Card Action Buttons -->
               <div class="bike-card-actions">
-                <NuxtLink class="action-link action-link--secondary" :to="`/garage/${bike.id}`">
+                <NuxtLink
+                  class="action-link action-link--secondary"
+                  :to="`/garage/${bike.id}`"
+                >
                   <GIcon name="wrench" size="xs" />
                   <span>Spesifikasi &amp; Servis</span>
                 </NuxtLink>
-                <NuxtLink class="action-link action-link--primary" :to="`/upgrade-lab?bike=${bike.id}`">
+                <NuxtLink
+                  class="action-link action-link--primary"
+                  :to="`/upgrade-lab?bike=${bike.id}`"
+                >
                   <GIcon name="upgrade" size="xs" filled />
                   <span>Cek Upgrade</span>
                 </NuxtLink>
@@ -321,13 +373,18 @@ function specsBreakdown(bike: Bike): { known: number; unknown: number } {
       <!-- Empty Garage State for Signed-in user with 0 bikes -->
       <div v-else class="empty-garage-card">
         <div class="empty-artwork-box">
-          <img src="/bikes/gravel.svg" alt="Garasi Kosong" class="empty-artwork-svg" />
+          <img
+            src="/bikes/gravel.svg"
+            alt="Garasi Kosong"
+            class="empty-artwork-svg"
+          />
         </div>
         <div class="empty-garage-content">
           <span class="guest-pill">GARASI SIAP DIGUNAKAN</span>
           <h2>Garasi Anda Masih Kosong</h2>
           <p>
-            Daftarkan sepeda pertama Anda untuk mulai mencatat anatomi komponen, riwayat servis berkala, dan memeriksa kompatibilitas upgrade.
+            Daftarkan sepeda pertama Anda untuk mulai mencatat anatomi komponen,
+            riwayat servis berkala, dan memeriksa kompatibilitas upgrade.
           </p>
           <NuxtLink class="cta-btn cta-btn--primary" to="/garage/new">
             <GIcon name="plus" size="xs" color="#17202A" />
@@ -403,7 +460,7 @@ function specsBreakdown(bike: Bike): { known: number; unknown: number } {
   width: 0.45rem;
   height: 0.45rem;
   border-radius: 50%;
-  background: #16A34A;
+  background: #16a34a;
 }
 
 .counter-chip {
@@ -454,7 +511,9 @@ function specsBreakdown(bike: Bike): { known: number; unknown: number } {
   text-decoration: none;
   border: 1.5px solid var(--color-ink);
   box-shadow: 0 2px 0 var(--color-ink);
-  transition: transform 90ms ease, box-shadow 90ms ease;
+  transition:
+    transform 90ms ease,
+    box-shadow 90ms ease;
   white-space: nowrap;
 }
 
@@ -492,7 +551,7 @@ function specsBreakdown(bike: Bike): { known: number; unknown: number } {
 }
 
 .guest-card__artwork {
-  background: #F8FAFC;
+  background: #f8fafc;
   border-bottom: 1.5px solid var(--color-sand);
   display: flex;
   align-items: center;
@@ -535,8 +594,8 @@ function specsBreakdown(bike: Bike): { known: number; unknown: number } {
   font-size: 0.65rem;
   font-weight: 900;
   letter-spacing: 0.05em;
-  color: #0284C7;
-  background: #E0F2FE;
+  color: #0284c7;
+  background: #e0f2fe;
   padding: 0.15rem 0.5rem;
   border-radius: 9999px;
   width: fit-content;
@@ -650,7 +709,9 @@ function specsBreakdown(bike: Bike): { known: number; unknown: number } {
   font-size: 0.82rem;
   font-weight: 850;
   cursor: pointer;
-  transition: transform 90ms ease, box-shadow 90ms ease;
+  transition:
+    transform 90ms ease,
+    box-shadow 90ms ease;
 }
 
 .demo-quick-btn:active {
@@ -714,7 +775,9 @@ function specsBreakdown(bike: Bike): { known: number; unknown: number } {
   display: flex;
   flex-direction: column;
   box-shadow: 0 4px 16px rgba(23, 32, 42, 0.04);
-  transition: border-color 150ms ease, box-shadow 150ms ease;
+  transition:
+    border-color 150ms ease,
+    box-shadow 150ms ease;
 }
 
 .bike-card:hover {
@@ -726,7 +789,7 @@ function specsBreakdown(bike: Bike): { known: number; unknown: number } {
   position: relative;
   width: 100%;
   height: 10rem;
-  background: #F8FAFC;
+  background: #f8fafc;
   border-bottom: 1.5px solid var(--color-sand);
   overflow: hidden;
 }
@@ -901,7 +964,7 @@ function specsBreakdown(bike: Bike): { known: number; unknown: number } {
 
 .gauge-fill {
   height: 100%;
-  background: #16A34A;
+  background: #16a34a;
   border-radius: 9999px;
   transition: width 300ms ease;
 }
@@ -1025,8 +1088,8 @@ function specsBreakdown(bike: Bike): { known: number; unknown: number } {
 }
 
 .state-card--error {
-  background: #FEE2E2;
-  border-color: #FCA5A5;
-  color: #991B1B;
+  background: #fee2e2;
+  border-color: #fca5a5;
+  color: #991b1b;
 }
 </style>

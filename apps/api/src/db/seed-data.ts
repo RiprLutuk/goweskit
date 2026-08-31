@@ -741,7 +741,8 @@ export const DEMO_PLACE_SEEDS = [
     description:
       'Practice skills-area marker for controlled MTB drills and short sessions.',
     coordinate: { longitude: 106.662, latitude: -6.193 },
-    address: 'Wisata Danau Cipondoh, Jl. KH Hasyim Ashari, Tangerang · demo data',
+    address:
+      'Wisata Danau Cipondoh, Jl. KH Hasyim Ashari, Tangerang · demo data',
     bicycleTypes: ['mtb_hardtail'],
     beginnerFriendly: false,
     verificationStatus: 'community_verified',

@@ -57,5 +57,13 @@ export function useAuth() {
     initialized.value = true;
   }
 
-  return { user, initialized, refresh, register, login, loginWithGoogle, logout };
+  return {
+    user,
+    initialized,
+    refresh,
+    register,
+    login,
+    loginWithGoogle,
+    logout,
+  };
 }

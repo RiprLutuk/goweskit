@@ -55,13 +55,35 @@ function selectHotspot(index: number | null): void {
     </div>
 
     <!-- Skeleton Anatomy Shimmer during Loading -->
-    <div v-if="loading" style="display: grid; gap: 1rem;">
-      <div class="anatomy-hero" style="padding: 1.5rem; display: grid; gap: 0.85rem; border-radius: 1.25rem; background: var(--color-white); border: 1px solid rgb(23 32 42 / 8%);">
-        <div class="skeleton-shimmer" style="width: 30%; height: 1.1rem; border-radius: 0.35rem;" />
-        <div class="skeleton-shimmer" style="width: 60%; height: 2rem; border-radius: 0.5rem;" />
-        <div class="skeleton-shimmer" style="width: 85%; height: 1rem; border-radius: 0.35rem;" />
+    <div v-if="loading" style="display: grid; gap: 1rem">
+      <div
+        class="anatomy-hero"
+        style="
+          padding: 1.5rem;
+          display: grid;
+          gap: 0.85rem;
+          border-radius: 1.25rem;
+          background: var(--color-white);
+          border: 1px solid rgb(23 32 42 / 8%);
+        "
+      >
+        <div
+          class="skeleton-shimmer"
+          style="width: 30%; height: 1.1rem; border-radius: 0.35rem"
+        />
+        <div
+          class="skeleton-shimmer"
+          style="width: 60%; height: 2rem; border-radius: 0.5rem"
+        />
+        <div
+          class="skeleton-shimmer"
+          style="width: 85%; height: 1rem; border-radius: 0.35rem"
+        />
       </div>
-      <div class="skeleton-shimmer" style="width: 100%; height: 16rem; border-radius: 1.25rem;" />
+      <div
+        class="skeleton-shimmer"
+        style="width: 100%; height: 16rem; border-radius: 1.25rem"
+      />
     </div>
 
     <!-- Error State -->
@@ -71,11 +93,7 @@ function selectHotspot(index: number | null): void {
       role="alert"
     >
       <p>{{ errorMessage }}</p>
-      <button
-        class="retry-btn"
-        type="button"
-        @click="loadAnatomy"
-      >
+      <button class="retry-btn" type="button" @click="loadAnatomy">
         Coba Lagi
       </button>
     </div>
@@ -85,7 +103,9 @@ function selectHotspot(index: number | null): void {
       <span class="type-badge">DALAM PENGEMBANGAN</span>
       <h2>Diagram Anatomi Masih Disiapkan</h2>
       <p>
-        Panduan interaktif saat ini tersedia lengkap untuk MTB Hardtail, Folding Bike, Gravel Bike, dan Road Bike. Anda tetap dapat menjelajahi seluruh katalog komponen.
+        Panduan interaktif saat ini tersedia lengkap untuk MTB Hardtail, Folding
+        Bike, Gravel Bike, dan Road Bike. Anda tetap dapat menjelajahi seluruh
+        katalog komponen.
       </p>
       <NuxtLink class="cta-link-btn" to="/learn">
         Jelajahi Katalog Komponen →
@@ -122,7 +142,9 @@ function selectHotspot(index: number | null): void {
           <div class="blueprint-workbench__header">
             <div>
               <span class="blueprint-eyebrow">🔬 BLUEPRINT INTERAKTIF</span>
-              <h2 id="diagram-title" class="blueprint-title">Diagram Titik Komponen</h2>
+              <h2 id="diagram-title" class="blueprint-title">
+                Diagram Titik Komponen
+              </h2>
             </div>
             <span class="parts-counter-badge">
               {{ anatomy.hotspots.length }} Titik Standar
@@ -145,16 +167,15 @@ function selectHotspot(index: number | null): void {
               <GIcon name="sparkles" size="sm" color="#EAB308" />
             </span>
             <p>
-              <strong>Petunjuk:</strong> Sentuh atau klik langsung pada bagian sepeda di atas untuk memeriksa spesifikasi teknisnya, atau pilih dari daftar komponen di bawah.
+              <strong>Petunjuk:</strong> Sentuh atau klik langsung pada bagian
+              sepeda di atas untuk memeriksa spesifikasi teknisnya, atau pilih
+              dari daftar komponen di bawah.
             </p>
           </div>
         </section>
 
         <!-- Selected Component Inspector Card (if selected) -->
-        <div
-          v-if="activeHotspot !== null"
-          class="selected-inspector-card"
-        >
+        <div v-if="activeHotspot !== null" class="selected-inspector-card">
           <div class="inspector-card__header">
             <div class="inspector-badge">
               {{ (activeHotspotIndex ?? 0) + 1 }}
@@ -211,7 +232,9 @@ function selectHotspot(index: number | null): void {
               v-for="(hotspot, index) in anatomy.hotspots"
               :key="hotspot.component.id"
               class="component-item-card"
-              :class="{ 'component-item-card--active': activeHotspotIndex === index }"
+              :class="{
+                'component-item-card--active': activeHotspotIndex === index,
+              }"
               @click="selectHotspot(index)"
             >
               <div class="component-item__top">
@@ -342,15 +365,15 @@ function selectHotspot(index: number | null): void {
   width: 0.45rem;
   height: 0.45rem;
   border-radius: 50%;
-  background: #16A34A;
+  background: #16a34a;
 }
 
 .type-pill-tag {
   font-family: var(--font-mono);
   font-size: 0.72rem;
   font-weight: 850;
-  color: #0284C7;
-  background: #E0F2FE;
+  color: #0284c7;
+  background: #e0f2fe;
   padding: 0.2rem 0.65rem;
   border-radius: 9999px;
   border: 1px solid rgba(2, 132, 199, 0.2);
@@ -443,7 +466,7 @@ function selectHotspot(index: number | null): void {
 .bike-diagram-container {
   width: 100%;
   border-radius: 1.25rem;
-  background: #F8FAFC;
+  background: #f8fafc;
   border: 1.5px solid var(--color-sand);
   overflow: hidden;
 }
@@ -487,8 +510,14 @@ function selectHotspot(index: number | null): void {
 }
 
 @keyframes slideDown {
-  from { opacity: 0; transform: translateY(-6px); }
-  to { opacity: 1; transform: translateY(0); }
+  from {
+    opacity: 0;
+    transform: translateY(-6px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
 }
 
 .inspector-card__header {
@@ -656,8 +685,8 @@ function selectHotspot(index: number | null): void {
   width: 1.85rem;
   height: 1.85rem;
   border-radius: 0.55rem;
-  background: #E0F2FE;
-  color: #0369A1;
+  background: #e0f2fe;
+  color: #0369a1;
   font-family: var(--font-mono);
   font-weight: 900;
   font-size: 0.78rem;
@@ -748,13 +777,15 @@ function selectHotspot(index: number | null): void {
 }
 
 @keyframes spin {
-  to { transform: rotate(360deg); }
+  to {
+    transform: rotate(360deg);
+  }
 }
 
 .state-card--error {
-  background: #FEE2E2;
-  border-color: #FCA5A5;
-  color: #991B1B;
+  background: #fee2e2;
+  border-color: #fca5a5;
+  color: #991b1b;
 }
 
 .empty-anatomy-card {
@@ -773,8 +804,8 @@ function selectHotspot(index: number | null): void {
   font-family: var(--font-mono);
   font-size: 0.65rem;
   font-weight: 900;
-  background: #E0F2FE;
-  color: #0369A1;
+  background: #e0f2fe;
+  color: #0369a1;
   padding: 0.2rem 0.6rem;
   border-radius: 9999px;
 }

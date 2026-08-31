@@ -190,16 +190,36 @@ function bikeTypeSvg(slug: string): string {
 
 function bikeTypeHighlights(slug: string): string[] {
   if (slug === 'mtb_hardtail') {
-    return ['Boost 15×110 / 12×148', 'Fork Tapered', '1×12 Wide Range', 'Dropper 30.9/31.6'];
+    return [
+      'Boost 15×110 / 12×148',
+      'Fork Tapered',
+      '1×12 Wide Range',
+      'Dropper 30.9/31.6',
+    ];
   }
   if (slug === 'folding') {
-    return ['ISO 406 / ISO 305', 'QR 135mm / 130mm', 'BB BSA 68mm', 'Seatpost 33.9mm'];
+    return [
+      'ISO 406 / ISO 305',
+      'QR 135mm / 130mm',
+      'BB BSA 68mm',
+      'Seatpost 33.9mm',
+    ];
   }
   if (slug === 'road') {
-    return ['700c (ISO 622)', 'Thru-Axle 12×100/142', 'Flat Mount Disc', '2×11 / 2×12 Speed'];
+    return [
+      '700c (ISO 622)',
+      'Thru-Axle 12×100/142',
+      'Flat Mount Disc',
+      '2×11 / 2×12 Speed',
+    ];
   }
   if (slug === 'gravel') {
-    return ['Ban 38–50mm', 'Drop Bar Flare', 'Thru-Axle 12mm', 'Clutch Derailleur'];
+    return [
+      'Ban 38–50mm',
+      'Drop Bar Flare',
+      'Thru-Axle 12mm',
+      'Clutch Derailleur',
+    ];
   }
   return ['Standar Terverifikasi'];
 }
@@ -242,7 +262,10 @@ function runWizardEvaluation(): void {
         'Drivetrain 1×12 wide-range dengan Micro Spline / HG',
       ],
     };
-  } else if (wizardHandlebar.value === 'drop' && wizardTerrain.value === 'gravel') {
+  } else if (
+    wizardHandlebar.value === 'drop' &&
+    wizardTerrain.value === 'gravel'
+  ) {
     wizardResult.value = {
       typeSlug: 'gravel',
       typeName: 'Sepeda Gravel',
@@ -297,12 +320,16 @@ function resetWizard(): void {
         <!-- Main Title & Sub -->
         <h1 class="learn-hero__title">Anatomi &amp; Standar Sepeda</h1>
         <p class="learn-hero__subtitle">
-          Pelajari tipe sepeda, kompatibilitas komponen as roda, bottom bracket, headset, dan standar teknis secara transparan tanpa bingung.
+          Pelajari tipe sepeda, kompatibilitas komponen as roda, bottom bracket,
+          headset, dan standar teknis secara transparan tanpa bingung.
         </p>
 
         <!-- Quick Action Tools Row -->
         <div class="learn-quick-actions">
-          <NuxtLink to="/learn/diagnostics" class="action-pill action-pill--alert">
+          <NuxtLink
+            to="/learn/diagnostics"
+            class="action-pill action-pill--alert"
+          >
             <span class="pill-icon">
               <GIcon name="wrench" size="xs" color="#EF4444" />
             </span>
@@ -344,10 +371,19 @@ function resetWizard(): void {
             class="learn-search__input"
             @input="searchQuery ? null : clearSearch()"
           />
-          <button v-if="searchQuery" class="learn-search__clear" type="button" @click="clearSearch">
+          <button
+            v-if="searchQuery"
+            class="learn-search__clear"
+            type="button"
+            @click="clearSearch"
+          >
             <GIcon name="close" size="xs" />
           </button>
-          <button class="learn-search__submit" type="submit" :disabled="searching">
+          <button
+            class="learn-search__submit"
+            type="submit"
+            :disabled="searching"
+          >
             {{ searching ? '…' : 'Cari' }}
           </button>
         </form>
@@ -358,15 +394,25 @@ function resetWizard(): void {
       <!-- Search Results View (If searched) -->
       <div v-if="hasSearched" class="search-results-section">
         <div class="search-results-header">
-          <span>Hasil Pencarian untuk <strong>"{{ searchQuery }}"</strong> ({{ searchResults.length }})</span>
+          <span
+            >Hasil Pencarian untuk <strong>"{{ searchQuery }}"</strong> ({{
+              searchResults.length
+            }})</span
+          >
           <button class="clear-text-btn" type="button" @click="clearSearch">
             <GIcon name="close" size="xs" /> Tutup Pencarian
           </button>
         </div>
 
-        <p v-if="searchError" class="state-card state-card--error" role="alert">{{ searchError }}</p>
-        <p v-else-if="searchResults.length === 0" class="state-card state-card--empty">
-          Tidak ditemukan istilah yang cocok. Coba cari kata kunci seperti "axle", "freehub", "travel", atau "bb".
+        <p v-if="searchError" class="state-card state-card--error" role="alert">
+          {{ searchError }}
+        </p>
+        <p
+          v-else-if="searchResults.length === 0"
+          class="state-card state-card--empty"
+        >
+          Tidak ditemukan istilah yang cocok. Coba cari kata kunci seperti
+          "axle", "freehub", "travel", atau "bb".
         </p>
         <div v-else class="search-results-grid">
           <NuxtLink
@@ -446,16 +492,42 @@ function resetWizard(): void {
       <!-- Loading Skeleton Shimmer Grid -->
       <div v-if="loading" class="types-grid">
         <div v-for="i in 4" :key="i" class="bike-type-card skeleton-card-box">
-          <div class="skeleton-shimmer" style="width: 100%; height: 10rem; border-radius: 0.85rem;" />
-          <div style="padding: 1rem; display: grid; gap: 0.65rem;">
-            <div class="skeleton-shimmer" style="width: 35%; height: 1.1rem; border-radius: 0.35rem;" />
-            <div class="skeleton-shimmer" style="width: 60%; height: 1.5rem; border-radius: 0.4rem;" />
-            <div class="skeleton-shimmer" style="width: 90%; height: 0.85rem; border-radius: 0.35rem;" />
-            <div class="skeleton-shimmer" style="width: 100%; height: 2.6rem; border-radius: 0.75rem; margin-top: 0.5rem;" />
+          <div
+            class="skeleton-shimmer"
+            style="width: 100%; height: 10rem; border-radius: 0.85rem"
+          />
+          <div style="padding: 1rem; display: grid; gap: 0.65rem">
+            <div
+              class="skeleton-shimmer"
+              style="width: 35%; height: 1.1rem; border-radius: 0.35rem"
+            />
+            <div
+              class="skeleton-shimmer"
+              style="width: 60%; height: 1.5rem; border-radius: 0.4rem"
+            />
+            <div
+              class="skeleton-shimmer"
+              style="width: 90%; height: 0.85rem; border-radius: 0.35rem"
+            />
+            <div
+              class="skeleton-shimmer"
+              style="
+                width: 100%;
+                height: 2.6rem;
+                border-radius: 0.75rem;
+                margin-top: 0.5rem;
+              "
+            />
           </div>
         </div>
       </div>
-      <p v-else-if="errorMessage" class="state-card state-card--error" role="alert">{{ errorMessage }}</p>
+      <p
+        v-else-if="errorMessage"
+        class="state-card state-card--error"
+        role="alert"
+      >
+        {{ errorMessage }}
+      </p>
 
       <template v-else-if="!hasSearched">
         <!-- ══════════════════════════════════════════════════════════
@@ -523,7 +595,10 @@ function resetWizard(): void {
         <!-- ══════════════════════════════════════════════════════════
              TAB 2: 20 COMPONENT CATEGORIES GRID
              ══════════════════════════════════════════════════════════ -->
-        <section v-else-if="activeTab === 'components'" class="components-section">
+        <section
+          v-else-if="activeTab === 'components'"
+          class="components-section"
+        >
           <div class="components-grid">
             <NuxtLink
               v-for="cat in componentCategories"
@@ -532,7 +607,11 @@ function resetWizard(): void {
               class="component-card"
             >
               <div class="component-card__icon-box">
-                <GIcon :name="categoryIconName(cat.slug)" size="lg" color="#17202A" />
+                <GIcon
+                  :name="categoryIconName(cat.slug)"
+                  size="lg"
+                  color="#17202A"
+                />
               </div>
               <div class="component-card__details">
                 <h3 class="component-card__name">{{ cat.name }}</h3>
@@ -550,7 +629,10 @@ function resetWizard(): void {
           <div class="glossary-header-banner">
             <div class="glossary-banner-text">
               <h3>Kamus Standar &amp; Istilah Bengkel Sepeda</h3>
-              <p>Pelajari arti istilah mekanik seperti Boost, UDH, Tapered, BSA, Micro Spline, dan HG.</p>
+              <p>
+                Pelajari arti istilah mekanik seperti Boost, UDH, Tapered, BSA,
+                Micro Spline, dan HG.
+              </p>
             </div>
             <button
               class="curate-button"
@@ -588,8 +670,12 @@ function resetWizard(): void {
               :class="{ 'bookmark-filter-toggle--active': showOnlyBookmarked }"
               @click="showOnlyBookmarked = !showOnlyBookmarked"
             >
-              <span>{{ showOnlyBookmarked ? '⭐ Istilah Tersimpan' : '☆ Tersimpan' }}</span>
-              <span class="bookmark-count-badge">{{ bookmarkedTerms.length }}</span>
+              <span>{{
+                showOnlyBookmarked ? '⭐ Istilah Tersimpan' : '☆ Tersimpan'
+              }}</span>
+              <span class="bookmark-count-badge">{{
+                bookmarkedTerms.length
+              }}</span>
             </button>
           </div>
 
@@ -608,23 +694,39 @@ function resetWizard(): void {
                 <button
                   type="button"
                   class="glossary-star-btn"
-                  :class="{ 'glossary-star-btn--bookmarked': bookmarkedTerms.includes(term.slug) }"
-                  :title="bookmarkedTerms.includes(term.slug) ? 'Hapus dari bookmark' : 'Simpan ke bookmark'"
+                  :class="{
+                    'glossary-star-btn--bookmarked': bookmarkedTerms.includes(
+                      term.slug,
+                    ),
+                  }"
+                  :title="
+                    bookmarkedTerms.includes(term.slug)
+                      ? 'Hapus dari bookmark'
+                      : 'Simpan ke bookmark'
+                  "
                   @click="toggleBookmark(term.slug)"
                 >
                   {{ bookmarkedTerms.includes(term.slug) ? '⭐' : '☆' }}
                 </button>
               </div>
               <p class="glossary-card__plain">{{ term.plainDefinition }}</p>
-              
+
               <div v-if="term.technicalDefinition" class="glossary-card__tech">
                 <span class="tech-label">Spesifikasi Teknis:</span>
                 <p>{{ term.technicalDefinition }}</p>
               </div>
 
-              <div v-if="term.aliases && term.aliases.length > 0" class="glossary-card__aliases">
+              <div
+                v-if="term.aliases && term.aliases.length > 0"
+                class="glossary-card__aliases"
+              >
                 <span class="alias-label">Alias:</span>
-                <span v-for="alias in term.aliases" :key="alias" class="alias-pill">{{ alias }}</span>
+                <span
+                  v-for="alias in term.aliases"
+                  :key="alias"
+                  class="alias-pill"
+                  >{{ alias }}</span
+                >
               </div>
             </article>
           </div>
@@ -634,18 +736,26 @@ function resetWizard(): void {
       <!-- ══════════════════════════════════════════════════════════
            OFFICIAL ENGINEERING STANDARDS PROVENANCE BANNER
            ══════════════════════════════════════════════════════════ -->
-      <section class="standards-provenance-section" aria-labelledby="standards-provenance-title">
+      <section
+        class="standards-provenance-section"
+        aria-labelledby="standards-provenance-title"
+      >
         <div class="provenance-section-header">
           <div class="provenance-header-left">
             <span class="provenance-chip">
               <GIcon name="shield" size="xs" color="#15803D" filled />
               <span>Standar Terverifikasi</span>
             </span>
-            <h2 id="standards-provenance-title" class="provenance-section-title">
+            <h2
+              id="standards-provenance-title"
+              class="provenance-section-title"
+            >
               Transparansi &amp; Rujukan Standar Resmi
             </h2>
             <p class="provenance-section-sub">
-              Seluruh aturan kompatibilitas dan dimensi mekanik di GowesKit diverifikasi dari dokumen teknis resmi industri sepeda internasional:
+              Seluruh aturan kompatibilitas dan dimensi mekanik di GowesKit
+              diverifikasi dari dokumen teknis resmi industri sepeda
+              internasional:
             </p>
           </div>
         </div>
@@ -662,7 +772,10 @@ function resetWizard(): void {
               <span class="ext-icon">↗</span>
             </div>
             <strong class="standard-title">ISO 5775-1 / ISO 4210</strong>
-            <p class="standard-desc">Standar dimensi pelek, Bead Seat Diameter (BSD ban), dan uji keselamatan rangka sepeda.</p>
+            <p class="standard-desc">
+              Standar dimensi pelek, Bead Seat Diameter (BSD ban), dan uji
+              keselamatan rangka sepeda.
+            </p>
           </a>
 
           <a
@@ -675,8 +788,13 @@ function resetWizard(): void {
               <span class="standard-org">SHIS (Standard Headset)</span>
               <span class="ext-icon">↗</span>
             </div>
-            <strong class="standard-title">Cane Creek, FSA &amp; Park Tool</strong>
-            <p class="standard-desc">Standardized Headset Identification System untuk kecocokan fork steerer (EC, ZS, IS).</p>
+            <strong class="standard-title"
+              >Cane Creek, FSA &amp; Park Tool</strong
+            >
+            <p class="standard-desc">
+              Standardized Headset Identification System untuk kecocokan fork
+              steerer (EC, ZS, IS).
+            </p>
           </a>
 
           <a
@@ -689,8 +807,13 @@ function resetWizard(): void {
               <span class="standard-org">Bottom Bracket Standards</span>
               <span class="ext-icon">↗</span>
             </div>
-            <strong class="standard-title">Park Tool &amp; Manufacturer Specs</strong>
-            <p class="standard-desc">Identifikasi shell ulir BSA/T47 dan pressfit BB86/92, BB30, DUB 28.99mm, 24mm.</p>
+            <strong class="standard-title"
+              >Park Tool &amp; Manufacturer Specs</strong
+            >
+            <p class="standard-desc">
+              Identifikasi shell ulir BSA/T47 dan pressfit BB86/92, BB30, DUB
+              28.99mm, 24mm.
+            </p>
           </a>
 
           <a
@@ -703,8 +826,13 @@ function resetWizard(): void {
               <span class="standard-org">Shimano &amp; SRAM Tech</span>
               <span class="ext-icon">↗</span>
             </div>
-            <strong class="standard-title">Groupset &amp; Axle Compatibility</strong>
-            <p class="standard-desc">Matriks kompatibilitas drivetrain Micro Spline, HG, XD/XDR, Boost 148, dan Linkglide CUES.</p>
+            <strong class="standard-title"
+              >Groupset &amp; Axle Compatibility</strong
+            >
+            <p class="standard-desc">
+              Matriks kompatibilitas drivetrain Micro Spline, HG, XD/XDR, Boost
+              148, dan Linkglide CUES.
+            </p>
           </a>
         </div>
       </section>
@@ -723,57 +851,83 @@ function resetWizard(): void {
       <div class="wizard-modal-sheet">
         <div class="modal-header">
           <div class="modal-header-titles">
-            <span class="modal-step-badge">Langkah {{ wizardStep <= 3 ? `${wizardStep}/3` : 'Selesai' }}</span>
+            <span class="modal-step-badge"
+              >Langkah
+              {{ wizardStep <= 3 ? `${wizardStep}/3` : 'Selesai' }}</span
+            >
             <h2>Deteksi Tipe Sepeda Anda</h2>
           </div>
-          <button class="modal-close" type="button" aria-label="Tutup" @click="showWizard = false">
+          <button
+            class="modal-close"
+            type="button"
+            aria-label="Tutup"
+            @click="showWizard = false"
+          >
             <GIcon name="close" size="xs" />
           </button>
         </div>
 
         <!-- Step 1 -->
         <div v-if="wizardStep === 1" class="wizard-step-body">
-          <p class="step-question">Di medan mana Anda paling sering bersepeda?</p>
+          <p class="step-question">
+            Di medan mana Anda paling sering bersepeda?
+          </p>
           <div class="step-buttons-stack">
             <button
               class="wizard-btn-card"
               type="button"
-              @click="wizardTerrain = 'trail'; wizardStep = 2"
+              @click="
+                wizardTerrain = 'trail';
+                wizardStep = 2;
+              "
             >
               <div class="btn-icon-box">
                 <GIcon name="tree" size="md" color="#16A34A" />
               </div>
               <div>
                 <strong>Jalur Tanah &amp; Bebatuan (Off-road)</strong>
-                <small>Singletrack, turunan bukit, tanah basah, dan bike park</small>
+                <small
+                  >Singletrack, turunan bukit, tanah basah, dan bike park</small
+                >
               </div>
             </button>
 
             <button
               class="wizard-btn-card"
               type="button"
-              @click="wizardTerrain = 'paved'; wizardStep = 2"
+              @click="
+                wizardTerrain = 'paved';
+                wizardStep = 2;
+              "
             >
               <div class="btn-icon-box">
                 <GIcon name="bike-road" size="md" color="#0284C7" />
               </div>
               <div>
                 <strong>Jalan Aspal Mulus &amp; Perkotaan</strong>
-                <small>Jalan raya, rute komuter kota, dan putaran velodrome</small>
+                <small
+                  >Jalan raya, rute komuter kota, dan putaran velodrome</small
+                >
               </div>
             </button>
 
             <button
               class="wizard-btn-card"
               type="button"
-              @click="wizardTerrain = 'gravel'; wizardStep = 2"
+              @click="
+                wizardTerrain = 'gravel';
+                wizardStep = 2;
+              "
             >
               <div class="btn-icon-box">
                 <GIcon name="bike-gravel" size="md" color="#D97706" />
               </div>
               <div>
                 <strong>Kombinasi Aspal &amp; Jalan Makadam / Kerikil</strong>
-                <small>Jalur pedesaan, perkebunan, dan rute jarak jauh all-road</small>
+                <small
+                  >Jalur pedesaan, perkebunan, dan rute jarak jauh
+                  all-road</small
+                >
               </div>
             </button>
           </div>
@@ -781,26 +935,37 @@ function resetWizard(): void {
 
         <!-- Step 2 -->
         <div v-else-if="wizardStep === 2" class="wizard-step-body">
-          <p class="step-question">Apakah rangka sepeda Anda memiliki engsel lipat di bagian tengah?</p>
+          <p class="step-question">
+            Apakah rangka sepeda Anda memiliki engsel lipat di bagian tengah?
+          </p>
           <div class="step-buttons-stack">
             <button
               class="wizard-btn-card"
               type="button"
-              @click="wizardFolding = 'yes'; runWizardEvaluation()"
+              @click="
+                wizardFolding = 'yes';
+                runWizardEvaluation();
+              "
             >
               <div class="btn-icon-box">
                 <GIcon name="bike-folding" size="md" color="#7C3AED" />
               </div>
               <div>
                 <strong>Ya, Sepeda Bisa Dilipat (Folding)</strong>
-                <small>Rangka berengsel, roda kecil (16–20 inci), mudah disimpan</small>
+                <small
+                  >Rangka berengsel, roda kecil (16–20 inci), mudah
+                  disimpan</small
+                >
               </div>
             </button>
 
             <button
               class="wizard-btn-card"
               type="button"
-              @click="wizardFolding = 'no'; wizardStep = 3"
+              @click="
+                wizardFolding = 'no';
+                wizardStep = 3;
+              "
             >
               <div class="btn-icon-box">
                 <GIcon name="bike" size="md" color="#17202A" />
@@ -815,50 +980,67 @@ function resetWizard(): void {
 
         <!-- Step 3 -->
         <div v-else-if="wizardStep === 3" class="wizard-step-body">
-          <p class="step-question">Model setang (handlebar) seperti apa yang terpasang?</p>
+          <p class="step-question">
+            Model setang (handlebar) seperti apa yang terpasang?
+          </p>
           <div class="step-buttons-stack">
             <button
               class="wizard-btn-card"
               type="button"
-              @click="wizardHandlebar = 'flat'; runWizardEvaluation()"
+              @click="
+                wizardHandlebar = 'flat';
+                runWizardEvaluation();
+              "
             >
               <div class="btn-icon-box">
                 <GIcon name="bike-mtb" size="md" color="#059669" />
               </div>
               <div>
                 <strong>Setang Lurus / Riser (Flat Bar)</strong>
-                <small>Posisi gowes tegak, kontrol stabil di medan off-road / kota</small>
+                <small
+                  >Posisi gowes tegak, kontrol stabil di medan off-road /
+                  kota</small
+                >
               </div>
             </button>
 
             <button
               class="wizard-btn-card"
               type="button"
-              @click="wizardHandlebar = 'drop'; runWizardEvaluation()"
+              @click="
+                wizardHandlebar = 'drop';
+                runWizardEvaluation();
+              "
             >
               <div class="btn-icon-box">
                 <GIcon name="bike-road" size="md" color="#EA580C" />
               </div>
               <div>
                 <strong>Setang Balap Melengkung (Drop Bar)</strong>
-                <small>Posisi gowes aerodinamis untuk kecepatan dan jarak jauh</small>
+                <small
+                  >Posisi gowes aerodinamis untuk kecepatan dan jarak
+                  jauh</small
+                >
               </div>
             </button>
           </div>
         </div>
 
         <!-- Step 4: Result -->
-        <div v-else-if="wizardStep === 4 && wizardResult" class="wizard-result-box">
-          <div class="result-score-badge">
-            ✓ {{ wizardResult.matchScore }}
-          </div>
+        <div
+          v-else-if="wizardStep === 4 && wizardResult"
+          class="wizard-result-box"
+        >
+          <div class="result-score-badge">✓ {{ wizardResult.matchScore }}</div>
           <h3 class="result-bike-name">{{ wizardResult.typeName }}</h3>
           <p class="result-bike-summary">{{ wizardResult.summary }}</p>
 
           <div class="common-standards-box">
             <strong>Standar Komponen Umum:</strong>
             <ul>
-              <li v-for="spec in wizardResult.commonSpecs" :key="spec">{{ spec }}</li>
+              <li v-for="spec in wizardResult.commonSpecs" :key="spec">
+                {{ spec }}
+              </li>
             </ul>
           </div>
 
@@ -870,7 +1052,11 @@ function resetWizard(): void {
             >
               Buka Anatomi {{ wizardResult.typeName }} →
             </NuxtLink>
-            <button class="button button--secondary" type="button" @click="resetWizard">
+            <button
+              class="button button--secondary"
+              type="button"
+              @click="resetWizard"
+            >
               Ulangi Deteksi
             </button>
           </div>
@@ -943,7 +1129,7 @@ function resetWizard(): void {
   width: 0.45rem;
   height: 0.45rem;
   border-radius: 50%;
-  background: #16A34A;
+  background: #16a34a;
 }
 
 .learn-hero__title {
@@ -985,7 +1171,9 @@ function resetWizard(): void {
   cursor: pointer;
   border: 1.5px solid var(--color-ink);
   box-shadow: 0 2px 0 var(--color-ink);
-  transition: transform 90ms ease, box-shadow 90ms ease;
+  transition:
+    transform 90ms ease,
+    box-shadow 90ms ease;
   white-space: nowrap;
   min-width: 0;
   box-sizing: border-box;
@@ -997,10 +1185,10 @@ function resetWizard(): void {
 }
 
 .action-pill--alert {
-  background: #FEF3C7;
-  color: #92400E;
-  border-color: #92400E;
-  box-shadow: 0 2px 0 #92400E;
+  background: #fef3c7;
+  color: #92400e;
+  border-color: #92400e;
+  box-shadow: 0 2px 0 #92400e;
 }
 
 .action-pill--wizard {
@@ -1028,7 +1216,9 @@ function resetWizard(): void {
   border: 1.5px solid var(--color-sand);
   box-shadow: 0 2px 8px rgba(23, 32, 42, 0.03);
   margin-top: 0.35rem;
-  transition: border-color 150ms ease, background-color 150ms ease;
+  transition:
+    border-color 150ms ease,
+    background-color 150ms ease;
 }
 
 .learn-search:focus-within {
@@ -1202,7 +1392,10 @@ function resetWizard(): void {
   display: flex;
   flex-direction: column;
   box-shadow: 0 4px 16px rgba(23, 32, 42, 0.03);
-  transition: border-color 150ms ease, box-shadow 150ms ease, transform 150ms ease;
+  transition:
+    border-color 150ms ease,
+    box-shadow 150ms ease,
+    transform 150ms ease;
 }
 
 .bike-type-card:hover {
@@ -1214,7 +1407,7 @@ function resetWizard(): void {
 .bike-type-illustration-box {
   width: 100%;
   height: 9.5rem;
-  background: #F8FAFC;
+  background: #f8fafc;
   border-bottom: 1.5px solid var(--color-sand);
   display: flex;
   align-items: center;
@@ -1248,8 +1441,8 @@ function resetWizard(): void {
   font-family: var(--font-mono);
   font-size: 0.62rem;
   font-weight: 900;
-  color: #0284C7;
-  background: #E0F2FE;
+  color: #0284c7;
+  background: #e0f2fe;
   padding: 0.15rem 0.5rem;
   border-radius: 9999px;
   width: fit-content;
@@ -1753,9 +1946,9 @@ function resetWizard(): void {
 }
 
 .state-card--error {
-  background: #FEE2E2;
-  border-color: #FCA5A5;
-  color: #991B1B;
+  background: #fee2e2;
+  border-color: #fca5a5;
+  color: #991b1b;
 }
 
 /* ══════════════════════════════════════════════════════════
@@ -2001,7 +2194,9 @@ function resetWizard(): void {
   border: 1px solid var(--color-sand);
   text-decoration: none;
   color: inherit;
-  transition: border-color 120ms ease, transform 120ms ease;
+  transition:
+    border-color 120ms ease,
+    transform 120ms ease;
 }
 
 .standard-ref-card:hover {

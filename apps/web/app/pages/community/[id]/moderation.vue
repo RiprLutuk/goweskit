@@ -75,7 +75,10 @@ onMounted(loadQueue);
 
 <template>
   <div class="page-stack moderation-page">
-    <NuxtLink class="back-link" :to="`/community/${community?.community.slug || communityIdentifier}`">
+    <NuxtLink
+      class="back-link"
+      :to="`/community/${community?.community.slug || communityIdentifier}`"
+    >
       <GIcon name="chevron-left" size="xs" />
       <span>Kembali ke Detail Komunitas</span>
     </NuxtLink>
@@ -87,7 +90,8 @@ onMounted(loadQueue);
       </span>
       <h1>Tinjau Permintaan Gabung Komunitas</h1>
       <p>
-        Setujui atau tolak calon anggota komunitas dengan seksama. Setiap keputusan tercatat secara transparan.
+        Setujui atau tolak calon anggota komunitas dengan seksama. Setiap
+        keputusan tercatat secara transparan.
       </p>
     </header>
 
@@ -100,7 +104,10 @@ onMounted(loadQueue);
       aria-labelledby="moderation-sign-in-title"
     >
       <h2 id="moderation-sign-in-title">Masuk Akun Diperlukan</h2>
-      <p>Hanya pemilik atau pengurus aktif yang dapat membuka antrean moderasi ini.</p>
+      <p>
+        Hanya pemilik atau pengurus aktif yang dapat membuka antrean moderasi
+        ini.
+      </p>
       <NuxtLink class="button button--primary" to="/login">Masuk Akun</NuxtLink>
     </section>
     <section
@@ -110,7 +117,8 @@ onMounted(loadQueue);
     >
       <h2>Akses Moderasi Dibatasi</h2>
       <p>
-        Halaman antrean ini khusus diperuntukkan bagi pemilik atau admin komunitas terdaftar.
+        Halaman antrean ini khusus diperuntukkan bagi pemilik atau admin
+        komunitas terdaftar.
       </p>
       <NuxtLink
         class="button button--secondary"
@@ -164,7 +172,10 @@ onMounted(loadQueue);
           }}</span>
           <div class="request-card__copy">
             <strong>{{ request.requester.displayName }}</strong>
-            <span>Diajukan pada {{ formatCommunityDate(request.requestedAt) }}</span>
+            <span
+              >Diajukan pada
+              {{ formatCommunityDate(request.requestedAt) }}</span
+            >
           </div>
           <div class="request-card__actions">
             <button
@@ -174,7 +185,11 @@ onMounted(loadQueue);
               @click="decide(request, 'approve')"
             >
               <GIcon name="check" size="xs" />
-              <span>{{ activeMembershipId === request.membershipId ? 'Menyimpan…' : 'Setujui' }}</span>
+              <span>{{
+                activeMembershipId === request.membershipId
+                  ? 'Menyimpan…'
+                  : 'Setujui'
+              }}</span>
             </button>
             <button
               class="button button--secondary button--reject"

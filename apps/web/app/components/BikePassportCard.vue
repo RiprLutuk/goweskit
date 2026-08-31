@@ -111,7 +111,9 @@ ${specsText}
 }
 
 // Draw HD Story / Post card on canvas for download & native share
-async function renderCanvas(format: 'story' | 'post'): Promise<HTMLCanvasElement> {
+async function renderCanvas(
+  format: 'story' | 'post',
+): Promise<HTMLCanvasElement> {
   const canvas = document.createElement('canvas');
   const ctx = canvas.getContext('2d');
   if (!ctx) throw new Error('Canvas 2D context not available');
@@ -148,7 +150,11 @@ async function renderCanvas(format: 'story' | 'post'): Promise<HTMLCanvasElement
 
   ctx.fillStyle = '#94A3B8';
   ctx.font = '28px sans-serif';
-  ctx.fillText(`ID: ${props.bike.id.slice(0, 12)}`, canvas.width - 320, isStory ? 120 : 90);
+  ctx.fillText(
+    `ID: ${props.bike.id.slice(0, 12)}`,
+    canvas.width - 320,
+    isStory ? 120 : 90,
+  );
 
   // 4. Nickname & Model
   ctx.fillStyle = '#FFFFFF';
@@ -167,7 +173,11 @@ async function renderCanvas(format: 'story' | 'post'): Promise<HTMLCanvasElement
 
   ctx.fillStyle = '#17202A';
   ctx.font = 'bold 28px sans-serif';
-  ctx.fillText(props.bike.bicycleType.name.toUpperCase(), 110, isStory ? 392 : 312);
+  ctx.fillText(
+    props.bike.bicycleType.name.toUpperCase(),
+    110,
+    isStory ? 392 : 312,
+  );
 
   ctx.fillStyle = '#0284C7';
   ctx.beginPath();
@@ -176,7 +186,11 @@ async function renderCanvas(format: 'story' | 'post'): Promise<HTMLCanvasElement
 
   ctx.fillStyle = '#FFFFFF';
   ctx.font = 'bold 28px sans-serif';
-  ctx.fillText(`✓ ${knownSpecsCount.value}/${totalSpecsCount.value} SPECS VERIFIED`, 450, isStory ? 392 : 312);
+  ctx.fillText(
+    `✓ ${knownSpecsCount.value}/${totalSpecsCount.value} SPECS VERIFIED`,
+    450,
+    isStory ? 392 : 312,
+  );
 
   // 6. Draw Bike Photo or Artwork if available
   const imgBoxY = isStory ? 460 : 360;
@@ -196,7 +210,8 @@ async function renderCanvas(format: 'story' | 'post'): Promise<HTMLCanvasElement
   try {
     const img = new Image();
     img.crossOrigin = 'anonymous';
-    const imgSrc = props.bike.photoUrl || bikeTypeSvg(props.bike.bicycleType.slug);
+    const imgSrc =
+      props.bike.photoUrl || bikeTypeSvg(props.bike.bicycleType.slug);
     await new Promise((resolve) => {
       img.onload = resolve;
       img.onerror = resolve; // don't crash if image fails
@@ -218,7 +233,8 @@ async function renderCanvas(format: 'story' | 'post'): Promise<HTMLCanvasElement
   ctx.font = 'bold 32px sans-serif';
   ctx.fillText('STANDAR KOMPONEN TERVERIFIKASI', 80, specsY);
 
-  const keySpecs = props.bike.specs?.filter((s) => s.knowledge === 'known').slice(0, 6) ?? [];
+  const keySpecs =
+    props.bike.specs?.filter((s) => s.knowledge === 'known').slice(0, 6) ?? [];
   const startCardY = specsY + 30;
   const cardW = (canvas.width - 160 - 30) / 2;
   const cardH = isStory ? 100 : 70;
@@ -244,7 +260,11 @@ async function renderCanvas(format: 'story' | 'post'): Promise<HTMLCanvasElement
     ctx.fillStyle = '#FFFFFF';
     ctx.font = 'bold 26px sans-serif';
     const valText = spec.valueLabel ?? spec.value ?? '-';
-    ctx.fillText(valText.length > 22 ? valText.slice(0, 22) + '…' : valText, x + 20, y + (isStory ? 75 : 58));
+    ctx.fillText(
+      valText.length > 22 ? valText.slice(0, 22) + '…' : valText,
+      x + 20,
+      y + (isStory ? 75 : 58),
+    );
   });
 
   // 8. Bottom Footer with QR code (Story mode)
@@ -257,14 +277,18 @@ async function renderCanvas(format: 'story' | 'post'): Promise<HTMLCanvasElement
         qrImg.src = qrDataUrl.value;
       });
       ctx.drawImage(qrImg, 80, 1600, 180, 180);
-      
+
       ctx.fillStyle = '#FFFFFF';
       ctx.font = 'bold 32px sans-serif';
       ctx.fillText('PINDAI UNTUK ANATOMI LENGKAP', 290, 1660);
 
       ctx.fillStyle = '#94A3B8';
       ctx.font = '26px sans-serif';
-      ctx.fillText('Diverifikasi dengan aturan deterministik GowesKit', 290, 1710);
+      ctx.fillText(
+        'Diverifikasi dengan aturan deterministik GowesKit',
+        290,
+        1710,
+      );
       ctx.fillText('goweskit.id · My Garage Workshop', 290, 1755);
     } catch {
       // ignore qr draw fallback
@@ -274,7 +298,11 @@ async function renderCanvas(format: 'story' | 'post'): Promise<HTMLCanvasElement
   // Watermark stamp
   ctx.fillStyle = 'rgba(201, 243, 106, 0.8)';
   ctx.font = 'bold 24px monospace';
-  ctx.fillText('⚡ POWERED BY GOWESKIT', isStory ? canvas.width - 420 : canvas.width - 380, canvas.height - 40);
+  ctx.fillText(
+    '⚡ POWERED BY GOWESKIT',
+    isStory ? canvas.width - 420 : canvas.width - 380,
+    canvas.height - 40,
+  );
 
   return canvas;
 }
@@ -282,19 +310,27 @@ async function renderCanvas(format: 'story' | 'post'): Promise<HTMLCanvasElement
 async function downloadStoryImage() {
   isGeneratingImage.value = true;
   try {
-    const canvas = await renderCanvas(activeFormat.value === 'post' ? 'post' : 'story');
-    const blob = await new Promise<Blob | null>((resolve) => canvas.toBlob(resolve, 'image/png'));
+    const canvas = await renderCanvas(
+      activeFormat.value === 'post' ? 'post' : 'story',
+    );
+    const blob = await new Promise<Blob | null>((resolve) =>
+      canvas.toBlob(resolve, 'image/png'),
+    );
     if (!blob) throw new Error('Blob creation failed');
 
     const url = URL.createObjectURL(blob);
     const link = document.createElement('a');
     link.href = url;
-    const formatName = activeFormat.value === 'post' ? 'Post_1x1' : 'Story_9x16';
+    const formatName =
+      activeFormat.value === 'post' ? 'Post_1x1' : 'Story_9x16';
     link.download = `${props.bike.nickname.replaceAll(' ', '_')}_GowesKit_${formatName}.png`;
     link.click();
     URL.revokeObjectURL(url);
 
-    toast.success('Poster HD Terunduh!', 'Format pas untuk Instagram Story / WhatsApp Status.');
+    toast.success(
+      'Poster HD Terunduh!',
+      'Format pas untuk Instagram Story / WhatsApp Status.',
+    );
   } catch (err: unknown) {
     console.error('Download error:', err);
     toast.error('Gagal mengunduh poster', 'Silakan gunakan tombol salin spek.');
@@ -306,8 +342,12 @@ async function downloadStoryImage() {
 async function shareToMedia() {
   isGeneratingImage.value = true;
   try {
-    const canvas = await renderCanvas(activeFormat.value === 'post' ? 'post' : 'story');
-    const blob = await new Promise<Blob | null>((resolve) => canvas.toBlob(resolve, 'image/png'));
+    const canvas = await renderCanvas(
+      activeFormat.value === 'post' ? 'post' : 'story',
+    );
+    const blob = await new Promise<Blob | null>((resolve) =>
+      canvas.toBlob(resolve, 'image/png'),
+    );
     if (!blob) throw new Error('Blob creation failed');
 
     const file = new File(
@@ -322,7 +362,10 @@ async function shareToMedia() {
         title: `Paspor Sepeda ${props.bike.nickname}`,
         text: `Cek identitas dan standar spesifikasi ${props.bike.nickname} di GowesKit!`,
       });
-      toast.success('Berhasil Dibagikan!', 'Paspor sepeda siap diposting ke media sosial.');
+      toast.success(
+        'Berhasil Dibagikan!',
+        'Paspor sepeda siap diposting ke media sosial.',
+      );
     } else if (navigator.share) {
       await navigator.share({
         title: `Paspor Sepeda ${props.bike.nickname}`,
@@ -410,7 +453,7 @@ async function shareToMedia() {
             <!-- Poster Header -->
             <div class="flex-poster__header">
               <div class="brand-chip">
-                <span class="brand-dot"/>
+                <span class="brand-dot" />
                 <span>GOWESKIT WORKSHOP</span>
               </div>
               <span class="auth-serial">ID: {{ bike.id.slice(0, 8) }}</span>
@@ -419,7 +462,9 @@ async function shareToMedia() {
             <!-- Bike Title & Type -->
             <div class="flex-poster__title-block">
               <span class="poster-type-badge">{{ bike.bicycleType.name }}</span>
-              <h2 id="passport-title" class="poster-bike-name">{{ bike.nickname }}</h2>
+              <h2 id="passport-title" class="poster-bike-name">
+                {{ bike.nickname }}
+              </h2>
               <p class="poster-model-subtitle">{{ fullBikeTitle }}</p>
             </div>
 
@@ -438,29 +483,43 @@ async function shareToMedia() {
                 class="poster-artwork-svg"
               />
               <div class="verified-seal-chip">
-                <span>✓ {{ knownSpecsCount }}/{{ totalSpecsCount }} STANDAR TERVERIFIKASI</span>
+                <span
+                  >✓ {{ knownSpecsCount }}/{{ totalSpecsCount }} STANDAR
+                  TERVERIFIKASI</span
+                >
               </div>
             </div>
 
             <!-- Key Specs Shelf -->
             <div class="flex-poster__specs-shelf">
               <div
-                v-for="spec in (bike.specs?.filter((s) => s.knowledge === 'known').slice(0, 4) ?? [])"
+                v-for="spec in bike.specs
+                  ?.filter((s) => s.knowledge === 'known')
+                  .slice(0, 4) ?? []"
                 :key="spec.standardCode"
                 class="poster-spec-chip"
               >
                 <span class="poster-spec-lbl">{{ spec.label }}</span>
-                <strong class="poster-spec-val">{{ spec.valueLabel ?? spec.value }}</strong>
+                <strong class="poster-spec-val">{{
+                  spec.valueLabel ?? spec.value
+                }}</strong>
               </div>
             </div>
 
             <!-- Poster Footer with QR code -->
             <div class="flex-poster__footer">
-              <img v-if="qrDataUrl" :src="qrDataUrl" alt="QR Code Garasi" class="poster-qr-code" />
+              <img
+                v-if="qrDataUrl"
+                :src="qrDataUrl"
+                alt="QR Code Garasi"
+                class="poster-qr-code"
+              />
               <div class="poster-footer-text">
                 <strong>PINDAI UNTUK ANATOMI LENGKAP</strong>
                 <small>Buku Servis &amp; Standar Dimensi Terverifikasi</small>
-                <span class="poster-watermark">goweskit.id · Digital Bike Passport</span>
+                <span class="poster-watermark"
+                  >goweskit.id · Digital Bike Passport</span
+                >
               </div>
             </div>
           </div>
@@ -469,18 +528,16 @@ async function shareToMedia() {
         <!-- ══════════════════════════════════════════════════════════
              MODE 3: TECHNICAL SPEC SHEET (PRINTABLE)
              ══════════════════════════════════════════════════════════ -->
-        <div
-          v-else
-          id="printable-bike-passport"
-          class="passport-card-sheet"
-        >
+        <div v-else id="printable-bike-passport" class="passport-card-sheet">
           <!-- Sheet Header -->
           <div class="sheet-header">
             <div class="sheet-brand">
               <span class="sheet-logo-box">G</span>
               <div>
                 <strong class="sheet-brand-title">GowesKit Workshop</strong>
-                <span class="sheet-brand-sub">Lembar Identitas &amp; Spesifikasi Mekanik</span>
+                <span class="sheet-brand-sub"
+                  >Lembar Identitas &amp; Spesifikasi Mekanik</span
+                >
               </div>
             </div>
             <span class="sheet-type-pill">{{ bike.bicycleType.name }}</span>
@@ -492,27 +549,53 @@ async function shareToMedia() {
               <h2>{{ bike.nickname }}</h2>
               <p>{{ fullBikeTitle }}</p>
               <div class="sheet-pills-row">
-                <span class="sheet-stat-pill">✓ {{ knownSpecsCount }}/{{ totalSpecsCount }} Standar Terdata</span>
-                <span v-if="bike.modelYear" class="sheet-stat-pill">Tahun {{ bike.modelYear }}</span>
+                <span class="sheet-stat-pill"
+                  >✓ {{ knownSpecsCount }}/{{ totalSpecsCount }} Standar
+                  Terdata</span
+                >
+                <span v-if="bike.modelYear" class="sheet-stat-pill"
+                  >Tahun {{ bike.modelYear }}</span
+                >
               </div>
             </div>
-            <img v-if="qrDataUrl" :src="qrDataUrl" alt="QR Code" class="sheet-qr" />
+            <img
+              v-if="qrDataUrl"
+              :src="qrDataUrl"
+              alt="QR Code"
+              class="sheet-qr"
+            />
           </div>
 
           <!-- Full Specs Grid -->
           <div class="sheet-specs-table">
-            <div class="specs-table-title">Daftar Standar Dimensi Komponen:</div>
-            <div v-if="bike.specs && bike.specs.length > 0" class="specs-dense-grid">
-              <div v-for="spec in bike.specs" :key="spec.standardCode" class="dense-cell">
+            <div class="specs-table-title">
+              Daftar Standar Dimensi Komponen:
+            </div>
+            <div
+              v-if="bike.specs && bike.specs.length > 0"
+              class="specs-dense-grid"
+            >
+              <div
+                v-for="spec in bike.specs"
+                :key="spec.standardCode"
+                class="dense-cell"
+              >
                 <span class="dense-cell__lbl">{{ spec.label }}</span>
-                <strong class="dense-cell__val">{{ spec.valueLabel ?? spec.value ?? 'Belum terisi' }}</strong>
+                <strong class="dense-cell__val">{{
+                  spec.valueLabel ?? spec.value ?? 'Belum terisi'
+                }}</strong>
               </div>
             </div>
-            <p v-else class="empty-notice">Belum ada spesifikasi teknis tercatat.</p>
+            <p v-else class="empty-notice">
+              Belum ada spesifikasi teknis tercatat.
+            </p>
           </div>
 
           <div class="sheet-footer">
-            <small>Diverifikasi dengan engine kompatibilitas deterministik GowesKit · ID: {{ bike.id }}</small>
+            <small
+              >Diverifikasi dengan engine kompatibilitas deterministik GowesKit
+              · ID: {{ bike.id }}</small
+            >
           </div>
         </div>
 
@@ -527,7 +610,9 @@ async function shareToMedia() {
             @click="shareToMedia"
           >
             <span>📲</span>
-            <span>{{ isGeneratingImage ? 'Memproses…' : 'Share ke Medsos' }}</span>
+            <span>{{
+              isGeneratingImage ? 'Memproses…' : 'Share ke Medsos'
+            }}</span>
           </button>
 
           <button
@@ -581,7 +666,7 @@ async function shareToMedia() {
   position: relative;
   width: 100%;
   max-width: 32rem;
-  background: #17202A;
+  background: #17202a;
   border: 1.5px solid rgba(201, 243, 106, 0.3);
   border-radius: 1.5rem;
   box-shadow: 0 25px 60px rgba(0, 0, 0, 0.4);
@@ -601,7 +686,7 @@ async function shareToMedia() {
   border-radius: 50%;
   background: rgba(255, 255, 255, 0.15);
   border: 1px solid rgba(255, 255, 255, 0.2);
-  color: #FFFFFF;
+  color: #ffffff;
   font-size: 0.9rem;
   cursor: pointer;
   display: flex;
@@ -622,7 +707,7 @@ async function shareToMedia() {
   align-items: center;
   gap: 0.35rem;
   padding: 0.85rem 1rem 0.65rem;
-  background: #0F172A;
+  background: #0f172a;
   border-bottom: 1px solid rgba(255, 255, 255, 0.1);
 }
 
@@ -636,7 +721,7 @@ async function shareToMedia() {
   border-radius: 9999px;
   border: none;
   background: transparent;
-  color: #94A3B8;
+  color: #94a3b8;
   font-size: 0.76rem;
   font-weight: 850;
   cursor: pointer;
@@ -646,7 +731,7 @@ async function shareToMedia() {
 
 .format-tab-btn--active {
   background: var(--color-chain-lime);
-  color: #17202A;
+  color: #17202a;
   box-shadow: 0 2px 8px rgba(201, 243, 106, 0.25);
 }
 
@@ -663,7 +748,7 @@ async function shareToMedia() {
 
 .flex-poster {
   width: 100%;
-  background: radial-gradient(circle at top right, #243447 0%, #17202A 100%);
+  background: radial-gradient(circle at top right, #243447 0%, #17202a 100%);
   border: 1.5px solid rgba(201, 243, 106, 0.25);
   border-radius: 1.25rem;
   padding: 1.25rem;
@@ -704,7 +789,7 @@ async function shareToMedia() {
 .auth-serial {
   font-family: var(--font-mono);
   font-size: 0.65rem;
-  color: #64748B;
+  color: #64748b;
 }
 
 .flex-poster__title-block {
@@ -717,7 +802,7 @@ async function shareToMedia() {
   font-family: var(--font-mono);
   font-size: 0.68rem;
   font-weight: 850;
-  color: #38BDF8;
+  color: #38bdf8;
   text-transform: uppercase;
 }
 
@@ -726,7 +811,7 @@ async function shareToMedia() {
   font-size: 1.5rem;
   font-weight: 900;
   letter-spacing: -0.03em;
-  color: #FFFFFF;
+  color: #ffffff;
   line-height: 1.15;
 }
 
@@ -734,7 +819,7 @@ async function shareToMedia() {
   margin: 0;
   font-size: 0.82rem;
   font-weight: 700;
-  color: #94A3B8;
+  color: #94a3b8;
 }
 
 /* Artwork Box */
@@ -742,7 +827,7 @@ async function shareToMedia() {
   position: relative;
   width: 100%;
   height: 9.5rem;
-  background: #0F172A;
+  background: #0f172a;
   border: 1px solid rgba(255, 255, 255, 0.1);
   border-radius: 1rem;
   display: flex;
@@ -804,14 +889,14 @@ async function shareToMedia() {
   font-family: var(--font-mono);
   font-size: 0.6rem;
   font-weight: 800;
-  color: #64748B;
+  color: #64748b;
   text-transform: uppercase;
 }
 
 .poster-spec-val {
   font-size: 0.78rem;
   font-weight: 850;
-  color: #FFFFFF;
+  color: #ffffff;
   white-space: nowrap;
   overflow: hidden;
   text-overflow: ellipsis;
@@ -830,7 +915,7 @@ async function shareToMedia() {
   width: 4rem;
   height: 4rem;
   border-radius: 0.45rem;
-  background: #FFFFFF;
+  background: #ffffff;
   padding: 0.2rem;
   flex-shrink: 0;
 }
@@ -844,12 +929,12 @@ async function shareToMedia() {
 .poster-footer-text strong {
   font-size: 0.74rem;
   font-weight: 900;
-  color: #FFFFFF;
+  color: #ffffff;
 }
 
 .poster-footer-text small {
   font-size: 0.66rem;
-  color: #94A3B8;
+  color: #94a3b8;
 }
 
 .poster-watermark {
@@ -864,8 +949,8 @@ async function shareToMedia() {
    ══════════════════════════════════════════════════════════ */
 .passport-card-sheet {
   padding: 1.25rem;
-  background: #FFFFFF;
-  color: #17202A;
+  background: #ffffff;
+  color: #17202a;
   display: flex;
   flex-direction: column;
   gap: 1rem;
@@ -876,7 +961,7 @@ async function shareToMedia() {
   display: flex;
   align-items: center;
   justify-content: space-between;
-  border-bottom: 2px solid #17202A;
+  border-bottom: 2px solid #17202a;
   padding-bottom: 0.65rem;
 }
 
@@ -889,7 +974,7 @@ async function shareToMedia() {
 .sheet-logo-box {
   width: 1.85rem;
   height: 1.85rem;
-  background: #17202A;
+  background: #17202a;
   color: var(--color-chain-lime);
   font-weight: 900;
   border-radius: 0.4rem;
@@ -907,7 +992,7 @@ async function shareToMedia() {
 .sheet-brand-sub {
   display: block;
   font-size: 0.65rem;
-  color: #64748B;
+  color: #64748b;
   text-transform: uppercase;
 }
 
@@ -916,8 +1001,8 @@ async function shareToMedia() {
   font-size: 0.7rem;
   font-weight: 850;
   padding: 0.2rem 0.6rem;
-  background: #E0F2FE;
-  color: #0369A1;
+  background: #e0f2fe;
+  color: #0369a1;
   border-radius: 9999px;
 }
 
@@ -926,8 +1011,8 @@ async function shareToMedia() {
   align-items: center;
   justify-content: space-between;
   gap: 1rem;
-  background: #F8FAFC;
-  border: 1px solid #E2E8F0;
+  background: #f8fafc;
+  border: 1px solid #e2e8f0;
   border-radius: 0.85rem;
   padding: 0.85rem;
 }
@@ -954,16 +1039,16 @@ async function shareToMedia() {
   font-weight: 800;
   padding: 0.15rem 0.45rem;
   border-radius: 0.35rem;
-  background: #FFFFFF;
-  border: 1px solid #CBD5E1;
+  background: #ffffff;
+  border: 1px solid #cbd5e1;
 }
 
 .sheet-qr {
   width: 4.5rem;
   height: 4.5rem;
   border-radius: 0.45rem;
-  border: 1px solid #E2E8F0;
-  background: #FFFFFF;
+  border: 1px solid #e2e8f0;
+  background: #ffffff;
   padding: 0.15rem;
 }
 
@@ -981,8 +1066,8 @@ async function shareToMedia() {
 }
 
 .dense-cell {
-  background: #F8FAFC;
-  border: 1px solid #E2E8F0;
+  background: #f8fafc;
+  border: 1px solid #e2e8f0;
   border-radius: 0.45rem;
   padding: 0.35rem 0.5rem;
   display: flex;
@@ -991,20 +1076,20 @@ async function shareToMedia() {
 
 .dense-cell__lbl {
   font-size: 0.62rem;
-  color: #64748B;
+  color: #64748b;
 }
 
 .dense-cell__val {
   font-size: 0.78rem;
-  color: #17202A;
+  color: #17202a;
 }
 
 .sheet-footer {
   text-align: center;
-  border-top: 1px solid #E2E8F0;
+  border-top: 1px solid #e2e8f0;
   padding-top: 0.65rem;
   font-size: 0.65rem;
-  color: #64748B;
+  color: #64748b;
 }
 
 /* ══════════════════════════════════════════════════════════
@@ -1015,7 +1100,7 @@ async function shareToMedia() {
   grid-template-columns: 1.2fr 1fr 1fr;
   gap: 0.45rem;
   padding: 0.85rem 1rem;
-  background: #0F172A;
+  background: #0f172a;
   border-top: 1px solid rgba(255, 255, 255, 0.1);
 }
 
@@ -1040,25 +1125,25 @@ async function shareToMedia() {
 
 .studio-btn--share {
   background: var(--color-chain-lime);
-  color: #17202A;
+  color: #17202a;
   box-shadow: 0 2px 8px rgba(201, 243, 106, 0.25);
 }
 
 .studio-btn--download {
   background: rgba(255, 255, 255, 0.15);
-  color: #FFFFFF;
+  color: #ffffff;
   border: 1px solid rgba(255, 255, 255, 0.2);
 }
 
 .studio-btn--copy {
   background: rgba(255, 255, 255, 0.08);
-  color: #CBD5E1;
+  color: #cbd5e1;
 }
 
 .studio-btn--print {
   grid-column: span 3;
   background: #334155;
-  color: #FFFFFF;
+  color: #ffffff;
 }
 
 @media print {

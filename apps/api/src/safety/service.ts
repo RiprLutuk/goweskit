@@ -229,7 +229,11 @@ export class SafetyService {
   ): Promise<{ locations: SafetyLocation[] }> {
     const session = await this.repository.findSession(userId, sessionId);
     if (session === null) {
-      throw new AppError('INVALID_REQUEST', 'Safety session was not found.', 404);
+      throw new AppError(
+        'INVALID_REQUEST',
+        'Safety session was not found.',
+        404,
+      );
     }
     const locations = await this.repository.listSessionLocations(sessionId);
     return { locations };

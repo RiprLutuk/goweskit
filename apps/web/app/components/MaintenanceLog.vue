@@ -47,7 +47,8 @@ function dueCopy(event: MaintenanceEvent): string {
   if (event.nextDueDate !== null) {
     const date = formatDate(event.nextDueDate);
     if (event.dueStatus === 'overdue') parts.push(`Lewat jadwal (${date})`);
-    else if (event.dueStatus === 'due') parts.push(`Jatuh tempo hari ini (${date})`);
+    else if (event.dueStatus === 'due')
+      parts.push(`Jatuh tempo hari ini (${date})`);
     else parts.push(`Cek berikutnya ${date}`);
   }
   if (event.nextDueDistanceKm !== null) {
@@ -153,7 +154,10 @@ onMounted(loadEvents);
       <div>
         <p class="section-heading__eyebrow">Buku Servis Digital</p>
         <h2 id="maintenance-title">Riwayat Perawatan</h2>
-        <p>Catat servis rantai, rem, suspensi, dan pasang pengingat tanggal &amp; jarak tempuh (odometer).</p>
+        <p>
+          Catat servis rantai, rem, suspensi, dan pasang pengingat tanggal &amp;
+          jarak tempuh (odometer).
+        </p>
       </div>
     </div>
 
@@ -165,7 +169,13 @@ onMounted(loadEvents);
           type="button"
           class="quick-svc-btn"
           :disabled="saving"
-          @click="quickLogService('chain_lube', 'Pembersihan & pelumasan rantai rutin', 14)"
+          @click="
+            quickLogService(
+              'chain_lube',
+              'Pembersihan & pelumasan rantai rutin',
+              14,
+            )
+          "
         >
           ⛓️ Rantai Bersih &amp; Lumasi
         </button>
@@ -173,7 +183,13 @@ onMounted(loadEvents);
           type="button"
           class="quick-svc-btn"
           :disabled="saving"
-          @click="quickLogService('sealant', 'Pengecekan tekanan & top-up sealant ban', 30)"
+          @click="
+            quickLogService(
+              'sealant',
+              'Pengecekan tekanan & top-up sealant ban',
+              30,
+            )
+          "
         >
           💨 Ban &amp; Sealant OK
         </button>
@@ -181,7 +197,13 @@ onMounted(loadEvents);
           type="button"
           class="quick-svc-btn"
           :disabled="saving"
-          @click="quickLogService('brake_pads', 'Inspeksi ketebalan & pembersihan pad rem', 60)"
+          @click="
+            quickLogService(
+              'brake_pads',
+              'Inspeksi ketebalan & pembersihan pad rem',
+              60,
+            )
+          "
         >
           🛑 Pad Rem Dicek
         </button>
@@ -189,7 +211,13 @@ onMounted(loadEvents);
           type="button"
           class="quick-svc-btn"
           :disabled="saving"
-          @click="quickLogService('chain_clean', 'Cuci menyeluruh dan degrease drivetrain', 30)"
+          @click="
+            quickLogService(
+              'chain_clean',
+              'Cuci menyeluruh dan degrease drivetrain',
+              30,
+            )
+          "
         >
           🧼 Cuci &amp; Degrease
         </button>
@@ -218,7 +246,11 @@ onMounted(loadEvents);
         </label>
         <label>
           <span>Ingatkan Kembali Pada</span>
-          <input v-model="form.nextDueDate" type="date" :min="form.performedAt" />
+          <input
+            v-model="form.nextDueDate"
+            type="date"
+            :min="form.performedAt"
+          />
         </label>
       </div>
 
@@ -298,21 +330,22 @@ onMounted(loadEvents);
         }"
       >
         <div class="maintenance-card__top">
-          <span class="type-badge">{{ MAINTENANCE_EVENT_LABELS[event.type] }}</span>
-          <span
-            class="due-pill"
-            :class="`due-pill--${event.dueStatus}`"
-          >
+          <span class="type-badge">{{
+            MAINTENANCE_EVENT_LABELS[event.type]
+          }}</span>
+          <span class="due-pill" :class="`due-pill--${event.dueStatus}`">
             {{ dueCopy(event) }}
           </span>
         </div>
 
         <div class="maintenance-card__meta">
           <span class="meta-date">
-            <GIcon name="history" size="xs" /> {{ formatDate(event.performedAt) }}
+            <GIcon name="history" size="xs" />
+            {{ formatDate(event.performedAt) }}
           </span>
           <span v-if="event.performedAtDistanceKm !== null" class="meta-dist">
-            <GIcon name="route" size="xs" /> Odometer: {{ event.performedAtDistanceKm.toLocaleString() }} km
+            <GIcon name="route" size="xs" /> Odometer:
+            {{ event.performedAtDistanceKm.toLocaleString() }} km
           </span>
         </div>
 

@@ -89,7 +89,10 @@ export class CommunityService {
     user: User,
   ): Promise<JoinCommunityResponse> {
     const community = await this.getCommunity(communityId);
-    const existing = await this.repository.findMembership(community.id, user.id);
+    const existing = await this.repository.findMembership(
+      community.id,
+      user.id,
+    );
     const decision = decideCommunityJoin({
       visibility: community.visibility,
       joinMode: community.joinMode,

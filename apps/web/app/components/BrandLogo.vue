@@ -18,7 +18,12 @@ withDefaults(
 </script>
 
 <template>
-  <NuxtLink :to="to" class="brand-lockup" :class="[`brand-lockup--${size}`]" aria-label="GowesKit Home">
+  <NuxtLink
+    :to="to"
+    class="brand-lockup"
+    :class="[`brand-lockup--${size}`]"
+    aria-label="GowesKit Home"
+  >
     <!-- Pro Cycling Monogram Mark (G + Velocity Wheel + Aero Dart) -->
     <div class="brand-mark-box">
       <svg
@@ -67,7 +72,8 @@ withDefaults(
     <!-- Wordmark & Cycling Identity Tagline -->
     <div v-if="!compact" class="brand-text">
       <div class="brand-title">
-        <span class="brand-title__gowes">Gowes</span><span class="brand-title__kit">Kit</span>
+        <span class="brand-title__gowes">Gowes</span
+        ><span class="brand-title__kit">Kit</span>
         <span class="brand-title__dot" aria-hidden="true" />
       </div>
       <span v-if="showTagline" class="brand-sub">{{ tagline }}</span>
@@ -83,7 +89,9 @@ withDefaults(
   text-decoration: none;
   color: var(--color-ink);
   user-select: none;
-  transition: opacity 120ms ease, transform 120ms ease;
+  transition:
+    opacity 120ms ease,
+    transform 120ms ease;
 }
 
 .brand-lockup:active {
@@ -97,7 +105,9 @@ withDefaults(
   flex-shrink: 0;
   border-radius: 0.85rem;
   box-shadow: 0 4px 12px rgb(23 32 42 / 16%);
-  transition: transform 150ms ease, box-shadow 150ms ease;
+  transition:
+    transform 150ms ease,
+    box-shadow 150ms ease;
 }
 
 .brand-lockup:hover .brand-mark-box {
@@ -111,24 +121,24 @@ withDefaults(
 
 /* SVG Palette Tokens */
 .brand-mark-bg {
-  fill: #17202A;
+  fill: #17202a;
 }
 
 .brand-mark-border {
-  stroke: #C9F36A;
+  stroke: #c9f36a;
   stroke-opacity: 0.35;
 }
 
 .brand-mark-wheel {
-  stroke: #C9F36A;
+  stroke: #c9f36a;
 }
 
 .brand-mark-arrow {
-  stroke: #8EDDF4;
+  stroke: #8eddf4;
 }
 
 .brand-mark-hub {
-  fill: #FFFFFF;
+  fill: #ffffff;
 }
 
 /* Sizing Variants */
@@ -183,11 +193,11 @@ withDefaults(
 }
 
 .brand-title__gowes {
-  color: #17202A;
+  color: #17202a;
 }
 
 .brand-title__kit {
-  color: #0F766E;
+  color: #0f766e;
   margin-left: 0.05em;
   position: relative;
 }
@@ -197,8 +207,8 @@ withDefaults(
   width: 0.35em;
   height: 0.35em;
   border-radius: 9999px;
-  background: #C9F36A;
-  border: 1px solid #17202A;
+  background: #c9f36a;
+  border: 1px solid #17202a;
   margin-left: 0.15em;
   transform: translateY(-0.05em);
 }
@@ -208,7 +218,7 @@ withDefaults(
   font-weight: 800;
   letter-spacing: 0.08em;
   text-transform: uppercase;
-  color: #64748B;
+  color: #64748b;
   font-family: var(--font-heading);
 }
 </style>

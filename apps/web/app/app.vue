@@ -36,7 +36,13 @@ const userPillName = computed(() => {
     </div>
 
     <!-- 100% Full-Bleed Sticky Top App Bar (Hidden on /explore and /ride-flex for full-screen experience) -->
-    <header v-if="!route.path.startsWith('/explore') && !route.path.startsWith('/ride-flex')" class="site-header">
+    <header
+      v-if="
+        !route.path.startsWith('/explore') &&
+        !route.path.startsWith('/ride-flex')
+      "
+      class="site-header"
+    >
       <div class="site-header__container">
         <!-- Left: Pro Cycling Brand Lockup -->
         <BrandLogo />
@@ -58,10 +64,14 @@ const userPillName = computed(() => {
         <div class="site-header__right">
           <NuxtLink class="header-user-pill" to="/me" aria-label="My Account">
             <ClientOnly>
-              <span class="network-dot" :class="{ 'network-dot--offline': !isOnline }" aria-hidden="true" />
+              <span
+                class="network-dot"
+                :class="{ 'network-dot--offline': !isOnline }"
+                aria-hidden="true"
+              />
               <span class="user-pill-label">{{ userPillName }}</span>
               <span class="user-pill-avatar" aria-hidden="true">
-                {{ user ? (user.displayName.charAt(0).toUpperCase()) : '👤' }}
+                {{ user ? user.displayName.charAt(0).toUpperCase() : '👤' }}
               </span>
               <template #fallback>
                 <span class="network-dot" aria-hidden="true" />
@@ -75,8 +85,21 @@ const userPillName = computed(() => {
     </header>
 
     <!-- Main Content Area -->
-    <div class="app-shell" :class="{ 'app-shell--explore': route.path.startsWith('/explore'), 'app-shell--ride-flex': route.path.startsWith('/ride-flex') }">
-      <main id="main-content" class="main-content" :class="{ 'main-content--explore': route.path.startsWith('/explore'), 'main-content--ride-flex': route.path.startsWith('/ride-flex') }">
+    <div
+      class="app-shell"
+      :class="{
+        'app-shell--explore': route.path.startsWith('/explore'),
+        'app-shell--ride-flex': route.path.startsWith('/ride-flex'),
+      }"
+    >
+      <main
+        id="main-content"
+        class="main-content"
+        :class="{
+          'main-content--explore': route.path.startsWith('/explore'),
+          'main-content--ride-flex': route.path.startsWith('/ride-flex'),
+        }"
+      >
         <NuxtPage />
       </main>
     </div>
@@ -154,7 +177,9 @@ const userPillName = computed(() => {
   font-size: 0.82rem;
   font-weight: 750;
   text-decoration: none;
-  transition: color 120ms ease, background-color 120ms ease;
+  transition:
+    color 120ms ease,
+    background-color 120ms ease;
 }
 
 .desktop-nav__link:hover {
@@ -181,7 +206,9 @@ const userPillName = computed(() => {
   font-size: 0.76rem;
   font-weight: 800;
   box-shadow: 0 2px 6px rgb(23 32 42 / 6%);
-  transition: border-color 120ms ease, transform 120ms ease;
+  transition:
+    border-color 120ms ease,
+    transform 120ms ease;
 }
 
 .header-user-pill:hover {

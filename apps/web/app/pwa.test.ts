@@ -8,7 +8,9 @@ describe('PWA configuration and assets', () => {
     expect(existsSync(manifestPath)).toBe(true);
 
     const manifestContent = JSON.parse(readFileSync(manifestPath, 'utf-8'));
-    expect(manifestContent.name).toBe('GowesKit — Cycling Knowledge & Workshop');
+    expect(manifestContent.name).toBe(
+      'GowesKit — Cycling Knowledge & Workshop',
+    );
     expect(manifestContent.short_name).toBe('GowesKit');
     expect(manifestContent.display).toBe('standalone');
     expect(manifestContent.orientation).toBe('portrait-primary');
@@ -25,9 +27,9 @@ describe('PWA configuration and assets', () => {
     const swContent = readFileSync(swPath, 'utf-8');
     expect(swContent).toContain('goweskit-static-');
     expect(swContent).toContain('PRECACHE_URLS');
-    expect(swContent).toContain('addEventListener(\'install\'');
-    expect(swContent).toContain('addEventListener(\'activate\'');
-    expect(swContent).toContain('addEventListener(\'fetch\'');
+    expect(swContent).toContain("addEventListener('install'");
+    expect(swContent).toContain("addEventListener('activate'");
+    expect(swContent).toContain("addEventListener('fetch'");
   });
 
   it('has app icons in public directory', () => {

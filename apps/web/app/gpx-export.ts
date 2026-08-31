@@ -187,7 +187,10 @@ export function parseGpxToRoute(
     if (item) sampledPoints.push({ lat: item.lat, lon: item.lon });
   }
   const lastSampled = sampledPoints[sampledPoints.length - 1];
-  if (!lastSampled || (lastSampled.lat !== lastPoint.lat && lastSampled.lon !== lastPoint.lon)) {
+  if (
+    !lastSampled ||
+    (lastSampled.lat !== lastPoint.lat && lastSampled.lon !== lastPoint.lon)
+  ) {
     sampledPoints.push({ lat: lastPoint.lat, lon: lastPoint.lon });
   }
 
@@ -244,11 +247,31 @@ export function parseGpxToRoute(
   const peakPt = projectPoint(peakPoint.lat, peakPoint.lon);
 
   const waypoints = [
-    { name: 'Start Solo Ride', icon: '🚩', x: startPt.x, y: startPt.y, type: 'photo' as const },
+    {
+      name: 'Start Solo Ride',
+      icon: '🚩',
+      x: startPt.x,
+      y: startPt.y,
+      type: 'photo' as const,
+    },
     ...(maxEle > -Infinity && maxEleIdx !== 0 && maxEleIdx !== points.length - 1
-      ? [{ name: `Peak (+${Math.round(maxEle)}m)`, icon: '⛰️', x: peakPt.x, y: peakPt.y, type: 'climb' as const }]
+      ? [
+          {
+            name: `Peak (+${Math.round(maxEle)}m)`,
+            icon: '⛰️',
+            x: peakPt.x,
+            y: peakPt.y,
+            type: 'climb' as const,
+          },
+        ]
       : []),
-    { name: 'Finish Solo Ride', icon: '🏁', x: endPt.x, y: endPt.y, type: 'sprint' as const },
+    {
+      name: 'Finish Solo Ride',
+      icon: '🏁',
+      x: endPt.x,
+      y: endPt.y,
+      type: 'sprint' as const,
+    },
   ];
 
   return {

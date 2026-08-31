@@ -21,6 +21,10 @@ export default defineNuxtConfig({
   devServer: {
     port: devServerPort,
   },
+  routeRules: {
+    '/communities': { redirect: '/community' },
+    '/maintenance': { redirect: '/garage' },
+  },
   vite: {
     optimizeDeps: {
       exclude: ['maplibre-gl'],
@@ -127,7 +131,11 @@ export default defineNuxtConfig({
       ],
       link: [
         { rel: 'preconnect', href: 'https://fonts.googleapis.com' },
-        { rel: 'preconnect', href: 'https://fonts.gstatic.com', crossorigin: '' },
+        {
+          rel: 'preconnect',
+          href: 'https://fonts.gstatic.com',
+          crossorigin: '',
+        },
         {
           rel: 'stylesheet',
           href: 'https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@500;700;800&family=Outfit:wght@400;500;600;700;800;900&family=Plus+Jakarta+Sans:wght@400;500;600;700;800&family=Space+Grotesk:wght@500;600;700;800&display=swap',

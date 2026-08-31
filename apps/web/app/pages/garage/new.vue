@@ -52,7 +52,9 @@ onMounted(async () => {
   }
 });
 
-function applyPreset(presetKey: 'mtb_boost' | 'folding_20' | 'road_disc'): void {
+function applyPreset(
+  presetKey: 'mtb_boost' | 'folding_20' | 'road_disc',
+): void {
   if (presetKey === 'mtb_boost') {
     nickname.value = 'Trail Explorer 29';
     brand.value = 'Trek';
@@ -178,7 +180,10 @@ async function submit(): Promise<void> {
         specs: selectedSpecs(),
       },
     });
-    toast.success('Sepeda Ditambahkan!', `"${response.bike.nickname}" siap dikelola di garasi.`);
+    toast.success(
+      'Sepeda Ditambahkan!',
+      `"${response.bike.nickname}" siap dikelola di garasi.`,
+    );
     await navigateTo(`/garage/${response.bike.id}`);
   } catch (error: unknown) {
     const msg = getApiErrorMessage(error);
@@ -191,11 +196,15 @@ async function submit(): Promise<void> {
 </script>
 
 <template>
-  <section class="form-card form-card--wide new-bike-card" aria-labelledby="new-bike-title">
+  <section
+    class="form-card form-card--wide new-bike-card"
+    aria-labelledby="new-bike-title"
+  >
     <p class="welcome-card__eyebrow">Incomplete is 100% okay</p>
     <h1 id="new-bike-title">Add a bike to your Garage.</h1>
     <p class="new-bike-lead">
-      Start with what you know. Unknown details remain visible without blocking you.
+      Start with what you know. Unknown details remain visible without blocking
+      you.
     </p>
 
     <p v-if="loading" class="state-card" role="status">
@@ -210,7 +219,8 @@ async function submit(): Promise<void> {
       <!-- Quick Presets Helper -->
       <div class="presets-banner">
         <strong>
-          <GIcon name="sparkles" size="xs" color="#16A34A" /> Quick Presets (Optional)
+          <GIcon name="sparkles" size="xs" color="#16A34A" /> Quick Presets
+          (Optional)
         </strong>
         <p>Pre-fill standard interfaces from common builds to save time:</p>
         <div class="preset-buttons-row">
@@ -252,7 +262,8 @@ async function submit(): Promise<void> {
             />
           </label>
           <span v-if="errors.nickname" class="field-error-msg">
-            <GIcon name="shield" size="xs" color="#EF4444" filled /> {{ errors.nickname }}
+            <GIcon name="shield" size="xs" color="#EF4444" filled />
+            {{ errors.nickname }}
           </span>
         </div>
 
@@ -275,25 +286,44 @@ async function submit(): Promise<void> {
             </select>
           </label>
           <span v-if="errors.bicycleTypeId" class="field-error-msg">
-            <GIcon name="shield" size="xs" color="#EF4444" filled /> {{ errors.bicycleTypeId }}
+            <GIcon name="shield" size="xs" color="#EF4444" filled />
+            {{ errors.bicycleTypeId }}
           </span>
         </div>
 
         <label>
           <span>Brand <small>optional</small></span>
-          <input v-model="brand" maxlength="100" placeholder="e.g. Polygon, Trek, Giant, Dahon" />
+          <input
+            v-model="brand"
+            maxlength="100"
+            placeholder="e.g. Polygon, Trek, Giant, Dahon"
+          />
         </label>
         <label>
           <span>Model <small>optional</small></span>
-          <input v-model="model" maxlength="100" placeholder="e.g. Siskiu, Marlin, Boardwalk" />
+          <input
+            v-model="model"
+            maxlength="100"
+            placeholder="e.g. Siskiu, Marlin, Boardwalk"
+          />
         </label>
         <label>
           <span>Model year <small>optional</small></span>
-          <input v-model="modelYear" type="number" min="1900" max="2100" placeholder="e.g. 2024" />
+          <input
+            v-model="modelYear"
+            type="number"
+            min="1900"
+            max="2100"
+            placeholder="e.g. 2024"
+          />
         </label>
         <label>
           <span>Bike photo URL <small>optional</small></span>
-          <input v-model="photoUrl" type="url" placeholder="https://... image link" />
+          <input
+            v-model="photoUrl"
+            type="url"
+            placeholder="https://... image link"
+          />
         </label>
       </div>
 

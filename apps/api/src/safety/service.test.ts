@@ -131,9 +131,7 @@ class MemorySafetyRepository implements SafetyRepository {
     return Promise.resolve(session);
   }
 
-  public listSessionLocations(
-    sessionId: string,
-  ): Promise<SafetyLocation[]> {
+  public listSessionLocations(sessionId: string): Promise<SafetyLocation[]> {
     const session = this.sessions.find((s) => s.id === sessionId);
     return Promise.resolve(session?.lastLocation ? [session.lastLocation] : []);
   }

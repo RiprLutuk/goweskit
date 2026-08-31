@@ -12,7 +12,10 @@ export default defineNuxtPlugin(() => {
             const installingWorker = reg.installing;
             if (installingWorker) {
               installingWorker.onstatechange = () => {
-                if (installingWorker.state === 'installed' && navigator.serviceWorker.controller) {
+                if (
+                  installingWorker.state === 'installed' &&
+                  navigator.serviceWorker.controller
+                ) {
                   // New update available
                   console.info('[PWA] New version ready.');
                 }

@@ -19,25 +19,31 @@ const PRECACHE_URLS = [
 
 self.addEventListener('install', (event) => {
   event.waitUntil(
-    caches.open(STATIC_CACHE_NAME).then((cache) => {
-      return cache.addAll(PRECACHE_URLS).catch((err) => {
-        console.warn('[SW] Pre-cache partial failure:', err);
-      });
-    }).then(() => self.skipWaiting())
+    caches
+      .open(STATIC_CACHE_NAME)
+      .then((cache) => {
+        return cache.addAll(PRECACHE_URLS).catch((err) => {
+          console.warn('[SW] Pre-cache partial failure:', err);
+        });
+      })
+      .then(() => self.skipWaiting()),
   );
 });
 
 self.addEventListener('activate', (event) => {
   event.waitUntil(
-    caches.keys().then((keys) => {
-      return Promise.all(
-        keys.map((key) => {
-          if (key !== STATIC_CACHE_NAME && key !== API_CACHE_NAME) {
-            return caches.delete(key);
-          }
-        })
-      );
-    }).then(() => self.clients.claim())
+    caches
+      .keys()
+      .then((keys) => {
+        return Promise.all(
+          keys.map((key) => {
+            if (key !== STATIC_CACHE_NAME && key !== API_CACHE_NAME) {
+              return caches.delete(key);
+            }
+          }),
+        );
+      })
+      .then(() => self.clients.claim()),
   );
 });
 
@@ -67,11 +73,15 @@ self.addEventListener('fetch', (event) => {
           return caches.match(request).then((cachedResponse) => {
             if (cachedResponse) return cachedResponse;
             return new Response(
-              JSON.stringify({ error: 'offline', message: 'You are currently offline. Showing cached workshop data.' }),
-              { status: 503, headers: { 'Content-Type': 'application/json' } }
+              JSON.stringify({
+                error: 'offline',
+                message:
+                  'You are currently offline. Showing cached workshop data.',
+              }),
+              { status: 503, headers: { 'Content-Type': 'application/json' } },
             );
           });
-        })
+        }),
     );
     return;
   }
@@ -95,7 +105,11 @@ self.addEventListener('fetch', (event) => {
 
       return fetch(request)
         .then((networkResponse) => {
-          if (networkResponse && networkResponse.status === 200 && request.url.startsWith('http')) {
+          if (
+            networkResponse &&
+            networkResponse.status === 200 &&
+            request.url.startsWith('http')
+          ) {
             const responseClone = networkResponse.clone();
             caches.open(STATIC_CACHE_NAME).then((cache) => {
               cache.put(request, responseClone);
@@ -109,6 +123,6 @@ self.addEventListener('fetch', (event) => {
             return caches.match('/');
           }
         });
-    })
+    }),
   );
 });

@@ -6,7 +6,7 @@ if (existsSync(rootEnvPath)) process.loadEnvFile(rootEnvPath);
 
 import { readConfig } from '../config.js';
 import { createDatabase } from './client.js';
-import { users, trustedContacts, safetySessions, userBikes } from './schema.js';
+import { users, trustedContacts, userBikes } from './schema.js';
 import { decryptNullable, decryptText } from '../crypto/encryption.js';
 
 async function main() {
@@ -28,7 +28,9 @@ async function main() {
     })),
   );
 
-  console.log('\n--- 2. TRUSTED CONTACTS TABLE (phone, email, note Encrypted) ---');
+  console.log(
+    '\n--- 2. TRUSTED CONTACTS TABLE (phone, email, note Encrypted) ---',
+  );
   const contactRows = await db.select().from(trustedContacts).limit(5);
   console.table(
     contactRows.map((c) => ({

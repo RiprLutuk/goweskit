@@ -1,5 +1,11 @@
 <script setup lang="ts">
-const { isLiveGps, gpsStatus, showPromptBanner, dismissPromptBanner, requestLocation } = useUserLocation();
+const {
+  isLiveGps,
+  gpsStatus,
+  showPromptBanner,
+  dismissPromptBanner,
+  requestLocation,
+} = useUserLocation();
 const { triggerHaptic } = usePwa();
 const requesting = ref(false);
 
@@ -28,7 +34,12 @@ function handleDismiss(): void {
   >
     <div class="location-banner__icon-box" aria-hidden="true">
       <div class="location-beacon-pulse" />
-      <GIcon name="radar" size="sm" color="#0F766E" class="location-beacon-icon" />
+      <GIcon
+        name="radar"
+        size="sm"
+        color="#0F766E"
+        class="location-beacon-icon"
+      />
     </div>
 
     <div class="location-banner__body">
@@ -36,8 +47,12 @@ function handleDismiss(): void {
         <strong class="location-banner__title">Aktifkan Lokasi GPS</strong>
         <span class="location-banner__pill">Live Cockpit</span>
       </div>
-      <p v-if="gpsStatus === 'denied'" class="location-banner__desc location-banner__desc--warn">
-        Akses lokasi diblokir di browser. Klik ikon setelan di URL bar untuk mengizinkan.
+      <p
+        v-if="gpsStatus === 'denied'"
+        class="location-banner__desc location-banner__desc--warn"
+      >
+        Akses lokasi diblokir di browser. Klik ikon setelan di URL bar untuk
+        mengizinkan.
       </p>
       <p v-else class="location-banner__desc">
         Dapatkan ramalan cuaca real-time &amp; rute gowes terdekat di kotamu.
@@ -126,7 +141,8 @@ function handleDismiss(): void {
     transform: scale(0.95);
     opacity: 0.8;
   }
-  70%, 100% {
+  70%,
+  100% {
     transform: scale(1.25);
     opacity: 0;
   }
@@ -202,7 +218,9 @@ function handleDismiss(): void {
   border-radius: 0.65rem;
   cursor: pointer;
   white-space: nowrap;
-  transition: transform 90ms ease, opacity 90ms ease;
+  transition:
+    transform 90ms ease,
+    opacity 90ms ease;
 }
 
 .location-allow-btn:hover {
@@ -224,7 +242,9 @@ function handleDismiss(): void {
   font-size: 0.85rem;
   cursor: pointer;
   border-radius: 50%;
-  transition: background-color 120ms ease, color 120ms ease;
+  transition:
+    background-color 120ms ease,
+    color 120ms ease;
 }
 
 .location-close-btn:hover {

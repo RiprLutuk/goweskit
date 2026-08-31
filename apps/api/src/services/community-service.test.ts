@@ -84,7 +84,9 @@ class MemoryCommunityRepository implements CommunityRepository {
     return Promise.resolve([{ ...community, distanceMeters: 2000 }]);
   }
 
-  public findCommunityById(identifier: string): Promise<PublicCommunity | null> {
+  public findCommunityById(
+    identifier: string,
+  ): Promise<PublicCommunity | null> {
     return Promise.resolve(
       identifier === communityId || identifier === community.slug
         ? community

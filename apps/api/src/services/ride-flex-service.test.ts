@@ -95,10 +95,19 @@ describe('RideFlexService', () => {
   });
 
   it('supports multimodal photo vision and telemetry coaching', async () => {
-    const mockFetch: typeof fetch = (input, init) => {
-      const body = JSON.parse(init?.body as string);
-      expect(body.contents[0].parts[0].inline_data).toBeDefined();
-      expect(body.contents[0].parts[0].inline_data.mime_type).toBe('image/jpeg');
+    const mockFetch: typeof fetch = (_input, init) => {
+      const rawBody = typeof init?.body === 'string' ? init.body : '{}';
+      const body = JSON.parse(rawBody) as {
+        contents: {
+          parts: {
+            inline_data?: { mime_type: string; data: string };
+          }[];
+        }[];
+      };
+      expect(body.contents[0]?.parts[0]?.inline_data).toBeDefined();
+      expect(body.contents[0]?.parts[0]?.inline_data?.mime_type).toBe(
+        'image/jpeg',
+      );
 
       return Promise.resolve(
         new Response(
@@ -115,11 +124,14 @@ describe('RideFlexService', () => {
                           athlete: '180W average power with strong endurance.',
                           humor: 'Sepeda kotor, senyum lebar!',
                           technical: 'Gravel 40c tires at 32 psi.',
-                          gravel: 'Kabut tipis di kebun teh Sentul sangat epik.',
+                          gravel:
+                            'Kabut tipis di kebun teh Sentul sangat epik.',
                         },
-                        photoVisualInsight: 'Pemandangan kebun teh berkabut dengan rute tanah berbatu.',
+                        photoVisualInsight:
+                          'Pemandangan kebun teh berkabut dengan rute tanah berbatu.',
                         recommendedTheme: 'gravel',
-                        trainingInsight: 'Zona 3 Aerobic dominan, hidrasi 750ml cukup.',
+                        trainingInsight:
+                          'Zona 3 Aerobic dominan, hidrasi 750ml cukup.',
                         mechanicTip: 'Cuci sisa lumpur pada disc brake rotor.',
                       }),
                     },

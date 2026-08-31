@@ -38,7 +38,10 @@ async function submit(): Promise<void> {
   errorMessage.value = '';
   submitting.value = true;
   try {
-    await login({ email: email.value.trim().toLowerCase(), password: password.value });
+    await login({
+      email: email.value.trim().toLowerCase(),
+      password: password.value,
+    });
     toast.success('Berhasil Masuk!', 'Selamat datang kembali di GowesKit.');
     await navigateTo('/me');
   } catch (error: unknown) {
@@ -77,7 +80,9 @@ async function quickDemoLogin(): Promise<void> {
         <BrandLogo size="lg" :show-tagline="false" class="auth-brand-center" />
         <span class="auth-eyebrow">Selamat Datang Kembali</span>
         <h1 id="login-title" class="auth-title">Masuk ke Akun</h1>
-        <p class="auth-sub">Kelola garasi, catatan servis, dan kontak darurat solo-ride Anda.</p>
+        <p class="auth-sub">
+          Kelola garasi, catatan servis, dan kontak darurat solo-ride Anda.
+        </p>
       </div>
 
       <!-- Google Sign In -->
@@ -145,12 +150,17 @@ async function quickDemoLogin(): Promise<void> {
           @click="quickDemoLogin"
         >
           <GIcon name="bolt" size="xs" color="#D97706" filled />
-          <span>{{ demoLoggingIn ? 'Memuat Demo…' : 'Masuk Akun Demo (1-Klik)' }}</span>
+          <span>{{
+            demoLoggingIn ? 'Memuat Demo…' : 'Masuk Akun Demo (1-Klik)'
+          }}</span>
         </button>
       </form>
 
       <div class="auth-footer">
-        <span>Belum punya akun? <NuxtLink to="/register">Daftar Akun Baru</NuxtLink></span>
+        <span
+          >Belum punya akun?
+          <NuxtLink to="/register">Daftar Akun Baru</NuxtLink></span
+        >
       </div>
     </section>
   </div>
