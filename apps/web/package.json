@@ -17,7 +17,7 @@
     "@goweskit/bike-domain": "workspace:*",
     "@goweskit/contracts": "workspace:*",
     "@goweskit/ui": "workspace:*",
-    "maplibre-gl": "6.2.0",
+    "maplibre-gl": "6.4.1",
     "nuxt": "4.5.2",
     "qrcode": "^1.5.4",
     "sweetalert2": "^11.26.25",
